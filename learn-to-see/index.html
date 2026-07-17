@@ -50,13 +50,13 @@
   .cprog{transition:stroke-dashoffset .05s linear;}
   .choiceGlyph{font-weight:800;color:#fff;line-height:1;
     display:flex;align-items:center;justify-content:center;}
-  #replay{position:fixed;top:calc(14px + env(safe-area-inset-top));left:50%;
-    transform:translateX(-50%);width:92px;height:92px;border-radius:50%;
-    background:#ff2b2b;color:#fff;border:none;font-size:46px;
+  #replay{position:fixed;top:calc(14px + env(safe-area-inset-top));
+    left:calc(16px + env(safe-area-inset-left));width:84px;height:84px;border-radius:50%;
+    background:#ff2b2b;color:#fff;border:none;font-size:42px;
     box-shadow:0 0 26px rgba(255,43,43,.55);
     display:none;align-items:center;justify-content:center;cursor:pointer;z-index:60;}
   #replay:hover{background:#ff5a4d;}
-  #replay:active{transform:translateX(-50%) scale(.94);}
+  #replay:active{transform:scale(.94);}
   #kb{position:absolute;inset:0;display:none;flex-direction:column;z-index:40;}
   #kb.on{display:flex;}
   #kbAnswer{min-height:78px;display:flex;align-items:center;justify-content:center;gap:18px;
@@ -76,9 +76,10 @@
   .kbkey.blurred{opacity:.2;pointer-events:none;transition:opacity .2s;}
   .kbkey.active{opacity:1;transition:opacity .2s;}
   #kb.spellmode #kbAnswer{display:none;}
-  #kb.spellmode #kbKeys{padding-top:90px;}
-  #spellBar{position:fixed;top:calc(14px + env(safe-area-inset-top));left:50%;
-    transform:translateX(-50%);color:#fff;font-size:44px;font-weight:800;letter-spacing:8px;
+  #kb.spellmode #kbKeys{padding-top:150px;}
+  #spellBar{position:fixed;top:calc(20px + env(safe-area-inset-top));left:50%;
+    transform:translateX(-50%);color:#fff;font-weight:800;letter-spacing:10px;
+    font-size:clamp(44px, 9vw, 78px);
     z-index:55;display:none;white-space:nowrap;}
   #spellBar.on{display:block;}
   textarea#sWords{background:#222;color:#fff;border:1px solid #3a3a3a;border-radius:8px;
@@ -1015,6 +1016,8 @@
   function applyMode(){
     const kb=(S.activity==='keyboard'), sp=(S.activity==='spell'), ch=(S.activity==='choose');
     kbMode = sp ? 'spell' : 'free';
+    // only Look & Tap / Cause & Effect use the circle; hide it in every other activity
+    if(!(S.activity==='tap'||S.activity==='cause')) target.style.visibility='hidden';
     $('replay').style.display=(ch||sp)?'flex':'none';
     $('spellBar').classList.toggle('on', sp);
     $('kb').classList.toggle('on', kb||sp);       // Spell also uses the keyboard view
@@ -1111,7 +1114,7 @@
   renderProfiles();
   syncControls();        // pushes the active child's settings into the UI + applyLook
   if(!hoverDwell){ gaze.style.display='none'; }   // no gaze dot on touch devices
-  $('replay').style.display=(S.activity==='choose')?'flex':'none';
+  applyMode();                                    // set the right mode immediately (hide circle if not tap/cause)
   loop();
   setTimeout(startRound, S.delay*1000);
 })();

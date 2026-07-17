@@ -130,6 +130,14 @@
   .toggle.on::after{left:23px;}
   .hint{color:#7a7a7a;font-size:12.5px;line-height:1.45;margin:4px 0 0;}
   #closePanel{float:right;background:none;border:none;color:#aaa;font-size:22px;cursor:pointer;}
+  .grp{border-top:1px solid #262626;}
+  .grphead{width:100%;background:none;border:none;color:#fff;font-size:16px;font-weight:700;
+    text-align:left;padding:14px 2px;cursor:pointer;display:flex;justify-content:space-between;
+    align-items:center;font-family:inherit;}
+  .grphead .arw{color:#888;font-size:12px;transition:transform .2s;}
+  .grp.open .grphead .arw{transform:rotate(180deg);}
+  .grpbody{display:none;padding:0 2px 14px;}
+  .grp.open .grpbody{display:block;}
   .btnrow{display:flex;gap:8px;}
   .btnrow .act{width:auto;flex:1;margin-top:6px;}
   #progressPanel{position:fixed;inset:0;background:#0c0c0c;color:#eee;z-index:80;
@@ -189,107 +197,120 @@
   <button id="closePanel">✕</button>
   <h2>Settings</h2>
 
-  <h3>Child Profile</h3>
-  <div class="row"><label>Active child</label>
-    <select id="sProfile"></select></div>
-  <div class="btnrow">
-    <button class="act" id="btnNewProfile">New</button>
-    <button class="act" id="btnRenameProfile">Rename</button>
-    <button class="act" id="btnDelProfile">Delete</button>
+  <div class="grp open">
+    <button class="grphead" type="button">Child <span class="arw">▾</span></button>
+    <div class="grpbody">
+      <div class="row"><label>Active child</label><select id="sProfile"></select></div>
+      <div class="btnrow">
+        <button class="act" id="btnNewProfile">New</button>
+        <button class="act" id="btnRenameProfile">Rename</button>
+        <button class="act" id="btnDelProfile">Delete</button>
+      </div>
+      <button class="act" id="btnProgress">View progress &amp; report</button>
+      <p class="hint">Settings and progress save per child on this device.</p>
+    </div>
   </div>
-  <button class="act" id="btnProgress">View progress &amp; report</button>
-  <p class="hint">Each child's settings save automatically on this device.
-    Progress — taps and how quickly they find the target — is tracked per child.</p>
 
-  <h3>Activity</h3>
-  <div class="row"><label>Type</label>
-    <select id="sActivity">
-      <option value="tap">Look &amp; Tap (find the target)</option>
-      <option value="cause">Cause &amp; Effect (looking makes it happen)</option>
-      <option value="choose">Choose (find the letter, number, or shape)</option>
-      <option value="spell">Spell — type teacher's words (keyboard)</option>
-      <option value="keyboard">Keyboard — free typing by gaze</option>
-    </select></div>
-  <div class="row" id="rowWords" style="display:none;flex-direction:column;align-items:stretch">
-    <label style="margin-bottom:6px">Words to spell (separate with spaces or commas)</label>
-    <textarea id="sWords" rows="3" placeholder="cat dog sun hat mom"></textarea></div>
-  <div class="row" id="rowKb" style="display:none"><label>Keyboard layout</label>
-    <select id="sKeyboard">
-      <option value="blocks">Blocks (big, spaced)</option>
-      <option value="az">A–Z</option>
-      <option value="qwerty">QWERTY</option>
-    </select></div>
-  <div class="row" id="rowKbCase" style="display:none"><label>Uppercase letters</label><div class="toggle" id="tKbUpper"></div></div>
-  <div class="row" id="rowContent" style="display:none"><label>What to find</label>
-    <select id="sContent">
-      <option value="letters">Letters (A B C)</option>
-      <option value="lower">Letters (a b c)</option>
-      <option value="numbers">Numbers</option>
-      <option value="shapes">Shapes</option>
-    </select></div>
-  <div class="row" id="rowChoices" style="display:none"><label>Number of choices</label>
-    <select id="sChoices">
-      <option value="1">1 (errorless — only the answer)</option>
-      <option value="2">2 (answer + one distractor)</option>
-      <option value="all">All letters (full keyboard)</option>
-    </select></div>
-  <p class="hint">Cause &amp; Effect is the simplest — a quick look sets off a big
-    celebration. Look &amp; Tap adds hold-to-select. Choose speaks a prompt
-    ("Find the A") and the child looks at the right letter, number, or shape —
-    building visual discrimination.</p>
+  <div class="grp open">
+    <button class="grphead" type="button">Activity <span class="arw">▾</span></button>
+    <div class="grpbody">
+      <div class="row"><label>Type</label>
+        <select id="sActivity">
+          <option value="tap">Look &amp; Tap (find the target)</option>
+          <option value="cause">Cause &amp; Effect (looking makes it happen)</option>
+          <option value="choose">Choose (letter, number, or shape)</option>
+          <option value="spell">Spell — teacher's words (keyboard)</option>
+          <option value="keyboard">Keyboard — free typing by gaze</option>
+        </select></div>
+      <div class="row" id="rowContent" style="display:none"><label>What to find</label>
+        <select id="sContent">
+          <option value="letters">Letters (A B C)</option>
+          <option value="lower">Letters (a b c)</option>
+          <option value="numbers">Numbers</option>
+          <option value="shapes">Shapes</option>
+        </select></div>
+      <div class="row" id="rowChoices" style="display:none"><label>Number of choices</label>
+        <select id="sChoices">
+          <option value="1">1 (errorless — only the answer)</option>
+          <option value="2">2 (answer + one distractor)</option>
+          <option value="all">All letters (full keyboard)</option>
+        </select></div>
+      <div class="row" id="rowWords" style="display:none;flex-direction:column;align-items:stretch">
+        <label style="margin-bottom:6px">Words to spell (spaces or commas)</label>
+        <textarea id="sWords" rows="3" placeholder="cat dog sun hat mom"></textarea></div>
+      <div class="row" id="rowKb" style="display:none"><label>Keyboard layout</label>
+        <select id="sKeyboard">
+          <option value="blocks">Blocks (big, spaced)</option>
+          <option value="az">A–Z</option>
+          <option value="qwerty">QWERTY</option>
+        </select></div>
+      <div class="row" id="rowKbCase" style="display:none"><label>Uppercase letters</label><div class="toggle" id="tKbUpper"></div></div>
+    </div>
+  </div>
 
-  <h3>Target</h3>
-  <div class="row"><label>Size</label>
-    <input type="range" id="sSize" min="80" max="480" step="10" value="200">
-    <span class="val" id="vSize">200</span></div>
-  <div class="row"><label>Color</label></div>
-  <div class="swrow" id="colors"></div>
-  <div class="row"><label>Glow (backlight)</label><div class="toggle on" id="tGlow"></div></div>
-  <div class="row"><label>Movement (pulse)</label><div class="toggle on" id="tPulse"></div></div>
-  <div class="row"><label>Movement</label>
-    <select id="sPos">
-      <option value="still">Still (center)</option>
-      <option value="jump">Jump to a new spot each tap</option>
-      <option value="glide">Glide (child follows it)</option>
-    </select></div>
-  <div class="row" id="rowSpeed" style="display:none"><label>Glide speed</label>
-    <input type="range" id="sSpeed" min="1" max="10" step="1" value="3">
-    <span class="val" id="vSpeed">3</span></div>
+  <div class="grp open">
+    <button class="grphead" type="button">Look <span class="arw">▾</span></button>
+    <div class="grpbody">
+      <div class="row" id="rowSize"><label>Size</label>
+        <input type="range" id="sSize" min="80" max="480" step="10" value="200">
+        <span class="val" id="vSize">200</span></div>
+      <div class="row"><label>Color</label></div>
+      <div class="swrow" id="colors"></div>
+      <div class="row" id="rowGlow"><label>Glow (backlight)</label><div class="toggle on" id="tGlow"></div></div>
+    </div>
+  </div>
 
-  <h3>Selection</h3>
-  <div class="row"><label>Dwell time (look &amp; hold)</label>
-    <input type="range" id="sDwell" min="0.3" max="4" step="0.1" value="1.5">
-    <span class="val" id="vDwell">1.5s</span></div>
-  <div class="row"><label>Require switch to confirm</label><div class="toggle" id="tSwitch"></div></div>
-  <p class="hint">Off = looking and holding selects on its own.
-    On = child dwells to light up the target, then presses a switch, spacebar,
-    or clicks to confirm. Any key or click counts as a switch.</p>
-  <div class="row"><label>Hold steadiness</label>
-    <input type="range" id="sTol" min="0" max="200" step="10" value="80">
-    <span class="val" id="vTol">80</span></div>
-  <p class="hint">Higher = more forgiving of jittery gaze; the timer keeps
-    filling even if gaze drifts a little off the target.</p>
+  <div class="grp open" id="grpMovement">
+    <button class="grphead" type="button">Movement <span class="arw">▾</span></button>
+    <div class="grpbody">
+      <div class="row"><label>Pulse</label><div class="toggle on" id="tPulse"></div></div>
+      <div class="row"><label>Where it appears</label>
+        <select id="sPos">
+          <option value="still">Still (center)</option>
+          <option value="jump">Jump to a new spot each tap</option>
+          <option value="glide">Glide (child follows it)</option>
+        </select></div>
+      <div class="row" id="rowSpeed" style="display:none"><label>Glide speed</label>
+        <input type="range" id="sSpeed" min="1" max="10" step="1" value="3">
+        <span class="val" id="vSpeed">3</span></div>
+    </div>
+  </div>
 
-  <h3>Pacing (for CVI)</h3>
-  <div class="row"><label>Delay before target appears</label>
-    <input type="range" id="sDelay" min="0" max="5" step="0.5" value="1">
-    <span class="val" id="vDelay">1.0s</span></div>
-  <p class="hint">CVI kids often need a few seconds of blank space to
-    disengage and re-look before the next target shows up.</p>
+  <div class="grp open">
+    <button class="grphead" type="button">Timing <span class="arw">▾</span></button>
+    <div class="grpbody">
+      <div class="row"><label>Dwell time (look &amp; hold)</label>
+        <input type="range" id="sDwell" min="0.3" max="4" step="0.1" value="1.5">
+        <span class="val" id="vDwell">1.5s</span></div>
+      <div class="row"><label>Hold steadiness</label>
+        <input type="range" id="sTol" min="0" max="200" step="10" value="80">
+        <span class="val" id="vTol">80</span></div>
+      <div class="row" id="rowDelay"><label>Delay before next</label>
+        <input type="range" id="sDelay" min="0" max="5" step="0.5" value="1">
+        <span class="val" id="vDelay">1.0s</span></div>
+      <div class="row" id="rowSwitch"><label>Require switch to confirm</label><div class="toggle" id="tSwitch"></div></div>
+      <p class="hint">Higher steadiness is more forgiving of jittery gaze.</p>
+    </div>
+  </div>
 
-  <h3>Reward</h3>
-  <div class="row"><label>Sound</label><div class="toggle on" id="tSound"></div></div>
-  <div class="row"><label>Sparkles</label><div class="toggle on" id="tSpark"></div></div>
+  <div class="grp">
+    <button class="grphead" type="button">Sound &amp; Rewards <span class="arw">▾</span></button>
+    <div class="grpbody">
+      <div class="row"><label>Sound</label><div class="toggle on" id="tSound"></div></div>
+      <div class="row"><label>Sparkles</label><div class="toggle on" id="tSpark"></div></div>
+    </div>
+  </div>
 
-  <h3>Other</h3>
-  <div class="row"><label>Show gaze dot</label><div class="toggle on" id="tGaze"></div></div>
-  <p class="hint">Shows a small ring where the tracker cursor is — useful for
-    calibration and for you to see what the child is looking at. Turn off during play.</p>
-  <button class="act" id="btnFull">Enter full screen</button>
-  <button class="act" id="btnReset">Reset tap count</button>
-  <p class="hint" style="margin-top:14px">Tobii setup: run the tracker's
-    Gaze Interaction / mouse-emulation so the cursor follows the child's eyes,
-    then this app treats "cursor rests on target" as "child is looking at it."</p>
+  <div class="grp">
+    <button class="grphead" type="button">Other <span class="arw">▾</span></button>
+    <div class="grpbody">
+      <div class="row"><label>Show gaze dot</label><div class="toggle on" id="tGaze"></div></div>
+      <p class="hint">The gaze dot shows where the tracker cursor is — good for calibration, turn off during play.</p>
+      <button class="act" id="btnFull">Enter full screen</button>
+      <button class="act" id="btnReset">Reset tap count</button>
+      <p class="hint">Tobii: run the tracker's gaze→mouse control so the cursor follows the child's eyes.</p>
+    </div>
+  </div>
 </div>
 
 <!-- ---------------- Progress report ---------------- -->
@@ -580,18 +601,31 @@
   $('gear').onclick=()=>$('panel').classList.add('open');
   $('closePanel').onclick=()=>$('panel').classList.remove('open');
 
+  // collapsible groups
+  $('panel').addEventListener('click', e=>{
+    const h=e.target.closest('.grphead');
+    if(h && h.parentElement) h.parentElement.classList.toggle('open');
+  });
+  // show only the settings that apply to the current activity
+  function updateMenuVisibility(){
+    const a=S.activity, single=(a==='tap'||a==='cause'), kb=(a==='keyboard');
+    const V=(id,on,disp)=>{const el=$(id); if(el) el.style.display=on?(disp||'flex'):'none';};
+    V('rowContent', a==='choose');
+    V('rowChoices', a==='choose'||a==='spell');
+    V('rowWords', a==='spell');
+    V('rowKb', kb); V('rowKbCase', kb);
+    V('rowSize', !kb); V('rowGlow', !kb);
+    V('grpMovement', single, 'block');
+    V('rowSpeed', single && S.position==='glide');
+    V('rowDelay', !kb);
+    V('rowSwitch', a==='tap');
+  }
+
   $('sSize').oninput=e=>{S.size=+e.target.value;$('vSize').textContent=S.size;applyLook();placeTarget();};
   $('sDwell').oninput=e=>{S.dwell=+e.target.value;$('vDwell').textContent=S.dwell.toFixed(1)+'s';};
   $('sTol').oninput=e=>{S.tol=+e.target.value;$('vTol').textContent=S.tol;};
   $('sDelay').oninput=e=>{S.delay=+e.target.value;$('vDelay').textContent=S.delay.toFixed(1)+'s';};
-  $('sActivity').onchange=e=>{S.activity=e.target.value;
-    const ch=(S.activity==='choose'), kb=(S.activity==='keyboard'), sp=(S.activity==='spell');
-    $('rowContent').style.display=ch?'flex':'none';
-    $('rowChoices').style.display=(ch||sp)?'flex':'none';
-    $('rowWords').style.display=sp?'flex':'none';
-    $('rowKb').style.display=kb?'flex':'none';
-    $('rowKbCase').style.display=kb?'flex':'none';
-    resetActivity();};
+  $('sActivity').onchange=e=>{S.activity=e.target.value; updateMenuVisibility(); resetActivity();};
   $('sContent').onchange=e=>{S.content=e.target.value; resetActivity();};
   $('sChoices').onchange=e=>{S.choices=(e.target.value==='all')?'all':+e.target.value; resetActivity();};
   $('sWords').oninput=e=>{S.words=e.target.value;};
@@ -605,7 +639,7 @@
   $('kbDel').onclick=(e)=>{ e.stopPropagation(); kbDelete(); };
   $('kbSpeak').onclick=(e)=>{ e.stopPropagation(); kbReadback(); };
   $('sPos').onchange=e=>{S.position=e.target.value;
-    $('rowSpeed').style.display=(S.position==='glide')?'flex':'none';
+    updateMenuVisibility();
     placeTarget();};
   $('sSpeed').oninput=e=>{S.speed=+e.target.value;$('vSpeed').textContent=S.speed;rescaleGlide();};
 
@@ -683,17 +717,13 @@
     $('sContent').value=S.content; $('sChoices').value=String(S.choices);
     $('sKeyboard').value=S.keyboard; $('tKbUpper').classList.toggle('on',S.kbUpper);
     $('sWords').value=S.words;
-    $('rowContent').style.display=(S.activity==='choose')?'flex':'none';
-    $('rowChoices').style.display=(S.activity==='choose'||S.activity==='spell')?'flex':'none';
-    $('rowWords').style.display=(S.activity==='spell')?'flex':'none';
-    $('rowKb').style.display=(S.activity==='keyboard')?'flex':'none';
-    $('rowKbCase').style.display=(S.activity==='keyboard')?'flex':'none';
     $('sSize').value=S.size; $('vSize').textContent=S.size;
     $('sDwell').value=S.dwell; $('vDwell').textContent=S.dwell.toFixed(1)+'s';
     $('sTol').value=S.tol; $('vTol').textContent=S.tol;
     $('sDelay').value=S.delay; $('vDelay').textContent=S.delay.toFixed(1)+'s';
     $('sSpeed').value=S.speed; $('vSpeed').textContent=S.speed;
-    $('sPos').value=S.position; $('rowSpeed').style.display=(S.position==='glide')?'flex':'none';
+    $('sPos').value=S.position;
+    updateMenuVisibility();
     $('tGlow').classList.toggle('on',S.glow);
     $('tPulse').classList.toggle('on',S.pulse);
     $('tSwitch').classList.toggle('on',S.requireSwitch);

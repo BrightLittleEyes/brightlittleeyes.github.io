@@ -50,11 +50,13 @@
   .cprog{transition:stroke-dashoffset .05s linear;}
   .choiceGlyph{font-weight:800;color:#fff;line-height:1;
     display:flex;align-items:center;justify-content:center;}
-  #replay{position:fixed;top:calc(10px + env(safe-area-inset-top));left:50%;
-    transform:translateX(-50%);width:52px;height:52px;border-radius:50%;
-    background:rgba(255,255,255,.10);color:#fff;border:none;font-size:24px;
+  #replay{position:fixed;top:calc(14px + env(safe-area-inset-top));left:50%;
+    transform:translateX(-50%);width:92px;height:92px;border-radius:50%;
+    background:#ff2b2b;color:#fff;border:none;font-size:46px;
+    box-shadow:0 0 26px rgba(255,43,43,.55);
     display:none;align-items:center;justify-content:center;cursor:pointer;z-index:60;}
-  #replay:hover{background:rgba(255,255,255,.2);}
+  #replay:hover{background:#ff5a4d;}
+  #replay:active{transform:translateX(-50%) scale(.94);}
 
   /* ---- Gaze dot (shows where the tracker cursor is) ---- */
   #gaze{position:fixed;width:26px;height:26px;border-radius:50%;
@@ -173,7 +175,8 @@
     </select></div>
   <div class="row" id="rowContent" style="display:none"><label>What to find</label>
     <select id="sContent">
-      <option value="letters">Letters</option>
+      <option value="letters">Letters (A B C)</option>
+      <option value="lower">Letters (a b c)</option>
       <option value="numbers">Numbers</option>
       <option value="shapes">Shapes</option>
     </select></div>
@@ -279,7 +282,8 @@
   const gaze=document.getElementById('gaze');
   const scoreEl=document.getElementById('score');
 
-  const PALETTE=["#ff2b2b","#ffd400","#ff7a00","#25d0ff","#42ff4e","#ff59d6","#ffffff"];
+  // Red, orange, yellow, green, blue, purple, white
+  const PALETTE=["#ff2b2b","#ff7a00","#ffd400","#2ecc40","#1e90ff","#b84dff","#ffffff"];
 
   // ---------- audio (no external files) ----------
   let ac=null;
@@ -718,6 +722,7 @@
 
   // ---------- Choose activity (letters / numbers / shapes) ----------
   const LETTERS='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  const LOWER='abcdefghijklmnopqrstuvwxyz'.split('');
   const NUMBERS='0123456789'.split('');
   const SHAPES=['circle','square','triangle','star','heart'];
 
@@ -727,7 +732,11 @@
       speechSynthesis.speak(u);
     }catch(e){}
   }
-  function promptText(item){ return (S.content==='shapes' ? 'Find the '+item : 'Find '+item); }
+  function promptText(item){
+    if(S.content==='shapes') return 'Find the '+item;
+    if(S.content==='numbers') return 'Find the number '+item;
+    return 'Find the letter '+item.toUpperCase();   // upper & lower are named the same
+  }
 
   function starPoints(cx,cy,outer,inner,pts){
     let s=''; for(let i=0;i<pts*2;i++){ const r=i%2?inner:outer; const a=Math.PI/pts*i-Math.PI/2;
@@ -778,7 +787,8 @@
 
   function startChooseRound(){
     clearChoose(); target.style.visibility='hidden';
-    const set = S.content==='letters'?LETTERS : (S.content==='numbers'?NUMBERS:SHAPES);
+    const set = S.content==='letters'?LETTERS : S.content==='lower'?LOWER
+      : S.content==='numbers'?NUMBERS : SHAPES;
     chooseAnswer = set[Math.floor(Math.random()*set.length)];
     let items=[chooseAnswer];
     if(S.choices>=2){ let d; do{ d=set[Math.floor(Math.random()*set.length)]; }while(d===chooseAnswer); items.push(d); }

@@ -207,8 +207,8 @@
       <option value="tap">Look &amp; Tap (find the target)</option>
       <option value="cause">Cause &amp; Effect (looking makes it happen)</option>
       <option value="choose">Choose (find the letter, number, or shape)</option>
-      <option value="spell">Spell (teacher's words, guided)</option>
-      <option value="keyboard">Keyboard (free typing by gaze)</option>
+      <option value="spell">Spell — type teacher's words (keyboard)</option>
+      <option value="keyboard">Keyboard — free typing by gaze</option>
     </select></div>
   <div class="row" id="rowWords" style="display:none;flex-direction:column;align-items:stretch">
     <label style="margin-bottom:6px">Words to spell (separate with spaces or commas)</label>
@@ -229,8 +229,9 @@
     </select></div>
   <div class="row" id="rowChoices" style="display:none"><label>Number of choices</label>
     <select id="sChoices">
-      <option value="1">1 — just find it</option>
-      <option value="2">2 — pick the right one</option>
+      <option value="1">1 (errorless — only the answer)</option>
+      <option value="2">2 (answer + one distractor)</option>
+      <option value="all">All letters (full keyboard)</option>
     </select></div>
   <p class="hint">Cause &amp; Effect is the simplest — a quick look sets off a big
     celebration. Look &amp; Tap adds hold-to-select. Choose speaks a prompt
@@ -592,7 +593,7 @@
     $('rowKbCase').style.display=kb?'flex':'none';
     resetActivity();};
   $('sContent').onchange=e=>{S.content=e.target.value; resetActivity();};
-  $('sChoices').onchange=e=>{S.choices=+e.target.value; resetActivity();};
+  $('sChoices').onchange=e=>{S.choices=(e.target.value==='all')?'all':+e.target.value; resetActivity();};
   $('sWords').oninput=e=>{S.words=e.target.value;};
   $('sWords').onchange=()=>{ if(S.activity==='spell') startSpellRound(); };
   $('sKeyboard').onchange=e=>{S.keyboard=e.target.value; if(S.activity==='keyboard') buildKeyboard();};
@@ -876,7 +877,8 @@
       : S.content==='numbers'?NUMBERS : SHAPES;
     chooseAnswer = set[Math.floor(Math.random()*set.length)];
     let items=[chooseAnswer];
-    if(S.choices>=2){ let d; do{ d=set[Math.floor(Math.random()*set.length)]; }while(d===chooseAnswer); items.push(d); }
+    const nChoices=(S.choices==='all')?2:S.choices;   // "All" only applies to Spell; treat as 2 here
+    if(nChoices>=2){ let d; do{ d=set[Math.floor(Math.random()*set.length)]; }while(d===chooseAnswer); items.push(d); }
     for(let i=items.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [items[i],items[j]]=[items[j],items[i]]; }
     const m=S.size*0.7+40;
     const pos = items.length===1
@@ -950,12 +952,16 @@
   // random distractor) bold and active; everything else blurred out.
   function spellScaffold(){
     const need=spellWord[spellIndex]; spellCorrect=need;
-    const allowed=new Set([need]);
-    if(S.choices>=2){
-      const pool='abcdefghijklmnopqrstuvwxyz'.split('').filter(x=>x!==need);
-      allowed.add(pool[Math.floor(Math.random()*pool.length)]);   // random distractor
+    if(S.choices==='all'){
+      setKbScaffold(null);          // whole keyboard active — child finds the letter
+    } else {
+      const allowed=new Set([need]);
+      if(S.choices>=2){
+        const pool='abcdefghijklmnopqrstuvwxyz'.split('').filter(x=>x!==need);
+        allowed.add(pool[Math.floor(Math.random()*pool.length)]);   // random distractor
+      }
+      setKbScaffold(allowed);
     }
-    setKbScaffold(allowed);
     needRelease=false; targetShownAt=performance.now();
   }
   function spellKeyPicked(ch){

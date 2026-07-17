@@ -220,8 +220,12 @@
           <option value="tap">Look &amp; Tap (find the target)</option>
           <option value="cause">Cause &amp; Effect (looking makes it happen)</option>
           <option value="choose">Choose (letter, number, or shape)</option>
-          <option value="spell">Spell — teacher's words (keyboard)</option>
-          <option value="keyboard">Keyboard — free typing by gaze</option>
+          <option value="keyboard">Keyboard &amp; Spelling</option>
+        </select></div>
+      <div class="row" id="rowKbTask" style="display:none"><label>Mode</label>
+        <select id="sKbTask">
+          <option value="keyboard">Free typing</option>
+          <option value="spell">Spell a word</option>
         </select></div>
       <div class="row" id="rowContent" style="display:none"><label>What to find</label>
         <select id="sContent">
@@ -609,16 +613,18 @@
   });
   // show only the settings that apply to the current activity
   function updateMenuVisibility(){
-    const a=S.activity, single=(a==='tap'||a==='cause'), kb=(a==='keyboard');
+    const a=S.activity, single=(a==='tap'||a==='cause'),
+          grp=(a==='keyboard'||a==='spell');   // the Keyboard & Spelling group
     const V=(id,on,disp)=>{const el=$(id); if(el) el.style.display=on?(disp||'flex'):'none';};
+    V('rowKbTask', grp);                        // Free typing / Spell a word
     V('rowContent', a==='choose');
     V('rowChoices', a==='choose'||a==='spell');
     V('rowWords', a==='spell');
-    V('rowKb', kb); V('rowKbCase', kb);
-    V('rowSize', !kb); V('rowGlow', !kb);
+    V('rowKb', grp); V('rowKbCase', grp);
+    V('rowSize', !grp); V('rowGlow', !grp);
     V('grpMovement', single, 'block');
     V('rowSpeed', single && S.position==='glide');
-    V('rowDelay', !kb);
+    V('rowDelay', a!=='keyboard');              // spell keeps pacing; free typing doesn't
     V('rowSwitch', a==='tap');
   }
 
@@ -627,12 +633,17 @@
   $('sTol').oninput=e=>{S.tol=+e.target.value;$('vTol').textContent=S.tol;};
   $('sDelay').oninput=e=>{S.delay=+e.target.value;$('vDelay').textContent=S.delay.toFixed(1)+'s';};
   $('sActivity').onchange=e=>{S.activity=e.target.value; updateMenuVisibility(); resetActivity();};
+  $('sKbTask').onchange=e=>{S.activity=e.target.value; updateMenuVisibility(); resetActivity();};
   $('sContent').onchange=e=>{S.content=e.target.value; resetActivity();};
   $('sChoices').onchange=e=>{S.choices=(e.target.value==='all')?'all':+e.target.value; resetActivity();};
   $('sWords').oninput=e=>{S.words=e.target.value;};
   $('sWords').onchange=()=>{ if(S.activity==='spell') startSpellRound(); };
-  $('sKeyboard').onchange=e=>{S.keyboard=e.target.value; if(S.activity==='keyboard') buildKeyboard();};
-  toggle($('tKbUpper'),'kbUpper',()=>{ if(S.activity==='keyboard') buildKeyboard(); });
+  $('sKeyboard').onchange=e=>{S.keyboard=e.target.value; rebuildKeys();};
+  toggle($('tKbUpper'),'kbUpper', rebuildKeys);
+  function rebuildKeys(){
+    if(S.activity==='keyboard') buildKeyboard();
+    else if(S.activity==='spell'){ buildKeyboard(); spellScaffold(); }
+  }
   $('replay').onclick=()=>{
     if(S.activity==='spell'){ speak('Spell '+spellWord); }
     else if(S.activity==='choose' && chooseAnswer){ speak(promptText(chooseAnswer)); }
@@ -714,7 +725,8 @@
 
   // reflect S into every control
   function syncControls(){
-    $('sActivity').value=S.activity;
+    $('sActivity').value=(S.activity==='spell'?'keyboard':S.activity);
+    $('sKbTask').value=(S.activity==='spell'?'spell':'keyboard');
     $('sContent').value=S.content; $('sChoices').value=String(S.choices);
     $('sKeyboard').value=S.keyboard; $('tKbUpper').classList.toggle('on',S.kbUpper);
     $('sWords').value=S.words;

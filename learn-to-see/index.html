@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>I Can Learn To See — Look &amp; Tap</title>
+<style>
+  :root{
+    --bg:#000000;
+    --target:#ff2b2b;         /* saturated red (common CVI-preferred color) */
+    --ring:#ffffff;
+    --ui:#8a8a8a;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    color:#fff; cursor:none;}
+  #stage{position:fixed;inset:0;}
+
+  /* ---- Target ---- */
+  #target{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    display:flex;align-items:center;justify-content:center;
+    will-change:transform,left,top;touch-action:none;}
+  #targetShape{border-radius:50%;background:var(--target);
+    box-shadow:0 0 0 0 rgba(255,255,255,0);
+    transition:box-shadow .15s ease;}
+  /* attention-getter animations */
+  .pulse #targetShape{animation:pulse 1.4s ease-in-out infinite;}
+  .glow  #targetShape{box-shadow:0 0 60px 20px var(--target);}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+
+  /* dwell ring drawn with SVG */
+  #ring{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    pointer-events:none;}
+  #ringProg{transition:stroke-dashoffset .05s linear;}
+
+  /* sparkle reward */
+  .spark{position:absolute;width:14px;height:14px;border-radius:50%;
+    background:#fff;pointer-events:none;}
+
+  /* ---- Gaze dot (shows where the tracker cursor is) ---- */
+  #gaze{position:fixed;width:26px;height:26px;border-radius:50%;
+    border:2px solid rgba(255,255,255,.55);transform:translate(-50%,-50%);
+    pointer-events:none;left:-100px;top:-100px;z-index:50;}
+
+  /* ---- Minimal, out-of-the-way UI ---- */
+  #hud{position:fixed;top:10px;left:14px;color:var(--ui);font-size:15px;
+    z-index:60;user-select:none;}
+  #gear{position:fixed;top:8px;right:10px;width:44px;height:44px;border-radius:50%;
+    background:rgba(255,255,255,.06);color:var(--ui);border:none;font-size:20px;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:60;}
+  #gear:hover{background:rgba(255,255,255,.14);color:#fff;}
+
+  /* settings panel */
+  #panel{position:fixed;top:0;right:0;height:100%;width:340px;max-width:90vw;
+    background:#141414;border-left:1px solid #2a2a2a;padding:20px 22px;
+    overflow-y:auto;transform:translateX(105%);transition:transform .25s ease;
+    z-index:70;cursor:default;}
+  #panel.open{transform:translateX(0);}
+  #panel h2{margin:.2em 0 .6em;font-size:19px;}
+  #panel h3{margin:1.3em 0 .4em;font-size:13px;letter-spacing:.08em;
+    text-transform:uppercase;color:#9a9a9a;}
+  .row{display:flex;align-items:center;justify-content:space-between;
+    gap:10px;margin:10px 0;font-size:15px;}
+  .row label{flex:1;}
+  input[type=range]{width:150px;accent-color:var(--target);}
+  .val{width:52px;text-align:right;color:#bbb;font-variant-numeric:tabular-nums;}
+  .swatch{width:30px;height:30px;border-radius:50%;border:3px solid transparent;
+    cursor:pointer;}
+  .swatch.sel{border-color:#fff;}
+  .swrow{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0;}
+  select,button.act{background:#222;color:#fff;border:1px solid #3a3a3a;
+    border-radius:8px;padding:8px 10px;font-size:15px;cursor:pointer;}
+  button.act{width:100%;margin-top:6px;}
+  .toggle{position:relative;width:46px;height:26px;background:#333;border-radius:20px;
+    cursor:pointer;transition:background .2s;flex:none;}
+  .toggle.on{background:var(--target);}
+  .toggle::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;
+    border-radius:50%;background:#fff;transition:left .2s;}
+  .toggle.on::after{left:23px;}
+  .hint{color:#7a7a7a;font-size:12.5px;line-height:1.45;margin:4px 0 0;}
+  #closePanel{float:right;background:none;border:none;color:#aaa;font-size:22px;cursor:pointer;}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="target" class="pulse glow">
+    <svg id="ring" width="10" height="10"><circle id="ringProg" cx="5" cy="5" r="4"
+      fill="none" stroke="var(--ring)" stroke-width="6" stroke-linecap="round"
+      transform="rotate(-90 5 5)"></circle></svg>
+    <div id="targetShape"></div>
+  </div>
+</div>
+
+<div id="gaze"></div>
+<div id="hud">Taps: <span id="score">0</span></div>
+<button id="gear" title="Settings">⚙</button>
+
+<!-- ---------------- Settings ---------------- -->
+<div id="panel">
+  <button id="closePanel">✕</button>
+  <h2>Settings</h2>
+
+  <h3>Target</h3>
+  <div class="row"><label>Size</label>
+    <input type="range" id="sSize" min="80" max="480" step="10" value="200">
+    <span class="val" id="vSize">200</span></div>
+  <div class="row"><label>Color</label></div>
+  <div class="swrow" id="colors"></div>
+  <div class="row"><label>Glow (backlight)</label><div class="toggle on" id="tGlow"></div></div>
+  <div class="row"><label>Movement (pulse)</label><div class="toggle on" id="tPulse"></div></div>
+  <div class="row"><label>Movement</label>
+    <select id="sPos">
+      <option value="still">Still (center)</option>
+      <option value="jump">Jump to a new spot each tap</option>
+      <option value="glide">Glide (child follows it)</option>
+    </select></div>
+  <div class="row" id="rowSpeed" style="display:none"><label>Glide speed</label>
+    <input type="range" id="sSpeed" min="1" max="10" step="1" value="3">
+    <span class="val" id="vSpeed">3</span></div>
+
+  <h3>Selection</h3>
+  <div class="row"><label>Dwell time (look &amp; hold)</label>
+    <input type="range" id="sDwell" min="0.3" max="4" step="0.1" value="1.5">
+    <span class="val" id="vDwell">1.5s</span></div>
+  <div class="row"><label>Require switch to confirm</label><div class="toggle" id="tSwitch"></div></div>
+  <p class="hint">Off = looking and holding selects on its own.
+    On = child dwells to light up the target, then presses a switch, spacebar,
+    or clicks to confirm. Any key or click counts as a switch.</p>
+  <div class="row"><label>Hold steadiness</label>
+    <input type="range" id="sTol" min="0" max="200" step="10" value="80">
+    <span class="val" id="vTol">80</span></div>
+  <p class="hint">Higher = more forgiving of jittery gaze; the timer keeps
+    filling even if gaze drifts a little off the target.</p>
+
+  <h3>Pacing (for CVI)</h3>
+  <div class="row"><label>Delay before target appears</label>
+    <input type="range" id="sDelay" min="0" max="5" step="0.5" value="1">
+    <span class="val" id="vDelay">1.0s</span></div>
+  <p class="hint">CVI kids often need a few seconds of blank space to
+    disengage and re-look before the next target shows up.</p>
+
+  <h3>Reward</h3>
+  <div class="row"><label>Sound</label><div class="toggle on" id="tSound"></div></div>
+  <div class="row"><label>Sparkles</label><div class="toggle on" id="tSpark"></div></div>
+
+  <h3>Other</h3>
+  <div class="row"><label>Show gaze dot</label><div class="toggle on" id="tGaze"></div></div>
+  <p class="hint">Shows a small ring where the tracker cursor is — useful for
+    calibration and for you to see what the child is looking at. Turn off during play.</p>
+  <button class="act" id="btnFull">Enter full screen</button>
+  <button class="act" id="btnReset">Reset tap count</button>
+  <p class="hint" style="margin-top:14px">Tobii setup: run the tracker's
+    Gaze Interaction / mouse-emulation so the cursor follows the child's eyes,
+    then this app treats "cursor rests on target" as "child is looking at it."</p>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  // ---------- state / settings ----------
+  const S = {
+    size:200, color:"#ff2b2b", glow:true, pulse:true, position:"still", speed:3,
+    dwell:1.5, requireSwitch:false, tol:80, delay:1.0,
+    sound:true, spark:true, showGaze:true
+  };
+  const glide={vx:0,vy:0};
+  let score=0, armed=false, dwellStart=0, raf=null;
+  let switchReady=false;           // when requireSwitch: true once dwell completes
+  let cursor={x:innerWidth/2,y:innerHeight/2};
+
+  const stage=document.getElementById('stage');
+  const target=document.getElementById('target');
+  const shape=document.getElementById('targetShape');
+  const ring=document.getElementById('ring');
+  const ringProg=document.getElementById('ringProg');
+  const gaze=document.getElementById('gaze');
+  const scoreEl=document.getElementById('score');
+
+  const PALETTE=["#ff2b2b","#ffd400","#ff7a00","#25d0ff","#42ff4e","#ff59d6","#ffffff"];
+
+  // ---------- audio (no external files) ----------
+  let ac=null;
+  function beep(freqs){
+    if(!S.sound) return;
+    try{
+      ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+      const t0=ac.currentTime;
+      freqs.forEach((f,i)=>{
+        const o=ac.createOscillator(), g=ac.createGain();
+        o.type='sine'; o.frequency.value=f;
+        const s=t0+i*0.12;
+        g.gain.setValueAtTime(0,s);
+        g.gain.linearRampToValueAtTime(0.25,s+0.02);
+        g.gain.exponentialRampToValueAtTime(0.001,s+0.35);
+        o.connect(g).connect(ac.destination); o.start(s); o.stop(s+0.36);
+      });
+    }catch(e){}
+  }
+
+  // ---------- layout ----------
+  function applyLook(){
+    document.documentElement.style.setProperty('--target',S.color);
+    shape.style.width=shape.style.height=S.size+'px';
+    shape.style.borderRadius='50%';
+    target.classList.toggle('glow',S.glow);
+    target.classList.toggle('pulse',S.pulse);
+    // ring sized a bit larger than the target
+    const R=S.size/2+26, sw=10, box=R*2+sw*2, c=box/2, rad=R;
+    ring.setAttribute('width',box); ring.setAttribute('height',box);
+    ringProg.setAttribute('cx',c); ringProg.setAttribute('cy',c);
+    ringProg.setAttribute('r',rad);
+    ringProg.setAttribute('stroke-width',sw);
+    ringProg.setAttribute('transform',`rotate(-90 ${c} ${c})`);
+    const circ=2*Math.PI*rad;
+    ringProg.style.strokeDasharray=circ;
+    ringProg.style.strokeDashoffset=circ;
+    ring._circ=circ;
+  }
+  function setRing(p){ // p 0..1
+    ringProg.style.strokeDashoffset=ring._circ*(1-p);
+  }
+
+  function placeTarget(){
+    let x=innerWidth/2, y=innerHeight/2;
+    if(S.position==='jump' || S.position==='glide'){
+      const m=S.size*0.7+40;
+      x=m+Math.random()*(innerWidth-2*m);
+      y=m+Math.random()*(innerHeight-2*m);
+    }
+    target.style.left=x+'px'; target.style.top=y+'px';
+    target._cx=x; target._cy=y;
+    if(S.position==='glide') startGlide();
+  }
+  function startGlide(){
+    const a=Math.random()*2*Math.PI;
+    glide.vx=Math.cos(a)*S.speed; glide.vy=Math.sin(a)*S.speed;
+  }
+  function rescaleGlide(){
+    const mag=Math.hypot(glide.vx,glide.vy)||1;
+    glide.vx=glide.vx/mag*S.speed; glide.vy=glide.vy/mag*S.speed;
+  }
+  function glideStep(){
+    const m=S.size/2+16;
+    let x=target._cx+glide.vx, y=target._cy+glide.vy;
+    if(x<m){x=m; glide.vx=Math.abs(glide.vx);}
+    if(x>innerWidth-m){x=innerWidth-m; glide.vx=-Math.abs(glide.vx);}
+    if(y<m){y=m; glide.vy=Math.abs(glide.vy);}
+    if(y>innerHeight-m){y=innerHeight-m; glide.vy=-Math.abs(glide.vy);}
+    target._cx=x; target._cy=y;
+    target.style.left=x+'px'; target.style.top=y+'px';
+  }
+
+  function hideTarget(){ target.style.visibility='hidden'; armed=false; setRing(0);}
+  function showTarget(){
+    placeTarget();
+    target.style.visibility='visible';
+    armed=true; switchReady=false; dwellStart=0; setRing(0);
+  }
+
+  // ---------- gaze / dwell loop ----------
+  function onTarget(){
+    const r=S.size/2 + S.tol;               // radius + steadiness tolerance
+    const dx=cursor.x-target._cx, dy=cursor.y-target._cy;
+    return (dx*dx+dy*dy) <= r*r;
+  }
+
+  function loop(){
+    raf=requestAnimationFrame(loop);
+    if(!armed){ return; }
+    const now=performance.now();
+    if(S.position==='glide' && !switchReady) glideStep();
+    if(onTarget()){
+      if(!dwellStart) dwellStart=now;
+      const p=Math.min(1,(now-dwellStart)/(S.dwell*1000));
+      setRing(p);
+      if(p>=1){
+        if(S.requireSwitch){
+          if(!switchReady){ switchReady=true; shape.style.boxShadow=
+            '0 0 80px 30px '+S.color; } // "lit up, ready" — wait for switch
+        } else {
+          select();
+        }
+      }
+    } else {
+      // gaze left the target — reset (unless already lit & waiting for switch)
+      if(!switchReady){ dwellStart=0; setRing(0); }
+    }
+  }
+
+  function pressSwitch(){
+    // switch only does something when target is lit and waiting
+    if(armed && switchReady){ select(); }
+  }
+
+  // ---------- reward / select ----------
+  function select(){
+    if(!armed) return;
+    armed=false;
+    score++; scoreEl.textContent=score;
+    beep([523,659,784]); // C-E-G chime
+    // celebrate: grow + sparkle
+    shape.animate([{transform:'scale(1)'},{transform:'scale(1.35)'},{transform:'scale(1)'}],
+      {duration:600,easing:'ease-out'});
+    if(S.spark) sparkle(target._cx,target._cy);
+    setRing(0); switchReady=false;
+    hideTarget();
+    setTimeout(showTarget, S.delay*1000);
+  }
+
+  function sparkle(x,y){
+    for(let i=0;i<14;i++){
+      const s=document.createElement('div');
+      s.className='spark';
+      s.style.left=x+'px'; s.style.top=y+'px';
+      s.style.background=PALETTE[i%PALETTE.length];
+      stage.appendChild(s);
+      const a=Math.random()*2*Math.PI, d=120+Math.random()*160;
+      s.animate([{transform:'translate(-50%,-50%) scale(1)',opacity:1},
+        {transform:`translate(${Math.cos(a)*d-50}%,${Math.sin(a)*d-50}%) scale(0)`,opacity:0}],
+        {duration:700,easing:'ease-out'}).onfinish=()=>s.remove();
+    }
+  }
+
+  // ---------- input: cursor = gaze ----------
+  function moveCursor(x,y){
+    cursor.x=x; cursor.y=y;
+    if(S.showGaze){ gaze.style.left=x+'px'; gaze.style.top=y+'px'; }
+  }
+  addEventListener('mousemove',e=>moveCursor(e.clientX,e.clientY));
+  addEventListener('touchmove',e=>{const t=e.touches[0]; if(t) moveCursor(t.clientX,t.clientY);},{passive:true});
+
+  // --- Native gaze hook -------------------------------------------------
+  // In the Electron desktop build, a native tracker bridge (Tobii eyex /
+  // gazelinger-style) pushes real gaze coordinates in screen pixels here,
+  // instead of relying on the OS cursor. Same for a hardware switch.
+  //   window.dispatchEvent(new CustomEvent('gaze',{detail:{x,y}}))
+  //   window.dispatchEvent(new CustomEvent('gaze-switch'))
+  addEventListener('gaze',e=>{const g=e.detail; if(g) moveCursor(g.x,g.y);});
+  addEventListener('gaze-switch',()=>pressSwitch());
+  // Bridge exposed by Electron preload (present only in the desktop app):
+  if(window.gazeBridge && window.gazeBridge.onGaze){
+    window.gazeBridge.onGaze((x,y)=>moveCursor(x,y));
+    window.gazeBridge.onSwitch&&window.gazeBridge.onSwitch(()=>pressSwitch());
+  }
+
+  // switch = any key (spacebar/switch interfaces send keys) or a click/tap on target
+  addEventListener('keydown',e=>{
+    if(e.target.closest('#panel')) return;   // don't hijack settings typing
+    if(e.code==='Space'||e.key===' '||e.code==='Enter'||e.code==='Tab'){e.preventDefault();}
+    pressSwitch();
+  });
+  stage.addEventListener('click',e=>{
+    // a direct click/tap on the target also counts (mouse testing & touch)
+    moveCursor(e.clientX,e.clientY);
+    if(S.requireSwitch) pressSwitch();
+    else if(armed && onTarget()) select();
+  });
+
+  // ---------- settings wiring ----------
+  const $=id=>document.getElementById(id);
+  function toggle(el,key,after){
+    el.addEventListener('click',()=>{S[key]=!S[key];el.classList.toggle('on',S[key]);after&&after();});
+  }
+  $('gear').onclick=()=>$('panel').classList.add('open');
+  $('closePanel').onclick=()=>$('panel').classList.remove('open');
+
+  $('sSize').oninput=e=>{S.size=+e.target.value;$('vSize').textContent=S.size;applyLook();placeTarget();};
+  $('sDwell').oninput=e=>{S.dwell=+e.target.value;$('vDwell').textContent=S.dwell.toFixed(1)+'s';};
+  $('sTol').oninput=e=>{S.tol=+e.target.value;$('vTol').textContent=S.tol;};
+  $('sDelay').oninput=e=>{S.delay=+e.target.value;$('vDelay').textContent=S.delay.toFixed(1)+'s';};
+  $('sPos').onchange=e=>{S.position=e.target.value;
+    $('rowSpeed').style.display=(S.position==='glide')?'flex':'none';
+    placeTarget();};
+  $('sSpeed').oninput=e=>{S.speed=+e.target.value;$('vSpeed').textContent=S.speed;rescaleGlide();};
+
+  toggle($('tGlow'),'glow',applyLook);
+  toggle($('tPulse'),'pulse',applyLook);
+  toggle($('tSwitch'),'requireSwitch',()=>{if(!S.requireSwitch){switchReady=false;shape.style.boxShadow='';}});
+  toggle($('tSound'),'sound');
+  toggle($('tSpark'),'spark');
+  toggle($('tGaze'),'showGaze',()=>{gaze.style.display=S.showGaze?'block':'none';});
+
+  // color swatches
+  const cw=$('colors');
+  PALETTE.forEach(c=>{
+    const d=document.createElement('div');
+    d.className='swatch'+(c===S.color?' sel':'');
+    d.style.background=c;
+    d.onclick=()=>{S.color=c;applyLook();[...cw.children].forEach(x=>x.classList.remove('sel'));d.classList.add('sel');};
+    cw.appendChild(d);
+  });
+
+  $('btnFull').onclick=()=>{const el=document.documentElement;
+    if(document.fullscreenElement){document.exitFullscreen();}
+    else if(el.requestFullscreen){el.requestFullscreen();}};
+  $('btnReset').onclick=()=>{score=0;scoreEl.textContent=0;};
+
+  // ---------- go ----------
+  applyLook();
+  loop();
+  setTimeout(showTarget, S.delay*1000);
+})();
+</script>
+</body>
+</html>

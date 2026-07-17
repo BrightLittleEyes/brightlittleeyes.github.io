@@ -2,1079 +2,230 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>I Can Learn To See — Look &amp; Tap</title>
-<link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#000000">
-<link rel="apple-touch-icon" href="icon-192.png">
-<style>
-  :root{
-    --bg:#000000;
-    --target:#ff2b2b;         /* saturated red (common CVI-preferred color) */
-    --ring:#ffffff;
-    --ui:#8a8a8a;
-  }
-  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
-  html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-    color:#fff; cursor:none;}
-  #stage{position:fixed;inset:0;}
-
-  /* ---- Target ---- */
-  #target{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-    display:flex;align-items:center;justify-content:center;
-    will-change:transform,left,top;touch-action:none;}
-  #targetShape{border-radius:50%;background:var(--target);
-    box-shadow:0 0 0 0 rgba(255,255,255,0);
-    transition:box-shadow .15s ease;}
-  /* attention-getter animations */
-  .pulse #targetShape{animation:pulse 1.4s ease-in-out infinite;}
-  .glow  #targetShape{box-shadow:0 0 60px 20px var(--target);}
-  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
-
-  /* dwell ring drawn with SVG */
-  #ring{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-    pointer-events:none;}
-  #ringProg{transition:stroke-dashoffset .05s linear;}
-
-  /* sparkle reward */
-  .spark{position:absolute;width:14px;height:14px;border-radius:50%;
-    background:#fff;pointer-events:none;}
-  .fx-ring{position:absolute;width:140px;height:140px;border-radius:50%;
-    border:8px solid #fff;pointer-events:none;transform:translate(-50%,-50%);}
-  .fx-emoji{position:absolute;font-size:120px;line-height:1;pointer-events:none;
-    transform:translate(-50%,-50%);filter:drop-shadow(0 0 20px rgba(0,0,0,.6));}
-  .choice{position:absolute;transform:translate(-50%,-50%);
-    display:flex;align-items:center;justify-content:center;}
-  .cring{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;}
-  .cprog{transition:stroke-dashoffset .05s linear;}
-  .choiceGlyph{font-weight:800;color:#fff;line-height:1;
-    display:flex;align-items:center;justify-content:center;}
-  #replay{position:fixed;top:calc(14px + env(safe-area-inset-top));left:50%;
-    transform:translateX(-50%);width:92px;height:92px;border-radius:50%;
-    background:#ff2b2b;color:#fff;border:none;font-size:46px;
-    box-shadow:0 0 26px rgba(255,43,43,.55);
-    display:none;align-items:center;justify-content:center;cursor:pointer;z-index:60;}
-  #replay:hover{background:#ff5a4d;}
-  #replay:active{transform:translateX(-50%) scale(.94);}
-  #kb{position:absolute;inset:0;display:none;flex-direction:column;z-index:40;}
-  #kb.on{display:flex;}
-  #kbAnswer{min-height:78px;display:flex;align-items:center;justify-content:center;gap:18px;
-    padding:8px 12px;border-bottom:2px solid #222;}
-  #kbText{color:#fff;font-size:52px;font-weight:800;letter-spacing:4px;min-width:1ch;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  #kbAnswer button{background:#ff2b2b;color:#fff;border:none;border-radius:50%;
-    width:64px;height:64px;font-size:30px;cursor:pointer;flex:none;}
-  #kbAnswer button:active{transform:scale(.94);}
-  #kbKeys{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;padding:8px;}
-  .kbrow{display:flex;justify-content:center;gap:12px;}
-  .kbkey{position:relative;overflow:hidden;border:3px solid #333;border-radius:14px;
-    display:flex;align-items:center;justify-content:center;font-weight:800;}
-  .kbfill{position:absolute;left:0;bottom:0;width:100%;height:100%;transform:scaleY(0);
-    transform-origin:bottom;opacity:.4;pointer-events:none;}
-  .kbglyph{position:relative;z-index:1;}
-  #spellBar{position:fixed;top:calc(14px + env(safe-area-inset-top));left:50%;
-    transform:translateX(-50%);color:#fff;font-size:44px;font-weight:800;letter-spacing:8px;
-    z-index:55;display:none;white-space:nowrap;}
-  #spellBar.on{display:block;}
-  textarea#sWords{background:#222;color:#fff;border:1px solid #3a3a3a;border-radius:8px;
-    padding:8px 10px;font-size:15px;width:100%;resize:vertical;font-family:inherit;}
-
-  /* ---- Gaze dot (shows where the tracker cursor is) ---- */
-  #gaze{position:fixed;width:26px;height:26px;border-radius:50%;
-    border:2px solid rgba(255,255,255,.55);transform:translate(-50%,-50%);
-    pointer-events:none;left:-100px;top:-100px;z-index:50;}
-
-  /* ---- Minimal, out-of-the-way UI ---- */
-  #hud{position:fixed;top:calc(10px + env(safe-area-inset-top));
-    left:calc(14px + env(safe-area-inset-left));color:var(--ui);font-size:15px;
-    z-index:60;user-select:none;}
-  #gear{position:fixed;top:calc(8px + env(safe-area-inset-top));
-    right:calc(10px + env(safe-area-inset-right));width:44px;height:44px;border-radius:50%;
-    background:rgba(255,255,255,.06);color:var(--ui);border:none;font-size:20px;
-    display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:60;}
-  #gear:hover{background:rgba(255,255,255,.14);color:#fff;}
-
-  /* settings panel */
-  #panel{position:fixed;top:0;right:0;height:100%;width:340px;max-width:90vw;
-    background:#141414;border-left:1px solid #2a2a2a;
-    padding:calc(20px + env(safe-area-inset-top)) calc(22px + env(safe-area-inset-right))
-      calc(20px + env(safe-area-inset-bottom)) 22px;
-    overflow-y:auto;transform:translateX(105%);transition:transform .25s ease;
-    z-index:70;cursor:default;-webkit-overflow-scrolling:touch;}
-  #panel.open{transform:translateX(0);}
-  #panel h2{margin:.2em 0 .6em;font-size:19px;}
-  #panel h3{margin:1.3em 0 .4em;font-size:13px;letter-spacing:.08em;
-    text-transform:uppercase;color:#9a9a9a;}
-  .row{display:flex;align-items:center;justify-content:space-between;
-    gap:10px;margin:10px 0;font-size:15px;}
-  .row label{flex:1;}
-  input[type=range]{width:150px;accent-color:var(--target);}
-  .val{width:52px;text-align:right;color:#bbb;font-variant-numeric:tabular-nums;}
-  .swatch{width:30px;height:30px;border-radius:50%;border:3px solid transparent;
-    cursor:pointer;}
-  .swatch.sel{border-color:#fff;}
-  .swrow{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0;}
-  select,button.act{background:#222;color:#fff;border:1px solid #3a3a3a;
-    border-radius:8px;padding:8px 10px;font-size:15px;cursor:pointer;}
-  button.act{width:100%;margin-top:6px;}
-  .toggle{position:relative;width:46px;height:26px;background:#333;border-radius:20px;
-    cursor:pointer;transition:background .2s;flex:none;}
-  .toggle.on{background:var(--target);}
-  .toggle::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;
-    border-radius:50%;background:#fff;transition:left .2s;}
-  .toggle.on::after{left:23px;}
-  .hint{color:#7a7a7a;font-size:12.5px;line-height:1.45;margin:4px 0 0;}
-  #closePanel{float:right;background:none;border:none;color:#aaa;font-size:22px;cursor:pointer;}
-  .btnrow{display:flex;gap:8px;}
-  .btnrow .act{width:auto;flex:1;margin-top:6px;}
-  #progressPanel{position:fixed;inset:0;background:#0c0c0c;color:#eee;z-index:80;
-    display:none;overflow-y:auto;padding:26px 22px;cursor:default;}
-  #progressPanel.open{display:block;}
-  .rep-wrap{max-width:720px;margin:0 auto;}
-  #progressPanel h2{font-size:22px;margin:.2em 0;}
-  #progressPanel h3{color:#9a9a9a;text-transform:uppercase;letter-spacing:.08em;font-size:12px;margin:1.5em 0 .5em;}
-  .stat-grid{display:flex;flex-wrap:wrap;gap:12px;margin:12px 0;}
-  .stat{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:14px 16px;flex:1;min-width:120px;}
-  .stat b{display:block;font-size:26px;color:#fff;font-variant-numeric:tabular-nums;}
-  .stat span{color:#9a9a9a;font-size:13px;}
-  .bars{display:flex;align-items:flex-end;gap:6px;height:120px;padding-top:8px;}
-  .bar{flex:1;background:var(--target);border-radius:4px 4px 0 0;min-height:3px;}
-  table.rep{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px;}
-  table.rep th,table.rep td{text-align:left;padding:8px 10px;border-bottom:1px solid #242424;}
-  table.rep th{color:#9a9a9a;font-weight:600;}
-  .rep-actions{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap;}
-  @media print{
-    body *{visibility:hidden;}
-    #progressPanel,#progressPanel *{visibility:visible;}
-    #progressPanel{position:absolute;background:#fff;color:#000;inset:0;display:block;}
-    #progressPanel .stat{background:#f2f2f2;border-color:#ccc;}
-    #progressPanel .stat b{color:#000;}
-    .bar{background:#ff3b30 !important;}
-    #btnCloseProgress,.rep-actions{display:none;}
-    table.rep th,table.rep td{border-color:#ccc;}
-  }
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bright Little Eyes – #icanlearntosee</title>
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<div id="stage">
-  <div id="target" class="pulse glow">
-    <svg id="ring" width="10" height="10"><circle id="ringProg" cx="5" cy="5" r="4"
-      fill="none" stroke="var(--ring)" stroke-width="6" stroke-linecap="round"
-      transform="rotate(-90 5 5)"></circle></svg>
-    <div id="targetShape"></div>
+
+<header>
+  <a class="logo" href="#top">
+    
+    <div>Bright Little Eyes</div>
+  </a>
+  <button class="nav-toggle" aria-label="Toggle menu" onclick="document.getElementById('navlist').classList.toggle('open')">&#9776;</button>
+  <nav>
+    <ul id="navlist">
+      <li><a href="#top" class="active">Home</a></li>
+      <li><a href="#welcome">Welcome</a></li>
+      <li><a href="#apps">Our Apps</a></li>
+      <li><a href="#gallery">Our Story</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+</header>
+
+<div id="top"></div>
+<section class="hero">
+  <h1>Helping every child <span>learn to see</span><br>so they can see to learn</h1>
+  <p class="tagline">Bright Little Eyes creates simple, high-contrast apps for children with low vision or Cortical Visual Impairment (CVI) — built by a family who lived it.</p>
+  <span class="hashtag">#icanlearntosee</span>
+  <div class="hero-ctas">
+    <a class="btn btn-red" href="https://apps.apple.com/us/app/gridables/id6762519703" target="_blank" rel="noopener">Download Latest App</a>
+    <a class="btn btn-outline" href="https://www.youtube.com/watch?v=zJ59CxaDnCc" target="_blank" rel="noopener">Explore Latest App</a>
   </div>
-  <div id="kb">
-    <div id="kbAnswer">
-      <button id="kbSpeak" title="Read it back">🔊</button>
-      <span id="kbText"></span>
-      <button id="kbDel" title="Delete last">⌫</button>
+</section>
+
+<section class="welcome" id="welcome">
+  <div class="welcome-grid">
+    <img src="https://brightlittleeyes.wordpress.com/wp-content/uploads/2021/09/img_4769.jpg" alt="Child using a Bright Little Eyes app">
+    <div class="welcome-text">
+      <span class="pill">WELCOME</span>
+      <p>Welcome to Bright Little Eyes. We are a team devoted to creating a collection of apps that can better help a child with a visual impairment.</p>
+      <p>We created these apps because we realized our son really struggled to see. Not being able to see made it hard for him to learn. His vision therapist had advised us that our first goal should be to get him to "use" his vision. More complex apps became something he would tap on but would struggle to look at.</p>
+      <p>We have discovered that he can see best with yellow on a black background. With lots of repetition we are seeing him begin to not only "use" his vision but learn.</p>
+      <p>Our Bright Little Eyes apps are created with a simplistic layout consisting of a black or white backdrop with contrasting colors of red, yellow, or blue.</p>
+      <p>With this simplistic layout, we hope the Bright Little Eyes apps can help your child learn to see so they can see to learn.</p>
     </div>
-    <div id="kbKeys"></div>
   </div>
-</div>
+</section>
 
-<div id="gaze"></div>
-<div id="hud">Taps: <span id="score">0</span></div>
-<div id="spellBar"></div>
-<button id="replay" title="Say it again">🔊</button>
-<button id="gear" title="Settings">⚙</button>
-
-<!-- ---------------- Settings ---------------- -->
-<div id="panel">
-  <button id="closePanel">✕</button>
-  <h2>Settings</h2>
-
-  <h3>Child Profile</h3>
-  <div class="row"><label>Active child</label>
-    <select id="sProfile"></select></div>
-  <div class="btnrow">
-    <button class="act" id="btnNewProfile">New</button>
-    <button class="act" id="btnRenameProfile">Rename</button>
-    <button class="act" id="btnDelProfile">Delete</button>
+<section class="apps" id="apps">
+  <div class="section-head">
+    <h2>Our <span class="accent">Apps</span></h2>
+    <p>Four apps, one mission: make learning visually accessible for kids with CVI and low vision.</p>
   </div>
-  <button class="act" id="btnProgress">View progress &amp; report</button>
-  <p class="hint">Each child's settings save automatically on this device.
-    Progress — taps and how quickly they find the target — is tracked per child.</p>
+  <div class="app-grid">
 
-  <h3>Activity</h3>
-  <div class="row"><label>Type</label>
-    <select id="sActivity">
-      <option value="tap">Look &amp; Tap (find the target)</option>
-      <option value="cause">Cause &amp; Effect (looking makes it happen)</option>
-      <option value="choose">Choose (find the letter, number, or shape)</option>
-      <option value="spell">Spell (teacher's words, guided)</option>
-      <option value="keyboard">Keyboard (free typing by gaze)</option>
-    </select></div>
-  <div class="row" id="rowWords" style="display:none;flex-direction:column;align-items:stretch">
-    <label style="margin-bottom:6px">Words to spell (separate with spaces or commas)</label>
-    <textarea id="sWords" rows="3" placeholder="cat dog sun hat mom"></textarea></div>
-  <div class="row" id="rowKb" style="display:none"><label>Keyboard layout</label>
-    <select id="sKeyboard">
-      <option value="blocks">Blocks (big, spaced)</option>
-      <option value="az">A–Z</option>
-      <option value="qwerty">QWERTY</option>
-    </select></div>
-  <div class="row" id="rowKbCase" style="display:none"><label>Uppercase letters</label><div class="toggle" id="tKbUpper"></div></div>
-  <div class="row" id="rowContent" style="display:none"><label>What to find</label>
-    <select id="sContent">
-      <option value="letters">Letters (A B C)</option>
-      <option value="lower">Letters (a b c)</option>
-      <option value="numbers">Numbers</option>
-      <option value="shapes">Shapes</option>
-    </select></div>
-  <div class="row" id="rowChoices" style="display:none"><label>Number of choices</label>
-    <select id="sChoices">
-      <option value="1">1 — just find it</option>
-      <option value="2">2 — pick the right one</option>
-    </select></div>
-  <p class="hint">Cause &amp; Effect is the simplest — a quick look sets off a big
-    celebration. Look &amp; Tap adds hold-to-select. Choose speaks a prompt
-    ("Find the A") and the child looks at the right letter, number, or shape —
-    building visual discrimination.</p>
+    <div class="app-card">
+      <img src="learn-to-see-icon.svg" alt="I Can Learn To See eye-gaze activity">
+      <div class="app-card-body">
+        <span class="tag tag-live">PLAY FREE IN BROWSER</span>
+        <h3>I Can Learn To See</h3>
+        <p>A look-and-tap activity for kids first learning to use their vision. A single high-contrast target on black glows and moves to invite a look; the child selects it just by looking and holding — no speech or reading needed. Works with an eye-gaze tracker, touch, or a mouse.</p>
+        <div class="card-actions">
+          <a class="btn btn-red" href="learn-to-see/">Open the Activity</a>
+        </div>
+      </div>
+    </div>
 
-  <h3>Target</h3>
-  <div class="row"><label>Size</label>
-    <input type="range" id="sSize" min="80" max="480" step="10" value="200">
-    <span class="val" id="vSize">200</span></div>
-  <div class="row"><label>Color</label></div>
-  <div class="swrow" id="colors"></div>
-  <div class="row"><label>Glow (backlight)</label><div class="toggle on" id="tGlow"></div></div>
-  <div class="row"><label>Movement (pulse)</label><div class="toggle on" id="tPulse"></div></div>
-  <div class="row"><label>Movement</label>
-    <select id="sPos">
-      <option value="still">Still (center)</option>
-      <option value="jump">Jump to a new spot each tap</option>
-      <option value="glide">Glide (child follows it)</option>
-    </select></div>
-  <div class="row" id="rowSpeed" style="display:none"><label>Glide speed</label>
-    <input type="range" id="sSpeed" min="1" max="10" step="1" value="3">
-    <span class="val" id="vSpeed">3</span></div>
+    <div class="app-card">
+      <img src="Gridables-icon.png" alt="Gridables app icon" style="object-fit:contain; background:#000; padding:20px;">
+      <div class="app-card-body">
+        <span class="tag tag-live">AVAILABLE NOW</span>
+        <h3>Gridables</h3>
+        <p>A friendly worksheet companion for kids learning addition, subtraction, multiplication, and division — scan a printed worksheet and solve it right on screen with a visual grid, number line, base-ten blocks, and bead counter.</p>
+        <div class="card-actions">
+          <a class="btn btn-blue" href="https://apps.apple.com/us/app/gridables/id6762519703" target="_blank" rel="noopener">View on App Store</a>
+          <a class="btn btn-ghost" href="Gridables.html">Learn More</a>
+        </div>
+      </div>
+    </div>
 
-  <h3>Selection</h3>
-  <div class="row"><label>Dwell time (look &amp; hold)</label>
-    <input type="range" id="sDwell" min="0.3" max="4" step="0.1" value="1.5">
-    <span class="val" id="vDwell">1.5s</span></div>
-  <div class="row"><label>Require switch to confirm</label><div class="toggle" id="tSwitch"></div></div>
-  <p class="hint">Off = looking and holding selects on its own.
-    On = child dwells to light up the target, then presses a switch, spacebar,
-    or clicks to confirm. Any key or click counts as a switch.</p>
-  <div class="row"><label>Hold steadiness</label>
-    <input type="range" id="sTol" min="0" max="200" step="10" value="80">
-    <span class="val" id="vTol">80</span></div>
-  <p class="hint">Higher = more forgiving of jittery gaze; the timer keeps
-    filling even if gaze drifts a little off the target.</p>
+    <div class="app-card">
+      <img src="https://brightlittleeyes.wordpress.com/wp-content/uploads/2021/09/img_4843.jpg" alt="Drag n Drop app screenshot">
+      <div class="app-card-body">
+        <span class="tag tag-live">AVAILABLE NOW</span>
+        <h3>Drag n Drop</h3>
+        <p>An interactive game where kids drag bright, primary-colored objects — a gumball machine, fish bowl, jelly beans, piggy bank — into their place on a high-contrast background.</p>
+        <div class="stars">★★★★★ <span>4.5–5.0 average</span></div>
+        <div class="card-actions">
+          <a class="btn btn-blue" href="https://apps.apple.com/us/app/drag-n-drop-brightlittleeyes/id1586221765" target="_blank" rel="noopener">View on App Store</a>
+          <a class="btn btn-ghost" href="drag-n-drop.html">Learn More</a>
+        </div>
+      </div>
+    </div>
 
-  <h3>Pacing (for CVI)</h3>
-  <div class="row"><label>Delay before target appears</label>
-    <input type="range" id="sDelay" min="0" max="5" step="0.5" value="1">
-    <span class="val" id="vDelay">1.0s</span></div>
-  <p class="hint">CVI kids often need a few seconds of blank space to
-    disengage and re-look before the next target shows up.</p>
+    <div class="app-card">
+      <img src="https://brightlittleeyes.wordpress.com/wp-content/uploads/2021/09/img_4827.jpg" alt="ABC Plus app screenshot">
+      <div class="app-card-body">
+        <span class="tag tag-live">AVAILABLE NOW</span>
+        <h3>ABC Plus</h3>
+        <p>Everything in ABC Lite, plus lowercase letters, shapes, and numbers. Same tap-listen-and-learn experience with bold contrasting colors for kids with CVI.</p>
+        <div class="stars">★★★★★ <span>4.5–5.0 average</span></div>
+        <div class="card-actions">
+          <a class="btn btn-blue" href="https://apps.apple.com/us/app/abc-plus/id1579401799" target="_blank" rel="noopener">View on App Store</a>
+          <a class="btn btn-ghost" href="abc-plus.html">Learn More</a>
+        </div>
+      </div>
+    </div>
 
-  <h3>Reward</h3>
-  <div class="row"><label>Sound</label><div class="toggle on" id="tSound"></div></div>
-  <div class="row"><label>Sparkles</label><div class="toggle on" id="tSpark"></div></div>
+    <div class="app-card">
+      <img src="https://brightlittleeyes.wordpress.com/wp-content/uploads/2021/09/img_4754-4.jpg" alt="ABC Lite app screenshot">
+      <div class="app-card-body">
+        <span class="tag tag-live">AVAILABLE NOW</span>
+        <h3>ABC Lite</h3>
+        <p>A simple alphabet game on a black or white background with bold red, yellow, or blue letters — designed for kids with CVI to tap, listen, and learn without visual clutter.</p>
+        <div class="stars">★★★★★ <span>4.5–5.0 average</span></div>
+        <div class="card-actions">
+          <a class="btn btn-blue" href="https://apps.apple.com/us/app/abc-lite/id1572200923" target="_blank" rel="noopener">View on App Store</a>
+          <a class="btn btn-ghost" href="abc-lite.html">Learn More</a>
+        </div>
+      </div>
+    </div>
 
-  <h3>Other</h3>
-  <div class="row"><label>Show gaze dot</label><div class="toggle on" id="tGaze"></div></div>
-  <p class="hint">Shows a small ring where the tracker cursor is — useful for
-    calibration and for you to see what the child is looking at. Turn off during play.</p>
-  <button class="act" id="btnFull">Enter full screen</button>
-  <button class="act" id="btnReset">Reset tap count</button>
-  <p class="hint" style="margin-top:14px">Tobii setup: run the tracker's
-    Gaze Interaction / mouse-emulation so the cursor follows the child's eyes,
-    then this app treats "cursor rests on target" as "child is looking at it."</p>
-</div>
+    <div class="app-card">
+      <img src="Encodables-icon.png" alt="Encodables app icon" style="object-fit:contain; background:#000; padding:20px;">
+      <div class="app-card-body">
+        <span class="tag tag-soon">COMING SOON</span>
+        <h3>Encodables</h3>
+        <p>A spelling companion to Gridables — helping kids practice words with the same simple, high-contrast design built for children with CVI and low vision.</p>
+        <div class="card-actions">
+          <a class="btn btn-ghost" href="Encodables.html">Learn More</a>
+        </div>
+      </div>
+    </div>
 
-<!-- ---------------- Progress report ---------------- -->
-<div id="progressPanel">
-  <div class="rep-wrap">
-    <button class="act" id="btnCloseProgress" style="width:auto;float:right">✕ Close</button>
-    <h2 id="repTitle">Progress</h2>
-    <div id="repBody"></div>
+    <div class="app-card">
+      <img src="tap-to-spell-icon.png" alt="Tap to Spell app icon" style="object-fit:contain; background:#000; padding:20px;">
+      <div class="app-card-body">
+        <span class="tag tag-soon">COMING SOON</span>
+        <h3>Tap to Spell</h3>
+        <p>A new tap-based spelling app designed to make learning words fun and accessible for kids with CVI and low vision.</p>
+        <div class="card-actions">
+          <a class="btn btn-ghost" href="tap-to-spell.html">Learn More</a>
+        </div>
+      </div>
+    </div>
+
   </div>
-</div>
+</section>
+
+<section class="gallery" id="gallery">
+  <div class="section-head">
+    <h2>Little Eyes, <span class="accent">Big Moments</span></h2>
+    <p>Real kids, real progress.</p>
+  </div>
+  <div class="gallery-grid">
+    <img src="https://brightlittleeyes.wordpress.com/wp-content/uploads/2021/09/dsc00021.jpg" alt="">
+    <img src="https://brightlittleeyes.wordpress.com/wp-content/uploads/2021/09/img_4752.jpg" alt="">
+    <img src="https://brightlittleeyes.wordpress.com/wp-content/uploads/2021/09/dsc00046.jpg" alt="">
+    <img src="https://brightlittleeyes.wordpress.com/wp-content/uploads/2021/09/img_4819.jpg" alt="" style="object-position: top center;">
+    <img src="https://brightlittleeyes.wordpress.com/wp-content/uploads/2021/09/dsc00035.jpg" alt="">
+    <img src="https://brightlittleeyes.wordpress.com/wp-content/uploads/2021/09/img_4777.jpg" alt="">
+  </div>
+</section>
+
+<section class="story" id="story">
+  <div class="section-head">
+    <h2>Our <span class="accent">Story</span></h2>
+  </div>
+  <div class="story-wrap">
+    <blockquote>"When our son came into our lives, we were told he was blind, deaf, and would not live past spring. We praise God that he has been blessed with many springs since."</blockquote>
+    <blockquote>"With the simplicity of the apps and the contrasting colors, our son has begun to identify objects he couldn't before. We're so thankful for every milestone he's reached — and we can't wait to see what the future holds for our Bright Little Eyes."</blockquote>
+    <p class="story-sig">— Proud Mommy, Founder of Bright Little Eyes</p>
+    <div class="story-cta">
+      <a class="btn btn-outline" style="border-color:var(--red); color:var(--red);" href="https://www.instagram.com/brightlittleeyes/" target="_blank" rel="noopener">See more on Instagram</a>
+    </div>
+  </div>
+  <div class="gallery-grid" style="margin-top:40px;">
+    <img src="https://brightlittleeyes.wordpress.com/wp-content/uploads/2021/09/img_4752.jpg" alt="Our Story">
+    <img src="https://brightlittleeyes.wordpress.com/wp-content/uploads/2021/09/dsc00053-2.jpg" alt="Our Story">
+    <img src="https://brightlittleeyes.wordpress.com/wp-content/uploads/2021/09/img_4764.jpg" alt="Our Story">
+    <img src="https://brightlittleeyes.wordpress.com/wp-content/uploads/2021/09/img_4819.jpg" alt="Our Story">
+    <img src="https://brightlittleeyes.wordpress.com/wp-content/uploads/2021/09/dsc00056-4.jpg" alt="Our Story">
+    <img src="https://brightlittleeyes.wordpress.com/wp-content/uploads/2021/09/img_4777.jpg" alt="Our Story">
+  </div>
+</section>
+
+<section class="contact" id="contact">
+  <h2>Let's Stay Connected</h2>
+  <p>Questions, feedback, or your child's own #icanlearntosee story? We'd love to hear it.</p>
+  <a class="email" href="mailto:brightlittleeyes@gmail.com">brightlittleeyes@gmail.com</a>
+  <div class="contact-photo">
+    <img src="https://brightlittleeyes.wordpress.com/wp-content/uploads/2021/09/img_0-2.gif" alt="Bright Little Eyes activity table setup">
+  </div>
+  <div class="social-links">
+    <a href="https://www.facebook.com/Icanlearntosee" target="_blank" rel="noopener">Facebook</a>
+    <a href="https://www.instagram.com/brightlittleeyes/" target="_blank" rel="noopener">Instagram</a>
+  </div>
+</section>
+
+<footer>
+  <p>&copy; 2026 Bright Little Eyes. Apps powered by <a href="https://apps.apple.com/us/developer/mungomash-llc/id1538608165" target="_blank" rel="noopener">Mungomash, LLC</a>.</p>
+</footer>
 
 <script>
-(function(){
-  "use strict";
-  // ---------- state / settings ----------
-  const S = {
-    activity:"tap", content:"letters", choices:2, words:"cat dog sun hat mom", keyboard:"blocks", kbUpper:false,
-    size:200, color:"#ff2b2b", glow:true, pulse:true, position:"jump", speed:3,
-    dwell:1.5, requireSwitch:false, tol:80, delay:1.0,
-    sound:true, spark:true, showGaze:true
-  };
-  const glide={vx:0,vy:0};
-  let score=0, armed=false, dwellStart=0, raf=null;
-  let switchReady=false;           // when requireSwitch: true once dwell completes
-  let targetShownAt=0;             // for measuring look-to-tap acquisition time
-  let needRelease=false;           // touch: require a finger lift before the next dwell-select
-  let chooseItems=[], chooseAnswer=null;   // Choose activity: on-screen options + the correct one
-  let cursor={x:-9999,y:-9999};   // start off-screen so nothing dwells until gaze/mouse moves
-  // Touch devices (iPad/phone) have no hovering pointer, so use tap-to-select
-  // instead of hover-dwell (otherwise the centered target would auto-select forever).
-  const hoverDwell = window.matchMedia('(hover: hover)').matches;
+const navLinks = document.querySelectorAll('nav a[href^="#"]');
 
-  const stage=document.getElementById('stage');
-  const target=document.getElementById('target');
-  const shape=document.getElementById('targetShape');
-  const ring=document.getElementById('ring');
-  const ringProg=document.getElementById('ringProg');
-  const gaze=document.getElementById('gaze');
-  const scoreEl=document.getElementById('score');
+const sectionIds = ['top', 'welcome', 'apps', 'gallery', 'story', 'contact'];
+const sections = sectionIds.map(id => document.getElementById(id)).filter(Boolean);
 
-  // Red, orange, yellow, green, blue, purple, white
-  const PALETTE=["#ff2b2b","#ff7a00","#ffd400","#2ecc40","#1e90ff","#b84dff","#ffffff"];
-
-  // ---------- audio (no external files) ----------
-  let ac=null;
-  function beep(freqs){
-    if(!S.sound) return;
-    try{
-      ac=ac||new (window.AudioContext||window.webkitAudioContext)();
-      const t0=ac.currentTime;
-      freqs.forEach((f,i)=>{
-        const o=ac.createOscillator(), g=ac.createGain();
-        o.type='sine'; o.frequency.value=f;
-        const s=t0+i*0.12;
-        g.gain.setValueAtTime(0,s);
-        g.gain.linearRampToValueAtTime(0.25,s+0.02);
-        g.gain.exponentialRampToValueAtTime(0.001,s+0.35);
-        o.connect(g).connect(ac.destination); o.start(s); o.stop(s+0.36);
-      });
-    }catch(e){}
-  }
-
-  // ---------- layout ----------
-  function applyLook(){
-    document.documentElement.style.setProperty('--target',S.color);
-    shape.style.width=shape.style.height=S.size+'px';
-    shape.style.borderRadius='50%';
-    target.classList.toggle('glow',S.glow);
-    target.classList.toggle('pulse',S.pulse);
-    // ring sized a bit larger than the target
-    const R=S.size/2+26, sw=10, box=R*2+sw*2, c=box/2, rad=R;
-    ring.setAttribute('width',box); ring.setAttribute('height',box);
-    ringProg.setAttribute('cx',c); ringProg.setAttribute('cy',c);
-    ringProg.setAttribute('r',rad);
-    ringProg.setAttribute('stroke-width',sw);
-    ringProg.setAttribute('transform',`rotate(-90 ${c} ${c})`);
-    const circ=2*Math.PI*rad;
-    ringProg.style.strokeDasharray=circ;
-    ringProg.style.strokeDashoffset=circ;
-    ring._circ=circ;
-  }
-  function setRing(p){ // p 0..1
-    ringProg.style.strokeDashoffset=ring._circ*(1-p);
-  }
-
-  function placeTarget(){
-    let x=innerWidth/2, y=innerHeight/2;
-    if(S.position==='jump' || S.position==='glide'){
-      const m=S.size*0.7+40;
-      x=m+Math.random()*(innerWidth-2*m);
-      y=m+Math.random()*(innerHeight-2*m);
-    }
-    target.style.left=x+'px'; target.style.top=y+'px';
-    target._cx=x; target._cy=y;
-    if(S.position==='glide') startGlide();
-  }
-  function startGlide(){
-    const a=Math.random()*2*Math.PI;
-    glide.vx=Math.cos(a)*S.speed; glide.vy=Math.sin(a)*S.speed;
-  }
-  function rescaleGlide(){
-    const mag=Math.hypot(glide.vx,glide.vy)||1;
-    glide.vx=glide.vx/mag*S.speed; glide.vy=glide.vy/mag*S.speed;
-  }
-  function glideStep(){
-    const m=S.size/2+16;
-    let x=target._cx+glide.vx, y=target._cy+glide.vy;
-    if(x<m){x=m; glide.vx=Math.abs(glide.vx);}
-    if(x>innerWidth-m){x=innerWidth-m; glide.vx=-Math.abs(glide.vx);}
-    if(y<m){y=m; glide.vy=Math.abs(glide.vy);}
-    if(y>innerHeight-m){y=innerHeight-m; glide.vy=-Math.abs(glide.vy);}
-    target._cx=x; target._cy=y;
-    target.style.left=x+'px'; target.style.top=y+'px';
-  }
-
-  function hideTarget(){ target.style.visibility='hidden'; armed=false; setRing(0);}
-  function showTarget(){
-    if(S.activity!=='tap' && S.activity!=='cause'){ return; }   // other activities run their own systems
-    placeTarget();
-    target.style.visibility='visible';
-    armed=true; switchReady=false; dwellStart=0; setRing(0);
-    targetShownAt=performance.now();
-  }
-
-  // ---------- gaze / dwell loop ----------
-  function onTarget(){
-    const r=S.size/2 + S.tol;               // radius + steadiness tolerance
-    const dx=cursor.x-target._cx, dy=cursor.y-target._cy;
-    return (dx*dx+dy*dy) <= r*r;
-  }
-
-  function loop(){
-    raf=requestAnimationFrame(loop);
-    if(S.activity==='keyboard'){ kbLoop(); return; }
-    if(S.activity==='choose'||S.activity==='spell'){ chooseLoop(); return; }
-    if(!armed){ return; }
-    if(S.position==='glide' && !switchReady) glideStep();
-    if(!onTarget()) needRelease=false;   // gaze/finger left the target → ready to select again
-    const now=performance.now();
-    if(onTarget() && !needRelease){
-      if(!dwellStart) dwellStart=now;
-      // Cause & Effect responds to a quick look; Look & Tap uses the full dwell
-      const dwellSec = (S.activity==='cause') ? Math.min(S.dwell,0.6) : S.dwell;
-      const p=Math.min(1,(now-dwellStart)/(dwellSec*1000));
-      setRing(p);
-      if(p>=1){
-        if(S.requireSwitch && S.activity!=='cause'){
-          if(!switchReady){ switchReady=true; shape.style.boxShadow=
-            '0 0 80px 30px '+S.color; } // "lit up, ready" — wait for switch
-        } else {
-          select();
-        }
-      }
-    } else {
-      // gaze left the target — reset (unless already lit & waiting for switch)
-      if(!switchReady){ dwellStart=0; setRing(0); }
-    }
-  }
-
-  function pressSwitch(){
-    // switch only does something when target is lit and waiting
-    if(armed && switchReady){ select(); }
-  }
-
-  // ---------- reward / select ----------
-  function select(){
-    if(!armed) return;
-    armed=false;
-    needRelease=true;   // must look/move away from the target before it can select again
-    score++; scoreEl.textContent=score;
-    // record look-to-tap time for progress tracking (capped so walk-aways don't skew)
-    const acq=Math.min(30000, Math.max(0, performance.now()-targetShownAt));
-    recordTap(acq);
-    // celebrate: grow, then a reward sized to the activity
-    shape.animate([{transform:'scale(1)'},{transform:'scale(1.35)'},{transform:'scale(1)'}],
-      {duration:600,easing:'ease-out'});
-    if(S.activity==='cause'){
-      bigCelebrate(target._cx,target._cy);            // full-screen payoff
-    } else {
-      beep([523,659,784]);                            // C-E-G chime
-      if(S.spark) sparkle(target._cx,target._cy);
-    }
-    setRing(0); switchReady=false;
-    hideTarget();
-    setTimeout(showTarget, S.delay*1000);
-  }
-
-  function bigCelebrate(x,y){
-    // expanding rings
-    for(let i=0;i<3;i++){
-      const r=document.createElement('div'); r.className='fx-ring';
-      r.style.left=x+'px'; r.style.top=y+'px'; r.style.borderColor=S.color;
-      stage.appendChild(r);
-      r.animate([{transform:'translate(-50%,-50%) scale(0.2)',opacity:.9},
-        {transform:'translate(-50%,-50%) scale(3.4)',opacity:0}],
-        {duration:900,delay:i*120,easing:'ease-out'}).onfinish=()=>r.remove();
-    }
-    if(S.spark){ sparkle(x,y); sparkle(x,y); }
-    // big friendly emoji pop
-    const E=['⭐','🎈','🎉','🌟','💫','🦄','🐶','🌈','🐠','🌸'];
-    const em=document.createElement('div'); em.className='fx-emoji';
-    em.textContent=E[Math.floor(Math.random()*E.length)];
-    em.style.left=x+'px'; em.style.top=y+'px'; stage.appendChild(em);
-    em.animate([{transform:'translate(-50%,-50%) scale(0.3)',opacity:0},
-      {transform:'translate(-50%,-50%) scale(1.4)',opacity:1,offset:.3},
-      {transform:'translate(-50%,-50%) scale(1.2)',opacity:1,offset:.7},
-      {transform:'translate(-50%,-50%) scale(1.7)',opacity:0}],
-      {duration:1100,easing:'ease-out'}).onfinish=()=>em.remove();
-    beep([523,659,784,1047]); // brighter 4-note chord
-  }
-
-  function sparkle(x,y){
-    for(let i=0;i<14;i++){
-      const s=document.createElement('div');
-      s.className='spark';
-      s.style.left=x+'px'; s.style.top=y+'px';
-      s.style.background=PALETTE[i%PALETTE.length];
-      stage.appendChild(s);
-      const a=Math.random()*2*Math.PI, d=120+Math.random()*160;
-      s.animate([{transform:'translate(-50%,-50%) scale(1)',opacity:1},
-        {transform:`translate(${Math.cos(a)*d-50}%,${Math.sin(a)*d-50}%) scale(0)`,opacity:0}],
-        {duration:700,easing:'ease-out'}).onfinish=()=>s.remove();
-    }
-  }
-
-  // ---------- input: cursor = gaze ----------
-  function moveCursor(x,y){
-    cursor.x=x; cursor.y=y;
-    if(S.showGaze && hoverDwell){ gaze.style.left=x+'px'; gaze.style.top=y+'px'; }
-  }
-  // Only a real hovering pointer (desktop mouse / eye-gaze cursor) drives dwell.
-  // On touch devices we ignore mouse hover so a stray trackpad/simulator pointer
-  // can't select on its own — only actual touches count there.
-  addEventListener('mousemove',e=>{ if(hoverDwell) moveCursor(e.clientX,e.clientY); });
-  // Touch: pressing sets the "pointer" on the target so the ring fills while held;
-  // lifting resets it off-screen so it never keeps selecting on its own.
-  addEventListener('touchstart',e=>{const t=e.touches[0]; if(t) moveCursor(t.clientX,t.clientY);},{passive:true});
-  addEventListener('touchmove',e=>{const t=e.touches[0]; if(t) moveCursor(t.clientX,t.clientY);},{passive:true});
-  function endTouch(){ cursor.x=-9999; cursor.y=-9999; dwellStart=0; needRelease=false; if(!switchReady) setRing(0); }
-  addEventListener('touchend',endTouch,{passive:true});
-  addEventListener('touchcancel',endTouch,{passive:true});
-
-  // --- Native gaze hook -------------------------------------------------
-  // In the Electron desktop build, a native tracker bridge (Tobii eyex /
-  // gazelinger-style) pushes real gaze coordinates in screen pixels here,
-  // instead of relying on the OS cursor. Same for a hardware switch.
-  //   window.dispatchEvent(new CustomEvent('gaze',{detail:{x,y}}))
-  //   window.dispatchEvent(new CustomEvent('gaze-switch'))
-  addEventListener('gaze',e=>{const g=e.detail; if(g) moveCursor(g.x,g.y);});
-  addEventListener('gaze-switch',()=>pressSwitch());
-  // Bridge exposed by Electron preload (present only in the desktop app):
-  if(window.gazeBridge && window.gazeBridge.onGaze){
-    window.gazeBridge.onGaze((x,y)=>moveCursor(x,y));
-    window.gazeBridge.onSwitch&&window.gazeBridge.onSwitch(()=>pressSwitch());
-  }
-
-  // switch = any key (spacebar/switch interfaces send keys) or a click/tap on target
-  addEventListener('keydown',e=>{
-    if(e.target.closest('#panel')) return;   // don't hijack settings typing
-    if(e.code==='Space'||e.key===' '||e.code==='Enter'||e.code==='Tab'){e.preventDefault();}
-    pressSwitch();
+function setActive(id) {
+  navLinks.forEach(link => {
+    link.classList.remove('active');
+    if (link.getAttribute('href') === '#' + id) link.classList.add('active');
   });
-  stage.addEventListener('click',e=>{
-    // a direct click/tap also counts (mouse testing & touch)
-    moveCursor(e.clientX,e.clientY);
-    if(S.activity==='keyboard'){
-      const k=keyAt(e.clientX,e.clientY);
-      if(k && !needRelease) kbSelectKey(k);
-      if(!hoverDwell){ cursor.x=-9999; cursor.y=-9999; }
-      return;
-    }
-    if(S.activity==='choose'||S.activity==='spell'){
-      const c=choiceAt(e.clientX,e.clientY);
-      if(c && armed && !needRelease) chooseSelect(c);
-      if(!hoverDwell){ cursor.x=-9999; cursor.y=-9999; }
-      return;
-    }
-    if(S.requireSwitch) pressSwitch();
-    else if(armed && onTarget()) select();
-    if(!hoverDwell){ cursor.x=-9999; cursor.y=-9999; }  // touch: don't leave a resting pointer
-  });
-
-  // ---------- settings wiring ----------
-  const $=id=>document.getElementById(id);
-  function toggle(el,key,after){
-    el.addEventListener('click',()=>{S[key]=!S[key];el.classList.toggle('on',S[key]);after&&after();});
-  }
-  $('gear').onclick=()=>$('panel').classList.add('open');
-  $('closePanel').onclick=()=>$('panel').classList.remove('open');
-
-  $('sSize').oninput=e=>{S.size=+e.target.value;$('vSize').textContent=S.size;applyLook();placeTarget();};
-  $('sDwell').oninput=e=>{S.dwell=+e.target.value;$('vDwell').textContent=S.dwell.toFixed(1)+'s';};
-  $('sTol').oninput=e=>{S.tol=+e.target.value;$('vTol').textContent=S.tol;};
-  $('sDelay').oninput=e=>{S.delay=+e.target.value;$('vDelay').textContent=S.delay.toFixed(1)+'s';};
-  $('sActivity').onchange=e=>{S.activity=e.target.value;
-    const ch=(S.activity==='choose'), kb=(S.activity==='keyboard'), sp=(S.activity==='spell');
-    $('rowContent').style.display=ch?'flex':'none';
-    $('rowChoices').style.display=(ch||sp)?'flex':'none';
-    $('rowWords').style.display=sp?'flex':'none';
-    $('rowKb').style.display=kb?'flex':'none';
-    $('rowKbCase').style.display=kb?'flex':'none';
-    resetActivity();};
-  $('sContent').onchange=e=>{S.content=e.target.value; resetActivity();};
-  $('sChoices').onchange=e=>{S.choices=+e.target.value; resetActivity();};
-  $('sWords').oninput=e=>{S.words=e.target.value;};
-  $('sWords').onchange=()=>{ if(S.activity==='spell') startSpellRound(); };
-  $('sKeyboard').onchange=e=>{S.keyboard=e.target.value; if(S.activity==='keyboard') buildKeyboard();};
-  toggle($('tKbUpper'),'kbUpper',()=>{ if(S.activity==='keyboard') buildKeyboard(); });
-  $('replay').onclick=()=>{
-    if(S.activity==='spell'){ speak('Spell '+spellWord); }
-    else if(S.activity==='choose' && chooseAnswer){ speak(promptText(chooseAnswer)); }
-  };
-  $('kbDel').onclick=(e)=>{ e.stopPropagation(); kbDelete(); };
-  $('kbSpeak').onclick=(e)=>{ e.stopPropagation(); kbReadback(); };
-  $('sPos').onchange=e=>{S.position=e.target.value;
-    $('rowSpeed').style.display=(S.position==='glide')?'flex':'none';
-    placeTarget();};
-  $('sSpeed').oninput=e=>{S.speed=+e.target.value;$('vSpeed').textContent=S.speed;rescaleGlide();};
-
-  toggle($('tGlow'),'glow',applyLook);
-  toggle($('tPulse'),'pulse',applyLook);
-  toggle($('tSwitch'),'requireSwitch',()=>{if(!S.requireSwitch){switchReady=false;shape.style.boxShadow='';}});
-  toggle($('tSound'),'sound');
-  toggle($('tSpark'),'spark');
-  toggle($('tGaze'),'showGaze',()=>{gaze.style.display=S.showGaze?'block':'none';});
-
-  // color swatches
-  const cw=$('colors');
-  PALETTE.forEach(c=>{
-    const d=document.createElement('div');
-    d.className='swatch'; d.dataset.c=c;
-    d.style.background=c;
-    d.onclick=()=>{S.color=c;applyLook();markSwatch(); if(S.activity==='keyboard') buildKeyboard();};
-    cw.appendChild(d);
-  });
-  function markSwatch(){ [...cw.children].forEach(x=>x.classList.toggle('sel', x.dataset.c===S.color)); }
-
-  $('btnFull').onclick=()=>{const el=document.documentElement;
-    if(document.fullscreenElement){document.exitFullscreen();}
-    else if(el.requestFullscreen){el.requestFullscreen();}};
-  $('btnReset').onclick=()=>{score=0;scoreEl.textContent=0;};
-
-  // ---------- profiles & progress (saved on this device) ----------
-  const KEY='iclts_v1';
-  let store=null;
-  function loadStore(){ try{const r=localStorage.getItem(KEY); if(r) return JSON.parse(r);}catch(e){} return null; }
-  function saveStore(){ try{ localStorage.setItem(KEY, JSON.stringify(store)); }catch(e){} }
-  function defaults(){ return {activity:"tap",content:"letters",choices:2,words:"cat dog sun hat mom",keyboard:"blocks",kbUpper:false,size:200,color:"#ff2b2b",glow:true,pulse:true,position:"jump",
-    speed:3,dwell:1.5,requireSwitch:false,tol:80,delay:1.0,sound:true,spark:true,showGaze:true}; }
-  function ensureStore(){
-    store=loadStore();
-    if(!store||!store.profiles||!store.activeId||!store.profiles[store.activeId]){
-      const id='p'+Date.now();
-      store={activeId:id,profiles:{}};
-      store.profiles[id]={name:'Child 1',settings:defaults(),sessions:[]};
-      saveStore();
-    }
-    // one-time migration: move existing profiles onto the new "jump" default
-    if(!store.migJump){
-      Object.keys(store.profiles).forEach(id=>{
-        const s=store.profiles[id].settings;
-        if(s && s.position==='still') s.position='jump';
-      });
-      store.migJump=true; saveStore();
-    }
-  }
-  function activeProfile(){ return store.profiles[store.activeId]; }
-  function applyActiveProfile(){ Object.assign(S, defaults(), activeProfile().settings||{}); }
-  function saveActiveSettings(){
-    const p=activeProfile(); if(!p) return;
-    p.settings={activity:S.activity,content:S.content,choices:S.choices,words:S.words,keyboard:S.keyboard,kbUpper:S.kbUpper,size:S.size,color:S.color,glow:S.glow,pulse:S.pulse,position:S.position,
-      speed:S.speed,dwell:S.dwell,requireSwitch:S.requireSwitch,tol:S.tol,delay:S.delay,
-      sound:S.sound,spark:S.spark,showGaze:S.showGaze};
-    saveStore();
-  }
-  function recordTap(acqMs, correct){
-    const p=activeProfile(); if(!p) return;
-    p.sessions=p.sessions||[];
-    const now=Date.now();
-    let s=p.sessions[p.sessions.length-1];
-    if(!s || (now-s.end)>20*60*1000){ s={start:now,end:now,taps:0,sumAcq:0,correct:0,wrong:0}; p.sessions.push(s); }
-    s.end=now;
-    if(correct===false){ s.wrong=(s.wrong||0)+1; }          // wrong pick (Choose activity)
-    else { s.taps++; s.sumAcq+=acqMs; if(correct===true) s.correct=(s.correct||0)+1; }
-    saveStore();
-  }
-
-  // reflect S into every control
-  function syncControls(){
-    $('sActivity').value=S.activity;
-    $('sContent').value=S.content; $('sChoices').value=String(S.choices);
-    $('sKeyboard').value=S.keyboard; $('tKbUpper').classList.toggle('on',S.kbUpper);
-    $('sWords').value=S.words;
-    $('rowContent').style.display=(S.activity==='choose')?'flex':'none';
-    $('rowChoices').style.display=(S.activity==='choose'||S.activity==='spell')?'flex':'none';
-    $('rowWords').style.display=(S.activity==='spell')?'flex':'none';
-    $('rowKb').style.display=(S.activity==='keyboard')?'flex':'none';
-    $('rowKbCase').style.display=(S.activity==='keyboard')?'flex':'none';
-    $('sSize').value=S.size; $('vSize').textContent=S.size;
-    $('sDwell').value=S.dwell; $('vDwell').textContent=S.dwell.toFixed(1)+'s';
-    $('sTol').value=S.tol; $('vTol').textContent=S.tol;
-    $('sDelay').value=S.delay; $('vDelay').textContent=S.delay.toFixed(1)+'s';
-    $('sSpeed').value=S.speed; $('vSpeed').textContent=S.speed;
-    $('sPos').value=S.position; $('rowSpeed').style.display=(S.position==='glide')?'flex':'none';
-    $('tGlow').classList.toggle('on',S.glow);
-    $('tPulse').classList.toggle('on',S.pulse);
-    $('tSwitch').classList.toggle('on',S.requireSwitch);
-    $('tSound').classList.toggle('on',S.sound);
-    $('tSpark').classList.toggle('on',S.spark);
-    $('tGaze').classList.toggle('on',S.showGaze);
-    gaze.style.display=S.showGaze?'block':'none';
-    markSwatch(); applyLook(); placeTarget();
-  }
-  function renderProfiles(){
-    const sel=$('sProfile'); sel.innerHTML='';
-    Object.keys(store.profiles).forEach(id=>{
-      const o=document.createElement('option'); o.value=id; o.textContent=store.profiles[id].name;
-      if(id===store.activeId) o.selected=true; sel.appendChild(o);
-    });
-  }
-  // save settings automatically whenever a control in the panel changes
-  ['input','change','click'].forEach(ev=>
-    $('panel').addEventListener(ev, ()=>setTimeout(saveActiveSettings,0)));
-
-  $('sProfile').onchange=e=>{ store.activeId=e.target.value; saveStore();
-    applyActiveProfile(); syncControls(); };
-  $('btnNewProfile').onclick=()=>{
-    const n=(prompt('Name for the new child profile:','Child '+(Object.keys(store.profiles).length+1))||'').trim();
-    if(!n) return;
-    const id='p'+Date.now();
-    store.profiles[id]={name:n,settings:defaults(),sessions:[]};
-    store.activeId=id; saveStore();
-    applyActiveProfile(); renderProfiles(); syncControls();
-  };
-  $('btnRenameProfile').onclick=()=>{
-    const p=activeProfile(); const n=(prompt('Rename this child:',p.name)||'').trim();
-    if(!n) return; p.name=n; saveStore(); renderProfiles();
-  };
-  $('btnDelProfile').onclick=()=>{
-    const ids=Object.keys(store.profiles);
-    if(ids.length<=1){ alert('You need at least one child profile. Rename it instead.'); return; }
-    const p=activeProfile();
-    if(!confirm('Delete "'+p.name+'" and all their saved progress?')) return;
-    delete store.profiles[store.activeId];
-    store.activeId=Object.keys(store.profiles)[0]; saveStore();
-    applyActiveProfile(); renderProfiles(); syncControls();
-  };
-
-  // ---------- progress report ----------
-  function fmtDate(ms){ const d=new Date(ms);
-    return d.toLocaleDateString([], {month:'short',day:'numeric'})+' '+
-      d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}); }
-  function renderReport(){
-    const p=activeProfile();
-    $('repTitle').textContent='Progress — '+p.name;
-    const sessions=(p.sessions||[]).filter(s=>s.taps>0);
-    const body=$('repBody');
-    if(!sessions.length){
-      body.innerHTML='<p class="hint">No sessions recorded yet. Play the activity and '+
-        'each look-and-tap will be logged here automatically.</p>'; return;
-    }
-    const totalTaps=sessions.reduce((a,s)=>a+s.taps,0);
-    const overallAvg=sessions.reduce((a,s)=>a+s.sumAcq,0)/totalTaps/1000;
-    const bestAvg=Math.min(...sessions.map(s=>s.sumAcq/s.taps/1000));
-    const maxTaps=Math.max(1,...sessions.map(s=>s.taps));
-    const totalCorrect=sessions.reduce((a,s)=>a+(s.correct||0),0);
-    const totalWrong=sessions.reduce((a,s)=>a+(s.wrong||0),0);
-    const accCard=(totalCorrect+totalWrong)>0
-      ? '<div class="stat"><b>'+Math.round(totalCorrect/(totalCorrect+totalWrong)*100)+'%</b><span>Choose accuracy</span></div>'
-      : '';
-    const recent=sessions.slice(-14);
-    const bars=recent.map(s=>{
-      const h=Math.round(s.taps/maxTaps*100);
-      return '<div class="bar" style="height:'+h+'%" title="'+s.taps+' taps"></div>';
-    }).join('');
-    const rows=sessions.slice().reverse().slice(0,25).map(s=>
-      '<tr><td>'+fmtDate(s.start)+'</td><td>'+s.taps+'</td><td>'+
-      (s.sumAcq/s.taps/1000).toFixed(1)+'s</td></tr>').join('');
-    body.innerHTML=
-      '<div class="stat-grid">'+
-        '<div class="stat"><b>'+totalTaps+'</b><span>Total taps</span></div>'+
-        '<div class="stat"><b>'+sessions.length+'</b><span>Sessions</span></div>'+
-        '<div class="stat"><b>'+overallAvg.toFixed(1)+'s</b><span>Avg look-to-tap</span></div>'+
-        '<div class="stat"><b>'+bestAvg.toFixed(1)+'s</b><span>Fastest avg</span></div>'+
-        accCard+
-      '</div>'+
-      '<p class="hint">"Look-to-tap" is how long it takes from the target appearing to a '+
-      'successful tap. Lower over time means she is finding and holding on the target faster.</p>'+
-      '<h3>Taps per session (most recent)</h3><div class="bars">'+bars+'</div>'+
-      '<h3>Session history</h3>'+
-      '<table class="rep"><thead><tr><th>When</th><th>Taps</th><th>Avg look-to-tap</th></tr></thead>'+
-      '<tbody>'+rows+'</tbody></table>'+
-      '<div class="rep-actions">'+
-        '<button class="act" id="btnPrint" style="width:auto">Print / Save PDF</button>'+
-        '<button class="act" id="btnClearData" style="width:auto">Clear this child\'s history</button>'+
-      '</div>';
-    $('btnPrint').onclick=()=>window.print();
-    $('btnClearData').onclick=()=>{ if(confirm('Clear all recorded sessions for '+p.name+'?')){
-      p.sessions=[]; saveStore(); renderReport(); } };
-  }
-  $('btnProgress').onclick=()=>{ renderReport(); $('progressPanel').classList.add('open'); };
-  $('btnCloseProgress').onclick=()=>$('progressPanel').classList.remove('open');
-
-  // ---------- Choose activity (letters / numbers / shapes) ----------
-  const LETTERS='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-  const LOWER='abcdefghijklmnopqrstuvwxyz'.split('');
-  const NUMBERS='0123456789'.split('');
-  const SHAPES=['circle','square','triangle','star','heart'];
-
-  // Prefer a youthful / female English voice (avoids a deep male default).
-  let chosenVoice=null;
-  function pickVoice(){
-    let vs=[]; try{ vs=speechSynthesis.getVoices(); }catch(e){}
-    if(!vs.length) return null;
-    const pref=['samantha','karen','tessa','victoria','moira','fiona','susan',
-                'google us english','microsoft zira','zira','ava','allison','female'];
-    for(const name of pref){ const v=vs.find(v=>(v.name||'').toLowerCase().includes(name)); if(v) return v; }
-    return vs.find(v=>/^en/i.test(v.lang||'')) || vs[0];
-  }
-  try{ speechSynthesis.onvoiceschanged=()=>{ chosenVoice=null; }; }catch(e){}
-  function speak(t){
-    try{ speechSynthesis.cancel();
-      const u=new SpeechSynthesisUtterance(t);
-      const v=chosenVoice||(chosenVoice=pickVoice()); if(v) u.voice=v;
-      u.rate=0.9; u.pitch=1.25;   // higher pitch = brighter, more youthful
-      speechSynthesis.speak(u);
-    }catch(e){}
-  }
-  function promptText(item){
-    if(S.content==='shapes') return 'Find the '+item;
-    if(S.content==='numbers') return 'Find the number '+item;
-    return 'Find the letter '+item.toUpperCase();   // upper & lower are named the same
-  }
-
-  function starPoints(cx,cy,outer,inner,pts){
-    let s=''; for(let i=0;i<pts*2;i++){ const r=i%2?inner:outer; const a=Math.PI/pts*i-Math.PI/2;
-      s+=(cx+r*Math.cos(a)).toFixed(1)+','+(cy+r*Math.sin(a)).toFixed(1)+' '; } return s.trim();
-  }
-  function shapeNode(shape,sz){
-    const ns='http://www.w3.org/2000/svg';
-    const svg=document.createElementNS(ns,'svg');
-    svg.setAttribute('width',sz); svg.setAttribute('height',sz); svg.setAttribute('viewBox','0 0 100 100');
-    if(S.glow) svg.style.filter='drop-shadow(0 0 22px '+S.color+')';
-    let el;
-    if(shape==='square'){ el=document.createElementNS(ns,'rect'); el.setAttribute('x',6);el.setAttribute('y',6);el.setAttribute('width',88);el.setAttribute('height',88);el.setAttribute('rx',8); }
-    else if(shape==='triangle'){ el=document.createElementNS(ns,'polygon'); el.setAttribute('points','50,8 92,90 8,90'); }
-    else if(shape==='star'){ el=document.createElementNS(ns,'polygon'); el.setAttribute('points',starPoints(50,52,46,20,5)); }
-    else if(shape==='heart'){ el=document.createElementNS(ns,'path'); el.setAttribute('d','M50 86 C 8 54, 20 14, 50 34 C 80 14, 92 54, 50 86 Z'); }
-    else { el=document.createElementNS(ns,'circle'); el.setAttribute('cx',50);el.setAttribute('cy',50);el.setAttribute('r',46); }
-    el.setAttribute('fill',S.color); svg.appendChild(el); return svg;
-  }
-  function makeItemNode(item,sz,asShape){
-    if(asShape) return shapeNode(item,sz);
-    const disc=document.createElement('div');
-    disc.style.width=disc.style.height=sz+'px'; disc.style.borderRadius='50%';
-    disc.style.background=S.color; disc.style.display='flex';
-    disc.style.alignItems='center'; disc.style.justifyContent='center';
-    if(S.glow) disc.style.boxShadow='0 0 60px 20px '+S.color;
-    const g=document.createElement('div'); g.className='choiceGlyph';
-    g.textContent=item; g.style.fontSize=(sz*0.62)+'px';
-    disc.appendChild(g); return disc;
-  }
-  function makeChoice(item,x,y,correct,asShape){
-    const el=document.createElement('div'); el.className='choice';
-    el.style.left=x+'px'; el.style.top=y+'px';
-    const sz=S.size, R=sz/2+22, sw=10, box=R*2+sw*2, c=box/2, circ=2*Math.PI*R;
-    const ns='http://www.w3.org/2000/svg';
-    const svg=document.createElementNS(ns,'svg'); svg.setAttribute('class','cring');
-    svg.setAttribute('width',box); svg.setAttribute('height',box);
-    const ring=document.createElementNS(ns,'circle'); ring.setAttribute('class','cprog');
-    ring.setAttribute('cx',c); ring.setAttribute('cy',c); ring.setAttribute('r',R);
-    ring.setAttribute('fill','none'); ring.setAttribute('stroke','#fff'); ring.setAttribute('stroke-width',sw);
-    ring.setAttribute('stroke-linecap','round'); ring.setAttribute('transform','rotate(-90 '+c+' '+c+')');
-    ring.style.strokeDasharray=circ; ring.style.strokeDashoffset=circ;
-    svg.appendChild(ring); el.appendChild(svg);
-    el.appendChild(makeItemNode(item,sz,asShape));
-    stage.appendChild(el);
-    return {el,cx:x,cy:y,dwellStart:0,correct,prog:ring,circ};
-  }
-  function clearChoose(){ chooseItems.forEach(c=>c.el.remove()); chooseItems=[]; }
-
-  function startChooseRound(){
-    clearChoose(); target.style.visibility='hidden';
-    const set = S.content==='letters'?LETTERS : S.content==='lower'?LOWER
-      : S.content==='numbers'?NUMBERS : SHAPES;
-    chooseAnswer = set[Math.floor(Math.random()*set.length)];
-    let items=[chooseAnswer];
-    if(S.choices>=2){ let d; do{ d=set[Math.floor(Math.random()*set.length)]; }while(d===chooseAnswer); items.push(d); }
-    for(let i=items.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [items[i],items[j]]=[items[j],items[i]]; }
-    const m=S.size*0.7+40;
-    const pos = items.length===1
-      ? [[innerWidth/2, innerHeight/2]]
-      : [[Math.max(m,innerWidth*0.28), innerHeight/2],[Math.min(innerWidth-m,innerWidth*0.72), innerHeight/2]];
-    items.forEach((it,i)=>chooseItems.push(makeChoice(it,pos[i][0],pos[i][1],it===chooseAnswer, S.content==='shapes')));
-    armed=true; needRelease=false; targetShownAt=performance.now();
-    speak(promptText(chooseAnswer));
-  }
-
-  function onAnyChoice(){ const r=S.size/2+S.tol;
-    return chooseItems.some(c=>{const dx=cursor.x-c.cx,dy=cursor.y-c.cy; return dx*dx+dy*dy<=r*r;}); }
-  function choiceAt(x,y){ const r=S.size/2+S.tol;
-    return chooseItems.find(c=>{const dx=x-c.cx,dy=y-c.cy; return dx*dx+dy*dy<=r*r;}); }
-
-  function chooseLoop(){
-    if(!armed) return;
-    const now=performance.now();
-    if(!onAnyChoice()) needRelease=false;
-    chooseItems.forEach(c=>{
-      const r=S.size/2+S.tol, dx=cursor.x-c.cx, dy=cursor.y-c.cy;
-      if(dx*dx+dy*dy<=r*r && !needRelease){
-        if(!c.dwellStart) c.dwellStart=now;
-        const p=Math.min(1,(now-c.dwellStart)/(S.dwell*1000));
-        c.prog.style.strokeDashoffset=c.circ*(1-p);
-        if(p>=1) chooseSelect(c);
-      } else { c.dwellStart=0; c.prog.style.strokeDashoffset=c.circ; }
-    });
-  }
-  function chooseSelect(c){
-    if(!armed) return;
-    if(S.activity==='spell'){ spellSelect(c); return; }
-    if(c.correct){
-      armed=false; needRelease=true;
-      score++; scoreEl.textContent=score;
-      const acq=Math.min(30000,Math.max(0,performance.now()-targetShownAt));
-      recordTap(acq,true);
-      bigCelebrate(c.cx,c.cy);
-      clearChoose();
-      setTimeout(()=>{ if(S.activity==='choose') startChooseRound(); }, S.delay*1000);
-    } else {
-      recordTap(0,false);
-      beep([300,240]);
-      c.dwellStart=0; c.prog.style.strokeDashoffset=c.circ;
-      c.el.animate([{opacity:1},{opacity:.35},{opacity:1}],{duration:500,easing:'ease-out'});
-      needRelease=true;
-      speak(promptText(chooseAnswer));
-    }
-  }
-
-  // ---------- Spell activity (teacher's words, guided) ----------
-  let spellWords=[], spellWord='', spellIndex=0;
-  function parseSpellWords(){
-    return (S.words||'').split(/[\s,]+/).map(w=>w.toLowerCase().replace(/[^a-z]/g,'')).filter(Boolean);
-  }
-  function updateSpellBar(){
-    let s='';
-    for(let i=0;i<spellWord.length;i++){ s += (i<spellIndex ? spellWord[i] : '_') + ' '; }
-    $('spellBar').textContent=s.trim();
-  }
-  function startSpellRound(){
-    clearChoose(); target.style.visibility='hidden';
-    spellWords=parseSpellWords();
-    if(!spellWords.length){ armed=false; $('spellBar').textContent='Add words in Settings ⚙'; return; }
-    spellWord=spellWords[Math.floor(Math.random()*spellWords.length)];
-    spellIndex=0; updateSpellBar();
-    speak('Spell '+spellWord);
-    spellShowChoices();
-  }
-  function spellShowChoices(){
-    clearChoose();
-    const need=spellWord[spellIndex];
-    let items=[need];
-    if(S.choices>=2){
-      const pool='abcdefghijklmnopqrstuvwxyz'.split('').filter(x=>x!==need);
-      items.push(pool[Math.floor(Math.random()*pool.length)]);   // random distractor
-    }
-    for(let i=items.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [items[i],items[j]]=[items[j],items[i]]; }
-    const m=S.size*0.7+40;
-    const pos = items.length===1 ? [[innerWidth/2, innerHeight*0.56]]
-      : [[Math.max(m,innerWidth*0.28), innerHeight*0.56],[Math.min(innerWidth-m,innerWidth*0.72), innerHeight*0.56]];
-    items.forEach((it,i)=>chooseItems.push(makeChoice(it,pos[i][0],pos[i][1],it===need,false)));
-    armed=true; needRelease=false; targetShownAt=performance.now();
-  }
-  function spellSelect(c){
-    if(c.correct){
-      recordTap(Math.min(30000,Math.max(0,performance.now()-targetShownAt)),true);
-      needRelease=true; beep([660,880]);
-      spellIndex++; updateSpellBar(); clearChoose(); armed=false;
-      if(spellIndex>=spellWord.length){
-        score++; scoreEl.textContent=score;
-        bigCelebrate(innerWidth/2, innerHeight*0.56); speak(spellWord);
-        setTimeout(()=>{ if(S.activity==='spell') startSpellRound(); }, Math.max(1400,S.delay*1000+700));
-      } else {
-        setTimeout(()=>{ if(S.activity==='spell') spellShowChoices(); }, Math.max(500,S.delay*1000));
-      }
-    } else {
-      recordTap(0,false); beep([300,240]);
-      c.dwellStart=0; c.prog.style.strokeDashoffset=c.circ;
-      c.el.animate([{opacity:1},{opacity:.35},{opacity:1}],{duration:500,easing:'ease-out'});
-      needRelease=true; speak('Spell '+spellWord);
-    }
-  }
-
-  function applyMode(){
-    const kb=(S.activity==='keyboard'), sp=(S.activity==='spell'), ch=(S.activity==='choose');
-    $('replay').style.display=(ch||sp)?'flex':'none';
-    $('spellBar').classList.toggle('on', sp);
-    $('kb').classList.toggle('on', kb);
-    $('hud').style.display=kb?'none':'block';
-  }
-  function startRound(){
-    applyMode();
-    if(S.activity==='keyboard'){ buildKeyboard(); return; }
-    if(S.activity==='spell'){ startSpellRound(); return; }
-    if(S.activity==='choose') startChooseRound(); else showTarget();
-  }
-  function resetActivity(){
-    clearChoose(); armed=false; needRelease=false; setRing(0);
-    switchReady=false; shape.style.boxShadow='';
-    target.style.visibility='hidden';
-    applyMode();
-    if(S.activity==='keyboard'){ kbText=''; $('kbText').textContent=''; buildKeyboard(); return; }
-    setTimeout(startRound, 300);
-  }
-
-  // ---------- Keyboard activity (free typing by gaze) ----------
-  const KB={
-    blocks:[['a','b','c','d','e','f'],['g','h','i','j','k','l','m'],['n','o','p','q','r','s','t'],['u','v','w','x','y','z']],
-    az:[['a','b','c','d','e','f','g','h','i','j','k','l','m'],['n','o','p','q','r','s','t','u','v','w','x','y','z']],
-    qwerty:[['q','w','e','r','t','y','u','i','o','p'],['a','s','d','f','g','h','j','k','l'],['z','x','c','v','b','n','m']]
-  };
-  let kbKeys=[], kbText='';
-  function buildKeyboard(){
-    const wrap=$('kbKeys'); wrap.innerHTML=''; kbKeys=[];
-    const rows=KB[S.keyboard]||KB.blocks;
-    const maxCols=Math.max.apply(null,rows.map(r=>r.length));
-    const size=Math.max(44, Math.min(120,
-      Math.floor(innerWidth/(maxCols+1.5)), Math.floor(innerHeight*0.62/rows.length)));
-    rows.forEach(row=>{
-      const rEl=document.createElement('div'); rEl.className='kbrow';
-      row.forEach(ch=>{
-        const k=document.createElement('div'); k.className='kbkey';
-        k.style.width=k.style.height=size+'px'; k.style.fontSize=(size*0.58)+'px'; k.style.color=S.color;
-        const fill=document.createElement('div'); fill.className='kbfill'; fill.style.background=S.color;
-        const g=document.createElement('div'); g.className='kbglyph';
-        g.textContent=S.kbUpper?ch.toUpperCase():ch;
-        k.appendChild(fill); k.appendChild(g); rEl.appendChild(k);
-        kbKeys.push({el:k,fill,ch,dwellStart:0});
-      });
-      wrap.appendChild(rEl);
-    });
-    measureKeys();
-  }
-  function measureKeys(){ kbKeys.forEach(k=>{ const r=k.el.getBoundingClientRect();
-    k.cx=r.left+r.width/2; k.cy=r.top+r.height/2; k.hw=r.width/2; k.hh=r.height/2; }); }
-  addEventListener('resize',()=>{ if(S.activity==='keyboard') buildKeyboard(); });
-
-  function kbAppend(ch){ kbText+=(S.kbUpper?ch.toUpperCase():ch);
-    $('kbText').textContent=kbText; speak(ch.toUpperCase()); }
-  function kbDelete(){ kbText=kbText.slice(0,-1); $('kbText').textContent=kbText; }
-  function kbReadback(){ if(kbText) speak(kbText); }
-  function keyAt(x,y){ const pad=10;
-    return kbKeys.find(k=>Math.abs(x-k.cx)<=k.hw+pad && Math.abs(y-k.cy)<=k.hh+pad); }
-
-  function kbSelectKey(k){
-    needRelease=true; k.dwellStart=0; k.fill.style.transform='scaleY(0)';
-    k.el.animate([{transform:'scale(1)'},{transform:'scale(1.12)'},{transform:'scale(1)'}],{duration:250});
-    kbAppend(k.ch);
-  }
-  function kbLoop(){
-    const now=performance.now(); let onAny=false; const pad=10;
-    kbKeys.forEach(k=>{
-      const on=Math.abs(cursor.x-k.cx)<=k.hw+pad && Math.abs(cursor.y-k.cy)<=k.hh+pad;
-      if(on) onAny=true;
-      if(on && !needRelease){
-        if(!k.dwellStart) k.dwellStart=now;
-        const p=Math.min(1,(now-k.dwellStart)/(S.dwell*1000));
-        k.fill.style.transform='scaleY('+p+')';
-        if(p>=1) kbSelectKey(k);
-      } else { k.dwellStart=0; k.fill.style.transform='scaleY(0)'; }
-    });
-    if(!onAny) needRelease=false;
-  }
-
-  // ---------- go ----------
-  ensureStore();
-  applyActiveProfile();
-  renderProfiles();
-  syncControls();        // pushes the active child's settings into the UI + applyLook
-  if(!hoverDwell){ gaze.style.display='none'; }   // no gaze dot on touch devices
-  $('replay').style.display=(S.activity==='choose')?'flex':'none';
-  loop();
-  setTimeout(startRound, S.delay*1000);
-})();
-</script>
-<script>
-// Register the offline service worker (only when served over http/https, e.g. the
-// website/PWA — skipped in the bundled iPad/Android native app which runs from file://).
-if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-  addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
+
+window.addEventListener('scroll', () => {
+  const scrollY = window.scrollY + 120;
+  let current = sectionIds[0];
+  sections.forEach(sec => {
+    if (sec.offsetTop <= scrollY) current = sec.id;
+  });
+  setActive(current);
+});
 </script>
 </body>
 </html>

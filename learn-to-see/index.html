@@ -57,6 +57,22 @@
     display:none;align-items:center;justify-content:center;cursor:pointer;z-index:60;}
   #replay:hover{background:#ff5a4d;}
   #replay:active{transform:translateX(-50%) scale(.94);}
+  #kb{position:absolute;inset:0;display:none;flex-direction:column;z-index:40;}
+  #kb.on{display:flex;}
+  #kbAnswer{min-height:78px;display:flex;align-items:center;justify-content:center;gap:18px;
+    padding:8px 12px;border-bottom:2px solid #222;}
+  #kbText{color:#fff;font-size:52px;font-weight:800;letter-spacing:4px;min-width:1ch;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  #kbAnswer button{background:#ff2b2b;color:#fff;border:none;border-radius:50%;
+    width:64px;height:64px;font-size:30px;cursor:pointer;flex:none;}
+  #kbAnswer button:active{transform:scale(.94);}
+  #kbKeys{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;padding:8px;}
+  .kbrow{display:flex;justify-content:center;gap:12px;}
+  .kbkey{position:relative;overflow:hidden;border:3px solid #333;border-radius:14px;
+    display:flex;align-items:center;justify-content:center;font-weight:800;}
+  .kbfill{position:absolute;left:0;bottom:0;width:100%;height:100%;transform:scaleY(0);
+    transform-origin:bottom;opacity:.4;pointer-events:none;}
+  .kbglyph{position:relative;z-index:1;}
 
   /* ---- Gaze dot (shows where the tracker cursor is) ---- */
   #gaze{position:fixed;width:26px;height:26px;border-radius:50%;
@@ -142,6 +158,14 @@
       transform="rotate(-90 5 5)"></circle></svg>
     <div id="targetShape"></div>
   </div>
+  <div id="kb">
+    <div id="kbAnswer">
+      <button id="kbSpeak" title="Read it back">🔊</button>
+      <span id="kbText"></span>
+      <button id="kbDel" title="Delete last">⌫</button>
+    </div>
+    <div id="kbKeys"></div>
+  </div>
 </div>
 
 <div id="gaze"></div>
@@ -172,7 +196,15 @@
       <option value="tap">Look &amp; Tap (find the target)</option>
       <option value="cause">Cause &amp; Effect (looking makes it happen)</option>
       <option value="choose">Choose (find the letter, number, or shape)</option>
+      <option value="keyboard">Keyboard (free typing by gaze)</option>
     </select></div>
+  <div class="row" id="rowKb" style="display:none"><label>Keyboard layout</label>
+    <select id="sKeyboard">
+      <option value="blocks">Blocks (big, spaced)</option>
+      <option value="az">A–Z</option>
+      <option value="qwerty">QWERTY</option>
+    </select></div>
+  <div class="row" id="rowKbCase" style="display:none"><label>Uppercase letters</label><div class="toggle" id="tKbUpper"></div></div>
   <div class="row" id="rowContent" style="display:none"><label>What to find</label>
     <select id="sContent">
       <option value="letters">Letters (A B C)</option>
@@ -258,7 +290,7 @@
   "use strict";
   // ---------- state / settings ----------
   const S = {
-    activity:"tap", content:"letters", choices:2,
+    activity:"tap", content:"letters", choices:2, keyboard:"blocks", kbUpper:false,
     size:200, color:"#ff2b2b", glow:true, pulse:true, position:"jump", speed:3,
     dwell:1.5, requireSwitch:false, tol:80, delay:1.0,
     sound:true, spark:true, showGaze:true
@@ -375,6 +407,7 @@
 
   function loop(){
     raf=requestAnimationFrame(loop);
+    if(S.activity==='keyboard'){ kbLoop(); return; }
     if(S.activity==='choose'){ chooseLoop(); return; }
     if(!armed){ return; }
     if(S.position==='glide' && !switchReady) glideStep();
@@ -506,6 +539,12 @@
   stage.addEventListener('click',e=>{
     // a direct click/tap also counts (mouse testing & touch)
     moveCursor(e.clientX,e.clientY);
+    if(S.activity==='keyboard'){
+      const k=keyAt(e.clientX,e.clientY);
+      if(k && !needRelease) kbSelectKey(k);
+      if(!hoverDwell){ cursor.x=-9999; cursor.y=-9999; }
+      return;
+    }
     if(S.activity==='choose'){
       const c=choiceAt(e.clientX,e.clientY);
       if(c && armed && !needRelease) chooseSelect(c);
@@ -530,12 +569,19 @@
   $('sTol').oninput=e=>{S.tol=+e.target.value;$('vTol').textContent=S.tol;};
   $('sDelay').oninput=e=>{S.delay=+e.target.value;$('vDelay').textContent=S.delay.toFixed(1)+'s';};
   $('sActivity').onchange=e=>{S.activity=e.target.value;
-    $('rowContent').style.display=(S.activity==='choose')?'flex':'none';
-    $('rowChoices').style.display=(S.activity==='choose')?'flex':'none';
+    const ch=(S.activity==='choose'), kb=(S.activity==='keyboard');
+    $('rowContent').style.display=ch?'flex':'none';
+    $('rowChoices').style.display=ch?'flex':'none';
+    $('rowKb').style.display=kb?'flex':'none';
+    $('rowKbCase').style.display=kb?'flex':'none';
     resetActivity();};
   $('sContent').onchange=e=>{S.content=e.target.value; resetActivity();};
   $('sChoices').onchange=e=>{S.choices=+e.target.value; resetActivity();};
+  $('sKeyboard').onchange=e=>{S.keyboard=e.target.value; if(S.activity==='keyboard') buildKeyboard();};
+  toggle($('tKbUpper'),'kbUpper',()=>{ if(S.activity==='keyboard') buildKeyboard(); });
   $('replay').onclick=()=>{ if(S.activity==='choose' && chooseAnswer) speak(promptText(chooseAnswer)); };
+  $('kbDel').onclick=(e)=>{ e.stopPropagation(); kbDelete(); };
+  $('kbSpeak').onclick=(e)=>{ e.stopPropagation(); kbReadback(); };
   $('sPos').onchange=e=>{S.position=e.target.value;
     $('rowSpeed').style.display=(S.position==='glide')?'flex':'none';
     placeTarget();};
@@ -554,7 +600,7 @@
     const d=document.createElement('div');
     d.className='swatch'; d.dataset.c=c;
     d.style.background=c;
-    d.onclick=()=>{S.color=c;applyLook();markSwatch();};
+    d.onclick=()=>{S.color=c;applyLook();markSwatch(); if(S.activity==='keyboard') buildKeyboard();};
     cw.appendChild(d);
   });
   function markSwatch(){ [...cw.children].forEach(x=>x.classList.toggle('sel', x.dataset.c===S.color)); }
@@ -569,7 +615,7 @@
   let store=null;
   function loadStore(){ try{const r=localStorage.getItem(KEY); if(r) return JSON.parse(r);}catch(e){} return null; }
   function saveStore(){ try{ localStorage.setItem(KEY, JSON.stringify(store)); }catch(e){} }
-  function defaults(){ return {activity:"tap",content:"letters",choices:2,size:200,color:"#ff2b2b",glow:true,pulse:true,position:"jump",
+  function defaults(){ return {activity:"tap",content:"letters",choices:2,keyboard:"blocks",kbUpper:false,size:200,color:"#ff2b2b",glow:true,pulse:true,position:"jump",
     speed:3,dwell:1.5,requireSwitch:false,tol:80,delay:1.0,sound:true,spark:true,showGaze:true}; }
   function ensureStore(){
     store=loadStore();
@@ -592,7 +638,7 @@
   function applyActiveProfile(){ Object.assign(S, defaults(), activeProfile().settings||{}); }
   function saveActiveSettings(){
     const p=activeProfile(); if(!p) return;
-    p.settings={activity:S.activity,content:S.content,choices:S.choices,size:S.size,color:S.color,glow:S.glow,pulse:S.pulse,position:S.position,
+    p.settings={activity:S.activity,content:S.content,choices:S.choices,keyboard:S.keyboard,kbUpper:S.kbUpper,size:S.size,color:S.color,glow:S.glow,pulse:S.pulse,position:S.position,
       speed:S.speed,dwell:S.dwell,requireSwitch:S.requireSwitch,tol:S.tol,delay:S.delay,
       sound:S.sound,spark:S.spark,showGaze:S.showGaze};
     saveStore();
@@ -613,8 +659,11 @@
   function syncControls(){
     $('sActivity').value=S.activity;
     $('sContent').value=S.content; $('sChoices').value=String(S.choices);
+    $('sKeyboard').value=S.keyboard; $('tKbUpper').classList.toggle('on',S.kbUpper);
     $('rowContent').style.display=(S.activity==='choose')?'flex':'none';
     $('rowChoices').style.display=(S.activity==='choose')?'flex':'none';
+    $('rowKb').style.display=(S.activity==='keyboard')?'flex':'none';
+    $('rowKbCase').style.display=(S.activity==='keyboard')?'flex':'none';
     $('sSize').value=S.size; $('vSize').textContent=S.size;
     $('sDwell').value=S.dwell; $('vDwell').textContent=S.dwell.toFixed(1)+'s';
     $('sTol').value=S.tol; $('vTol').textContent=S.tol;
@@ -726,9 +775,22 @@
   const NUMBERS='0123456789'.split('');
   const SHAPES=['circle','square','triangle','star','heart'];
 
+  // Prefer a youthful / female English voice (avoids a deep male default).
+  let chosenVoice=null;
+  function pickVoice(){
+    let vs=[]; try{ vs=speechSynthesis.getVoices(); }catch(e){}
+    if(!vs.length) return null;
+    const pref=['samantha','karen','tessa','victoria','moira','fiona','susan',
+                'google us english','microsoft zira','zira','ava','allison','female'];
+    for(const name of pref){ const v=vs.find(v=>(v.name||'').toLowerCase().includes(name)); if(v) return v; }
+    return vs.find(v=>/^en/i.test(v.lang||'')) || vs[0];
+  }
+  try{ speechSynthesis.onvoiceschanged=()=>{ chosenVoice=null; }; }catch(e){}
   function speak(t){
     try{ speechSynthesis.cancel();
-      const u=new SpeechSynthesisUtterance(t); u.rate=0.85; u.pitch=1.05;
+      const u=new SpeechSynthesisUtterance(t);
+      const v=chosenVoice||(chosenVoice=pickVoice()); if(v) u.voice=v;
+      u.rate=0.9; u.pitch=1.25;   // higher pitch = brighter, more youthful
       speechSynthesis.speak(u);
     }catch(e){}
   }
@@ -841,16 +903,83 @@
     }
   }
 
-  function startRound(){
+  function applyMode(){
+    const kb=(S.activity==='keyboard');
     $('replay').style.display=(S.activity==='choose')?'flex':'none';
+    $('kb').classList.toggle('on', kb);
+    $('hud').style.display=kb?'none':'block';
+  }
+  function startRound(){
+    applyMode();
+    if(S.activity==='keyboard'){ buildKeyboard(); return; }
     if(S.activity==='choose') startChooseRound(); else showTarget();
   }
   function resetActivity(){
     clearChoose(); armed=false; needRelease=false; setRing(0);
     switchReady=false; shape.style.boxShadow='';
     target.style.visibility='hidden';
-    $('replay').style.display=(S.activity==='choose')?'flex':'none';
+    applyMode();
+    if(S.activity==='keyboard'){ kbText=''; $('kbText').textContent=''; buildKeyboard(); return; }
     setTimeout(startRound, 300);
+  }
+
+  // ---------- Keyboard activity (free typing by gaze) ----------
+  const KB={
+    blocks:[['a','b','c','d','e','f'],['g','h','i','j','k','l','m'],['n','o','p','q','r','s','t'],['u','v','w','x','y','z']],
+    az:[['a','b','c','d','e','f','g','h','i','j','k','l','m'],['n','o','p','q','r','s','t','u','v','w','x','y','z']],
+    qwerty:[['q','w','e','r','t','y','u','i','o','p'],['a','s','d','f','g','h','j','k','l'],['z','x','c','v','b','n','m']]
+  };
+  let kbKeys=[], kbText='';
+  function buildKeyboard(){
+    const wrap=$('kbKeys'); wrap.innerHTML=''; kbKeys=[];
+    const rows=KB[S.keyboard]||KB.blocks;
+    const maxCols=Math.max.apply(null,rows.map(r=>r.length));
+    const size=Math.max(44, Math.min(120,
+      Math.floor(innerWidth/(maxCols+1.5)), Math.floor(innerHeight*0.62/rows.length)));
+    rows.forEach(row=>{
+      const rEl=document.createElement('div'); rEl.className='kbrow';
+      row.forEach(ch=>{
+        const k=document.createElement('div'); k.className='kbkey';
+        k.style.width=k.style.height=size+'px'; k.style.fontSize=(size*0.58)+'px'; k.style.color=S.color;
+        const fill=document.createElement('div'); fill.className='kbfill'; fill.style.background=S.color;
+        const g=document.createElement('div'); g.className='kbglyph';
+        g.textContent=S.kbUpper?ch.toUpperCase():ch;
+        k.appendChild(fill); k.appendChild(g); rEl.appendChild(k);
+        kbKeys.push({el:k,fill,ch,dwellStart:0});
+      });
+      wrap.appendChild(rEl);
+    });
+    measureKeys();
+  }
+  function measureKeys(){ kbKeys.forEach(k=>{ const r=k.el.getBoundingClientRect();
+    k.cx=r.left+r.width/2; k.cy=r.top+r.height/2; k.hw=r.width/2; k.hh=r.height/2; }); }
+  addEventListener('resize',()=>{ if(S.activity==='keyboard') buildKeyboard(); });
+
+  function kbAppend(ch){ kbText+=(S.kbUpper?ch.toUpperCase():ch);
+    $('kbText').textContent=kbText; speak(ch.toUpperCase()); }
+  function kbDelete(){ kbText=kbText.slice(0,-1); $('kbText').textContent=kbText; }
+  function kbReadback(){ if(kbText) speak(kbText); }
+  function keyAt(x,y){ const pad=10;
+    return kbKeys.find(k=>Math.abs(x-k.cx)<=k.hw+pad && Math.abs(y-k.cy)<=k.hh+pad); }
+
+  function kbSelectKey(k){
+    needRelease=true; k.dwellStart=0; k.fill.style.transform='scaleY(0)';
+    k.el.animate([{transform:'scale(1)'},{transform:'scale(1.12)'},{transform:'scale(1)'}],{duration:250});
+    kbAppend(k.ch);
+  }
+  function kbLoop(){
+    const now=performance.now(); let onAny=false; const pad=10;
+    kbKeys.forEach(k=>{
+      const on=Math.abs(cursor.x-k.cx)<=k.hw+pad && Math.abs(cursor.y-k.cy)<=k.hh+pad;
+      if(on) onAny=true;
+      if(on && !needRelease){
+        if(!k.dwellStart) k.dwellStart=now;
+        const p=Math.min(1,(now-k.dwellStart)/(S.dwell*1000));
+        k.fill.style.transform='scaleY('+p+')';
+        if(p>=1) kbSelectKey(k);
+      } else { k.dwellStart=0; k.fill.style.transform='scaleY(0)'; }
+    });
+    if(!onAny) needRelease=false;
   }
 
   // ---------- go ----------

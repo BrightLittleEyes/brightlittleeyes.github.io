@@ -59,14 +59,15 @@
   #replay:active{transform:scale(.94);}
   #kb{position:absolute;inset:0;display:none;flex-direction:column;z-index:40;}
   #kb.on{display:flex;}
-  #kbAnswer{min-height:78px;display:flex;align-items:center;justify-content:center;gap:18px;
-    padding:8px 12px;border-bottom:2px solid #222;}
-  #kbText{color:#fff;font-size:52px;font-weight:800;letter-spacing:4px;min-width:1ch;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  #kbAnswer button{background:#ff2b2b;color:#fff;border:none;border-radius:50%;
-    width:64px;height:64px;font-size:30px;cursor:pointer;flex:none;}
-  #kbAnswer button:active{transform:scale(.94);}
-  #kbKeys{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;padding:8px;}
+  #kbAnswer{display:none;}
+  #kbDelBtn{position:fixed;top:calc(14px + env(safe-area-inset-top));
+    right:calc(16px + env(safe-area-inset-right));width:84px;height:84px;border-radius:50%;
+    background:#333;color:#fff;border:none;font-size:38px;
+    display:none;align-items:center;justify-content:center;cursor:pointer;z-index:60;}
+  #kbDelBtn:hover{background:#444;}
+  #kbDelBtn:active{transform:scale(.94);}
+  #kbKeys{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;
+    gap:12px;padding:150px 8px 8px;}
   .kbrow{display:flex;justify-content:center;gap:12px;}
   .kbkey{position:relative;overflow:hidden;border:3px solid #333;border-radius:14px;
     display:flex;align-items:center;justify-content:center;font-weight:800;}
@@ -80,7 +81,8 @@
   #spellBar{position:fixed;top:calc(20px + env(safe-area-inset-top));left:50%;
     transform:translateX(-50%);color:#fff;font-weight:800;letter-spacing:10px;
     font-size:clamp(44px, 9vw, 78px);
-    z-index:55;display:none;white-space:nowrap;}
+    z-index:55;display:none;white-space:nowrap;max-width:76vw;overflow:hidden;
+    text-align:center;}
   #spellBar.on{display:block;}
   textarea#sWords{background:#222;color:#fff;border:1px solid #3a3a3a;border-radius:8px;
     padding:8px 10px;font-size:15px;width:100%;resize:vertical;font-family:inherit;}
@@ -191,6 +193,7 @@
 <div id="hud">Taps: <span id="score">0</span></div>
 <div id="spellBar"></div>
 <button id="replay" title="Say it again">🔊</button>
+<button id="kbDelBtn" title="Delete last letter">⌫</button>
 <button id="gear" title="Settings">⚙</button>
 
 <!-- ---------------- Settings ---------------- -->
@@ -645,11 +648,11 @@
     else if(S.activity==='spell'){ buildKeyboard(); spellScaffold(); }
   }
   $('replay').onclick=()=>{
-    if(S.activity==='spell'){ speak('Spell '+spellWord); }
+    if(S.activity==='keyboard'){ kbReadback(); }
+    else if(S.activity==='spell'){ speak('Spell '+spellWord); }
     else if(S.activity==='choose' && chooseAnswer){ speak(promptText(chooseAnswer)); }
   };
-  $('kbDel').onclick=(e)=>{ e.stopPropagation(); kbDelete(); };
-  $('kbSpeak').onclick=(e)=>{ e.stopPropagation(); kbReadback(); };
+  $('kbDelBtn').onclick=()=>kbDelete();
   $('sPos').onchange=e=>{S.position=e.target.value;
     updateMenuVisibility();
     placeTarget();};
@@ -1030,11 +1033,14 @@
     kbMode = sp ? 'spell' : 'free';
     // only Look & Tap / Cause & Effect use the circle; hide it in every other activity
     if(!(S.activity==='tap'||S.activity==='cause')) target.style.visibility='hidden';
-    $('replay').style.display=(ch||sp)?'flex':'none';
-    $('spellBar').classList.toggle('on', sp);
-    $('kb').classList.toggle('on', kb||sp);       // Spell also uses the keyboard view
+    const grp=kb||sp;
+    $('replay').style.display=(ch||grp)?'flex':'none';   // audio button: choose, keyboard, spell
+    $('kbDelBtn').style.display=kb?'flex':'none';         // delete only in free typing
+    $('spellBar').classList.toggle('on', grp);           // shared word bar for keyboard & spell
+    if(kb) $('spellBar').textContent=kbText;             // free typing shows the typed text
+    $('kb').classList.toggle('on', grp);
     $('kb').classList.toggle('spellmode', sp);
-    $('hud').style.display=(kb||sp)?'none':'block';
+    $('hud').style.display=grp?'none':'block';
   }
   function startRound(){
     applyMode();
@@ -1047,7 +1053,7 @@
     switchReady=false; shape.style.boxShadow='';
     target.style.visibility='hidden';
     applyMode();
-    if(S.activity==='keyboard'){ kbText=''; $('kbText').textContent=''; buildKeyboard(); return; }
+    if(S.activity==='keyboard'){ kbText=''; $('spellBar').textContent=''; buildKeyboard(); return; }
     setTimeout(startRound, 300);
   }
 
@@ -1093,8 +1099,8 @@
   addEventListener('resize',()=>{ if(S.activity==='keyboard') buildKeyboard(); });
 
   function kbAppend(ch){ kbText+=(S.kbUpper?ch.toUpperCase():ch);
-    $('kbText').textContent=kbText; speak(ch.toUpperCase()); }
-  function kbDelete(){ kbText=kbText.slice(0,-1); $('kbText').textContent=kbText; }
+    $('spellBar').textContent=kbText; speak(ch.toUpperCase()); }
+  function kbDelete(){ kbText=kbText.slice(0,-1); $('spellBar').textContent=kbText; }
   function kbReadback(){ if(kbText) speak(kbText); }
   function keyAt(x,y){ const pad=10;
     return kbKeys.find(k=>!k.blurred && Math.abs(x-k.cx)<=k.hw+pad && Math.abs(y-k.cy)<=k.hh+pad); }

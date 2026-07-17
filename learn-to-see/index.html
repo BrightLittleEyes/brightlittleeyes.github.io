@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>I Can Learn To See — Look &amp; Tap</title>
 <style>
   :root{
@@ -37,6 +37,10 @@
   /* sparkle reward */
   .spark{position:absolute;width:14px;height:14px;border-radius:50%;
     background:#fff;pointer-events:none;}
+  .fx-ring{position:absolute;width:140px;height:140px;border-radius:50%;
+    border:8px solid #fff;pointer-events:none;transform:translate(-50%,-50%);}
+  .fx-emoji{position:absolute;font-size:120px;line-height:1;pointer-events:none;
+    transform:translate(-50%,-50%);filter:drop-shadow(0 0 20px rgba(0,0,0,.6));}
 
   /* ---- Gaze dot (shows where the tracker cursor is) ---- */
   #gaze{position:fixed;width:26px;height:26px;border-radius:50%;
@@ -44,18 +48,22 @@
     pointer-events:none;left:-100px;top:-100px;z-index:50;}
 
   /* ---- Minimal, out-of-the-way UI ---- */
-  #hud{position:fixed;top:10px;left:14px;color:var(--ui);font-size:15px;
+  #hud{position:fixed;top:calc(10px + env(safe-area-inset-top));
+    left:calc(14px + env(safe-area-inset-left));color:var(--ui);font-size:15px;
     z-index:60;user-select:none;}
-  #gear{position:fixed;top:8px;right:10px;width:44px;height:44px;border-radius:50%;
+  #gear{position:fixed;top:calc(8px + env(safe-area-inset-top));
+    right:calc(10px + env(safe-area-inset-right));width:44px;height:44px;border-radius:50%;
     background:rgba(255,255,255,.06);color:var(--ui);border:none;font-size:20px;
     display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:60;}
   #gear:hover{background:rgba(255,255,255,.14);color:#fff;}
 
   /* settings panel */
   #panel{position:fixed;top:0;right:0;height:100%;width:340px;max-width:90vw;
-    background:#141414;border-left:1px solid #2a2a2a;padding:20px 22px;
+    background:#141414;border-left:1px solid #2a2a2a;
+    padding:calc(20px + env(safe-area-inset-top)) calc(22px + env(safe-area-inset-right))
+      calc(20px + env(safe-area-inset-bottom)) 22px;
     overflow-y:auto;transform:translateX(105%);transition:transform .25s ease;
-    z-index:70;cursor:default;}
+    z-index:70;cursor:default;-webkit-overflow-scrolling:touch;}
   #panel.open{transform:translateX(0);}
   #panel h2{margin:.2em 0 .6em;font-size:19px;}
   #panel h3{margin:1.3em 0 .4em;font-size:13px;letter-spacing:.08em;
@@ -80,6 +88,34 @@
   .toggle.on::after{left:23px;}
   .hint{color:#7a7a7a;font-size:12.5px;line-height:1.45;margin:4px 0 0;}
   #closePanel{float:right;background:none;border:none;color:#aaa;font-size:22px;cursor:pointer;}
+  .btnrow{display:flex;gap:8px;}
+  .btnrow .act{width:auto;flex:1;margin-top:6px;}
+  #progressPanel{position:fixed;inset:0;background:#0c0c0c;color:#eee;z-index:80;
+    display:none;overflow-y:auto;padding:26px 22px;cursor:default;}
+  #progressPanel.open{display:block;}
+  .rep-wrap{max-width:720px;margin:0 auto;}
+  #progressPanel h2{font-size:22px;margin:.2em 0;}
+  #progressPanel h3{color:#9a9a9a;text-transform:uppercase;letter-spacing:.08em;font-size:12px;margin:1.5em 0 .5em;}
+  .stat-grid{display:flex;flex-wrap:wrap;gap:12px;margin:12px 0;}
+  .stat{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:14px 16px;flex:1;min-width:120px;}
+  .stat b{display:block;font-size:26px;color:#fff;font-variant-numeric:tabular-nums;}
+  .stat span{color:#9a9a9a;font-size:13px;}
+  .bars{display:flex;align-items:flex-end;gap:6px;height:120px;padding-top:8px;}
+  .bar{flex:1;background:var(--target);border-radius:4px 4px 0 0;min-height:3px;}
+  table.rep{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px;}
+  table.rep th,table.rep td{text-align:left;padding:8px 10px;border-bottom:1px solid #242424;}
+  table.rep th{color:#9a9a9a;font-weight:600;}
+  .rep-actions{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap;}
+  @media print{
+    body *{visibility:hidden;}
+    #progressPanel,#progressPanel *{visibility:visible;}
+    #progressPanel{position:absolute;background:#fff;color:#000;inset:0;display:block;}
+    #progressPanel .stat{background:#f2f2f2;border-color:#ccc;}
+    #progressPanel .stat b{color:#000;}
+    .bar{background:#ff3b30 !important;}
+    #btnCloseProgress,.rep-actions{display:none;}
+    table.rep th,table.rep td{border-color:#ccc;}
+  }
 </style>
 </head>
 <body>
@@ -100,6 +136,28 @@
 <div id="panel">
   <button id="closePanel">✕</button>
   <h2>Settings</h2>
+
+  <h3>Child Profile</h3>
+  <div class="row"><label>Active child</label>
+    <select id="sProfile"></select></div>
+  <div class="btnrow">
+    <button class="act" id="btnNewProfile">New</button>
+    <button class="act" id="btnRenameProfile">Rename</button>
+    <button class="act" id="btnDelProfile">Delete</button>
+  </div>
+  <button class="act" id="btnProgress">View progress &amp; report</button>
+  <p class="hint">Each child's settings save automatically on this device.
+    Progress — taps and how quickly they find the target — is tracked per child.</p>
+
+  <h3>Activity</h3>
+  <div class="row"><label>Type</label>
+    <select id="sActivity">
+      <option value="tap">Look &amp; Tap (find the target)</option>
+      <option value="cause">Cause &amp; Effect (looking makes it happen)</option>
+    </select></div>
+  <p class="hint">Cause &amp; Effect is the simplest starting point: a quick look
+    sets off a big celebration — teaching that her looking makes something happen.
+    Look &amp; Tap adds the hold-to-select skill.</p>
 
   <h3>Target</h3>
   <div class="row"><label>Size</label>
@@ -155,11 +213,21 @@
     then this app treats "cursor rests on target" as "child is looking at it."</p>
 </div>
 
+<!-- ---------------- Progress report ---------------- -->
+<div id="progressPanel">
+  <div class="rep-wrap">
+    <button class="act" id="btnCloseProgress" style="width:auto;float:right">✕ Close</button>
+    <h2 id="repTitle">Progress</h2>
+    <div id="repBody"></div>
+  </div>
+</div>
+
 <script>
 (function(){
   "use strict";
   // ---------- state / settings ----------
   const S = {
+    activity:"tap",
     size:200, color:"#ff2b2b", glow:true, pulse:true, position:"still", speed:3,
     dwell:1.5, requireSwitch:false, tol:80, delay:1.0,
     sound:true, spark:true, showGaze:true
@@ -167,7 +235,12 @@
   const glide={vx:0,vy:0};
   let score=0, armed=false, dwellStart=0, raf=null;
   let switchReady=false;           // when requireSwitch: true once dwell completes
-  let cursor={x:innerWidth/2,y:innerHeight/2};
+  let targetShownAt=0;             // for measuring look-to-tap acquisition time
+  let needRelease=false;           // touch: require a finger lift before the next dwell-select
+  let cursor={x:-9999,y:-9999};   // start off-screen so nothing dwells until gaze/mouse moves
+  // Touch devices (iPad/phone) have no hovering pointer, so use tap-to-select
+  // instead of hover-dwell (otherwise the centered target would auto-select forever).
+  const hoverDwell = window.matchMedia('(hover: hover)').matches;
 
   const stage=document.getElementById('stage');
   const target=document.getElementById('target');
@@ -256,6 +329,7 @@
     placeTarget();
     target.style.visibility='visible';
     armed=true; switchReady=false; dwellStart=0; setRing(0);
+    targetShownAt=performance.now();
   }
 
   // ---------- gaze / dwell loop ----------
@@ -268,14 +342,17 @@
   function loop(){
     raf=requestAnimationFrame(loop);
     if(!armed){ return; }
-    const now=performance.now();
     if(S.position==='glide' && !switchReady) glideStep();
-    if(onTarget()){
+    if(!onTarget()) needRelease=false;   // gaze/finger left the target → ready to select again
+    const now=performance.now();
+    if(onTarget() && !needRelease){
       if(!dwellStart) dwellStart=now;
-      const p=Math.min(1,(now-dwellStart)/(S.dwell*1000));
+      // Cause & Effect responds to a quick look; Look & Tap uses the full dwell
+      const dwellSec = (S.activity==='cause') ? Math.min(S.dwell,0.6) : S.dwell;
+      const p=Math.min(1,(now-dwellStart)/(dwellSec*1000));
       setRing(p);
       if(p>=1){
-        if(S.requireSwitch){
+        if(S.requireSwitch && S.activity!=='cause'){
           if(!switchReady){ switchReady=true; shape.style.boxShadow=
             '0 0 80px 30px '+S.color; } // "lit up, ready" — wait for switch
         } else {
@@ -297,15 +374,47 @@
   function select(){
     if(!armed) return;
     armed=false;
+    needRelease=true;   // must look/move away from the target before it can select again
     score++; scoreEl.textContent=score;
-    beep([523,659,784]); // C-E-G chime
-    // celebrate: grow + sparkle
+    // record look-to-tap time for progress tracking (capped so walk-aways don't skew)
+    const acq=Math.min(30000, Math.max(0, performance.now()-targetShownAt));
+    recordTap(acq);
+    // celebrate: grow, then a reward sized to the activity
     shape.animate([{transform:'scale(1)'},{transform:'scale(1.35)'},{transform:'scale(1)'}],
       {duration:600,easing:'ease-out'});
-    if(S.spark) sparkle(target._cx,target._cy);
+    if(S.activity==='cause'){
+      bigCelebrate(target._cx,target._cy);            // full-screen payoff
+    } else {
+      beep([523,659,784]);                            // C-E-G chime
+      if(S.spark) sparkle(target._cx,target._cy);
+    }
     setRing(0); switchReady=false;
     hideTarget();
     setTimeout(showTarget, S.delay*1000);
+  }
+
+  function bigCelebrate(x,y){
+    // expanding rings
+    for(let i=0;i<3;i++){
+      const r=document.createElement('div'); r.className='fx-ring';
+      r.style.left=x+'px'; r.style.top=y+'px'; r.style.borderColor=S.color;
+      stage.appendChild(r);
+      r.animate([{transform:'translate(-50%,-50%) scale(0.2)',opacity:.9},
+        {transform:'translate(-50%,-50%) scale(3.4)',opacity:0}],
+        {duration:900,delay:i*120,easing:'ease-out'}).onfinish=()=>r.remove();
+    }
+    if(S.spark){ sparkle(x,y); sparkle(x,y); }
+    // big friendly emoji pop
+    const E=['⭐','🎈','🎉','🌟','💫','🦄','🐶','🌈','🐠','🌸'];
+    const em=document.createElement('div'); em.className='fx-emoji';
+    em.textContent=E[Math.floor(Math.random()*E.length)];
+    em.style.left=x+'px'; em.style.top=y+'px'; stage.appendChild(em);
+    em.animate([{transform:'translate(-50%,-50%) scale(0.3)',opacity:0},
+      {transform:'translate(-50%,-50%) scale(1.4)',opacity:1,offset:.3},
+      {transform:'translate(-50%,-50%) scale(1.2)',opacity:1,offset:.7},
+      {transform:'translate(-50%,-50%) scale(1.7)',opacity:0}],
+      {duration:1100,easing:'ease-out'}).onfinish=()=>em.remove();
+    beep([523,659,784,1047]); // brighter 4-note chord
   }
 
   function sparkle(x,y){
@@ -325,10 +434,19 @@
   // ---------- input: cursor = gaze ----------
   function moveCursor(x,y){
     cursor.x=x; cursor.y=y;
-    if(S.showGaze){ gaze.style.left=x+'px'; gaze.style.top=y+'px'; }
+    if(S.showGaze && hoverDwell){ gaze.style.left=x+'px'; gaze.style.top=y+'px'; }
   }
-  addEventListener('mousemove',e=>moveCursor(e.clientX,e.clientY));
+  // Only a real hovering pointer (desktop mouse / eye-gaze cursor) drives dwell.
+  // On touch devices we ignore mouse hover so a stray trackpad/simulator pointer
+  // can't select on its own — only actual touches count there.
+  addEventListener('mousemove',e=>{ if(hoverDwell) moveCursor(e.clientX,e.clientY); });
+  // Touch: pressing sets the "pointer" on the target so the ring fills while held;
+  // lifting resets it off-screen so it never keeps selecting on its own.
+  addEventListener('touchstart',e=>{const t=e.touches[0]; if(t) moveCursor(t.clientX,t.clientY);},{passive:true});
   addEventListener('touchmove',e=>{const t=e.touches[0]; if(t) moveCursor(t.clientX,t.clientY);},{passive:true});
+  function endTouch(){ cursor.x=-9999; cursor.y=-9999; dwellStart=0; needRelease=false; if(!switchReady) setRing(0); }
+  addEventListener('touchend',endTouch,{passive:true});
+  addEventListener('touchcancel',endTouch,{passive:true});
 
   // --- Native gaze hook -------------------------------------------------
   // In the Electron desktop build, a native tracker bridge (Tobii eyex /
@@ -355,6 +473,7 @@
     moveCursor(e.clientX,e.clientY);
     if(S.requireSwitch) pressSwitch();
     else if(armed && onTarget()) select();
+    if(!hoverDwell){ cursor.x=-9999; cursor.y=-9999; }  // touch: don't leave a resting pointer
   });
 
   // ---------- settings wiring ----------
@@ -369,6 +488,7 @@
   $('sDwell').oninput=e=>{S.dwell=+e.target.value;$('vDwell').textContent=S.dwell.toFixed(1)+'s';};
   $('sTol').oninput=e=>{S.tol=+e.target.value;$('vTol').textContent=S.tol;};
   $('sDelay').oninput=e=>{S.delay=+e.target.value;$('vDelay').textContent=S.delay.toFixed(1)+'s';};
+  $('sActivity').onchange=e=>{S.activity=e.target.value;};
   $('sPos').onchange=e=>{S.position=e.target.value;
     $('rowSpeed').style.display=(S.position==='glide')?'flex':'none';
     placeTarget();};
@@ -385,19 +505,161 @@
   const cw=$('colors');
   PALETTE.forEach(c=>{
     const d=document.createElement('div');
-    d.className='swatch'+(c===S.color?' sel':'');
+    d.className='swatch'; d.dataset.c=c;
     d.style.background=c;
-    d.onclick=()=>{S.color=c;applyLook();[...cw.children].forEach(x=>x.classList.remove('sel'));d.classList.add('sel');};
+    d.onclick=()=>{S.color=c;applyLook();markSwatch();};
     cw.appendChild(d);
   });
+  function markSwatch(){ [...cw.children].forEach(x=>x.classList.toggle('sel', x.dataset.c===S.color)); }
 
   $('btnFull').onclick=()=>{const el=document.documentElement;
     if(document.fullscreenElement){document.exitFullscreen();}
     else if(el.requestFullscreen){el.requestFullscreen();}};
   $('btnReset').onclick=()=>{score=0;scoreEl.textContent=0;};
 
+  // ---------- profiles & progress (saved on this device) ----------
+  const KEY='iclts_v1';
+  let store=null;
+  function loadStore(){ try{const r=localStorage.getItem(KEY); if(r) return JSON.parse(r);}catch(e){} return null; }
+  function saveStore(){ try{ localStorage.setItem(KEY, JSON.stringify(store)); }catch(e){} }
+  function defaults(){ return {activity:"tap",size:200,color:"#ff2b2b",glow:true,pulse:true,position:"still",
+    speed:3,dwell:1.5,requireSwitch:false,tol:80,delay:1.0,sound:true,spark:true,showGaze:true}; }
+  function ensureStore(){
+    store=loadStore();
+    if(!store||!store.profiles||!store.activeId||!store.profiles[store.activeId]){
+      const id='p'+Date.now();
+      store={activeId:id,profiles:{}};
+      store.profiles[id]={name:'Child 1',settings:defaults(),sessions:[]};
+      saveStore();
+    }
+  }
+  function activeProfile(){ return store.profiles[store.activeId]; }
+  function applyActiveProfile(){ Object.assign(S, defaults(), activeProfile().settings||{}); }
+  function saveActiveSettings(){
+    const p=activeProfile(); if(!p) return;
+    p.settings={activity:S.activity,size:S.size,color:S.color,glow:S.glow,pulse:S.pulse,position:S.position,
+      speed:S.speed,dwell:S.dwell,requireSwitch:S.requireSwitch,tol:S.tol,delay:S.delay,
+      sound:S.sound,spark:S.spark,showGaze:S.showGaze};
+    saveStore();
+  }
+  function recordTap(acqMs){
+    const p=activeProfile(); if(!p) return;
+    p.sessions=p.sessions||[];
+    const now=Date.now();
+    let s=p.sessions[p.sessions.length-1];
+    if(!s || (now-s.end)>20*60*1000){ s={start:now,end:now,taps:0,sumAcq:0}; p.sessions.push(s); }
+    s.taps++; s.sumAcq+=acqMs; s.end=now;
+    saveStore();
+  }
+
+  // reflect S into every control
+  function syncControls(){
+    $('sActivity').value=S.activity;
+    $('sSize').value=S.size; $('vSize').textContent=S.size;
+    $('sDwell').value=S.dwell; $('vDwell').textContent=S.dwell.toFixed(1)+'s';
+    $('sTol').value=S.tol; $('vTol').textContent=S.tol;
+    $('sDelay').value=S.delay; $('vDelay').textContent=S.delay.toFixed(1)+'s';
+    $('sSpeed').value=S.speed; $('vSpeed').textContent=S.speed;
+    $('sPos').value=S.position; $('rowSpeed').style.display=(S.position==='glide')?'flex':'none';
+    $('tGlow').classList.toggle('on',S.glow);
+    $('tPulse').classList.toggle('on',S.pulse);
+    $('tSwitch').classList.toggle('on',S.requireSwitch);
+    $('tSound').classList.toggle('on',S.sound);
+    $('tSpark').classList.toggle('on',S.spark);
+    $('tGaze').classList.toggle('on',S.showGaze);
+    gaze.style.display=S.showGaze?'block':'none';
+    markSwatch(); applyLook(); placeTarget();
+  }
+  function renderProfiles(){
+    const sel=$('sProfile'); sel.innerHTML='';
+    Object.keys(store.profiles).forEach(id=>{
+      const o=document.createElement('option'); o.value=id; o.textContent=store.profiles[id].name;
+      if(id===store.activeId) o.selected=true; sel.appendChild(o);
+    });
+  }
+  // save settings automatically whenever a control in the panel changes
+  ['input','change','click'].forEach(ev=>
+    $('panel').addEventListener(ev, ()=>setTimeout(saveActiveSettings,0)));
+
+  $('sProfile').onchange=e=>{ store.activeId=e.target.value; saveStore();
+    applyActiveProfile(); syncControls(); };
+  $('btnNewProfile').onclick=()=>{
+    const n=(prompt('Name for the new child profile:','Child '+(Object.keys(store.profiles).length+1))||'').trim();
+    if(!n) return;
+    const id='p'+Date.now();
+    store.profiles[id]={name:n,settings:defaults(),sessions:[]};
+    store.activeId=id; saveStore();
+    applyActiveProfile(); renderProfiles(); syncControls();
+  };
+  $('btnRenameProfile').onclick=()=>{
+    const p=activeProfile(); const n=(prompt('Rename this child:',p.name)||'').trim();
+    if(!n) return; p.name=n; saveStore(); renderProfiles();
+  };
+  $('btnDelProfile').onclick=()=>{
+    const ids=Object.keys(store.profiles);
+    if(ids.length<=1){ alert('You need at least one child profile. Rename it instead.'); return; }
+    const p=activeProfile();
+    if(!confirm('Delete "'+p.name+'" and all their saved progress?')) return;
+    delete store.profiles[store.activeId];
+    store.activeId=Object.keys(store.profiles)[0]; saveStore();
+    applyActiveProfile(); renderProfiles(); syncControls();
+  };
+
+  // ---------- progress report ----------
+  function fmtDate(ms){ const d=new Date(ms);
+    return d.toLocaleDateString([], {month:'short',day:'numeric'})+' '+
+      d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}); }
+  function renderReport(){
+    const p=activeProfile();
+    $('repTitle').textContent='Progress — '+p.name;
+    const sessions=(p.sessions||[]).filter(s=>s.taps>0);
+    const body=$('repBody');
+    if(!sessions.length){
+      body.innerHTML='<p class="hint">No sessions recorded yet. Play the activity and '+
+        'each look-and-tap will be logged here automatically.</p>'; return;
+    }
+    const totalTaps=sessions.reduce((a,s)=>a+s.taps,0);
+    const overallAvg=sessions.reduce((a,s)=>a+s.sumAcq,0)/totalTaps/1000;
+    const bestAvg=Math.min(...sessions.map(s=>s.sumAcq/s.taps/1000));
+    const maxTaps=Math.max(...sessions.map(s=>s.taps));
+    const recent=sessions.slice(-14);
+    const bars=recent.map(s=>{
+      const h=Math.round(s.taps/maxTaps*100);
+      return '<div class="bar" style="height:'+h+'%" title="'+s.taps+' taps"></div>';
+    }).join('');
+    const rows=sessions.slice().reverse().slice(0,25).map(s=>
+      '<tr><td>'+fmtDate(s.start)+'</td><td>'+s.taps+'</td><td>'+
+      (s.sumAcq/s.taps/1000).toFixed(1)+'s</td></tr>').join('');
+    body.innerHTML=
+      '<div class="stat-grid">'+
+        '<div class="stat"><b>'+totalTaps+'</b><span>Total taps</span></div>'+
+        '<div class="stat"><b>'+sessions.length+'</b><span>Sessions</span></div>'+
+        '<div class="stat"><b>'+overallAvg.toFixed(1)+'s</b><span>Avg look-to-tap</span></div>'+
+        '<div class="stat"><b>'+bestAvg.toFixed(1)+'s</b><span>Fastest avg</span></div>'+
+      '</div>'+
+      '<p class="hint">"Look-to-tap" is how long it takes from the target appearing to a '+
+      'successful tap. Lower over time means she is finding and holding on the target faster.</p>'+
+      '<h3>Taps per session (most recent)</h3><div class="bars">'+bars+'</div>'+
+      '<h3>Session history</h3>'+
+      '<table class="rep"><thead><tr><th>When</th><th>Taps</th><th>Avg look-to-tap</th></tr></thead>'+
+      '<tbody>'+rows+'</tbody></table>'+
+      '<div class="rep-actions">'+
+        '<button class="act" id="btnPrint" style="width:auto">Print / Save PDF</button>'+
+        '<button class="act" id="btnClearData" style="width:auto">Clear this child\'s history</button>'+
+      '</div>';
+    $('btnPrint').onclick=()=>window.print();
+    $('btnClearData').onclick=()=>{ if(confirm('Clear all recorded sessions for '+p.name+'?')){
+      p.sessions=[]; saveStore(); renderReport(); } };
+  }
+  $('btnProgress').onclick=()=>{ renderReport(); $('progressPanel').classList.add('open'); };
+  $('btnCloseProgress').onclick=()=>$('progressPanel').classList.remove('open');
+
   // ---------- go ----------
-  applyLook();
+  ensureStore();
+  applyActiveProfile();
+  renderProfiles();
+  syncControls();        // pushes the active child's settings into the UI + applyLook
+  if(!hoverDwell){ gaze.style.display='none'; }   // no gaze dot on touch devices
   loop();
   setTimeout(showTarget, S.delay*1000);
 })();

@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>I Can Learn To See — Look &amp; Tap</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#000000">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
   :root{
     --bg:#000000;
@@ -663,6 +666,13 @@
   loop();
   setTimeout(showTarget, S.delay*1000);
 })();
+</script>
+<script>
+// Register the offline service worker (only when served over http/https, e.g. the
+// website/PWA — skipped in the bundled iPad/Android native app which runs from file://).
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
 </script>
 </body>
 </html>

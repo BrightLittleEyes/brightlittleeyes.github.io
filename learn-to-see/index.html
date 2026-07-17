@@ -44,6 +44,17 @@
     border:8px solid #fff;pointer-events:none;transform:translate(-50%,-50%);}
   .fx-emoji{position:absolute;font-size:120px;line-height:1;pointer-events:none;
     transform:translate(-50%,-50%);filter:drop-shadow(0 0 20px rgba(0,0,0,.6));}
+  .choice{position:absolute;transform:translate(-50%,-50%);
+    display:flex;align-items:center;justify-content:center;}
+  .cring{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;}
+  .cprog{transition:stroke-dashoffset .05s linear;}
+  .choiceGlyph{font-weight:800;color:#fff;line-height:1;
+    display:flex;align-items:center;justify-content:center;}
+  #replay{position:fixed;top:calc(10px + env(safe-area-inset-top));left:50%;
+    transform:translateX(-50%);width:52px;height:52px;border-radius:50%;
+    background:rgba(255,255,255,.10);color:#fff;border:none;font-size:24px;
+    display:none;align-items:center;justify-content:center;cursor:pointer;z-index:60;}
+  #replay:hover{background:rgba(255,255,255,.2);}
 
   /* ---- Gaze dot (shows where the tracker cursor is) ---- */
   #gaze{position:fixed;width:26px;height:26px;border-radius:50%;
@@ -133,6 +144,7 @@
 
 <div id="gaze"></div>
 <div id="hud">Taps: <span id="score">0</span></div>
+<button id="replay" title="Say it again">🔊</button>
 <button id="gear" title="Settings">⚙</button>
 
 <!-- ---------------- Settings ---------------- -->
@@ -157,10 +169,23 @@
     <select id="sActivity">
       <option value="tap">Look &amp; Tap (find the target)</option>
       <option value="cause">Cause &amp; Effect (looking makes it happen)</option>
+      <option value="choose">Choose (find the letter, number, or shape)</option>
     </select></div>
-  <p class="hint">Cause &amp; Effect is the simplest starting point: a quick look
-    sets off a big celebration — teaching that her looking makes something happen.
-    Look &amp; Tap adds the hold-to-select skill.</p>
+  <div class="row" id="rowContent" style="display:none"><label>What to find</label>
+    <select id="sContent">
+      <option value="letters">Letters</option>
+      <option value="numbers">Numbers</option>
+      <option value="shapes">Shapes</option>
+    </select></div>
+  <div class="row" id="rowChoices" style="display:none"><label>Number of choices</label>
+    <select id="sChoices">
+      <option value="1">1 — just find it</option>
+      <option value="2">2 — pick the right one</option>
+    </select></div>
+  <p class="hint">Cause &amp; Effect is the simplest — a quick look sets off a big
+    celebration. Look &amp; Tap adds hold-to-select. Choose speaks a prompt
+    ("Find the A") and the child looks at the right letter, number, or shape —
+    building visual discrimination.</p>
 
   <h3>Target</h3>
   <div class="row"><label>Size</label>
@@ -230,8 +255,8 @@
   "use strict";
   // ---------- state / settings ----------
   const S = {
-    activity:"tap",
-    size:200, color:"#ff2b2b", glow:true, pulse:true, position:"still", speed:3,
+    activity:"tap", content:"letters", choices:2,
+    size:200, color:"#ff2b2b", glow:true, pulse:true, position:"jump", speed:3,
     dwell:1.5, requireSwitch:false, tol:80, delay:1.0,
     sound:true, spark:true, showGaze:true
   };
@@ -240,6 +265,7 @@
   let switchReady=false;           // when requireSwitch: true once dwell completes
   let targetShownAt=0;             // for measuring look-to-tap acquisition time
   let needRelease=false;           // touch: require a finger lift before the next dwell-select
+  let chooseItems=[], chooseAnswer=null;   // Choose activity: on-screen options + the correct one
   let cursor={x:-9999,y:-9999};   // start off-screen so nothing dwells until gaze/mouse moves
   // Touch devices (iPad/phone) have no hovering pointer, so use tap-to-select
   // instead of hover-dwell (otherwise the centered target would auto-select forever).
@@ -329,6 +355,7 @@
 
   function hideTarget(){ target.style.visibility='hidden'; armed=false; setRing(0);}
   function showTarget(){
+    if(S.activity==='choose'){ return; }   // Choose runs its own round system
     placeTarget();
     target.style.visibility='visible';
     armed=true; switchReady=false; dwellStart=0; setRing(0);
@@ -344,6 +371,7 @@
 
   function loop(){
     raf=requestAnimationFrame(loop);
+    if(S.activity==='choose'){ chooseLoop(); return; }
     if(!armed){ return; }
     if(S.position==='glide' && !switchReady) glideStep();
     if(!onTarget()) needRelease=false;   // gaze/finger left the target → ready to select again
@@ -472,8 +500,14 @@
     pressSwitch();
   });
   stage.addEventListener('click',e=>{
-    // a direct click/tap on the target also counts (mouse testing & touch)
+    // a direct click/tap also counts (mouse testing & touch)
     moveCursor(e.clientX,e.clientY);
+    if(S.activity==='choose'){
+      const c=choiceAt(e.clientX,e.clientY);
+      if(c && armed && !needRelease) chooseSelect(c);
+      if(!hoverDwell){ cursor.x=-9999; cursor.y=-9999; }
+      return;
+    }
     if(S.requireSwitch) pressSwitch();
     else if(armed && onTarget()) select();
     if(!hoverDwell){ cursor.x=-9999; cursor.y=-9999; }  // touch: don't leave a resting pointer
@@ -491,7 +525,13 @@
   $('sDwell').oninput=e=>{S.dwell=+e.target.value;$('vDwell').textContent=S.dwell.toFixed(1)+'s';};
   $('sTol').oninput=e=>{S.tol=+e.target.value;$('vTol').textContent=S.tol;};
   $('sDelay').oninput=e=>{S.delay=+e.target.value;$('vDelay').textContent=S.delay.toFixed(1)+'s';};
-  $('sActivity').onchange=e=>{S.activity=e.target.value;};
+  $('sActivity').onchange=e=>{S.activity=e.target.value;
+    $('rowContent').style.display=(S.activity==='choose')?'flex':'none';
+    $('rowChoices').style.display=(S.activity==='choose')?'flex':'none';
+    resetActivity();};
+  $('sContent').onchange=e=>{S.content=e.target.value; resetActivity();};
+  $('sChoices').onchange=e=>{S.choices=+e.target.value; resetActivity();};
+  $('replay').onclick=()=>{ if(S.activity==='choose' && chooseAnswer) speak(promptText(chooseAnswer)); };
   $('sPos').onchange=e=>{S.position=e.target.value;
     $('rowSpeed').style.display=(S.position==='glide')?'flex':'none';
     placeTarget();};
@@ -525,7 +565,7 @@
   let store=null;
   function loadStore(){ try{const r=localStorage.getItem(KEY); if(r) return JSON.parse(r);}catch(e){} return null; }
   function saveStore(){ try{ localStorage.setItem(KEY, JSON.stringify(store)); }catch(e){} }
-  function defaults(){ return {activity:"tap",size:200,color:"#ff2b2b",glow:true,pulse:true,position:"still",
+  function defaults(){ return {activity:"tap",content:"letters",choices:2,size:200,color:"#ff2b2b",glow:true,pulse:true,position:"jump",
     speed:3,dwell:1.5,requireSwitch:false,tol:80,delay:1.0,sound:true,spark:true,showGaze:true}; }
   function ensureStore(){
     store=loadStore();
@@ -535,29 +575,42 @@
       store.profiles[id]={name:'Child 1',settings:defaults(),sessions:[]};
       saveStore();
     }
+    // one-time migration: move existing profiles onto the new "jump" default
+    if(!store.migJump){
+      Object.keys(store.profiles).forEach(id=>{
+        const s=store.profiles[id].settings;
+        if(s && s.position==='still') s.position='jump';
+      });
+      store.migJump=true; saveStore();
+    }
   }
   function activeProfile(){ return store.profiles[store.activeId]; }
   function applyActiveProfile(){ Object.assign(S, defaults(), activeProfile().settings||{}); }
   function saveActiveSettings(){
     const p=activeProfile(); if(!p) return;
-    p.settings={activity:S.activity,size:S.size,color:S.color,glow:S.glow,pulse:S.pulse,position:S.position,
+    p.settings={activity:S.activity,content:S.content,choices:S.choices,size:S.size,color:S.color,glow:S.glow,pulse:S.pulse,position:S.position,
       speed:S.speed,dwell:S.dwell,requireSwitch:S.requireSwitch,tol:S.tol,delay:S.delay,
       sound:S.sound,spark:S.spark,showGaze:S.showGaze};
     saveStore();
   }
-  function recordTap(acqMs){
+  function recordTap(acqMs, correct){
     const p=activeProfile(); if(!p) return;
     p.sessions=p.sessions||[];
     const now=Date.now();
     let s=p.sessions[p.sessions.length-1];
-    if(!s || (now-s.end)>20*60*1000){ s={start:now,end:now,taps:0,sumAcq:0}; p.sessions.push(s); }
-    s.taps++; s.sumAcq+=acqMs; s.end=now;
+    if(!s || (now-s.end)>20*60*1000){ s={start:now,end:now,taps:0,sumAcq:0,correct:0,wrong:0}; p.sessions.push(s); }
+    s.end=now;
+    if(correct===false){ s.wrong=(s.wrong||0)+1; }          // wrong pick (Choose activity)
+    else { s.taps++; s.sumAcq+=acqMs; if(correct===true) s.correct=(s.correct||0)+1; }
     saveStore();
   }
 
   // reflect S into every control
   function syncControls(){
     $('sActivity').value=S.activity;
+    $('sContent').value=S.content; $('sChoices').value=String(S.choices);
+    $('rowContent').style.display=(S.activity==='choose')?'flex':'none';
+    $('rowChoices').style.display=(S.activity==='choose')?'flex':'none';
     $('sSize').value=S.size; $('vSize').textContent=S.size;
     $('sDwell').value=S.dwell; $('vDwell').textContent=S.dwell.toFixed(1)+'s';
     $('sTol').value=S.tol; $('vTol').textContent=S.tol;
@@ -624,7 +677,12 @@
     const totalTaps=sessions.reduce((a,s)=>a+s.taps,0);
     const overallAvg=sessions.reduce((a,s)=>a+s.sumAcq,0)/totalTaps/1000;
     const bestAvg=Math.min(...sessions.map(s=>s.sumAcq/s.taps/1000));
-    const maxTaps=Math.max(...sessions.map(s=>s.taps));
+    const maxTaps=Math.max(1,...sessions.map(s=>s.taps));
+    const totalCorrect=sessions.reduce((a,s)=>a+(s.correct||0),0);
+    const totalWrong=sessions.reduce((a,s)=>a+(s.wrong||0),0);
+    const accCard=(totalCorrect+totalWrong)>0
+      ? '<div class="stat"><b>'+Math.round(totalCorrect/(totalCorrect+totalWrong)*100)+'%</b><span>Choose accuracy</span></div>'
+      : '';
     const recent=sessions.slice(-14);
     const bars=recent.map(s=>{
       const h=Math.round(s.taps/maxTaps*100);
@@ -639,6 +697,7 @@
         '<div class="stat"><b>'+sessions.length+'</b><span>Sessions</span></div>'+
         '<div class="stat"><b>'+overallAvg.toFixed(1)+'s</b><span>Avg look-to-tap</span></div>'+
         '<div class="stat"><b>'+bestAvg.toFixed(1)+'s</b><span>Fastest avg</span></div>'+
+        accCard+
       '</div>'+
       '<p class="hint">"Look-to-tap" is how long it takes from the target appearing to a '+
       'successful tap. Lower over time means she is finding and holding on the target faster.</p>'+
@@ -657,14 +716,142 @@
   $('btnProgress').onclick=()=>{ renderReport(); $('progressPanel').classList.add('open'); };
   $('btnCloseProgress').onclick=()=>$('progressPanel').classList.remove('open');
 
+  // ---------- Choose activity (letters / numbers / shapes) ----------
+  const LETTERS='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  const NUMBERS='0123456789'.split('');
+  const SHAPES=['circle','square','triangle','star','heart'];
+
+  function speak(t){
+    try{ speechSynthesis.cancel();
+      const u=new SpeechSynthesisUtterance(t); u.rate=0.85; u.pitch=1.05;
+      speechSynthesis.speak(u);
+    }catch(e){}
+  }
+  function promptText(item){ return (S.content==='shapes' ? 'Find the '+item : 'Find '+item); }
+
+  function starPoints(cx,cy,outer,inner,pts){
+    let s=''; for(let i=0;i<pts*2;i++){ const r=i%2?inner:outer; const a=Math.PI/pts*i-Math.PI/2;
+      s+=(cx+r*Math.cos(a)).toFixed(1)+','+(cy+r*Math.sin(a)).toFixed(1)+' '; } return s.trim();
+  }
+  function shapeNode(shape,sz){
+    const ns='http://www.w3.org/2000/svg';
+    const svg=document.createElementNS(ns,'svg');
+    svg.setAttribute('width',sz); svg.setAttribute('height',sz); svg.setAttribute('viewBox','0 0 100 100');
+    if(S.glow) svg.style.filter='drop-shadow(0 0 22px '+S.color+')';
+    let el;
+    if(shape==='square'){ el=document.createElementNS(ns,'rect'); el.setAttribute('x',6);el.setAttribute('y',6);el.setAttribute('width',88);el.setAttribute('height',88);el.setAttribute('rx',8); }
+    else if(shape==='triangle'){ el=document.createElementNS(ns,'polygon'); el.setAttribute('points','50,8 92,90 8,90'); }
+    else if(shape==='star'){ el=document.createElementNS(ns,'polygon'); el.setAttribute('points',starPoints(50,52,46,20,5)); }
+    else if(shape==='heart'){ el=document.createElementNS(ns,'path'); el.setAttribute('d','M50 86 C 8 54, 20 14, 50 34 C 80 14, 92 54, 50 86 Z'); }
+    else { el=document.createElementNS(ns,'circle'); el.setAttribute('cx',50);el.setAttribute('cy',50);el.setAttribute('r',46); }
+    el.setAttribute('fill',S.color); svg.appendChild(el); return svg;
+  }
+  function makeItemNode(item,sz){
+    if(S.content==='shapes') return shapeNode(item,sz);
+    const disc=document.createElement('div');
+    disc.style.width=disc.style.height=sz+'px'; disc.style.borderRadius='50%';
+    disc.style.background=S.color; disc.style.display='flex';
+    disc.style.alignItems='center'; disc.style.justifyContent='center';
+    if(S.glow) disc.style.boxShadow='0 0 60px 20px '+S.color;
+    const g=document.createElement('div'); g.className='choiceGlyph';
+    g.textContent=item; g.style.fontSize=(sz*0.62)+'px';
+    disc.appendChild(g); return disc;
+  }
+  function makeChoice(item,x,y,correct){
+    const el=document.createElement('div'); el.className='choice';
+    el.style.left=x+'px'; el.style.top=y+'px';
+    const sz=S.size, R=sz/2+22, sw=10, box=R*2+sw*2, c=box/2, circ=2*Math.PI*R;
+    const ns='http://www.w3.org/2000/svg';
+    const svg=document.createElementNS(ns,'svg'); svg.setAttribute('class','cring');
+    svg.setAttribute('width',box); svg.setAttribute('height',box);
+    const ring=document.createElementNS(ns,'circle'); ring.setAttribute('class','cprog');
+    ring.setAttribute('cx',c); ring.setAttribute('cy',c); ring.setAttribute('r',R);
+    ring.setAttribute('fill','none'); ring.setAttribute('stroke','#fff'); ring.setAttribute('stroke-width',sw);
+    ring.setAttribute('stroke-linecap','round'); ring.setAttribute('transform','rotate(-90 '+c+' '+c+')');
+    ring.style.strokeDasharray=circ; ring.style.strokeDashoffset=circ;
+    svg.appendChild(ring); el.appendChild(svg);
+    el.appendChild(makeItemNode(item,sz));
+    stage.appendChild(el);
+    return {el,cx:x,cy:y,dwellStart:0,correct,prog:ring,circ};
+  }
+  function clearChoose(){ chooseItems.forEach(c=>c.el.remove()); chooseItems=[]; }
+
+  function startChooseRound(){
+    clearChoose(); target.style.visibility='hidden';
+    const set = S.content==='letters'?LETTERS : (S.content==='numbers'?NUMBERS:SHAPES);
+    chooseAnswer = set[Math.floor(Math.random()*set.length)];
+    let items=[chooseAnswer];
+    if(S.choices>=2){ let d; do{ d=set[Math.floor(Math.random()*set.length)]; }while(d===chooseAnswer); items.push(d); }
+    for(let i=items.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [items[i],items[j]]=[items[j],items[i]]; }
+    const m=S.size*0.7+40;
+    const pos = items.length===1
+      ? [[innerWidth/2, innerHeight/2]]
+      : [[Math.max(m,innerWidth*0.28), innerHeight/2],[Math.min(innerWidth-m,innerWidth*0.72), innerHeight/2]];
+    items.forEach((it,i)=>chooseItems.push(makeChoice(it,pos[i][0],pos[i][1],it===chooseAnswer)));
+    armed=true; needRelease=false; targetShownAt=performance.now();
+    speak(promptText(chooseAnswer));
+  }
+
+  function onAnyChoice(){ const r=S.size/2+S.tol;
+    return chooseItems.some(c=>{const dx=cursor.x-c.cx,dy=cursor.y-c.cy; return dx*dx+dy*dy<=r*r;}); }
+  function choiceAt(x,y){ const r=S.size/2+S.tol;
+    return chooseItems.find(c=>{const dx=x-c.cx,dy=y-c.cy; return dx*dx+dy*dy<=r*r;}); }
+
+  function chooseLoop(){
+    if(!armed) return;
+    const now=performance.now();
+    if(!onAnyChoice()) needRelease=false;
+    chooseItems.forEach(c=>{
+      const r=S.size/2+S.tol, dx=cursor.x-c.cx, dy=cursor.y-c.cy;
+      if(dx*dx+dy*dy<=r*r && !needRelease){
+        if(!c.dwellStart) c.dwellStart=now;
+        const p=Math.min(1,(now-c.dwellStart)/(S.dwell*1000));
+        c.prog.style.strokeDashoffset=c.circ*(1-p);
+        if(p>=1) chooseSelect(c);
+      } else { c.dwellStart=0; c.prog.style.strokeDashoffset=c.circ; }
+    });
+  }
+  function chooseSelect(c){
+    if(!armed) return;
+    if(c.correct){
+      armed=false; needRelease=true;
+      score++; scoreEl.textContent=score;
+      const acq=Math.min(30000,Math.max(0,performance.now()-targetShownAt));
+      recordTap(acq,true);
+      bigCelebrate(c.cx,c.cy);
+      clearChoose();
+      setTimeout(()=>{ if(S.activity==='choose') startChooseRound(); }, S.delay*1000);
+    } else {
+      recordTap(0,false);
+      beep([300,240]);
+      c.dwellStart=0; c.prog.style.strokeDashoffset=c.circ;
+      c.el.animate([{opacity:1},{opacity:.35},{opacity:1}],{duration:500,easing:'ease-out'});
+      needRelease=true;
+      speak(promptText(chooseAnswer));
+    }
+  }
+
+  function startRound(){
+    $('replay').style.display=(S.activity==='choose')?'flex':'none';
+    if(S.activity==='choose') startChooseRound(); else showTarget();
+  }
+  function resetActivity(){
+    clearChoose(); armed=false; needRelease=false; setRing(0);
+    switchReady=false; shape.style.boxShadow='';
+    target.style.visibility='hidden';
+    $('replay').style.display=(S.activity==='choose')?'flex':'none';
+    setTimeout(startRound, 300);
+  }
+
   // ---------- go ----------
   ensureStore();
   applyActiveProfile();
   renderProfiles();
   syncControls();        // pushes the active child's settings into the UI + applyLook
   if(!hoverDwell){ gaze.style.display='none'; }   // no gaze dot on touch devices
+  $('replay').style.display=(S.activity==='choose')?'flex':'none';
   loop();
-  setTimeout(showTarget, S.delay*1000);
+  setTimeout(startRound, S.delay*1000);
 })();
 </script>
 <script>

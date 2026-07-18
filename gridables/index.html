@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gridables — Try it instantly</title>
+<!-- Smart App Banner: offers the full app on iOS Safari -->
+<meta name="apple-itunes-app" content="app-id=6762519703">
+<meta name="description" content="Gridables — a friendly, high-contrast worksheet companion for kids learning math. Scan a worksheet and solve it on screen. Try it instantly, no download.">
+<style>
+  :root{
+    --bg:#000;
+    --yellow:#FFD400;
+    --blue:#2E9BFF;
+    --text:#FFD400;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:32px 20px;
+  }
+  .wrap{max-width:560px;width:100%;}
+  .icon{
+    width:120px;height:120px;border-radius:26px;margin:0 auto 24px;
+    display:block;box-shadow:0 0 0 3px rgba(255,212,0,.25);
+  }
+  h1{font-size:2.4rem;line-height:1.1;margin:0 0 12px;font-weight:800;}
+  p.lead{font-size:1.2rem;line-height:1.5;margin:0 0 28px;color:#fff;}
+  .cta{
+    display:inline-block;background:var(--yellow);color:#000;
+    font-size:1.15rem;font-weight:800;text-decoration:none;
+    padding:16px 28px;border-radius:16px;margin:8px 6px;
+    min-width:240px;
+  }
+  .cta:active{transform:translateY(1px);}
+  .secondary{
+    display:inline-block;color:var(--blue);text-decoration:none;
+    font-size:1.05rem;font-weight:600;margin-top:18px;
+    border-bottom:2px solid transparent;
+  }
+  .secondary:hover{border-bottom-color:var(--blue);}
+  .note{margin-top:28px;font-size:.95rem;color:#aaa;line-height:1.5;}
+  .hashtag{color:var(--yellow);font-weight:700;letter-spacing:.5px;margin-top:22px;}
+  footer{margin-top:40px;font-size:.85rem;color:#777;}
+  footer a{color:#999;}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <img class="icon" src="https://brightlittleeyes.github.io/Gridables-icon.png" alt="Gridables app icon">
+    <h1>Gridables</h1>
+    <p class="lead">A friendly, high-contrast math worksheet companion for kids with low vision and CVI. Scan a worksheet and solve it right on screen.</p>
+
+    <a class="cta" href="https://apps.apple.com/us/app/gridables/id6762519703">Get Gridables on the App Store</a>
+
+    <div>
+      <a class="secondary" href="https://brightlittleeyes.github.io/Gridables.html">Learn more about Gridables →</a>
+    </div>
+
+    <p class="note" id="ios-note" hidden>On an iPhone or iPad? Tap the banner at the top to try Gridables instantly — no download needed.</p>
+
+    <p class="hashtag">#icanlearntosee</p>
+
+    <footer>
+      From <a href="https://brightlittleeyes.github.io/">Bright Little Eyes</a>
+    </footer>
+  </div>
+
+<script>
+  // Show the "try instantly" hint only on Apple touch devices.
+  (function(){
+    var isApple = /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent) && 'ontouchend' in document;
+    if (isApple) {
+      var n = document.getElementById('ios-note');
+      if (n) n.hidden = false;
+    }
+  })();
+</script>
+</body>
+</html>

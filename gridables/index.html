@@ -4,54 +4,30 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Gridables — Try it instantly</title>
-<!-- Smart App Banner: offers the full app on iOS Safari -->
 <meta name="apple-itunes-app" content="app-id=6762519703">
 <meta name="description" content="Gridables — a friendly, high-contrast worksheet companion for kids learning math. Scan a worksheet and solve it on screen. Try it instantly, no download.">
 <style>
-  :root{
-    --bg:#000;
-    --yellow:#FFD400;
-    --blue:#2E9BFF;
-    --text:#FFD400;
-  }
+  :root{--bg:#000;--yellow:#FFD400;--blue:#2E9BFF;--text:#FFD400;}
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
-  body{
-    background:var(--bg);
-    color:var(--text);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    min-height:100vh;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    text-align:center;
-    padding:32px 20px;
-  }
+  body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px 20px;}
   .wrap{max-width:560px;width:100%;}
-  .icon{
-    width:120px;height:120px;border-radius:26px;margin:0 auto 24px;
-    display:block;box-shadow:0 0 0 3px rgba(255,212,0,.25);
-  }
+  .icon{width:120px;height:120px;border-radius:26px;margin:0 auto 24px;display:block;box-shadow:0 0 0 3px rgba(255,212,0,.25);}
   h1{font-size:2.4rem;line-height:1.1;margin:0 0 12px;font-weight:800;}
   p.lead{font-size:1.2rem;line-height:1.5;margin:0 0 28px;color:#fff;}
-  .cta{
-    display:inline-block;background:var(--yellow);color:#000;
-    font-size:1.15rem;font-weight:800;text-decoration:none;
-    padding:16px 28px;border-radius:16px;margin:8px 6px;
-    min-width:240px;
-  }
+  .cta{display:inline-block;background:var(--yellow);color:#000;font-size:1.15rem;font-weight:800;text-decoration:none;padding:16px 28px;border-radius:16px;margin:8px 6px;min-width:240px;}
   .cta:active{transform:translateY(1px);}
-  .secondary{
-    display:inline-block;color:var(--blue);text-decoration:none;
-    font-size:1.05rem;font-weight:600;margin-top:18px;
-    border-bottom:2px solid transparent;
-  }
+  .secondary{display:inline-block;color:var(--blue);text-decoration:none;font-size:1.05rem;font-weight:600;margin-top:18px;border-bottom:2px solid transparent;}
   .secondary:hover{border-bottom-color:var(--blue);}
   .note{margin-top:28px;font-size:.95rem;color:#aaa;line-height:1.5;}
   .hashtag{color:var(--yellow);font-weight:700;letter-spacing:.5px;margin-top:22px;}
   footer{margin-top:40px;font-size:.85rem;color:#777;}
   footer a{color:#999;}
+  .qr-block{margin-top:34px;}
+  .qr-card{display:inline-block;background:#fff;padding:18px;border-radius:20px;}
+  .qr-card img{display:block;width:200px;height:200px;}
+  .qr-caption{margin-top:14px;font-size:1rem;color:var(--yellow);font-weight:700;}
+  @media (max-width:700px){ .qr-block{display:none;} }
 </style>
 </head>
 <body>
@@ -68,22 +44,24 @@
 
     <p class="note" id="ios-note" hidden>On an iPhone or iPad? Tap the banner at the top to try Gridables instantly — no download needed.</p>
 
+    <div class="qr-block">
+      <div class="qr-card"><img src="data:image/png;base64,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" alt="QR code to try Gridables"></div>
+      <p class="qr-caption">Scan with your iPhone camera to try it instantly</p>
+    </div>
+
     <p class="hashtag">#icanlearntosee</p>
 
-    <footer>
-      From <a href="https://brightlittleeyes.github.io/">Bright Little Eyes</a>
-    </footer>
+    <footer>From <a href="https://brightlittleeyes.github.io/">Bright Little Eyes</a></footer>
   </div>
 
 <script>
-  // Show the "try instantly" hint only on Apple touch devices.
   (function(){
     var isApple = /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent) && 'ontouchend' in document;
-    if (isApple) {
-      var n = document.getElementById('ios-note');
-      if (n) n.hidden = false;
-    }
+    if (isApple){ var n=document.getElementById('ios-note'); if(n) n.hidden=false; }
   })();
 </script>
 </body>
 </html>
+
+
+

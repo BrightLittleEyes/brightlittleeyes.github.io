@@ -531,16 +531,20 @@
   }
 
   function sparkle(x,y){
-    for(let i=0;i<14;i++){
+    // fireworks scaled to the circle: bigger circle -> bigger burst
+    const n=18+Math.round(S.size/16);
+    const dot=Math.max(10, Math.round(S.size*0.09));
+    for(let i=0;i<n;i++){
       const s=document.createElement('div');
       s.className='spark';
+      s.style.width=s.style.height=dot+'px';
       s.style.left=x+'px'; s.style.top=y+'px';
       s.style.background=PALETTE[i%PALETTE.length];
       stage.appendChild(s);
-      const a=Math.random()*2*Math.PI, d=120+Math.random()*160;
+      const a=Math.random()*2*Math.PI, d=S.size*(0.55+Math.random()*0.75);   // reach ≈ circle size
       s.animate([{transform:'translate(-50%,-50%) scale(1)',opacity:1},
-        {transform:`translate(${Math.cos(a)*d-50}%,${Math.sin(a)*d-50}%) scale(0)`,opacity:0}],
-        {duration:700,easing:'ease-out'}).onfinish=()=>s.remove();
+        {transform:`translate(calc(-50% + ${(Math.cos(a)*d).toFixed(1)}px), calc(-50% + ${(Math.sin(a)*d).toFixed(1)}px)) scale(0.2)`,opacity:0}],
+        {duration:820,easing:'cubic-bezier(.2,.7,.3,1)'}).onfinish=()=>s.remove();
     }
   }
 

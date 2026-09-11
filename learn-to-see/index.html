@@ -95,21 +95,24 @@
   /* ---- Minimal, out-of-the-way UI ---- */
   #hud{position:fixed;top:calc(10px + env(safe-area-inset-top));
     left:calc(14px + env(safe-area-inset-left));color:var(--ui);font-size:15px;
-    z-index:60;user-select:none;}
+    z-index:60;user-select:none;display:none;}
   #gear{position:fixed;top:calc(8px + env(safe-area-inset-top));
     right:calc(10px + env(safe-area-inset-right));width:44px;height:44px;border-radius:50%;
-    background:rgba(255,255,255,.06);color:var(--ui);border:none;font-size:20px;
-    display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:60;}
-  #gear:hover{background:rgba(255,255,255,.14);color:#fff;}
+    background:rgba(255,255,255,.06);color:var(--ui);border:none;font-size:20px;opacity:.35;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:60;transition:opacity .2s;}
+  #gear:hover{background:rgba(255,255,255,.14);color:#fff;opacity:1;}
 
   /* settings panel */
   #panel{position:fixed;top:0;right:0;height:100%;width:340px;max-width:90vw;
     background:#141414;border-left:1px solid #2a2a2a;
     padding:calc(20px + env(safe-area-inset-top)) calc(22px + env(safe-area-inset-right))
       calc(20px + env(safe-area-inset-bottom)) 22px;
-    overflow-y:auto;transform:translateX(105%);transition:transform .25s ease;
-    z-index:70;cursor:default;-webkit-overflow-scrolling:touch;}
+    overflow-y:auto;overflow-x:hidden;transform:translateX(105%);transition:transform .25s ease;
+    z-index:70;cursor:default;-webkit-overflow-scrolling:touch;box-sizing:border-box;}
   #panel.open{transform:translateX(0);}
+  .row{min-width:0;}
+  .row label{min-width:0;overflow:hidden;text-overflow:ellipsis;}
+  #panel select{max-width:60%;min-width:0;box-sizing:border-box;}
   #panel h2{margin:.2em 0 .6em;font-size:19px;}
   #panel h3{margin:1.3em 0 .4em;font-size:13px;letter-spacing:.08em;
     text-transform:uppercase;color:#9a9a9a;}
@@ -141,10 +144,21 @@
   .grp.open .grphead .arw{transform:rotate(180deg);}
   .grpbody{display:none;padding:0 2px 14px;}
   .grp.open .grpbody{display:block;}
+  #gate{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:90;display:none;
+    align-items:center;justify-content:center;cursor:default;}
+  #gate.open{display:flex;}
+  .gate-card{background:#161616;border:1px solid #2a2a2a;border-radius:16px;
+    padding:26px 28px;text-align:center;max-width:88vw;}
+  .gate-q{color:#fff;font-size:20px;margin:0 0 18px;}
+  .gate-opts{display:flex;gap:12px;justify-content:center;}
+  .gate-opts button{width:66px;height:66px;border-radius:12px;background:#222;
+    border:1px solid #3a3a3a;color:#fff;font-size:26px;font-weight:800;cursor:pointer;}
+  .gate-opts button:hover{background:#2e2e2e;}
+  #gateCancel{margin-top:16px;background:none;border:none;color:#888;font-size:14px;cursor:pointer;}
   .btnrow{display:flex;gap:8px;}
   .btnrow .act{width:auto;flex:1;margin-top:6px;}
   #progressPanel{position:fixed;inset:0;background:#0c0c0c;color:#eee;z-index:80;
-    display:none;overflow-y:auto;padding:26px 22px;cursor:default;}
+    display:none;overflow-y:auto;overflow-x:hidden;padding:26px 22px;cursor:default;box-sizing:border-box;}
   #progressPanel.open{display:block;}
   .rep-wrap{max-width:720px;margin:0 auto;}
   #progressPanel h2{font-size:22px;margin:.2em 0;}
@@ -211,7 +225,6 @@
         <button class="act" id="btnDelProfile">Delete</button>
       </div>
       <button class="act" id="btnProgress">View progress &amp; report</button>
-      <p class="hint">Settings and progress save per child on this device.</p>
     </div>
   </div>
 
@@ -257,22 +270,25 @@
   </div>
 
   <div class="grp open">
-    <button class="grphead" type="button">Look <span class="arw">▾</span></button>
+    <button class="grphead" type="button">Quick settings <span class="arw">▾</span></button>
     <div class="grpbody">
       <div class="row" id="rowSize"><label>Size</label>
         <input type="range" id="sSize" min="80" max="480" step="10" value="200">
         <span class="val" id="vSize">200</span></div>
       <div class="row"><label>Color</label></div>
       <div class="swrow" id="colors"></div>
-      <div class="row" id="rowGlow"><label>Glow (backlight)</label><div class="toggle on" id="tGlow"></div></div>
+      <div class="row"><label>Dwell time (look &amp; hold)</label>
+        <input type="range" id="sDwell" min="0.1" max="4" step="0.05" value="1.5">
+        <span class="val" id="vDwell">1.5s</span></div>
     </div>
   </div>
 
-  <div class="grp open" id="grpMovement">
-    <button class="grphead" type="button">Movement <span class="arw">▾</span></button>
+  <div class="grp">
+    <button class="grphead" type="button">Advanced <span class="arw">▾</span></button>
     <div class="grpbody">
-      <div class="row"><label>Pulse</label><div class="toggle on" id="tPulse"></div></div>
-      <div class="row"><label>Where it appears</label>
+      <div class="row" id="rowGlow"><label>Glow (backlight)</label><div class="toggle on" id="tGlow"></div></div>
+      <div class="row" id="rowPulse"><label>Pulse</label><div class="toggle on" id="tPulse"></div></div>
+      <div class="row" id="rowPos"><label>Where it appears</label>
         <select id="sPos">
           <option value="still">Still (center)</option>
           <option value="jump">Jump to a new spot each tap</option>
@@ -281,43 +297,30 @@
       <div class="row" id="rowSpeed" style="display:none"><label>Glide speed</label>
         <input type="range" id="sSpeed" min="1" max="10" step="1" value="3">
         <span class="val" id="vSpeed">3</span></div>
-    </div>
-  </div>
-
-  <div class="grp open">
-    <button class="grphead" type="button">Timing <span class="arw">▾</span></button>
-    <div class="grpbody">
-      <div class="row"><label>Dwell time (look &amp; hold)</label>
-        <input type="range" id="sDwell" min="0.1" max="4" step="0.05" value="1.5">
-        <span class="val" id="vDwell">1.5s</span></div>
-      <div class="row"><label>Hold steadiness</label>
+      <div class="row" id="rowTol"><label>Hold steadiness</label>
         <input type="range" id="sTol" min="0" max="200" step="10" value="80">
         <span class="val" id="vTol">80</span></div>
       <div class="row" id="rowDelay"><label>Delay before next</label>
         <input type="range" id="sDelay" min="0" max="5" step="0.5" value="1">
         <span class="val" id="vDelay">1.0s</span></div>
       <div class="row" id="rowSwitch"><label>Require switch to confirm</label><div class="toggle" id="tSwitch"></div></div>
-      <p class="hint">Higher steadiness is more forgiving of jittery gaze.</p>
-    </div>
-  </div>
-
-  <div class="grp">
-    <button class="grphead" type="button">Sound &amp; Rewards <span class="arw">▾</span></button>
-    <div class="grpbody">
+      <div class="row"><label>Look away to repeat</label><div class="toggle" id="tLookAway"></div></div>
       <div class="row"><label>Sound</label><div class="toggle on" id="tSound"></div></div>
       <div class="row"><label>Sparkles</label><div class="toggle on" id="tSpark"></div></div>
-    </div>
-  </div>
-
-  <div class="grp">
-    <button class="grphead" type="button">Other <span class="arw">▾</span></button>
-    <div class="grpbody">
       <div class="row"><label>Show gaze dot</label><div class="toggle on" id="tGaze"></div></div>
-      <p class="hint">The gaze dot shows where the tracker cursor is — good for calibration, turn off during play.</p>
       <button class="act" id="btnFull">Enter full screen</button>
       <button class="act" id="btnReset">Reset tap count</button>
-      <p class="hint">Tobii: run the tracker's gaze→mouse control so the cursor follows the child's eyes.</p>
+      <p class="hint">Tobii: run the tracker's gaze&rarr;mouse control so the cursor follows the child's eyes.</p>
     </div>
+  </div>
+</div>
+
+<!-- parent gate -->
+<div id="gate">
+  <div class="gate-card">
+    <p class="gate-q">Parents: what is <span id="gateQ"></span>?</p>
+    <div class="gate-opts" id="gateOpts"></div>
+    <button id="gateCancel">Cancel</button>
   </div>
 </div>
 
@@ -335,7 +338,7 @@
   "use strict";
   // ---------- state / settings ----------
   const S = {
-    activity:"tap", content:"letters", choices:2, words:"cat dog sun hat mom", keyboard:"blocks", kbUpper:false,
+    activity:"tap", content:"letters", choices:2, words:"cat dog sun hat mom", keyboard:"blocks", kbUpper:false, requireLookAway:false,
     size:200, color:"#ff2b2b", glow:true, pulse:true, position:"jump", speed:3,
     dwell:1.5, requireSwitch:false, tol:80, delay:1.0,
     sound:true, spark:true, showGaze:true
@@ -452,13 +455,17 @@
 
   function loop(){
     raf=requestAnimationFrame(loop);
+    // pause the activity while a settings/overlay screen is open
+    if($('panel').classList.contains('open')||$('gate').classList.contains('open')||$('progressPanel').classList.contains('open')){
+      dwellStart=0; return;
+    }
     if(S.activity==='keyboard'||S.activity==='spell'){ kbLoop(); return; }
     if(S.activity==='choose'){ chooseLoop(); return; }
     if(!armed){ return; }
     if(S.position==='glide' && !switchReady) glideStep();
     if(!onTarget()) needRelease=false;   // gaze/finger left the target → ready to select again
     const now=performance.now();
-    if(onTarget() && !needRelease){
+    if(onTarget() && !(needRelease && S.requireLookAway)){
       if(!dwellStart) dwellStart=now;
       // Cause & Effect responds to a quick look; Look & Tap uses the full dwell
       const dwellSec = (S.activity==='cause') ? Math.min(S.dwell,0.6) : S.dwell;
@@ -551,12 +558,13 @@
   // ---------- input: cursor = gaze ----------
   function moveCursor(x,y){
     cursor.x=x; cursor.y=y;
-    if(S.showGaze && hoverDwell){ gaze.style.left=x+'px'; gaze.style.top=y+'px'; }
   }
-  // Only a real hovering pointer (desktop mouse / eye-gaze cursor) drives dwell.
+  // The mouse / eye-gaze cursor drives the dwell. (On the Surface the browser
+  // reports as a touch device, so we must NOT gate this on hover capability.)
   // On touch devices we ignore mouse hover so a stray trackpad/simulator pointer
   // can't select on its own — only actual touches count there.
-  addEventListener('mousemove',e=>{ if(hoverDwell) moveCursor(e.clientX,e.clientY); });
+  addEventListener('mousemove',e=>{ moveCursor(e.clientX,e.clientY);
+    if(S.showGaze){ gaze.style.display='block'; gaze.style.left=e.clientX+'px'; gaze.style.top=e.clientY+'px'; } });
   // Touch: pressing sets the "pointer" on the target so the ring fills while held;
   // lifting resets it off-screen so it never keeps selecting on its own.
   addEventListener('touchstart',e=>{const t=e.touches[0]; if(t) moveCursor(t.clientX,t.clientY);},{passive:true});
@@ -590,13 +598,13 @@
     moveCursor(e.clientX,e.clientY);
     if(S.activity==='keyboard'||S.activity==='spell'){
       const k=keyAt(e.clientX,e.clientY);
-      if(k && !needRelease) kbSelectKey(k);
+      if(k && !(needRelease && S.requireLookAway)) kbSelectKey(k);
       if(!hoverDwell){ cursor.x=-9999; cursor.y=-9999; }
       return;
     }
     if(S.activity==='choose'){
       const c=choiceAt(e.clientX,e.clientY);
-      if(c && armed && !needRelease) chooseSelect(c);
+      if(c && armed && !(needRelease && S.requireLookAway)) chooseSelect(c);
       if(!hoverDwell){ cursor.x=-9999; cursor.y=-9999; }
       return;
     }
@@ -610,7 +618,19 @@
   function toggle(el,key,after){
     el.addEventListener('click',()=>{S[key]=!S[key];el.classList.toggle('on',S[key]);after&&after();});
   }
-  $('gear').onclick=()=>$('panel').classList.add('open');
+  // parent gate: a quick math check keeps the child out of the teacher settings
+  function openGate(){
+    const a=2+Math.floor(Math.random()*7), b=2+Math.floor(Math.random()*7), ans=a+b;
+    $('gateQ').textContent=a+' + '+b;
+    const opts=[ans, ans+1, ans-2].sort(()=>Math.random()-0.5);
+    const box=$('gateOpts'); box.innerHTML='';
+    opts.forEach(v=>{ const btn=document.createElement('button'); btn.textContent=v;
+      btn.onclick=()=>{ if(v===ans){ $('gate').classList.remove('open'); $('panel').classList.add('open'); } else { openGate(); } };
+      box.appendChild(btn); });
+    $('gate').classList.add('open');
+  }
+  $('gear').onclick=openGate;
+  $('gateCancel').onclick=()=>$('gate').classList.remove('open');
   $('closePanel').onclick=()=>$('panel').classList.remove('open');
 
   // collapsible groups
@@ -629,7 +649,7 @@
     V('rowWords', a==='spell');
     V('rowKb', grp); V('rowKbCase', grp);
     V('rowSize', !grp); V('rowGlow', !grp);
-    V('grpMovement', single, 'block');
+    V('rowPulse', single); V('rowPos', single);
     V('rowSpeed', single && S.position==='glide');
     V('rowDelay', a!=='keyboard');              // spell keeps pacing; free typing doesn't
     V('rowSwitch', a==='tap');
@@ -665,6 +685,7 @@
   toggle($('tGlow'),'glow',applyLook);
   toggle($('tPulse'),'pulse',applyLook);
   toggle($('tSwitch'),'requireSwitch',()=>{if(!S.requireSwitch){switchReady=false;shape.style.boxShadow='';}});
+  toggle($('tLookAway'),'requireLookAway');
   toggle($('tSound'),'sound');
   toggle($('tSpark'),'spark');
   toggle($('tGaze'),'showGaze',()=>{gaze.style.display=S.showGaze?'block':'none';});
@@ -691,7 +712,7 @@
   function loadStore(){ try{const r=localStorage.getItem(KEY); if(r) return JSON.parse(r);}catch(e){} return null; }
   function saveStore(){ try{ localStorage.setItem(KEY, JSON.stringify(store)); }catch(e){} }
   function defaults(){ return {activity:"tap",content:"letters",choices:2,words:"cat dog sun hat mom",keyboard:"blocks",kbUpper:false,size:200,color:"#ff2b2b",glow:true,pulse:true,position:"jump",
-    speed:3,dwell:1.5,requireSwitch:false,tol:80,delay:1.0,sound:true,spark:true,showGaze:true}; }
+    speed:3,dwell:1.5,requireSwitch:false,requireLookAway:false,tol:80,delay:1.0,sound:true,spark:true,showGaze:true}; }
   function ensureStore(){
     store=loadStore();
     if(!store||!store.profiles||!store.activeId||!store.profiles[store.activeId]){
@@ -714,7 +735,7 @@
   function saveActiveSettings(){
     const p=activeProfile(); if(!p) return;
     p.settings={activity:S.activity,content:S.content,choices:S.choices,words:S.words,keyboard:S.keyboard,kbUpper:S.kbUpper,size:S.size,color:S.color,glow:S.glow,pulse:S.pulse,position:S.position,
-      speed:S.speed,dwell:S.dwell,requireSwitch:S.requireSwitch,tol:S.tol,delay:S.delay,
+      speed:S.speed,dwell:S.dwell,requireSwitch:S.requireSwitch,requireLookAway:S.requireLookAway,tol:S.tol,delay:S.delay,
       sound:S.sound,spark:S.spark,showGaze:S.showGaze};
     saveStore();
   }
@@ -747,6 +768,7 @@
     $('tGlow').classList.toggle('on',S.glow);
     $('tPulse').classList.toggle('on',S.pulse);
     $('tSwitch').classList.toggle('on',S.requireSwitch);
+    $('tLookAway').classList.toggle('on',S.requireLookAway);
     $('tSound').classList.toggle('on',S.sound);
     $('tSpark').classList.toggle('on',S.spark);
     $('tGaze').classList.toggle('on',S.showGaze);
@@ -950,7 +972,7 @@
     if(!onAnyChoice()) needRelease=false;
     chooseItems.forEach(c=>{
       const r=S.size/2+S.tol, dx=cursor.x-c.cx, dy=cursor.y-c.cy;
-      if(dx*dx+dy*dy<=r*r && !needRelease){
+      if(dx*dx+dy*dy<=r*r && !(needRelease && S.requireLookAway)){
         if(!c.dwellStart) c.dwellStart=now;
         const p=Math.min(1,(now-c.dwellStart)/(S.dwell*1000));
         c.prog.style.strokeDashoffset=c.circ*(1-p);
@@ -1044,7 +1066,7 @@
     if(kb) $('spellBar').textContent=kbText;             // free typing shows the typed text
     $('kb').classList.toggle('on', grp);
     $('kb').classList.toggle('spellmode', sp);
-    $('hud').style.display=grp?'none':'block';
+    $('hud').style.display='none';   // Taps counter hidden for a clean child screen (still in the report)
   }
   function startRound(){
     applyMode();
@@ -1120,7 +1142,7 @@
       if(k.blurred) return;
       const on=Math.abs(cursor.x-k.cx)<=k.hw+pad && Math.abs(cursor.y-k.cy)<=k.hh+pad;
       if(on) onAny=true;
-      if(on && !needRelease){
+      if(on && !(needRelease && S.requireLookAway)){
         if(!k.dwellStart) k.dwellStart=now;
         const p=Math.min(1,(now-k.dwellStart)/(S.dwell*1000));
         k.fill.style.transform='scaleY('+p+')';
@@ -1135,7 +1157,7 @@
   applyActiveProfile();
   renderProfiles();
   syncControls();        // pushes the active child's settings into the UI + applyLook
-  if(!hoverDwell){ gaze.style.display='none'; }   // no gaze dot on touch devices
+  gaze.style.display=S.showGaze?'block':'none';   // gaze dot follows the mouse/eye cursor (mousemove)
   applyMode();                                    // set the right mode immediately (hide circle if not tap/cause)
   loop();
   setTimeout(startRound, S.delay*1000);

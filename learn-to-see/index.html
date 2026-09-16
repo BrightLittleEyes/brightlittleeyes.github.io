@@ -310,7 +310,7 @@
       <div class="row"><label>Show gaze dot</label><div class="toggle on" id="tGaze"></div></div>
       <button class="act" id="btnFull">Enter full screen</button>
       <button class="act" id="btnReset">Reset tap count</button>
-      <p class="hint">Tobii: run the tracker's gaze&rarr;mouse control so the cursor follows the child's eyes.</p>
+      <p class="hint">Eye gaze: set the eye tracker to move the mouse pointer (gaze-to-cursor); the app treats a look-and-hold as a tap. Also works with a head-mouse, touch, or a mouse.</p>
     </div>
   </div>
 </div>
@@ -574,9 +574,9 @@
   addEventListener('touchcancel',endTouch,{passive:true});
 
   // --- Native gaze hook -------------------------------------------------
-  // In the Electron desktop build, a native tracker bridge (Tobii eyex /
-  // gazelinger-style) pushes real gaze coordinates in screen pixels here,
-  // instead of relying on the OS cursor. Same for a hardware switch.
+  // In the Electron desktop build, a native eye-tracker bridge can push real
+  // gaze coordinates in screen pixels here, instead of relying on the OS cursor.
+  // Same for a hardware switch.
   //   window.dispatchEvent(new CustomEvent('gaze',{detail:{x,y}}))
   //   window.dispatchEvent(new CustomEvent('gaze-switch'))
   addEventListener('gaze',e=>{const g=e.detail; if(g) moveCursor(g.x,g.y);});

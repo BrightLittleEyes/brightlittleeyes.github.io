@@ -1,0 +1,1591 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Science">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.json">
+<title>Grade 6 Science</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+:root{
+  --bg:#F2F6F5; --surface:#FFFFFF; --ink:#15252A; --muted:#566A70; --line:#D3DEDC; --soft:#E6EEEC;
+  --accent:#0E7C6B; --accent-ink:#FFFFFF;
+  --good:#1D7A3A; --good-bg:#E2F3E7; --bad:#B3261E; --bad-bg:#FBE6E4;
+  --u1:#C2562D; --u2:#B7860F; --u3:#4F7A25; --u4:#3B4FA3; --u5:#0E7C6B; --u6:#6B3FA0;
+  --display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0E1618; --surface:#162226; --ink:#E4EEEC; --muted:#9AB0B3; --line:#2A3A3E; --soft:#1D2B2F;
+    --accent:#3FBFA8; --accent-ink:#06201B;
+    --good:#6BD08A; --good-bg:#15301E; --bad:#FF8A80; --bad-bg:#3A1A18;
+    --u1:#E57C52; --u2:#E0B23C; --u3:#8DBB57; --u4:#8C9CF0; --u5:#3FBFA8; --u6:#B48AE6;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0E1618; --surface:#162226; --ink:#E4EEEC; --muted:#9AB0B3; --line:#2A3A3E; --soft:#1D2B2F;
+  --accent:#3FBFA8; --accent-ink:#06201B;
+  --good:#6BD08A; --good-bg:#15301E; --bad:#FF8A80; --bad-bg:#3A1A18;
+  --u1:#E57C52; --u2:#E0B23C; --u3:#8DBB57; --u4:#8C9CF0; --u5:#3FBFA8; --u6:#B48AE6;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.55;}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:16px;padding-block:0 64px}
+h1,h2,h3{font-family:var(--display);line-height:1.15;text-wrap:balance;margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;padding-block:12px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:800;font-size:20px;margin-right:auto;background:none;border:0;padding:0}
+.brand .flask{width:30px;height:30px}
+.nav{display:flex;gap:4px;background:var(--soft);padding:4px;border-radius:10px}
+.nav button{border:0;background:none;padding:6px 14px;border-radius:7px;font-weight:700;font-size:15px;color:var(--muted)}
+.nav button[aria-current="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.who{display:flex;align-items:center;gap:8px;font-size:15px}
+.who label{color:var(--muted)}
+select,input[type=text]{font:inherit;font-size:15px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+
+/* home */
+.hero{padding-block:36px 20px;display:grid;gap:10px}
+.hero h1{font-size:clamp(30px,5vw,46px);font-weight:800;letter-spacing:-.01em}
+.hero p{margin:0;color:var(--muted);max-width:60ch}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.table{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-top:18px}
+.tile{--c:var(--accent);position:relative;text-align:left;background:var(--surface);border:2px solid var(--c);border-radius:6px;padding:12px 14px 14px;display:grid;gap:2px;transition:transform .15s ease, box-shadow .15s ease}
+.tile:hover{transform:translateY(-2px);box-shadow:0 6px 16px -8px var(--c)}
+.tile .num{font-family:var(--mono);font-weight:700;font-size:14px;color:var(--c)}
+.tile .sym{font-family:var(--display);font-weight:800;font-size:56px;line-height:1;color:var(--c);letter-spacing:-.02em;margin-top:2px}
+.tile .nm{font-weight:700;font-size:16px;line-height:1.25;min-height:2.5em}
+.tile .mass{font-family:var(--mono);font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:8px;border-top:1px dashed var(--line);padding-top:8px;margin-top:8px}
+.tile .mass b{color:var(--ink);font-weight:700}
+.legend{margin-top:14px;font-size:13px;color:var(--muted);font-family:var(--mono)}
+
+/* unit page */
+.back{border:0;background:none;color:var(--muted);padding:18px 0 6px;font-size:15px}
+.unithead{display:flex;gap:18px;align-items:center;padding-block:6px 20px;flex-wrap:wrap}
+.unithead .badge{--c:var(--accent);width:84px;height:84px;border:2px solid var(--c);border-radius:6px;display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:40px;color:var(--c);background:var(--surface);flex:none}
+.unithead h1{font-size:clamp(26px,4vw,38px)}
+.unithead p{margin:4px 0 0;color:var(--muted)}
+.cols{display:grid;grid-template-columns:220px 1fr;gap:28px;align-items:start}
+@media (max-width:760px){.cols{grid-template-columns:1fr}}
+.lessonlist{display:grid;gap:6px;position:sticky;top:80px}
+@media (max-width:760px){.lessonlist{position:static}}
+.lessonlist button{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:10px 12px;font-size:15px;display:flex;gap:10px;align-items:baseline}
+.lessonlist button span{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.lessonlist button[aria-current="true"]{border-color:var(--c);box-shadow:inset 3px 0 0 var(--c)}
+.lessonlist .sep{height:1px;background:var(--line);margin:8px 0}
+.lessonlist .act{font-weight:700}
+.lesson{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:24px clamp(18px,4vw,36px)}
+.lesson h2{font-size:28px;margin-bottom:12px}
+.lesson p{max-width:66ch;margin:0 0 14px}
+.lesson ul{max-width:64ch;padding-left:22px;margin:0 0 14px}
+.lesson li{margin-bottom:6px}
+.vocab{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
+.vocab h3{font-size:14px;font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;font-weight:500}
+.vocab dl{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0}
+.vocab dt{font-weight:700;color:var(--c)}
+.vocab dd{margin:0}
+@media (max-width:520px){.vocab dl{grid-template-columns:1fr}.vocab dd{margin-bottom:6px}}
+.tryit{margin-top:16px;background:var(--soft);border-radius:8px;padding:12px 16px;font-size:16px}
+.tryit b{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;display:block;color:var(--muted);font-weight:500;margin-bottom:2px}
+.lessonnav{display:flex;justify-content:space-between;gap:10px;margin-top:20px;flex-wrap:wrap}
+
+.btn{border:0;background:var(--accent);color:var(--accent-ink);padding:10px 18px;border-radius:8px;font-weight:700;font-size:16px}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn[disabled]{opacity:.45;cursor:default}
+
+/* quiz */
+.quiz{max-width:720px;margin:0 auto;padding-top:20px}
+.qhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.qhead .kind{font-family:var(--mono);font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--c)}
+.meter{height:6px;background:var(--soft);border-radius:3px;overflow:hidden;margin-bottom:22px}
+.meter i{display:block;height:100%;background:var(--c);transition:width .25s ease}
+.qcard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:22px clamp(16px,4vw,30px)}
+.qcard .qtext{font-size:21px;font-weight:700;margin:0 0 18px;line-height:1.35}
+.choices{display:grid;gap:10px}
+.choice{display:flex;gap:12px;align-items:flex-start;text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:8px;padding:12px 14px;font-size:17px}
+.choice .l{font-family:var(--mono);font-weight:700;color:var(--muted);flex:none;width:1.4em}
+.choice:hover:not([disabled]){border-color:var(--c)}
+.choice.picked{border-color:var(--c);background:var(--soft)}
+.choice.right{border-color:var(--good);background:var(--good-bg)}
+.choice.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.choice[disabled]{cursor:default}
+.explain{margin-top:16px;padding:12px 16px;border-radius:8px;font-size:16px}
+.explain.ok{background:var(--good-bg);color:var(--ink)}
+.explain.no{background:var(--bad-bg);color:var(--ink)}
+.explain strong{display:block}
+.qfoot{display:flex;justify-content:space-between;gap:10px;margin-top:18px;flex-wrap:wrap}
+
+/* results */
+.result{text-align:center;padding-block:10px 24px}
+.result .big{font-family:var(--display);font-weight:800;font-size:72px;line-height:1;color:var(--c)}
+.result .sub{font-family:var(--mono);color:var(--muted);margin-top:6px}
+.result .msg{font-size:20px;font-weight:700;margin-top:12px}
+.review{display:grid;gap:10px;margin-top:10px}
+.review .item{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--good);border-radius:6px;padding:12px 14px;font-size:15px}
+.review .item.miss{border-left-color:var(--bad)}
+.review .item p{margin:0 0 4px}
+.review .item .q{font-weight:700}
+.review .item .muted{color:var(--muted)}
+
+/* progress */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0 24px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.stat .v{font-family:var(--mono);font-weight:700;font-size:28px}
+.stat .k{font-size:13px;color:var(--muted)}
+.tblwrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:15px;min-width:560px}
+th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--line)}
+th{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500}
+td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+.pill{display:inline-block;font-family:var(--mono);font-size:12px;font-weight:700;padding:2px 8px;border-radius:99px}
+.pill.g{background:var(--good-bg);color:var(--good)}
+.pill.m{background:var(--soft);color:var(--ink)}
+.pill.b{background:var(--bad-bg);color:var(--bad)}
+.note{font-size:14px;color:var(--muted);margin-top:10px}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+.addform{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);padding:4px 12px;border-radius:99px;font-size:14px}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.section-h{display:flex;justify-content:space-between;align-items:end;gap:10px;flex-wrap:wrap;margin-top:28px;margin-bottom:10px}
+.section-h h2{font-size:22px}
+/* pictures and animations */
+.fig{margin:6px 0 22px;background:var(--soft);border-radius:10px;padding:14px clamp(10px,3vw,20px) 12px;color:var(--ink)}
+.fig .figtag{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--c);font-weight:700;display:block;margin-bottom:8px}
+.fig svg{display:block;width:100%;height:auto;max-width:100%;overflow:visible}
+.fig canvas{display:block;width:100%}
+.fig figcaption{font-size:15px;color:var(--muted);margin-top:10px;max-width:66ch}
+.fig svg text{font-family:var(--body)}
+.fig .lb{font-size:14px;font-weight:700;fill:currentColor}
+.fig .sm{font-size:12px;fill:currentColor;opacity:.8}
+.fig .in{font-size:20px;font-weight:700;fill:#fff}
+.fig .in.dk{fill:#333}
+.fig .cloud{fill:#F1F5F8;stroke:#9AA9B2;stroke-width:1.5}
+.ctrl{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin-top:12px;font-size:15px}
+.ctrl input[type=range]{accent-color:var(--c);flex:1;min-width:120px}
+.ctrl input[type=number]{font:inherit;font-size:15px;width:72px;padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+.out{font-family:var(--mono);font-size:14px;font-weight:700;margin:8px 0 0}
+.btn.small{padding:6px 14px;font-size:15px}
+.wtrows{display:grid;gap:8px;margin-top:14px}
+.wtrow{display:grid;grid-template-columns:70px 1fr 64px;gap:10px;align-items:center;font-size:15px}
+.wtrow b{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+.wtbar{height:14px;background:var(--surface);border-radius:7px;overflow:hidden}
+.wtbar i{display:block;height:100%;background:var(--c);border-radius:7px;transition:width .3s}
+.watch{margin-top:16px;border-top:1px solid var(--line);padding-top:14px}
+.watch h3{font-size:14px;font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-weight:500}
+.watch ul{list-style:none;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:8px}
+.watch a{display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink);border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:6px 14px 6px 8px;font-size:15px}
+.watch a:hover{border-color:var(--c)}
+.watch a svg{width:22px;height:22px;flex:none}
+.watch a.vid{display:flex;align-items:center;gap:14px;text-decoration:none;color:var(--ink);border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 16px 10px 10px;max-width:520px}
+.watch a.vid:hover{border-color:var(--c)}
+.watch .play{width:64px;height:44px;border-radius:8px;background:#E0483C;display:grid;place-items:center;flex:none}
+.watch .play svg{width:22px;height:22px}
+.watch a.vid b{display:block;font-size:16px;line-height:1.3}
+.watch a.vid small{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.watch p a{color:var(--c)}
+.watch p{font-size:13px;color:var(--muted);margin:8px 0 0}
+.fig [class*="bob"],.fig .melt-ice,.fig .melt-pool,.fig .bub,.fig .vap,.fig .rain,.fig [class^="p-"]{transform-box:fill-box}
+.bob{animation:bob 3s ease-in-out infinite}.bob.d1{animation-delay:-1s}.bob.d2{animation-delay:-2s}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.melt-ice{transform-origin:center bottom;animation:melt 6s ease-in-out infinite}
+@keyframes melt{0%,15%{transform:scale(1)}80%,100%{transform:scale(.25);opacity:.4}}
+.melt-pool{transform-origin:center;animation:pool 6s ease-in-out infinite}
+@keyframes pool{0%,15%{transform:scaleX(.3)}80%,100%{transform:scaleX(1)}}
+.bub{animation:bub 2.4s ease-in infinite;opacity:0}
+@keyframes bub{0%{transform:translateY(0);opacity:0}20%{opacity:1}100%{transform:translateY(-78px);opacity:0}}
+.vap{animation:vap 3s ease-out infinite;opacity:0}
+@keyframes vap{0%{transform:translateY(0);opacity:0}20%{opacity:1}100%{transform:translateY(-110px);opacity:0}}
+.rain{animation:rain 1.2s linear infinite;opacity:0}
+@keyframes rain{0%{transform:translateY(0);opacity:0}15%{opacity:1}100%{transform:translateY(50px);opacity:0}}
+.flow{animation:flow 1.2s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-32}}
+.p-r{animation:pr 2.5s ease-in-out infinite alternate}.p-l{animation:pl 2.5s ease-in-out infinite alternate}
+@keyframes pr{from{transform:translateX(0)}to{transform:translateX(10px)}}
+@keyframes pl{from{transform:translateX(0)}to{transform:translateX(-10px)}}
+.p-grow{transform-origin:center bottom;animation:pg 2.5s ease-in-out infinite alternate}
+@keyframes pg{from{transform:scaleY(.2)}to{transform:scaleY(1)}}
+.p-widen{transform-origin:center;animation:pw 2.5s ease-in-out infinite alternate}
+@keyframes pw{from{transform:scaleX(.3)}to{transform:scaleX(2.6)}}
+
+/* stars, badges, games, parent */
+.st,.stars{color:#E0A800}
+.stars{letter-spacing:1px;font-size:15px;white-space:nowrap}
+.stars .off{color:var(--line)}
+.starchip{font-family:var(--mono);font-weight:700;background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:3px 10px;font-size:14px}
+.starbar{height:10px;background:var(--soft);border-radius:5px;overflow:hidden;max-width:420px}
+.starbar i{display:block;height:100%;background:linear-gradient(90deg,#F2B705,#E0A800);border-radius:5px}
+.cont{position:relative;display:grid;gap:2px;text-align:left;width:100%;max-width:560px;background:var(--surface);border:2px solid var(--accent);border-radius:10px;padding:14px 56px 14px 18px;margin-top:6px}
+.cont b{font-size:18px;font-family:var(--display)}
+.cont small{color:var(--muted);font-size:14px}
+.cont .arrow{position:absolute;right:18px;top:50%;transform:translateY(-50%);font-size:26px;color:var(--accent)}
+.tile .checks{display:flex;align-items:center;gap:5px;margin-top:4px}
+.tile .checks i{width:12px;height:12px;border-radius:50%;border:2px solid var(--c)}
+.tile .checks i.on{background:var(--c)}
+.tile .checks small{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:4px}
+.tile .mass .stars{font-size:13px}
+.lessonlist .ck{min-width:1.6em;display:inline-block}
+.lessonlist .ck.on{color:var(--good);font-weight:700;font-size:15px}
+.lessonlist .act span{min-width:3.6em}
+.finish{margin-top:20px;display:flex;justify-content:center}
+.btn.big{font-size:18px;padding:12px 22px}
+.btn .st{color:#FFE27A}
+.finish .got{font-weight:700;color:var(--good)}
+.resumed{background:var(--soft);border-radius:8px;padding:10px 14px;font-size:15px}
+.linkbtn{border:0;background:none;color:var(--c);text-decoration:underline;padding:0;font-size:15px}
+.streak{font-family:var(--mono);font-weight:700;color:#E0A800;margin:-12px 0 12px;font-size:15px}
+.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.bigstars{font-size:54px;line-height:1;margin:8px 0 4px;display:flex;justify-content:center;gap:6px}
+.bigstars span{color:var(--line)}
+.bigstars span.on{color:#F2B705;animation:pop .5s both}
+@keyframes pop{0%{transform:scale(.2);opacity:0}70%{transform:scale(1.25)}100%{transform:scale(1);opacity:1}}
+.newbadge{margin-top:12px;background:var(--soft);display:inline-block;padding:8px 14px;border-radius:8px}
+.confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:50}
+.howto{color:var(--muted);margin:0 0 14px}
+.board{display:grid;grid-template-columns:1fr 1.4fr;gap:12px}
+.colw{display:grid;gap:10px;align-content:start}
+.tcard{border:2px solid var(--line);background:var(--surface);border-radius:8px;padding:12px;text-align:left;font-size:16px;min-height:52px}
+.tcard.word{font-weight:700}
+.tcard.sel{border-color:var(--c);background:var(--soft);box-shadow:0 0 0 3px var(--soft)}
+.tcard.done{border-color:var(--good);background:var(--good-bg);opacity:.75}
+.tcard.bad{border-color:var(--bad);background:var(--bad-bg);animation:shake .4s}
+@media (max-width:520px){.board{grid-template-columns:1fr 1.2fr;gap:8px}.tcard{font-size:14px;padding:10px}}
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+.bdg{background:var(--surface);border:1px dashed var(--line);border-radius:10px;padding:12px;display:grid;gap:2px;opacity:.6}
+.bdg.got{opacity:1;border:2px solid var(--c)}
+.bdg .medal{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--soft);color:var(--muted);font-weight:700;margin-bottom:4px}
+.bdg.got .medal{background:#F2B705;color:#fff}
+.bdg small{color:var(--muted);font-size:13px;line-height:1.35}
+.stat .v small{font-size:15px;color:var(--muted)}
+.pinbox{max-width:420px;margin:40px auto;display:grid;gap:10px;text-align:center}
+.pinbox h1{font-size:28px}.pinbox p{color:var(--muted);margin:0}
+.pinbox form{display:flex;gap:10px;justify-content:center}
+.pinbox input{font:inherit;font-family:var(--mono);font-size:26px;letter-spacing:.4em;width:150px;text-align:center;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+.pinerr{color:var(--bad);min-height:1.4em}
+.ptabs{display:inline-flex;flex-wrap:wrap;margin:10px 0 18px}
+.att{background:var(--surface);border:1px solid var(--line);border-radius:8px;margin-bottom:8px}
+.att summary{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;padding:10px 14px;cursor:pointer;font-size:15px}
+.att summary .n{font-family:var(--mono);font-size:13px;color:var(--muted)}
+.ans{margin:0;padding:4px 18px 12px 40px;display:grid;gap:8px;font-size:15px}
+.ans li{display:grid;gap:2px}
+.ans li.ok span{color:var(--good)}.ans li.no span:first-of-type{color:var(--bad)}
+.keyh{font-size:18px;margin:20px 0 8px}
+.key{padding-left:24px;display:grid;gap:12px;margin:0}
+.key ul{list-style:none;padding:0;margin:4px 0;display:grid;gap:2px;font-size:15px}
+.key li.right{color:var(--good);font-weight:700}
+.key small{color:var(--muted);font-size:13px}
+.pbody textarea{width:100%;font-family:var(--mono);font-size:12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);padding:8px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}.bigstars span.on,.shake,.tcard.bad{animation:none!important}.fig *{animation:none!important;opacity:1!important}}
+</style>
+
+<style>body{margin:0}</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <button class="brand" id="brand" aria-label="Home">
+      <svg class="flask" viewBox="0 0 32 32" aria-hidden="true"><path d="M12 3h8v2h-1v7.5l7.2 12.4A3 3 0 0 1 23.6 29H8.4a3 3 0 0 1-2.6-4.1L13 12.5V5h-1z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9.5 20h13l2.6 4.9a1.3 1.3 0 0 1-1.2 1.9H8.1a1.3 1.3 0 0 1-1.2-1.9z" fill="var(--accent)"/></svg>
+      Grade 6 Science Lab
+    </button>
+    <nav class="nav" aria-label="Sections">
+      <button id="nav-units" aria-current="true">Units</button>
+      <button id="nav-progress">Progress</button>
+      <button id="nav-parent">Parent</button>
+    </nav>
+    <div class="who">
+      <label for="student">Student</label>
+      <select id="student"></select>
+      <span class="starchip" id="starchip" hidden></span>
+    </div>
+  </div>
+</header>
+<main class="wrap" id="app"></main>
+
+<script>
+/* ============ PICTURES, ANIMATIONS, VIDEOS ============ */
+const FIG = {};
+let figStops = [];
+function stopFigs(){ figStops.forEach(f => { try{ f(); }catch(e){} }); figStops = []; }
+function cssv(el, name){ return getComputedStyle(el).getPropertyValue(name).trim(); }
+function loop(fn){
+  let alive = true, last = performance.now();
+  const tick = t => { if (!alive) return; const dt = Math.min(64, t - last); last = t; fn(t, dt); requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
+  return () => { alive = false; };
+}
+function canvasCtx(cv, h){
+  const w = Math.max(280, cv.clientWidth || 600), dpr = window.devicePixelRatio || 1;
+  if (cv._w !== w){ cv.width = w*dpr; cv.height = h*dpr; cv.style.height = h+"px"; cv._w = w; }
+  const ctx = cv.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0);
+  return { ctx, w, h };
+}
+const ARROW = id => `<defs><marker id="${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker></defs>`;
+const YT = q => "https://www.youtube.com/results?search_query=" + encodeURIComponent(q);
+
+/* ---------- Unit 1 ---------- */
+FIG["matter-0"] = { tag:"See it", cap:"Balls stand for atoms. Water is a compound (two different elements). Oxygen gas is a molecule of one element. Carbon dioxide is another compound.",
+  html:`<svg viewBox="0 0 600 210" role="img" aria-label="Models of a water molecule, an oxygen molecule, and a carbon dioxide molecule">
+  <g class="bob"><circle cx="62" cy="128" r="20" fill="#F4F4F4" stroke="#8A9599" stroke-width="2"/><circle cx="138" cy="128" r="20" fill="#F4F4F4" stroke="#8A9599" stroke-width="2"/>
+  <circle cx="100" cy="92" r="34" fill="#E0483C"/><text x="100" y="98" text-anchor="middle" class="in">O</text><text x="62" y="133" text-anchor="middle" class="in dk">H</text><text x="138" y="133" text-anchor="middle" class="in dk">H</text></g>
+  <g class="bob d1"><circle cx="272" cy="100" r="34" fill="#E0483C"/><circle cx="328" cy="100" r="34" fill="#E0483C"/><text x="272" y="106" text-anchor="middle" class="in">O</text><text x="328" y="106" text-anchor="middle" class="in">O</text></g>
+  <g class="bob d2"><circle cx="444" cy="100" r="30" fill="#E0483C"/><circle cx="556" cy="100" r="30" fill="#E0483C"/><circle cx="500" cy="100" r="28" fill="#3D4347"/>
+  <text x="444" y="106" text-anchor="middle" class="in">O</text><text x="500" y="106" text-anchor="middle" class="in">C</text><text x="556" y="106" text-anchor="middle" class="in">O</text></g>
+  <text x="100" y="180" text-anchor="middle" class="lb">Water · H₂O</text><text x="100" y="198" text-anchor="middle" class="sm">compound</text>
+  <text x="300" y="180" text-anchor="middle" class="lb">Oxygen gas · O₂</text><text x="300" y="198" text-anchor="middle" class="sm">molecule of one element</text>
+  <text x="500" y="180" text-anchor="middle" class="lb">Carbon dioxide · CO₂</text><text x="500" y="198" text-anchor="middle" class="sm">compound</text></svg>` };
+
+FIG["matter-1"] = { tag:"Play with it", cap:"Slide the temperature. Watch the particles vibrate in a solid, slide around in a liquid, and zoom apart in a gas.",
+  html:`<canvas class="cv" aria-label="Particles in a box that change state as temperature changes"></canvas>
+  <div class="ctrl"><label for="f-temp">Temperature</label><input type="range" id="f-temp" min="-30" max="140" value="-15"><output id="f-tempo" class="out"></output></div>`,
+  init(root){
+    const cv = root.querySelector("canvas"), sl = root.querySelector("#f-temp"), out = root.querySelector("#f-tempo");
+    const N = 40, H = 250, S = 18;
+    let P = [];
+    for (let i=0;i<N;i++) P.push({x:0,y:0,vx:Math.random()-.5,vy:Math.random()-.5,c:i%8,r:Math.floor(i/8),init:false});
+    return loop(() => {
+      const {ctx,w,h} = canvasCtx(cv,H), T = +sl.value;
+      const bx=20, by=14, bw=w-40, bh=h-28, cx=bx+bw/2, bottom=by+bh;
+      const state = T<0?"Solid":T<100?"Liquid":"Gas";
+      out.textContent = `${T} °C · ${state==="Solid"?"Solid (ice)":state==="Liquid"?"Liquid (water)":"Gas (water vapor)"}`;
+      const color = cssv(root,"--u1"), ink = cssv(root,"--muted");
+      ctx.clearRect(0,0,w,h);
+      ctx.strokeStyle = ink; ctx.lineWidth = 2; ctx.strokeRect(bx,by,bw,bh);
+      const top = state==="Liquid" ? bottom - bh*0.5 : by;
+      if (state==="Liquid"){ ctx.strokeStyle = color; ctx.setLineDash([6,6]); ctx.beginPath(); ctx.moveTo(bx,top); ctx.lineTo(bx+bw,top); ctx.stroke(); ctx.setLineDash([]); }
+      for (const p of P){
+        if (!p.init){ p.x = cx+(p.c-3.5)*S; p.y = bottom-12-p.r*S; p.init = true; }
+        if (state==="Solid"){
+          const tx = cx+(p.c-3.5)*S, ty = bottom-12-p.r*S, amp = 0.6+(T+30)/30*1.4;
+          p.x += (tx-p.x)*0.12 + (Math.random()-.5)*amp; p.y += (ty-p.y)*0.12 + (Math.random()-.5)*amp;
+        } else {
+          const v = state==="Liquid" ? 0.7 + T/100*1.1 : 3 + (T-100)/40*2.5;
+          p.vx += (Math.random()-.5)*0.5; p.vy += (Math.random()-.5)*0.5 + (state==="Liquid"?0.05:0);
+          const m = Math.hypot(p.vx,p.vy)||1; p.vx = p.vx/m*v; p.vy = p.vy/m*v;
+          p.x += p.vx; p.y += p.vy;
+          if (p.x<bx+8){p.x=bx+8;p.vx=Math.abs(p.vx);} if (p.x>bx+bw-8){p.x=bx+bw-8;p.vx=-Math.abs(p.vx);}
+          if (p.y<top+8){p.y=Math.min(p.y+2,top+8);p.vy=Math.abs(p.vy);} if (p.y>bottom-8){p.y=bottom-8;p.vy=-Math.abs(p.vy);}
+        }
+        ctx.fillStyle = color; ctx.beginPath(); ctx.arc(p.x,p.y,7,0,Math.PI*2); ctx.fill();
+      }
+    });
+  }};
+
+FIG["matter-2"] = { tag:"See it", cap:"Left: melting changes only the state, so it's a physical change. Right: bubbles of a brand-new gas mean a chemical change.",
+  html:`<svg viewBox="0 0 600 230" role="img" aria-label="An ice cube melting next to a beaker of vinegar and baking soda bubbling">
+  <ellipse class="melt-pool" cx="150" cy="150" rx="70" ry="9" fill="#8EC3E6"/>
+  <rect class="melt-ice" x="122" y="92" width="56" height="56" rx="6" fill="#D6EEFB" stroke="#3B82C4" stroke-width="2"/>
+  <path d="M400 55 L400 172 Q400 182 410 182 L490 182 Q500 182 500 172 L500 55" fill="none" stroke="currentColor" stroke-width="3"/>
+  <rect x="403" y="100" width="94" height="79" fill="#F2D7A6"/><ellipse cx="450" cy="100" rx="47" ry="6" fill="#FFF6E3"/>
+  ${[[418,0],[432,.6],[447,1.2],[461,.3],[476,.9],[488,1.5],[425,1.8],[468,2.1]].map(([x,d])=>`<circle class="bub" style="animation-delay:${d}s" cx="${x}" cy="172" r="${4+(x%3)}" fill="none" stroke="#B7860F" stroke-width="2"/>`).join("")}
+  <text x="150" y="202" text-anchor="middle" class="lb">Physical change</text><text x="150" y="220" text-anchor="middle" class="sm">ice melts, still H₂O</text>
+  <text x="450" y="202" text-anchor="middle" class="lb">Chemical change</text><text x="450" y="220" text-anchor="middle" class="sm">baking soda + vinegar make CO₂ gas</text></svg>` };
+
+/* ---------- Unit 2 ---------- */
+FIG["motion-0"] = { tag:"See it", cap:"At the top of each swing the ball stops, so it's all potential energy. At the bottom it's fastest: all kinetic. The total never changes.",
+  html:`<canvas class="cv" aria-label="A swinging pendulum with bars showing potential and kinetic energy trading places"></canvas>`,
+  init(root){
+    const cv = root.querySelector("canvas"), th0 = 0.85;
+    return loop(t => {
+      const {ctx,w,h} = canvasCtx(cv,250);
+      const ink = cssv(root,"--ink"), mut = cssv(root,"--muted"), c1 = cssv(root,"--u2"), c2 = cssv(root,"--u1");
+      const L = Math.min(165, w*0.3/Math.sin(th0)), px = w*0.32, py = 22;
+      const th = th0*Math.cos(t/2400*2*Math.PI);
+      const bx = px+L*Math.sin(th), by = py+L*Math.cos(th);
+      const pe = (1-Math.cos(th))/(1-Math.cos(th0)), ke = 1-pe;
+      ctx.clearRect(0,0,w,h);
+      ctx.strokeStyle = mut; ctx.setLineDash([4,6]); ctx.beginPath(); ctx.arc(px,py,L,Math.PI/2-th0,Math.PI/2+th0); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = ink; ctx.fillRect(px-30,py-4,60,4);
+      ctx.strokeStyle = ink; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(bx,by); ctx.stroke();
+      ctx.fillStyle = c1; ctx.beginPath(); ctx.arc(bx,by,15,0,Math.PI*2); ctx.fill();
+      const x0 = w*0.68, bw = Math.min(46,w*0.1), base = 205, max = 160;
+      [[pe,"Potential",c1],[ke,"Kinetic",c2]].forEach(([v,lab,col],i)=>{
+        const x = x0 + i*(bw+22);
+        ctx.strokeStyle = mut; ctx.lineWidth = 1; ctx.strokeRect(x,base-max,bw,max);
+        ctx.fillStyle = col; ctx.fillRect(x,base-max*v,bw,max*v);
+        ctx.fillStyle = ink; ctx.font = "13px "+cssv(root,"--body"); ctx.textAlign = "center"; ctx.fillText(lab,x+bw/2,base+20);
+        ctx.fillText(Math.round(v*100)+"%",x+bw/2,base+37);
+      });
+    });
+  }};
+
+FIG["motion-1"] = { tag:"Play with it", cap:"Set how hard each team pulls. Equal pulls are balanced forces, so the rope doesn't move. Unequal pulls are unbalanced, so the rope moves toward the stronger team.",
+  html:`<svg viewBox="0 0 600 190" role="img" aria-label="Tug of war with adjustable forces"><defs>${["l","r"].map(k=>`<marker id="tw-h${k}" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="18" orient="auto"><path d="M0 0 L10 5 L0 10 z" style="fill:var(${k==="l"?"--u4":"--u1"})"/></marker>`).join("")}</defs>
+  <line x1="300" y1="20" x2="300" y2="165" stroke="currentColor" stroke-dasharray="4 5" opacity=".5"/>
+  <line x1="0" y1="165" x2="600" y2="165" stroke="currentColor" opacity=".4"/>
+  <g id="tw-rope">
+    <line x1="80" y1="118" x2="520" y2="118" stroke="#A67C52" stroke-width="5"/>
+    <rect x="296" y="112" width="8" height="26" fill="#E0483C"/>
+    ${[70,105].map(x=>`<circle cx="${x}" cy="92" r="11" fill="currentColor"/><line x1="${x}" y1="103" x2="${x+10}" y2="140" stroke="currentColor" stroke-width="6" stroke-linecap="round"/><line x1="${x+10}" y1="140" x2="${x-4}" y2="163" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>`).join("")}
+    ${[495,530].map(x=>`<circle cx="${x}" cy="92" r="11" fill="currentColor"/><line x1="${x}" y1="103" x2="${x-10}" y2="140" stroke="currentColor" stroke-width="6" stroke-linecap="round"/><line x1="${x-10}" y1="140" x2="${x+4}" y2="163" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>`).join("")}
+  </g>
+  <line id="tw-la" x1="290" y1="40" x2="200" y2="40" stroke-width="5" marker-end="url(#tw-hl)" style="stroke:var(--u4)"/>
+  <line id="tw-ra" x1="310" y1="40" x2="400" y2="40" stroke-width="5" marker-end="url(#tw-hr)" style="stroke:var(--u1)"/>
+  <text id="tw-lt" x="200" y="26" text-anchor="middle" class="lb"></text><text id="tw-rt" x="400" y="26" text-anchor="middle" class="lb"></text></svg>
+  <div class="ctrl"><label for="tw-l">Left team</label><input type="range" id="tw-l" min="0" max="600" step="50" value="300"><output id="tw-lv" class="out" style="margin:0;min-width:52px"></output>
+  <label for="tw-r">Right team</label><input type="range" id="tw-r" min="0" max="600" step="50" value="450"><output id="tw-rv" class="out" style="margin:0;min-width:52px"></output>
+  <button class="btn ghost small" id="tw-reset">Reset</button></div><p class="out" id="tw-msg"></p>`,
+  init(root){
+    const g = root.querySelector("#tw-rope"), L = root.querySelector("#tw-l"), R = root.querySelector("#tw-r"), msg = root.querySelector("#tw-msg");
+    let pos = 0;
+    root.querySelector("#tw-reset").onclick = () => { pos = 0; };
+    return loop(() => {
+      const l = +L.value, r = +R.value, net = r - l;
+      root.querySelector("#tw-lv").textContent = l+" N"; root.querySelector("#tw-rv").textContent = r+" N";
+      root.querySelector("#tw-la").setAttribute("x2", 290 - Math.max(l,1)/600*170);
+      root.querySelector("#tw-ra").setAttribute("x2", 310 + Math.max(r,1)/600*170);
+      root.querySelector("#tw-lt").textContent = l+" N"; root.querySelector("#tw-rt").textContent = r+" N";
+      pos = Math.max(-190, Math.min(190, pos + net*0.012));
+      g.setAttribute("transform", `translate(${pos} 0)`);
+      msg.textContent = net===0 ? "Balanced: the forces cancel, so the rope's motion doesn't change."
+        : Math.abs(pos)>=190 ? `${net>0?"Right":"Left"} team wins! Net force was ${Math.abs(net)} N.`
+        : `Unbalanced: net force of ${Math.abs(net)} N to the ${net>0?"right":"left"}.`;
+    });
+  }};
+
+FIG["motion-2"] = { tag:"Play with it", cap:"Pick a speed for each car and race 150 meters. Speed = distance ÷ time, so the faster car finishes in less time.",
+  html:`<svg viewBox="0 0 620 170" role="img" aria-label="Two cars racing along a 150 meter track">
+  ${[0,25,50,75,100,125,150].map(m=>{const x=40+m*3.6;return `<line x1="${x}" y1="20" x2="${x}" y2="130" stroke="currentColor" opacity="${m===150?.9:.2}" stroke-width="${m===150?3:1}"/><text x="${x}" y="150" text-anchor="middle" class="sm">${m} m</text>`;}).join("")}
+  <line x1="40" y1="75" x2="580" y2="75" stroke="currentColor" opacity=".3" stroke-dasharray="10 8"/>
+  ${["a","b"].map((k,i)=>`<g id="car-${k}"><rect x="6" y="${36+i*55}" width="34" height="16" rx="5" style="fill:var(${i?"--u4":"--u1"})"/><rect x="14" y="${30+i*55}" width="16" height="9" rx="3" style="fill:var(${i?"--u4":"--u1"})" opacity=".7"/><circle cx="14" cy="${53+i*55}" r="5" fill="currentColor"/><circle cx="32" cy="${53+i*55}" r="5" fill="currentColor"/></g>`).join("")}
+  <text id="clock" x="610" y="165" text-anchor="end" class="lb">t = 0.0 s</text></svg>
+  <div class="ctrl"><label for="sp-a" style="color:var(--u1);font-weight:700">Car A</label><input type="number" id="sp-a" min="1" max="40" value="10"> m/s
+  <label for="sp-b" style="color:var(--u4);font-weight:700">Car B</label><input type="number" id="sp-b" min="1" max="40" value="15"> m/s
+  <button class="btn small" id="go">Start race</button></div><p class="out" id="race-msg">Press Start race.</p>`,
+  init(root){
+    const A = root.querySelector("#car-a"), B = root.querySelector("#car-b"), clk = root.querySelector("#clock"), msg = root.querySelector("#race-msg");
+    let t = 0, running = false, va = 10, vb = 15;
+    const place = () => {
+      const da = Math.min(150, va*t), db = Math.min(150, vb*t);
+      A.setAttribute("transform",`translate(${da*3.6} 0)`); B.setAttribute("transform",`translate(${db*3.6} 0)`);
+      clk.textContent = `t = ${t.toFixed(1)} s`;
+      return [da,db];
+    };
+    root.querySelector("#go").onclick = () => {
+      va = Math.max(1,Math.min(40,+root.querySelector("#sp-a").value||10)); vb = Math.max(1,Math.min(40,+root.querySelector("#sp-b").value||15));
+      t = 0; running = true; msg.textContent = "Racing…";
+    };
+    place();
+    return loop((_,dt) => {
+      if (!running) return;
+      t += dt/1000*3;
+      const [da,db] = place();
+      if (da>=150 && db>=150){
+        running = false; t = 150/Math.min(va,vb); place();
+        const ta = 150/va, tb = 150/vb;
+        msg.textContent = ta===tb ? `Tie! Both took ${ta.toFixed(1)} s.` :
+          `Car ${ta<tb?"A":"B"} wins. Car A: 150 m ÷ ${ta.toFixed(1)} s = ${va} m/s. Car B: 150 m ÷ ${tb.toFixed(1)} s = ${vb} m/s.`;
+      }
+    });
+  }};
+
+/* ---------- Unit 3 ---------- */
+FIG["earth-0"] = { tag:"See it", cap:"Follow the arrows around the rock cycle. The dashed arrow is a shortcut: igneous rock can become metamorphic rock without ever being sediment.",
+  html:(()=>{
+    const node = (x,y,label,fill) => `<rect x="${x-72}" y="${y-22}" width="144" height="44" rx="22" fill="${fill}"/><text x="${x}" y="${y+5}" text-anchor="middle" class="lb" style="fill:#15252A">${label}</text>`;
+    return `<svg viewBox="0 0 640 350" role="img" aria-label="The rock cycle: magma cools into igneous rock, which weathers into sedimentary rock, which heat and pressure turn into metamorphic rock, which melts back into magma">${ARROW("rk-a")}
+    <g stroke="currentColor" stroke-width="2" fill="none" marker-end="url(#rk-a)">
+      <path d="M248 300 Q150 290 120 208"/><path d="M130 156 Q160 70 244 54"/><path d="M396 54 Q480 70 510 156"/><path d="M520 208 Q490 290 392 300"/>
+      <path d="M194 180 L444 180" stroke-dasharray="6 6"/></g>
+    <text x="150" y="285" text-anchor="end" class="sm">cools and hardens</text>
+    <text x="150" y="88" text-anchor="end" class="sm">weathering, erosion,</text><text x="150" y="104" text-anchor="end" class="sm">pressed into layers</text>
+    <text x="490" y="96" class="sm">heat and pressure</text>
+    <text x="490" y="285" class="sm">melts</text>
+    <text x="320" y="170" text-anchor="middle" class="sm">heat and pressure</text>
+    ${node(320,40,"Sedimentary","#E8C98A")}${node(120,180,"Igneous","#E9A07F")}${node(520,180,"Metamorphic","#B8B0D9")}${node(320,305,"Magma","#F07B4F")}</svg>`;})() };
+
+FIG["earth-1"] = { tag:"See it", cap:"The three kinds of plate boundaries in motion. Colliding plates build mountains, separating plates let magma make new crust, and sliding plates cause earthquakes.",
+  html:`<svg viewBox="0 0 600 215" role="img" aria-label="Animations of convergent, divergent, and transform plate boundaries">${ARROW("pl-a")}
+  <polygon class="p-grow" points="62,100 100,48 138,100" fill="#8C6A4A"/>
+  <rect class="p-r" x="12" y="100" width="88" height="28" fill="#B79A74"/><rect class="p-l" x="100" y="100" width="88" height="28" fill="#A38563"/>
+  <rect class="p-widen" x="295" y="100" width="10" height="28" fill="#F07B4F"/>
+  <rect class="p-l" x="212" y="100" width="83" height="28" fill="#B79A74"/><rect class="p-r" x="305" y="100" width="83" height="28" fill="#A38563"/>
+  <rect class="p-r" x="412" y="62" width="176" height="36" fill="#B79A74"/><rect class="p-l" x="412" y="102" width="176" height="36" fill="#A38563"/>
+  <line x1="405" y1="100" x2="595" y2="100" stroke="#E0483C" stroke-width="2" stroke-dasharray="6 4"/>
+  <g stroke="currentColor" stroke-width="2" marker-end="url(#pl-a)"><line x1="30" y1="148" x2="70" y2="148"/><line x1="170" y1="148" x2="130" y2="148"/>
+  <line x1="270" y1="148" x2="230" y2="148"/><line x1="330" y1="148" x2="370" y2="148"/>
+  <line x1="470" y1="50" x2="530" y2="50"/><line x1="530" y1="150" x2="470" y2="150"/></g>
+  <text x="100" y="185" text-anchor="middle" class="lb">Convergent</text><text x="100" y="203" text-anchor="middle" class="sm">push together</text>
+  <text x="300" y="185" text-anchor="middle" class="lb">Divergent</text><text x="300" y="203" text-anchor="middle" class="sm">pull apart</text>
+  <text x="500" y="185" text-anchor="middle" class="lb">Transform</text><text x="500" y="203" text-anchor="middle" class="sm">slide past (seen from above)</text></svg>` };
+
+FIG["earth-2"] = { tag:"See it", cap:"The Sun heats the ocean, water vapor rises and condenses into clouds, rain falls on the land, and rivers carry it back to the sea.",
+  html:`<svg viewBox="0 0 640 300" role="img" aria-label="The water cycle: evaporation, condensation, precipitation, and collection">${ARROW("wc-a")}
+  <g stroke="#F2B705" stroke-width="3">${[0,45,90,135,180,225,270,315].map(a=>{const r=Math.PI*a/180;return `<line x1="${70+40*Math.cos(r)}" y1="${60+40*Math.sin(r)}" x2="${70+50*Math.cos(r)}" y2="${60+50*Math.sin(r)}"/>`;}).join("")}</g>
+  <circle cx="70" cy="60" r="30" fill="#F2B705"/>
+  <path d="M0 232 Q40 224 80 232 T160 232 T240 232 T320 232 L320 300 L0 300 Z" fill="#3B82C4"/>
+  <polygon points="300,300 300,236 390,236 470,132 545,212 640,188 640,300" fill="#6A994E"/>
+  <path class="flow" d="M500 176 Q470 225 420 238 T312 246" fill="none" stroke="#3B82C4" stroke-width="5" stroke-dasharray="10 6"/>
+  ${[110,150,190,230,265].map((x,i)=>`<circle class="vap" style="animation-delay:${i*.55}s" cx="${x}" cy="222" r="4" fill="#7FB5E0"/>`).join("")}
+  ${[468,486,504,522,540].map((x,i)=>`<line class="rain" style="animation-delay:${i*.25}s" x1="${x}" y1="96" x2="${x-4}" y2="108" stroke="#3B82C4" stroke-width="3" stroke-linecap="round"/>`).join("")}
+  <g class="cloud"><circle cx="300" cy="66" r="22"/><circle cx="326" cy="56" r="28"/><circle cx="356" cy="68" r="20"/><rect x="290" y="66" width="76" height="22" rx="11"/></g>
+  <g class="cloud"><circle cx="480" cy="76" r="20"/><circle cx="504" cy="66" r="26"/><circle cx="532" cy="78" r="18"/><rect x="470" y="76" width="72" height="20" rx="10"/></g>
+  <path d="M230 200 C 230 150, 250 110, 284 90" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="5 5" marker-end="url(#wc-a)"/>
+  <path d="M380 60 L452 64" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="5 5" marker-end="url(#wc-a)"/>
+  <text x="130" y="170" class="lb">Evaporation</text><text x="326" y="22" text-anchor="middle" class="lb">Condensation</text>
+  <text x="556" y="120" class="lb">Precipitation</text><text x="24" y="276" class="lb" style="fill:#fff">Collection</text>
+  <text x="416" y="274" class="sm" style="fill:#fff">runoff</text></svg>` };
+
+/* ---------- Unit 4 ---------- */
+FIG["space-0"] = { tag:"Play with it", cap:"Each planet orbits at its real speed compared to Earth. Distances and sizes are not to scale. Speed it up to see Neptune move: it takes 165 Earth years to go around once.",
+  html:`<canvas class="cv" aria-label="Animated solar system with the eight planets orbiting the Sun"></canvas>
+  <div class="ctrl"><span>Speed</span><div class="chips" id="ss-speed">${[1,5,25].map((s,i)=>`<button class="chip" data-s="${s}" aria-pressed="${i===0}">${s}×</button>`).join("")}</div><output class="out" id="ss-yr"></output></div>`,
+  init(root){
+    const cv = root.querySelector("canvas"), yr = root.querySelector("#ss-yr");
+    const PL = [["Mercury",.241,"#A8A29E",3],["Venus",.615,"#E3B869",5],["Earth",1,"#3B82C4",5],["Mars",1.88,"#C1440E",4],["Jupiter",11.86,"#D4A373",10],["Saturn",29.46,"#E6C87A",8],["Uranus",84.0,"#7FD1D8",7],["Neptune",164.8,"#4062BB",7]];
+    const start = PL.map((_,i)=>i*1.3), belt = Array.from({length:140},()=>[Math.random()*Math.PI*2,Math.random()]);
+    let years = 0, speed = 1;
+    root.querySelectorAll("[data-s]").forEach(b => b.onclick = () => { speed = +b.dataset.s; root.querySelectorAll("[data-s]").forEach(x=>x.setAttribute("aria-pressed",String(x===b))); });
+    return loop((_,dt) => {
+      const W = cv.clientWidth || 600, {ctx,w,h} = canvasCtx(cv, Math.min(420, Math.max(300, W*0.62)));
+      years += dt/1000/4*speed;
+      yr.textContent = `Earth years passed: ${years.toFixed(1)}`;
+      const cx=w/2, cy=h/2, rmax=Math.min(w/2,h/2)-12, ink=cssv(root,"--muted"), txt=cssv(root,"--ink");
+      ctx.clearRect(0,0,w,h);
+      const rad = i => rmax*(0.16 + i*0.12);
+      ctx.fillStyle = ink; belt.forEach(([a,f]) => { const r = rad(3)+(rad(4)-rad(3))*(0.3+f*0.4); ctx.fillRect(cx+r*Math.cos(a+years*0.05),cy+r*Math.sin(a+years*0.05),1.5,1.5); });
+      ctx.fillStyle = "#F2B705"; ctx.beginPath(); ctx.arc(cx,cy,rmax*0.08,0,Math.PI*2); ctx.fill();
+      ctx.font = "11px "+cssv(root,"--body"); ctx.textAlign = "center";
+      PL.forEach(([n,p,c,s],i) => {
+        const r = rad(i), a = start[i] - years/p*Math.PI*2, x = cx+r*Math.cos(a), y = cy+r*Math.sin(a);
+        ctx.strokeStyle = ink; ctx.globalAlpha = .35; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke(); ctx.globalAlpha = 1;
+        if (n==="Saturn"){ ctx.strokeStyle = c; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(x,y,s*1.9,s*.7,-.4,0,Math.PI*2); ctx.stroke(); }
+        ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x,y,s*(w<500?.8:1),0,Math.PI*2); ctx.fill();
+        ctx.fillStyle = txt; ctx.fillText(n,x,y-s-5);
+      });
+    });
+  }};
+
+FIG["space-1"] = { tag:"Play with it", cap:"Left: looking down on Earth from above the North Pole, with sunlight coming from the left. Right: what the Moon looks like from Earth that night. The Moon is always half lit; we just see different amounts of the lit half.",
+  html:`<canvas class="cv" aria-label="Moon phase simulator"></canvas>
+  <div class="ctrl"><label for="mp-d">Day of the cycle</label><input type="range" id="mp-d" min="0" max="29.5" step="0.25" value="4"><button class="btn ghost small" id="mp-play">Play</button></div>`,
+  init(root){
+    const cv = root.querySelector("canvas"), sl = root.querySelector("#mp-d"), pb = root.querySelector("#mp-play");
+    let playing = false;
+    pb.onclick = () => { playing = !playing; pb.textContent = playing ? "Pause" : "Play"; };
+    const NAMES = ["New moon","Waxing crescent","First quarter","Waxing gibbous","Full moon","Waning gibbous","Third quarter","Waning crescent"];
+    const LIT = "#EFEAD6", DARK = "#3A4448";
+    const litDisc = (ctx,x,y,r,leftLit) => { ctx.fillStyle = DARK; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = LIT; ctx.beginPath(); ctx.arc(x,y,r,leftLit?Math.PI/2:-Math.PI/2,leftLit?Math.PI*1.5:Math.PI/2); ctx.fill(); };
+    return loop((_,dt) => {
+      if (playing){ let d = +sl.value + dt/1000*2.5; if (d>29.5) d -= 29.5; sl.value = d; }
+      const {ctx,w,h} = canvasCtx(cv,270), day = +sl.value, p = day/29.5;
+      const ink = cssv(root,"--ink"), mut = cssv(root,"--muted"), font = cssv(root,"--body");
+      ctx.clearRect(0,0,w,h);
+      const lw = w*0.56, ex = lw/2+10, ey = h/2, R = Math.min(lw/2-34, h/2-30);
+      ctx.strokeStyle = "#F2B705"; ctx.lineWidth = 2;
+      for (let i=-2;i<=2;i++){ const y = ey+i*38; ctx.beginPath(); ctx.moveTo(6,y); ctx.lineTo(28,y); ctx.lineTo(23,y-4); ctx.moveTo(28,y); ctx.lineTo(23,y+4); ctx.stroke(); }
+      ctx.strokeStyle = mut; ctx.setLineDash([3,5]); ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(ex,ey,R,0,Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = "#3B82C4"; ctx.beginPath(); ctx.arc(ex,ey,15,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.beginPath(); ctx.arc(ex,ey,15,-Math.PI/2,Math.PI/2); ctx.fill();
+      const a = Math.PI + p*Math.PI*2, mx = ex+R*Math.cos(a), my = ey-R*Math.sin(a);
+      litDisc(ctx,mx,my,10,true);
+      ctx.fillStyle = ink; ctx.font = "12px "+font; ctx.textAlign = "center";
+      ctx.fillText("Earth",ex,ey+32); ctx.fillText("Moon",mx,my-15); ctx.fillStyle = mut; ctx.textAlign = "left"; ctx.fillText("sunlight",4,ey+100); ctx.textAlign = "center";
+      const vx = lw + (w-lw)/2, vy = h/2-14, r = Math.min((w-lw)/2-16, 72);
+      const right = p < 0.5, c = Math.cos(p*Math.PI*2), rx = r*Math.abs(c), crescent = c > 0;
+      litDisc(ctx,vx,vy,r,!right);
+      ctx.fillStyle = crescent ? DARK : LIT; ctx.beginPath(); ctx.ellipse(vx,vy,Math.max(rx,.01),r,0,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle = mut; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(vx,vy,r,0,Math.PI*2); ctx.stroke();
+      ctx.fillStyle = ink; ctx.font = "700 15px "+font; ctx.fillText(NAMES[Math.round(p*8)%8],vx,vy+r+26);
+      ctx.fillStyle = mut; ctx.font = "12px "+font; ctx.fillText(`Day ${day.toFixed(1)} of 29.5`,vx,vy+r+44);
+    });
+  }};
+
+FIG["space-2"] = { tag:"Play with it", cap:"Your mass is the same everywhere, but your weight depends on each world's gravity. Type a weight to see what a scale would read there.",
+  html:`<div class="ctrl" style="margin-top:0"><label for="wt">Weight on Earth</label><input type="number" id="wt" min="1" max="500" value="90"> pounds</div><div id="wt-rows" class="wtrows"></div>`,
+  init(root){
+    const G = [["Moon",.166],["Mercury",.38],["Mars",.38],["Venus",.91],["Earth",1],["Uranus",.89],["Saturn",1.07],["Neptune",1.14],["Jupiter",2.53]];
+    const inp = root.querySelector("#wt"), rows = root.querySelector("#wt-rows");
+    const draw = () => { const v = Math.max(0, Math.min(500, +inp.value||0));
+      rows.innerHTML = G.map(([n,g]) => `<div class="wtrow"><span>${n}</span><div class="wtbar"><i style="width:${g/2.53*100}%"></i></div><b>${Math.round(v*g)} lb</b></div>`).join(""); };
+    inp.addEventListener("input", draw); draw();
+    return () => {};
+  }};
+
+/* ---------- Unit 5 ---------- */
+FIG["life-0"] = { tag:"See it", cap:"Both cells have a membrane, nucleus, cytoplasm, and mitochondria (orange). Only the plant cell has a stiff cell wall, chloroplasts (green), and a big water-storing vacuole.",
+  html:`<svg viewBox="0 0 660 310" role="img" aria-label="An animal cell and a plant cell side by side with labeled parts">
+  <ellipse cx="170" cy="150" rx="125" ry="95" fill="#F6D6CF" stroke="#C2562D" stroke-width="3"/>
+  <circle cx="150" cy="140" r="34" fill="#C7B2E3" stroke="#6B3FA0" stroke-width="2"/><circle cx="158" cy="132" r="9" fill="#6B3FA0"/>
+  <text x="150" y="162" text-anchor="middle" class="sm" style="fill:#15252A">nucleus</text>
+  <ellipse cx="232" cy="190" rx="22" ry="11" fill="#F2A65A" stroke="#B55E12" stroke-width="2"/><ellipse cx="96" cy="196" rx="20" ry="10" fill="#F2A65A" stroke="#B55E12" stroke-width="2" transform="rotate(-20 96 196)"/>
+  <ellipse cx="236" cy="112" rx="18" ry="9" fill="#F2A65A" stroke="#B55E12" stroke-width="2" transform="rotate(25 236 112)"/>
+  <text x="170" y="222" text-anchor="middle" class="sm" style="fill:#15252A">cytoplasm</text>
+  <line x1="170" y1="40" x2="170" y2="55" stroke="currentColor"/><text x="170" y="34" text-anchor="middle" class="sm">cell membrane</text>
+  <text x="170" y="290" text-anchor="middle" class="lb">Animal cell</text>
+  <rect x="385" y="50" width="250" height="210" rx="8" fill="#7CB36B"/><rect x="395" y="60" width="230" height="190" rx="6" fill="#E6F2DA" stroke="#4F7A25" stroke-width="2"/>
+  <rect x="468" y="88" width="126" height="124" rx="32" fill="#BFE0F2" stroke="#3B82C4" stroke-width="2"/><text x="531" y="155" text-anchor="middle" class="sm" style="fill:#15252A">vacuole</text>
+  <circle cx="428" cy="100" r="24" fill="#C7B2E3" stroke="#6B3FA0" stroke-width="2"/><circle cx="433" cy="94" r="7" fill="#6B3FA0"/>
+  ${[[425,160,-15],[430,210,10],[520,232,0],[580,232,15],[610,120,80]].map(([x,y,r])=>`<ellipse cx="${x}" cy="${y}" rx="16" ry="8" fill="#3E8E41" stroke="#2B5F2D" stroke-width="2" transform="rotate(${r} ${x} ${y})"/>`).join("")}
+  <ellipse cx="605" cy="80" rx="12" ry="6" fill="#F2A65A" stroke="#B55E12" stroke-width="2"/>
+  <line x1="510" y1="36" x2="510" y2="50" stroke="currentColor"/><text x="510" y="30" text-anchor="middle" class="sm">cell wall</text>
+  <text x="510" y="290" text-anchor="middle" class="lb">Plant cell</text></svg>` };
+
+FIG["life-1"] = { tag:"See it", cap:"Each level is built from the one before it: similar cells make a tissue, tissues make an organ, organs make a system, and systems make you.",
+  html:(()=>{
+    const xs = [66,198,330,462,594];
+    const tissue = Array.from({length:9},(_,k)=>`<rect x="${198-26+(k%3)*18}" y="${44+Math.floor(k/3)*18}" width="16" height="16" rx="4" fill="#E8A6A0" stroke="#B3261E"/><circle cx="${198-18+(k%3)*18}" cy="${52+Math.floor(k/3)*18}" r="2.5" fill="#B3261E"/>`).join("");
+    const heart = (cx,cy,s) => `<path transform="translate(${cx} ${cy}) scale(${s})" d="M0 26 C -30 6, -40 -24, -18 -29 C -8 -31, 0 -21, 0 -17 C 0 -21, 8 -31, 18 -29 C 40 -24, 30 6, 0 26 Z" fill="#D64545"/>`;
+    return `<svg viewBox="0 0 660 175" role="img" aria-label="Levels of organization from cell to tissue to organ to organ system to organism">${ARROW("lv-a")}
+    <circle cx="66" cy="70" r="28" fill="#F6D6CF" stroke="#C2562D" stroke-width="2"/><circle cx="66" cy="70" r="9" fill="#6B3FA0"/>
+    ${tissue}${heart(330,70,1.1)}
+    <rect x="432" y="28" width="60" height="88" rx="26" fill="none" stroke="currentColor" stroke-width="2"/>${heart(462,66,.45)}
+    <g stroke="#D64545" stroke-width="3" fill="none"><path d="M462 56 L462 36"/><path d="M462 78 L462 108"/><path d="M462 90 L446 104"/><path d="M462 90 L478 104"/><path d="M455 60 L442 46"/><path d="M469 60 L482 46"/></g>
+    <g stroke="currentColor" stroke-width="4" stroke-linecap="round" fill="none"><circle cx="594" cy="36" r="12"/><path d="M594 48 L594 86 M574 62 L614 62 M594 86 L580 112 M594 86 L608 112"/></g>
+    <g stroke="currentColor" stroke-width="2" marker-end="url(#lv-a)">${xs.slice(0,4).map(x=>`<line x1="${x+38}" y1="70" x2="${x+94}" y2="70"/>`).join("")}</g>
+    ${[["Cell","muscle cell"],["Tissue","heart muscle"],["Organ","heart"],["Organ system","circulatory"],["Organism","you!"]].map(([a,b],i)=>`<text x="${xs[i]}" y="145" text-anchor="middle" class="lb">${a}</text><text x="${xs[i]}" y="163" text-anchor="middle" class="sm">${b}</text>`).join("")}</svg>`;})() };
+
+FIG["life-2"] = { tag:"See it", cap:"An energy pyramid. Each level keeps only about 10% of the energy from the level below it, which is why there are far fewer hawks than grasshoppers.",
+  html:(()=>{
+    const cx = 230, hw = y => 22 + (y-40)/220*200;
+    const L = [["Grass","10,000","#6A994E","Producers"],["Grasshopper","1,000","#A7C957","Herbivores"],["Frog","100","#F2B705","Carnivores"],["Hawk","10","#C2562D","Top predator"]];
+    let s = "";
+    L.forEach(([n,e,c,role],i) => { const yb = 260-i*55, yt = yb-55;
+      s += `<polygon points="${cx-hw(yb)},${yb} ${cx+hw(yb)},${yb} ${cx+hw(yt)},${yt} ${cx-hw(yt)},${yt}" fill="${c}" style="stroke:var(--bg)" stroke-width="2"/>
+      <text x="${cx}" y="${yb-24}" text-anchor="middle" class="lb" style="fill:#15252A">${n}</text><text x="${cx}" y="${yb-9}" text-anchor="middle" class="sm" style="fill:#15252A">${e} units</text>
+      <text x="${cx+hw(yb-27)+14}" y="${yb-22}" class="sm">${role}</text>`; });
+    return `<svg viewBox="0 0 640 275" role="img" aria-label="Energy pyramid: grass 10,000 units, grasshopper 1,000, frog 100, hawk 10">${ARROW("ep-a")}
+    ${s}<line x1="560" y1="250" x2="560" y2="60" stroke="currentColor" stroke-width="2" marker-end="url(#ep-a)"/>
+    <text x="572" y="150" class="sm">only ~10%</text><text x="572" y="166" class="sm">moves up</text><text x="572" y="182" class="sm">each level</text></svg>`;})() };
+
+/* ---------- Videos (YouTube searches open in a new tab) ---------- */
+const WATCH = {
+ "matter-0": {
+  "id": "jMW_0Ro6b5c",
+  "title": "What Is an Atom?",
+  "by": "Peekaboo Kidz (Dr. Binocs)",
+  "more": "atoms and molecules for kids"
+ },
+ "matter-1": {
+  "id": "24Yromifcss",
+  "title": "States of Matter: Solids, Liquids, and Gases",
+  "by": "Learn Bright",
+  "more": "states of matter for kids"
+ },
+ "matter-2": {
+  "id": "x49BtB5dOwg",
+  "title": "Physical and Chemical Changes",
+  "by": "FreeSchool",
+  "more": "physical and chemical changes for kids"
+ },
+ "motion-0": {
+  "id": "t0ShHdtB8jA",
+  "title": "Potential and Kinetic Energy",
+  "by": "Learning Junction",
+  "more": "potential and kinetic energy for kids"
+ },
+ "motion-1": {
+  "id": "rnlHxAYwCbg",
+  "title": "Balanced and Unbalanced Forces",
+  "by": "Generation Genius",
+  "more": "balanced and unbalanced forces for kids"
+ },
+ "motion-2": {
+  "id": "aA_mqSzbkM0",
+  "title": "Newton's 3 Laws of Motion",
+  "by": "FreeSchool",
+  "more": "Newton's laws of motion for kids"
+ },
+ "earth-0": {
+  "id": "ULtg13HyGsI",
+  "title": "The Rock Cycle",
+  "by": "Rogue Wonders",
+  "more": "rock cycle for kids"
+ },
+ "earth-1": {
+  "id": "bVn04eJRjV4",
+  "title": "Plate Tectonics Explained",
+  "by": "Learn Bright",
+  "more": "plate tectonics for kids"
+ },
+ "earth-2": {
+  "id": "z5G4NCwWUxY",
+  "title": "The Great Aqua Adventure (the water cycle)",
+  "by": "Crash Course Kids",
+  "more": "water cycle for kids"
+ },
+ "space-0": {
+  "id": "upCu4h0fsTo",
+  "title": "Introducing the Solar System and Beyond",
+  "by": "NASA",
+  "more": "solar system for kids"
+ },
+ "space-1": {
+  "id": "f4ZHdzl6ZWg",
+  "title": "Phases of the Moon",
+  "by": "FreeSchool",
+  "more": "moon phases for kids"
+ },
+ "space-2": {
+  "id": "ljRlB6TuMOU",
+  "title": "Defining Gravity",
+  "by": "Crash Course Kids",
+  "more": "gravity for kids"
+ },
+ "life-0": {
+  "id": "IO-rnq54B4A",
+  "title": "Plant and Animal Cells",
+  "by": "Rock 'N Learn",
+  "more": "plant and animal cells for kids"
+ },
+ "life-1": {
+  "id": "YE2peDF4Zqg",
+  "title": "Organization in the Human Body",
+  "by": "Khan Academy",
+  "more": "cells tissues organs organ systems for kids"
+ },
+ "life-2": {
+  "id": "Vtb3I8Vzlfg",
+  "title": "Food Webs",
+  "by": "Crash Course Kids",
+  "more": "food webs for kids"
+ }
+};
+</script>
+<script>
+/* ============ CONTENT ============ */
+/* Question format: [question, [choices...], correctIndex, explanation] */
+const UNITS = [
+{
+  id:"matter", n:1, sym:"Mt", color:"--u1", name:"Matter and Its Changes",
+  blurb:"What everything is made of, how it changes state, and how to tell a physical change from a chemical one.",
+  lessons:[
+    { t:"Atoms, Elements, and Molecules",
+      body:`<p>Everything that has mass and takes up space is <b>matter</b>. Your desk, the air, and your body are all matter. All matter is built from tiny particles called <b>atoms</b>. Atoms are so small that about a million of them lined up would be as wide as a human hair.</p>
+<p>An <b>element</b> is a substance made of only one kind of atom. Gold, oxygen, and carbon are elements. Scientists have found about 118 elements, and they organize them in the <b>periodic table</b>. Each element has a one- or two-letter symbol, like O for oxygen and Fe for iron.</p>
+<p>When two or more atoms bond together, they form a <b>molecule</b>. If the atoms are from different elements, the substance is a <b>compound</b>. Water (H₂O) is a compound: each molecule has two hydrogen atoms and one oxygen atom. A compound can act very differently from its elements. Sodium is a metal that reacts with water, and chlorine is a poisonous gas, but together they make table salt.</p>`,
+      vocab:[["Matter","Anything that has mass and takes up space"],["Atom","The smallest unit of an element"],["Element","A pure substance made of one kind of atom"],["Molecule","Two or more atoms bonded together"],["Compound","A substance made of two or more different elements bonded together"]],
+      tryit:"Look at a food label. Find sodium chloride (salt) or H₂O (water). Is each one an element or a compound?"},
+    { t:"States of Matter",
+      body:`<p>Matter is usually found in three states: <b>solid</b>, <b>liquid</b>, and <b>gas</b>. The state depends on how the particles move and how close together they are.</p>
+<ul><li><b>Solid:</b> particles are packed tightly and vibrate in place. A solid keeps its own shape and volume.</li>
+<li><b>Liquid:</b> particles are close but can slide past each other. A liquid has a fixed volume but takes the shape of its container.</li>
+<li><b>Gas:</b> particles are far apart and move fast in all directions. A gas has no fixed shape or volume and spreads to fill its container.</li></ul>
+<p>Adding thermal energy (heat) makes particles move faster. That is why ice <b>melts</b> into water and water <b>evaporates</b> or <b>boils</b> into water vapor. Removing heat slows particles down, so water vapor <b>condenses</b> into liquid and liquid water <b>freezes</b>. At sea level, pure water freezes at 0 °C (32 °F) and boils at 100 °C (212 °F).</p>`,
+      vocab:[["Solid","Definite shape and definite volume"],["Liquid","Definite volume, no definite shape"],["Gas","No definite shape or volume"],["Melting","Solid to liquid"],["Condensation","Gas to liquid"],["Evaporation","Liquid to gas"]],
+      tryit:"Put a cold glass of water on the counter. Where do the drops on the outside come from? (Hint: condensation.)"},
+    { t:"Physical and Chemical Changes",
+      body:`<p>A <b>physical change</b> changes the size, shape, or state of matter, but it is still the same substance. Cutting paper, melting butter, and dissolving sugar in water are physical changes. Often you can undo them.</p>
+<p>A <b>chemical change</b> makes one or more <b>new substances</b>. Burning wood, baking a cake, and iron rusting are chemical changes. They are usually hard or impossible to reverse.</p>
+<p>Clues that a chemical change happened:</p>
+<ul><li>Gas bubbles form (not from boiling)</li><li>The color changes</li><li>Heat or light is given off, or the material gets cold</li><li>A solid (called a <b>precipitate</b>) forms when two liquids are mixed</li><li>A new smell appears</li></ul>
+<p>In both kinds of change, the <b>law of conservation of mass</b> holds: atoms are rearranged, not created or destroyed, so the total mass stays the same.</p>`,
+      vocab:[["Physical change","A change in form that does not make a new substance"],["Chemical change","A change that produces a new substance"],["Precipitate","A solid that forms from mixing liquids"],["Conservation of mass","Mass is not created or destroyed in a change"]],
+      tryit:"Mix a spoonful of baking soda into vinegar. List the clues you see. Physical or chemical?"}
+  ],
+  quiz:[
+    ["Which of these is NOT matter?",["Air","Light","Water","A rock"],1,"Light has no mass and takes up no space, so it is energy, not matter."],
+    ["A substance made of only one kind of atom is called a(n)…",["compound","mixture","element","molecule"],2,"An element contains only one kind of atom, like pure gold or oxygen."],
+    ["In which state of matter do particles vibrate in place?",["Solid","Liquid","Gas","All of them equally"],0,"Solid particles are packed tightly and can only vibrate in place."],
+    ["Water vapor turning into droplets on a cold window is called…",["evaporation","melting","freezing","condensation"],3,"Gas turning into liquid is condensation."],
+    ["Which is a chemical change?",["Ice melting","Paper being torn","Wood burning","Sugar dissolving"],2,"Burning makes new substances like ash, smoke, and carbon dioxide."],
+    ["Water (H₂O) is a compound because it…",["is a liquid","contains two different elements bonded together","has no mass","is found in the ocean"],1,"H₂O has hydrogen and oxygen atoms bonded together."],
+    ["What does adding heat do to particles?",["Makes them move faster","Makes them stop","Makes them smaller","Removes them"],0,"More thermal energy means faster-moving particles."],
+    ["At sea level, pure water boils at…",["0 °C","50 °C","100 °C","212 °C"],2,"Water boils at 100 °C, which equals 212 °F."]
+  ],
+  test:[
+    ["Scientists organize the elements in the…",["food chain","periodic table","rock cycle","water cycle"],1,"The periodic table lists every known element."],
+    ["Which statement about gases is true?",["They have a fixed shape","They have a fixed volume","They spread out to fill their container","Their particles do not move"],2,"Gas particles move freely and fill any container."],
+    ["A liquid has…",["definite shape and definite volume","definite volume but no definite shape","no definite volume but definite shape","no definite shape or volume"],1,"A liquid keeps its volume but takes the shape of its container."],
+    ["Which is a sign of a chemical change?",["A change in shape","A change in size","Bubbles of a new gas forming","Water freezing"],2,"A new gas being made is evidence of a new substance."],
+    ["An iron nail rusts. This is a…",["physical change, because it's still iron","chemical change, because rust is a new substance","change of state","mixture"],1,"Rust (iron oxide) is a new substance made from iron and oxygen."],
+    ["Two atoms of oxygen bonded together (O₂) form a…",["molecule","compound made of two elements","mixture","state of matter"],0,"O₂ is a molecule. It is not a compound because both atoms are the same element."],
+    ["When water freezes, its particles…",["speed up","slow down and lock into place","disappear","turn into new atoms"],1,"Removing heat slows the particles until they lock into a solid."],
+    ["A 50 g ice cube melts completely. What is the mass of the water?",["More than 50 g","Less than 50 g","Exactly 50 g","0 g"],2,"Mass is conserved. Only the state changed."],
+    ["Mixing two clear liquids makes a cloudy solid appear. The solid is called a…",["precipitate","vapor","compound","solution"],0,"A solid that forms when liquids are mixed is a precipitate, a clue of chemical change."],
+    ["Dissolving salt in water is a physical change because…",["it produces a gas","a new substance forms","the salt is still salt and can be recovered by evaporating the water","it gives off light"],2,"No new substance forms. Evaporate the water and the salt is left."],
+    ["Which change of state happens when a puddle dries up on a sunny day?",["Condensation","Evaporation","Freezing","Melting"],1,"Liquid water turns into water vapor: evaporation."],
+    ["Table salt is made from sodium and chlorine. This shows that a compound…",["always acts like its elements","can have very different properties from its elements","is only one element","cannot be eaten"],1,"Salt is safe to eat, even though sodium and chlorine alone are dangerous."]
+  ]
+},
+{
+  id:"motion", n:2, sym:"Fm", color:"--u2", name:"Energy, Forces, and Motion",
+  blurb:"Kinds of energy, how heat moves, and how pushes and pulls change the way objects move.",
+  lessons:[
+    { t:"Forms of Energy",
+      body:`<p><b>Energy</b> is the ability to do work or cause change. Energy comes in two main types:</p>
+<ul><li><b>Kinetic energy</b> is energy of motion. A rolling ball and a flowing river have kinetic energy. The faster and heavier an object is, the more kinetic energy it has.</li>
+<li><b>Potential energy</b> is stored energy. A book on a high shelf has gravitational potential energy. A stretched rubber band and a battery store energy too.</li></ul>
+<p>Energy also has forms: thermal, electrical, light, sound, chemical, and mechanical. Energy can <b>transform</b> from one form to another. A flashlight changes chemical energy in batteries into electrical energy, then into light and heat. The <b>law of conservation of energy</b> says energy cannot be created or destroyed, only changed.</p>
+<p>Thermal energy (heat) moves in three ways:</p>
+<ul><li><b>Conduction:</b> through direct touch, like a metal spoon getting hot in soup</li>
+<li><b>Convection:</b> through moving liquids or gases, like warm air rising in a room</li>
+<li><b>Radiation:</b> through waves, like sunlight warming your face</li></ul>`,
+      vocab:[["Kinetic energy","Energy of motion"],["Potential energy","Stored energy"],["Conduction","Heat moving by direct contact"],["Convection","Heat moving through currents in a liquid or gas"],["Radiation","Energy moving as waves, even through space"]],
+      tryit:"Hold a ball high, then drop it. Where does it have the most potential energy? The most kinetic energy?"},
+    { t:"Forces",
+      body:`<p>A <b>force</b> is a push or a pull. Forces are measured in <b>newtons</b> (N). Every force has a size (strength) and a direction.</p>
+<p>When forces on an object are <b>balanced</b>, they cancel out and the object's motion does not change. In a tug-of-war where both teams pull equally, the rope does not move. When forces are <b>unbalanced</b>, the object speeds up, slows down, or changes direction.</p>
+<p>Two forces are everywhere:</p>
+<ul><li><b>Gravity</b> pulls objects with mass toward each other. Earth's gravity pulls you down, and that pull is your <b>weight</b>.</li>
+<li><b>Friction</b> acts between surfaces that touch, and it works against motion. Rough surfaces create more friction than smooth ones. Friction also creates heat, which is why rubbing your hands warms them.</li></ul>
+<p><b>Mass</b> is the amount of matter in an object, and it stays the same everywhere. <b>Weight</b> depends on gravity, so you would weigh less on the Moon even though your mass is the same.</p>`,
+      vocab:[["Force","A push or pull"],["Newton (N)","The unit used to measure force"],["Balanced forces","Forces that cancel; motion doesn't change"],["Friction","A force that resists motion between surfaces"],["Weight","The pull of gravity on an object's mass"]],
+      tryit:"Slide a book across a carpet and across a smooth table. Where does it go farther? Why?"},
+    { t:"Motion and Newton's Laws",
+      body:`<p><b>Speed</b> tells how far something travels in a certain amount of time:</p>
+<p style="font-family:var(--mono);font-size:18px;background:var(--soft);padding:10px 14px;border-radius:8px;display:inline-block">speed = distance ÷ time</p>
+<p>A car that travels 120 km in 2 hours has a speed of 60 km/h. <b>Velocity</b> is speed in a given direction, and <b>acceleration</b> is any change in velocity: speeding up, slowing down, or turning.</p>
+<p>Isaac Newton described three laws of motion:</p>
+<ul><li><b>First law (inertia):</b> An object at rest stays at rest, and an object in motion keeps moving the same way, unless an unbalanced force acts on it. That's why you lurch forward when a car stops suddenly.</li>
+<li><b>Second law:</b> The more force you apply, the more an object accelerates. A heavier object needs more force to accelerate the same amount (force = mass × acceleration).</li>
+<li><b>Third law:</b> For every action there is an equal and opposite reaction. A rocket pushes gas down, and the gas pushes the rocket up.</li></ul>`,
+      vocab:[["Speed","Distance divided by time"],["Velocity","Speed in a specific direction"],["Acceleration","A change in velocity"],["Inertia","An object's tendency to resist changes in motion"]],
+      tryit:"Walk 20 meters and time yourself. Divide distance by time to find your speed in m/s."}
+  ],
+  quiz:[
+    ["A rock sitting at the top of a hill has mostly…",["kinetic energy","potential energy","sound energy","no energy"],1,"It is not moving, but its height stores gravitational potential energy."],
+    ["Force is measured in…",["meters","grams","newtons","degrees"],2,"The newton (N) is the unit of force."],
+    ["A metal pan handle gets hot on the stove. This heat transfer is…",["conduction","convection","radiation","insulation"],0,"Heat moves through the metal by direct contact."],
+    ["A bike travels 30 km in 2 hours. What is its speed?",["60 km/h","15 km/h","32 km/h","28 km/h"],1,"30 km ÷ 2 h = 15 km/h."],
+    ["Which force slows a sliding hockey puck?",["Magnetism","Friction","Inertia","Radiation"],1,"Friction between the puck and the ice works against its motion."],
+    ["When forces on an object are balanced, the object's motion…",["speeds up","slows down","does not change","changes direction"],2,"Balanced forces cancel out."],
+    ["A rocket pushes gases down and moves up. This is Newton's…",["first law","second law","third law","law of gravity"],2,"Equal and opposite reaction: the third law."],
+    ["The Sun warms Earth through…",["conduction","convection","radiation","friction"],2,"Energy travels through space as waves: radiation."]
+  ],
+  test:[
+    ["Which has the most kinetic energy?",["A parked truck","A truck driving fast","A bowling ball on a shelf","A stretched rubber band"],1,"Kinetic energy depends on motion. The moving truck has mass and speed."],
+    ["A flashlight changes chemical energy into…",["only sound","electrical energy, then light and heat","mass","potential energy only"],1,"Batteries (chemical) power a circuit (electrical), which makes light and some heat."],
+    ["The law of conservation of energy says energy…",["can be created from nothing","is destroyed when used","cannot be created or destroyed, only changed","only exists as heat"],2,"Energy changes form, but the total stays the same."],
+    ["Warm air rising and cool air sinking in a room is an example of…",["conduction","convection","radiation","friction"],1,"Heat is carried by moving currents of air: convection."],
+    ["An astronaut's mass on the Moon compared to Earth is…",["less","more","the same","zero"],2,"Mass is the amount of matter and does not change. Weight changes."],
+    ["Why do you lurch forward when a car brakes suddenly?",["Gravity","Inertia","Convection","Radiation"],1,"Your body keeps moving forward because of inertia (Newton's first law)."],
+    ["Pushing an empty cart vs. a full cart with the same force: which accelerates more?",["The full cart","The empty cart","They accelerate the same","Neither moves"],1,"Less mass means more acceleration for the same force (Newton's second law)."],
+    ["A runner goes 400 m in 80 seconds. What is her speed?",["5 m/s","320 m/s","480 m/s","0.2 m/s"],0,"400 m ÷ 80 s = 5 m/s."],
+    ["Which of these is an acceleration?",["A car parked in a lot","A car moving at a steady 50 km/h in a straight line","A car turning a corner","A book resting on a table"],2,"Changing direction is a change in velocity, which is acceleration."],
+    ["Rubbing your hands together makes them warm because…",["friction changes motion energy into heat","gravity increases","radiation from the Sun","your hands lose mass"],0,"Friction turns kinetic energy into thermal energy."],
+    ["Two teams pull a rope with 500 N each in opposite directions. The rope…",["moves toward team 1","moves toward team 2","does not move because the forces are balanced","breaks immediately"],2,"Equal and opposite forces are balanced, so there is no change in motion."],
+    ["Which object has potential energy stored in it?",["A charged battery","A rolling marble","A song playing","Sunlight"],0,"A battery stores chemical potential energy."]
+  ]
+},
+{
+  id:"earth", n:3, sym:"Es", color:"--u3", name:"Earth's Systems",
+  blurb:"Rocks and how they change, the moving plates under our feet, and how water and weather cycle around the planet.",
+  lessons:[
+    { t:"Rocks and the Rock Cycle",
+      body:`<p>Earth's rocks come in three main types, based on how they form:</p>
+<ul><li><b>Igneous rock</b> forms when melted rock cools and hardens. Melted rock underground is <b>magma</b>; on the surface it's called <b>lava</b>. Granite and basalt are igneous. Obsidian cools so fast it looks like glass.</li>
+<li><b>Sedimentary rock</b> forms when bits of rock, sand, shells, and mud (<b>sediment</b>) are pressed and cemented together in layers over a long time. Sandstone and limestone are sedimentary. Most <b>fossils</b> are found in sedimentary rock.</li>
+<li><b>Metamorphic rock</b> forms when heat and pressure deep underground change an existing rock without melting it. Limestone can become marble, and shale can become slate.</li></ul>
+<p>The <b>rock cycle</b> is the slow process that changes rocks from one type to another. <b>Weathering</b> breaks rock into pieces, <b>erosion</b> carries the pieces away by water, wind, or ice, and <b>deposition</b> drops them in new places. Any rock type can become any other type given enough time.</p>`,
+      vocab:[["Igneous","Rock formed from cooled magma or lava"],["Sedimentary","Rock formed from pressed and cemented sediment"],["Metamorphic","Rock changed by heat and pressure"],["Weathering","Breaking rock into smaller pieces"],["Erosion","Moving sediment from one place to another"]],
+      tryit:"Find a rock outside. Does it have layers (sedimentary), crystals (maybe igneous), or bands (maybe metamorphic)?"},
+    { t:"Plate Tectonics",
+      body:`<p>Earth has layers: a thin, rocky <b>crust</b>, a thick hot <b>mantle</b>, and a metal <b>core</b>. The crust and upper mantle are broken into giant pieces called <b>tectonic plates</b>. The plates float on softer mantle rock and move a few centimeters each year, about as fast as your fingernails grow.</p>
+<p>About 250 million years ago, the continents were joined in one supercontinent called <b>Pangaea</b>. Evidence includes continents that fit like puzzle pieces (South America and Africa), matching fossils on different continents, and matching rock layers.</p>
+<p>Plates meet at three kinds of <b>boundaries</b>:</p>
+<ul><li><b>Convergent:</b> plates push together, forming mountains (like the Himalayas) or making one plate sink under another.</li>
+<li><b>Divergent:</b> plates pull apart, and magma rises to make new crust, like the Mid-Atlantic Ridge.</li>
+<li><b>Transform:</b> plates slide past each other, like the San Andreas Fault in California.</li></ul>
+<p>Most <b>earthquakes</b> and <b>volcanoes</b> happen near plate boundaries.</p>`,
+      vocab:[["Crust","Earth's thin, outer rocky layer"],["Mantle","The thick, hot layer below the crust"],["Tectonic plate","A giant moving piece of Earth's surface"],["Pangaea","The supercontinent from about 250 million years ago"],["Fault","A crack in the crust where rocks move"]],
+      tryit:"Look at a world map. Can you see how South America's east coast fits Africa's west coast?"},
+    { t:"The Water Cycle and Weather",
+      body:`<p>Earth's water moves in a never-ending loop called the <b>water cycle</b>. The <b>Sun</b> provides the energy that drives it.</p>
+<ul><li><b>Evaporation:</b> the Sun heats water in oceans, lakes, and rivers, turning it into water vapor.</li>
+<li><b>Transpiration:</b> plants release water vapor through their leaves.</li>
+<li><b>Condensation:</b> water vapor cools high in the air and forms tiny droplets, which make clouds.</li>
+<li><b>Precipitation:</b> droplets join, get heavy, and fall as rain, snow, sleet, or hail.</li>
+<li><b>Collection (runoff):</b> water gathers in oceans, lakes, rivers, and underground as groundwater.</li></ul>
+<p>About 97% of Earth's water is salt water in the oceans. Only a small part is fresh water we can use.</p>
+<p><b>Weather</b> is what the atmosphere is like at a certain place and time: temperature, wind, clouds, and precipitation today. <b>Climate</b> is the average weather of a place over many years (usually 30 or more). "It's snowing today" is weather; "Indiana has cold winters" is climate. Weather is measured with tools like a thermometer (temperature), barometer (air pressure), and rain gauge (precipitation).</p>`,
+      vocab:[["Evaporation","Liquid water turning into water vapor"],["Condensation","Water vapor cooling into droplets"],["Precipitation","Water falling from clouds"],["Weather","Atmosphere conditions at a place and time"],["Climate","Average weather over many years"]],
+      tryit:"Check the forecast for 5 days and write down the high temperatures. That's weather. How would you find the climate?"}
+  ],
+  quiz:[
+    ["Rock formed when lava cools and hardens is…",["sedimentary","metamorphic","igneous","fossil"],2,"Igneous rock forms from cooled magma or lava."],
+    ["Most fossils are found in which rock type?",["Igneous","Sedimentary","Metamorphic","Lava"],1,"Sediment gently buries plants and animals, preserving fossils in layers."],
+    ["What provides the energy that drives the water cycle?",["The Moon","Wind","The Sun","Earth's core"],2,"Sunlight heats water and causes evaporation."],
+    ["Clouds form during…",["evaporation","condensation","precipitation","runoff"],1,"Cooling water vapor condenses into tiny droplets that make clouds."],
+    ["The large moving pieces of Earth's crust are called…",["faults","tectonic plates","mantles","ridges"],1,"Tectonic plates slowly move on the mantle."],
+    ["Plates sliding past each other form a ___ boundary.",["convergent","divergent","transform","magma"],2,"Transform boundaries slide sideways, like the San Andreas Fault."],
+    ["\"Phoenix is hot and dry most of the year\" describes…",["weather","climate","a forecast","precipitation"],1,"This describes long-term average conditions, which is climate."],
+    ["Heat and pressure change limestone into marble. Marble is…",["igneous","sedimentary","metamorphic","magma"],2,"Rock changed by heat and pressure without melting is metamorphic."]
+  ],
+  test:[
+    ["Which layer of Earth is thinnest?",["Crust","Mantle","Outer core","Inner core"],0,"The crust is a thin rocky shell compared to the other layers."],
+    ["Moving sediment from one place to another by water or wind is…",["weathering","erosion","condensation","melting"],1,"Weathering breaks rock; erosion carries the pieces away."],
+    ["What was Pangaea?",["An ancient volcano","A supercontinent from about 250 million years ago","A type of rock","A layer of the atmosphere"],1,"All the continents were once joined as Pangaea."],
+    ["Which is evidence that continents were once joined?",["Matching fossils found on continents across oceans","Ocean water is salty","The Sun rises in the east","Rain falls from clouds"],0,"The same fossil species on distant continents suggests the land was once connected."],
+    ["The Himalayas formed where two plates…",["pulled apart","pushed together","slid past each other","stopped moving"],1,"Convergent boundaries push crust up into mountains."],
+    ["New crust forms at a ___ boundary.",["convergent","divergent","transform","none of these"],1,"At divergent boundaries, magma rises between separating plates."],
+    ["Where do most earthquakes and volcanoes occur?",["In the middle of plates","Near plate boundaries","Only in oceans","Only at the poles"],1,"Plates grinding, colliding, and separating cause most quakes and volcanoes."],
+    ["Plants releasing water vapor from their leaves is called…",["transpiration","precipitation","collection","conduction"],0,"Transpiration adds water vapor to the air from plants."],
+    ["About how much of Earth's water is salt water in the oceans?",["3%","25%","50%","97%"],3,"Only about 3% of Earth's water is fresh water."],
+    ["Which tool measures air pressure?",["Thermometer","Rain gauge","Barometer","Ruler"],2,"A barometer measures air pressure, which helps forecast weather."],
+    ["Any type of rock can become any other type over time. This idea is called…",["the water cycle","the rock cycle","plate tectonics","conservation of mass"],1,"The rock cycle shows how rocks change between igneous, sedimentary, and metamorphic."],
+    ["\"There is a thunderstorm this afternoon\" describes…",["climate","weather","the rock cycle","transpiration"],1,"Short-term conditions at a certain time are weather."]
+  ]
+},
+{
+  id:"space", n:4, sym:"Sp", color:"--u4", name:"Earth in Space",
+  blurb:"Our solar system, why we have day and night, seasons, and Moon phases, and how gravity holds it all together.",
+  lessons:[
+    { t:"The Solar System",
+      body:`<p>Our <b>solar system</b> is the Sun and everything that orbits it: 8 planets, their moons, dwarf planets like Pluto, asteroids, and comets.</p>
+<p>The <b>Sun</b> is a star, a giant ball of hot gas that makes its own light and heat. It holds more than 99% of the solar system's mass. It looks bigger and brighter than other stars only because it is much closer.</p>
+<p>In order from the Sun, the planets are Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, and Neptune. (Memory trick: "My Very Educated Mother Just Served Us Nachos.")</p>
+<ul><li>The four <b>inner planets</b> (Mercury to Mars) are small and rocky.</li>
+<li>The four <b>outer planets</b> are giants. Jupiter and Saturn are <b>gas giants</b>; Uranus and Neptune are <b>ice giants</b>. All four have rings.</li></ul>
+<p>An <b>asteroid belt</b> lies between Mars and Jupiter. Jupiter is the largest planet. Venus is the hottest, because its thick atmosphere traps heat.</p>`,
+      vocab:[["Star","A ball of hot gas that makes its own light"],["Planet","A large body that orbits a star"],["Orbit","The curved path of one object around another"],["Asteroid","A rocky object orbiting the Sun, smaller than a planet"],["Comet","An icy object that grows a glowing tail near the Sun"]],
+      tryit:"Say the planets in order using the memory trick, then try it without looking."},
+    { t:"Earth, Moon, and Sun",
+      body:`<p>Earth spins on its <b>axis</b>, an imaginary line through the North and South Poles. One full spin, a <b>rotation</b>, takes about 24 hours and causes <b>day and night</b>. The side facing the Sun has day.</p>
+<p>Earth also travels around the Sun. One full trip, a <b>revolution</b>, takes about 365¼ days, or one year.</p>
+<p><b>Seasons</b> happen because Earth's axis is <b>tilted</b> about 23.5°. When the Northern Hemisphere tilts toward the Sun, it gets more direct sunlight and longer days, so it has summer. When it tilts away, it has winter. Seasons are <i>not</i> caused by Earth being closer to the Sun; Earth is actually closest to the Sun in early January.</p>
+<p>The Moon orbits Earth about every 29.5 days. It doesn't make its own light; it reflects sunlight. As it orbits, we see different amounts of its lit half. These are the <b>phases</b>: new moon, waxing crescent, first quarter, waxing gibbous, full moon, waning gibbous, third quarter, waning crescent.</p>
+<p>An <b>eclipse</b> happens when one body blocks sunlight from another. In a <b>solar eclipse</b>, the Moon passes between the Sun and Earth. In a <b>lunar eclipse</b>, Earth passes between the Sun and Moon.</p>`,
+      vocab:[["Rotation","One spin on an axis (about 24 hours for Earth)"],["Revolution","One trip around the Sun (about 365 days)"],["Axis","Imaginary line an object spins around"],["Phase","The shape of the Moon's lit part we see from Earth"],["Eclipse","When one object blocks light from reaching another"]],
+      tryit:"Look at the Moon each night for a week and sketch its shape. Is it waxing (growing) or waning (shrinking)?"},
+    { t:"Gravity and Scale",
+      body:`<p><b>Gravity</b> is the force of attraction between objects with mass. Two things change how strong it is:</p>
+<ul><li><b>Mass:</b> more mass means stronger gravity. The Sun's huge mass holds all the planets in orbit.</li>
+<li><b>Distance:</b> the farther apart objects are, the weaker the pull.</li></ul>
+<p>Gravity keeps the Moon orbiting Earth and Earth orbiting the Sun. The Moon's gravity also pulls on Earth's oceans, causing <b>tides</b>.</p>
+<p>Space is enormous. Distances inside the solar system are often measured in <b>astronomical units</b> (AU); 1 AU is the average distance from Earth to the Sun, about 150 million km. Distances to stars are measured in <b>light-years</b>, the distance light travels in one year (about 9.5 trillion km). The nearest star after the Sun, Proxima Centauri, is about 4.2 light-years away.</p>
+<p>Our Sun is one of hundreds of billions of stars in the <b>Milky Way galaxy</b>, and the Milky Way is one of billions of galaxies in the universe.</p>`,
+      vocab:[["Gravity","Force of attraction between objects with mass"],["Tide","Rise and fall of ocean water caused mostly by the Moon"],["Astronomical unit","Average Earth–Sun distance, about 150 million km"],["Light-year","Distance light travels in one year"],["Galaxy","A huge system of billions of stars"]],
+      tryit:"If the Sun were a basketball, Earth would be a peppercorn about 26 meters away. Pace that out!"}
+  ],
+  quiz:[
+    ["What causes day and night?",["Earth's revolution around the Sun","Earth's rotation on its axis","The Moon blocking the Sun","Clouds"],1,"Earth spins once about every 24 hours, so each side faces the Sun, then away."],
+    ["How long does it take Earth to revolve around the Sun?",["24 hours","29.5 days","About 365 days","10 years"],2,"One revolution is one year."],
+    ["The Sun is a…",["planet","star","moon","comet"],1,"The Sun is a star, the closest one to Earth."],
+    ["Which planet is the largest?",["Earth","Saturn","Jupiter","Neptune"],2,"Jupiter is the biggest planet in the solar system."],
+    ["The Moon shines because it…",["makes its own light","reflects sunlight","is on fire","reflects Earth's light only"],1,"The Moon reflects light from the Sun."],
+    ["What causes Earth's seasons?",["Distance from the Sun","The tilt of Earth's axis","The Moon's phases","Ocean currents"],1,"The 23.5° tilt changes how directly sunlight hits each hemisphere."],
+    ["Which are the inner, rocky planets?",["Jupiter, Saturn, Uranus, Neptune","Mercury, Venus, Earth, Mars","Earth, Moon, Sun, Mars","Mars, Jupiter, Saturn, Pluto"],1,"The four planets closest to the Sun are small and rocky."],
+    ["What force keeps the planets in orbit around the Sun?",["Friction","Magnetism","Gravity","Wind"],2,"The Sun's gravity pulls on the planets and holds them in orbit."]
+  ],
+  test:[
+    ["In a solar eclipse, which object is in the middle?",["Earth","The Sun","The Moon","Mars"],2,"The Moon passes between the Sun and Earth, blocking sunlight."],
+    ["It is summer in Indiana when…",["Earth is closest to the Sun","the Northern Hemisphere is tilted toward the Sun","the Moon is full","Earth stops rotating"],1,"Tilting toward the Sun means more direct light and longer days."],
+    ["About how long does the Moon take to go through all its phases?",["1 day","7 days","29.5 days","365 days"],2,"A full cycle of phases takes about 29.5 days."],
+    ["Gravity between two objects gets weaker when…",["they get closer","their mass increases","they move farther apart","they start spinning"],2,"More distance means weaker gravity."],
+    ["The Moon's gravity is the main cause of…",["seasons","ocean tides","day and night","earthquakes"],1,"The Moon pulls on Earth's oceans, creating tides."],
+    ["A light-year measures…",["time","distance","brightness","mass"],1,"A light-year is the distance light travels in one year."],
+    ["Where is the asteroid belt?",["Between Earth and Mars","Between Mars and Jupiter","Beyond Neptune","Around the Moon"],1,"Most asteroids orbit between Mars and Jupiter."],
+    ["Why does the Sun look bigger and brighter than other stars?",["It is the biggest star in the universe","It is much closer to us","It is the only star that makes light","Other stars are turned off in the day"],1,"The Sun is an average-sized star; it looks big because it's close."],
+    ["Our solar system is part of which galaxy?",["Andromeda","The Milky Way","Proxima","Orion"],1,"The Sun is one of hundreds of billions of stars in the Milky Way."],
+    ["Which planet is hottest?",["Mercury","Venus","Mars","Jupiter"],1,"Venus's thick atmosphere traps heat, making it hotter than Mercury."],
+    ["During a lunar eclipse…",["the Moon blocks the Sun","Earth's shadow falls on the Moon","the Sun passes between Earth and Moon","the Moon makes its own light"],1,"Earth sits between the Sun and Moon, casting its shadow on the Moon."],
+    ["Jupiter and Saturn are called…",["rocky planets","ice giants","gas giants","dwarf planets"],2,"They are made mostly of hydrogen and helium gas."]
+  ]
+},
+{
+  id:"life", n:5, sym:"Lf", color:"--u5", name:"Cells to Ecosystems",
+  blurb:"Cells as the building blocks of life, how bodies are organized, and how energy flows through ecosystems.",
+  lessons:[
+    { t:"Cells: Building Blocks of Life",
+      body:`<p>Every living thing is made of one or more <b>cells</b>. Some organisms, like bacteria, are just one cell. You are made of trillions. Most cells are too small to see without a <b>microscope</b>.</p>
+<p>The <b>cell theory</b> says:</p>
+<ul><li>All living things are made of cells.</li><li>The cell is the basic unit of life.</li><li>All cells come from other cells.</li></ul>
+<p>Parts inside a cell are called <b>organelles</b>. Each has a job:</p>
+<ul><li><b>Cell membrane:</b> a thin layer that controls what enters and leaves the cell</li>
+<li><b>Nucleus:</b> the control center; holds DNA, the cell's instructions</li>
+<li><b>Cytoplasm:</b> the jelly-like fluid that holds the organelles</li>
+<li><b>Mitochondria:</b> the "powerhouses" that release energy from food</li></ul>
+<p><b>Plant cells</b> have two extra parts: a stiff <b>cell wall</b> for support, and <b>chloroplasts</b>, which capture sunlight to make food by photosynthesis. Plant cells also have a large <b>vacuole</b> that stores water.</p>`,
+      vocab:[["Cell","The basic unit of all living things"],["Nucleus","Control center of the cell; holds DNA"],["Cell membrane","Controls what goes in and out of the cell"],["Mitochondria","Release energy from food"],["Chloroplast","Captures sunlight to make food (plants only)"]],
+      tryit:"Draw a plant cell and an animal cell side by side. Label the two parts only the plant cell has."},
+    { t:"Levels of Organization",
+      body:`<p>In many-celled organisms, cells are organized into levels, from smallest to largest:</p>
+<p style="font-family:var(--mono);font-size:16px;background:var(--soft);padding:10px 14px;border-radius:8px">cells → tissues → organs → organ systems → organism</p>
+<ul><li>A <b>tissue</b> is a group of similar cells doing the same job, like muscle tissue.</li>
+<li>An <b>organ</b> is made of different tissues working together, like the heart or stomach.</li>
+<li>An <b>organ system</b> is a group of organs that work together, like the digestive system.</li></ul>
+<p>Some important human body systems:</p>
+<ul><li><b>Circulatory:</b> the heart pumps blood through blood vessels, carrying oxygen and nutrients.</li>
+<li><b>Respiratory:</b> the lungs take in oxygen and release carbon dioxide.</li>
+<li><b>Digestive:</b> breaks food into nutrients the body can use.</li>
+<li><b>Skeletal and muscular:</b> support the body and let it move.</li>
+<li><b>Nervous:</b> the brain, spinal cord, and nerves send signals and control the body.</li></ul>
+<p>Body systems work together. When you exercise, your respiratory system takes in more oxygen and your circulatory system pumps it faster to your muscles.</p>`,
+      vocab:[["Tissue","A group of similar cells doing one job"],["Organ","Different tissues working together"],["Organ system","Organs working together for a major function"],["Organism","A whole living thing"]],
+      tryit:"Count your pulse for 15 seconds, then multiply by 4. Do 20 jumping jacks and count again. Which systems changed?"},
+    { t:"Ecosystems and Energy Flow",
+      body:`<p>An <b>ecosystem</b> is all the living things in an area plus the nonliving things around them, like water, soil, sunlight, and air.</p>
+<p>Living things play different roles:</p>
+<ul><li><b>Producers</b> (plants, algae) make their own food by <b>photosynthesis</b>, using sunlight, water, and carbon dioxide to make sugar and release oxygen.</li>
+<li><b>Consumers</b> eat other living things. <b>Herbivores</b> eat plants, <b>carnivores</b> eat animals, and <b>omnivores</b> eat both.</li>
+<li><b>Decomposers</b> (fungi, bacteria) break down dead matter and return nutrients to the soil.</li></ul>
+<p>A <b>food chain</b> shows one path of energy: grass → grasshopper → frog → snake → hawk. Arrows point in the direction energy flows. A <b>food web</b> is many connected food chains.</p>
+<p>Almost all energy in an ecosystem starts with the <b>Sun</b>. Only about <b>10%</b> of the energy at one level passes to the next; the rest is used for living or lost as heat. That's why there are fewer top predators than plants.</p>`,
+      vocab:[["Ecosystem","Living and nonliving things interacting in an area"],["Producer","Makes its own food from sunlight"],["Consumer","Gets energy by eating other organisms"],["Decomposer","Breaks down dead matter"],["Photosynthesis","Plants use sunlight, water, and CO₂ to make sugar and oxygen"]],
+      tryit:"Build a food chain from your backyard or a park, starting with a producer and ending with a top predator."}
+  ],
+  quiz:[
+    ["What is the basic unit of all living things?",["Atom","Cell","Organ","Tissue"],1,"The cell is the basic unit of life."],
+    ["Which organelle is the cell's control center?",["Cell membrane","Nucleus","Mitochondria","Vacuole"],1,"The nucleus holds DNA and directs the cell."],
+    ["Which part is found in plant cells but NOT animal cells?",["Nucleus","Cell membrane","Chloroplast","Mitochondria"],2,"Chloroplasts (and cell walls) are only in plant cells."],
+    ["Which order is correct, from smallest to largest?",["Organ → tissue → cell","Cell → tissue → organ → organ system","Tissue → cell → organ","Organism → organ → cell"],1,"Cells form tissues, tissues form organs, organs form systems."],
+    ["The heart is part of which system?",["Digestive","Respiratory","Circulatory","Nervous"],2,"The heart pumps blood through the circulatory system."],
+    ["Organisms that make their own food from sunlight are…",["consumers","decomposers","producers","carnivores"],2,"Producers like plants use photosynthesis."],
+    ["Mushrooms breaking down a fallen log are…",["producers","decomposers","herbivores","carnivores"],1,"Fungi are decomposers that recycle nutrients."],
+    ["In a food chain, arrows point…",["from the eater to the eaten","in the direction energy flows","toward the Sun","randomly"],1,"Arrows show energy moving from food to the organism that eats it."]
+  ],
+  test:[
+    ["Which is part of the cell theory?",["All cells come from other cells","Cells are only found in animals","Cells can form from nonliving matter","All cells are the same size"],0,"Cells come only from existing cells."],
+    ["Which organelle releases energy from food?",["Nucleus","Mitochondria","Chloroplast","Cell wall"],1,"Mitochondria are the cell's powerhouses."],
+    ["What does the cell membrane do?",["Makes food","Stores DNA","Controls what enters and leaves the cell","Gives plants their green color"],2,"The membrane is the cell's gatekeeper."],
+    ["A group of similar cells that work together is a(n)…",["organ","tissue","organ system","organism"],1,"Similar cells doing one job form a tissue."],
+    ["Which system takes in oxygen and releases carbon dioxide?",["Respiratory","Digestive","Skeletal","Circulatory"],0,"The lungs are the main organs of the respiratory system."],
+    ["When you exercise, your heart beats faster to…",["digest food faster","deliver more oxygen to muscles","grow more bones","make you sleepy"],1,"The circulatory and respiratory systems work together to supply oxygen."],
+    ["What are the ingredients of photosynthesis?",["Oxygen and sugar","Sunlight, water, and carbon dioxide","Soil and oxygen","Meat and water"],1,"Plants use sunlight, water, and CO₂ to make sugar and release oxygen."],
+    ["A bear eats berries and fish. It is a(n)…",["herbivore","carnivore","omnivore","producer"],2,"Eating both plants and animals makes it an omnivore."],
+    ["In grass → rabbit → fox, the rabbit is a…",["producer","herbivore (primary consumer)","decomposer","top predator"],1,"The rabbit eats the producer, so it's a primary consumer."],
+    ["About how much energy passes from one level of a food chain to the next?",["100%","50%","10%","0%"],2,"About 10% passes on; the rest is used or lost as heat."],
+    ["Which is a NONLIVING part of an ecosystem?",["Bacteria","Sunlight","Grass","Deer"],1,"Sunlight, water, soil, and air are nonliving parts."],
+    ["Where does almost all energy in an ecosystem come from?",["The soil","The Sun","Decomposers","Water"],1,"Producers capture the Sun's energy, which then flows through the food web."]
+  ]
+}
+];
+
+/* ============ STATE & STORAGE (all on this device) ============ */
+const $ = s => document.querySelector(s);
+const app = $("#app");
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const LS = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } }
+};
+/* Extra safety: mirror everything into IndexedDB and ask Safari to keep it */
+const IDB = {
+  open(){ return new Promise((res,rej)=>{ try{ const r = indexedDB.open("g6science",1); r.onupgradeneeded = () => r.result.createObjectStore("kv"); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }catch(e){ rej(e); } }); },
+  async put(v){ try{ const db = await IDB.open(); await new Promise((res,rej)=>{ const tx = db.transaction("kv","readwrite"); tx.objectStore("kv").put(v,"state"); tx.oncomplete = res; tx.onerror = () => rej(tx.error); }); }catch(e){} },
+  async get(){ try{ const db = await IDB.open(); return await new Promise((res,rej)=>{ const r = db.transaction("kv").objectStore("kv").get("state"); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }catch(e){ return null; } }
+};
+function snapshot(){ const o = {}; try{ for (let i=0;i<localStorage.length;i++){ const k = localStorage.key(i); if (k && k.startsWith("g6-")) o[k] = localStorage.getItem(k); } }catch(e){} return o; }
+let _mirrorT = null;
+const _lsSet = LS.set;
+LS.set = (k,v) => { const ok = _lsSet(k,v); clearTimeout(_mirrorT); _mirrorT = setTimeout(() => IDB.put(snapshot()), 250); return ok; };
+try{ navigator.storage && navigator.storage.persist && navigator.storage.persist(); }catch(e){}
+
+let roster  = LS.get("g6-roster", []);
+let results = LS.get("g6-results", []);
+let student = LS.get("g6-student", "");
+let prog    = LS.get("g6-prog", {});      // {name:{done:{key:true}, last:{unit,lesson}}}
+let inprog  = LS.get("g6-inprog", {});    // {name:{unit,kind,qs,i,picks,checked,streak}}
+let pin     = LS.get("g6-pin", "");
+let soundOn = LS.get("g6-sound", true);
+let parentOK = false;
+let view = { page:"home" };
+const saveAll = () => { LS.set("g6-roster",roster); LS.set("g6-results",results); LS.set("g6-prog",prog); LS.set("g6-inprog",inprog); };
+const P = () => { if (!student) return {done:{},last:null}; if (!prog[student]) prog[student] = {done:{},last:null}; return prog[student]; };
+
+function pickStudent(){ return roster.includes(student) ? student : (roster[0] || ""); }
+function renderRoster(){
+  const sel = $("#student");
+  student = pickStudent();
+  sel.innerHTML = (roster.length ? roster.map(n => `<option ${n===student?"selected":""}>${esc(n)}</option>`).join("") : `<option value="">Add a student</option>`)
+    + `<option value="__add">+ Add student…</option>`;
+  renderStarChip();
+}
+function renderStarChip(){ $("#starchip").innerHTML = student ? `<span class="st">★</span> ${starTotal(student)}` : ""; $("#starchip").hidden = !student; }
+$("#student").addEventListener("change", e => {
+  if (e.target.value === "__add"){ go({page:"progress", adding:true}); renderRoster(); return; }
+  student = e.target.value; LS.set("g6-student", student); renderRoster(); go({page:"home"});
+});
+
+/* ============ SCORING, STARS, BADGES ============ */
+const unitById = id => UNITS.find(u => u.id === id);
+const pct = (a,b) => b ? Math.round(a*100/b) : 0;
+const starsFor = p => p>=90?3:p>=75?2:p>=60?1:0;
+const starStr = (n, max=3) => `<span class="stars" aria-label="${n} of ${max} stars">${"★".repeat(n)}<span class="off">${"★".repeat(max-n)}</span></span>`;
+function rs(stu, unit, kind){ return results.filter(r => r.student===stu && r.unit===unit && r.kind===kind); }
+function best(stu, unit, kind){ const a = rs(stu,unit,kind); return a.length ? Math.max(...a.map(r => r.pct)) : null; }
+function bestStars(stu, unit, kind){ const b = best(stu,unit,kind); return b==null ? 0 : starsFor(b); }
+function lessonsDone(stu, u){ const d = (prog[stu]||{}).done||{}; return u.lessons.filter((_,i)=>d[u.id+"-"+i]).length; }
+function starTotal(stu){
+  let t = 0; const d = (prog[stu]||{}).done||{};
+  t += Object.keys(d).length;
+  UNITS.forEach(u => ["quiz","test","game"].forEach(k => t += bestStars(stu,u.id,k)));
+  t += bestStars(stu,"final","final");
+  return t;
+}
+const STAR_MAX = UNITS.reduce((a,u)=>a+u.lessons.length,0) + UNITS.length*9 + 3;
+function badges(stu){
+  const d = (prog[stu]||{}).done||{}, mine = results.filter(r=>r.student===stu), st = starTotal(stu);
+  const list = [
+    ["First Steps","Finish your first lesson", Object.keys(d).length>=1],
+    ...UNITS.map(u => [`Unit ${u.n} Master`,`Finish every ${u.name} lesson and score 80%+ on its test`, lessonsDone(stu,u)===u.lessons.length && (best(stu,u.id,"test")||0)>=80, u.color]),
+    ["Perfect Score","Get 100% on any quiz or test", mine.some(r=>r.kind!=="game" && r.pct===100)],
+    ["Word Wizard","Get 3 stars in a vocabulary match game", mine.some(r=>r.kind==="game" && r.stars===3)],
+    ["Hot Streak","Answer 5 practice questions in a row correctly", mine.some(r=>(r.bestStreak||0)>=5)],
+    ["Star Collector","Earn 30 stars", st>=30],
+    ["Graduate","Score 80%+ on the final exam", (best(stu,"final","final")||0)>=80]
+  ];
+  return list.map(([name,how,got,color]) => ({name,how,got,color}));
+}
+
+/* ============ FUN: SOUND + CONFETTI ============ */
+let actx = null;
+function tone(freqs, dur=0.12){
+  if (!soundOn) return;
+  try{
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    freqs.forEach((f,i) => { const o = actx.createOscillator(), g = actx.createGain(); o.type = "triangle"; o.frequency.value = f;
+      const t0 = actx.currentTime + i*dur; g.gain.setValueAtTime(0.0001,t0); g.gain.exponentialRampToValueAtTime(0.18,t0+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t0+dur*1.6);
+      o.connect(g).connect(actx.destination); o.start(t0); o.stop(t0+dur*1.8); });
+  }catch(e){}
+}
+const sfx = { right:()=>tone([660,880]), wrong:()=>tone([220,180],.15), star:()=>tone([523,659,784,1047],.1), click:()=>tone([520],.05) };
+function confetti(){
+  if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const cv = document.createElement("canvas"); cv.className = "confetti"; document.body.appendChild(cv);
+  const dpr = window.devicePixelRatio||1, W = innerWidth, H = innerHeight; cv.width = W*dpr; cv.height = H*dpr;
+  const ctx = cv.getContext("2d"); ctx.scale(dpr,dpr);
+  const cols = ["#E57C52","#E0B23C","#8DBB57","#8C9CF0","#3FBFA8","#B48AE6","#F2B705"];
+  const bits = Array.from({length:140},()=>({x:Math.random()*W,y:-20-Math.random()*H*0.5,vx:(Math.random()-.5)*3,vy:2+Math.random()*4,r:Math.random()*6.28,vr:(Math.random()-.5)*.3,c:cols[Math.floor(Math.random()*cols.length)],s:6+Math.random()*6}));
+  const t0 = performance.now();
+  (function f(t){ ctx.clearRect(0,0,W,H);
+    bits.forEach(b=>{ b.x+=b.vx; b.y+=b.vy; b.vy+=0.05; b.r+=b.vr; ctx.save(); ctx.translate(b.x,b.y); ctx.rotate(b.r); ctx.fillStyle=b.c; ctx.fillRect(-b.s/2,-b.s/4,b.s,b.s/2); ctx.restore(); });
+    if (t-t0 < 3200) requestAnimationFrame(f); else cv.remove(); })(t0);
+}
+
+/* ============ HELPERS ============ */
+function grade(p){ return p>=90?"A":p>=80?"B":p>=70?"C":p>=60?"D":"F"; }
+function pillClass(p){ return p>=80?"g":p>=60?"m":"b"; }
+function shuffle(a){ a = a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function prepQ(q){ const order = shuffle(q[1].map((_,i)=>i)); return { q:q[0], choices: order.map(i=>q[1][i]), answer: order.indexOf(q[2]), why:q[3] }; }
+function go(v){ view = v; render(); window.scrollTo({top:0}); }
+function kindLabel(k){ return k==="quiz"?"Practice quiz":k==="test"?"Unit test":k==="game"?"Vocab match":"Final exam"; }
+function colorOf(unitId){ return unitId==="final" ? "--u6" : unitById(unitId).color; }
+function titleOf(unitId){ return unitId==="final" ? "All units" : `Unit ${unitById(unitId).n}: ${unitById(unitId).name}`; }
+const fmtDate = iso => { const d = new Date(iso); return d.toLocaleDateString(undefined,{month:"short",day:"numeric"})+" "+d.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"}); };
+function needStudent(){
+  if (student) return false;
+  go({page:"progress", adding:true}); return true;
+}
+
+$("#brand").onclick = () => go({page:"home"});
+$("#nav-units").onclick = () => go({page:"home"});
+$("#nav-progress").onclick = () => go({page:"progress"});
+$("#nav-parent").onclick = () => go({page:"parent", tab:"scores"});
+
+/* ============ VIEWS ============ */
+function render(){
+  stopFigs();
+  const pg = view.page;
+  $("#nav-units").setAttribute("aria-current", String(!["progress","parent"].includes(pg)));
+  $("#nav-progress").setAttribute("aria-current", String(pg==="progress"));
+  $("#nav-parent").setAttribute("aria-current", String(pg==="parent"));
+  renderStarChip();
+  if (pg==="home") return renderHome();
+  if (pg==="unit") return renderUnit();
+  if (pg==="quiz") return renderQuiz();
+  if (pg==="done") return renderDone();
+  if (pg==="game") return renderGame();
+  if (pg==="progress") return renderProgress();
+  if (pg==="parent") return renderParent();
+}
+
+function tileHTML(u){
+  const d = student ? lessonsDone(student,u) : 0;
+  return `<button class="tile" style="--c:var(${u.color})" data-unit="${u.id}">
+    <span class="num">${u.n}</span><span class="sym">${u.sym}</span><span class="nm">${esc(u.name)}</span>
+    <span class="checks" aria-label="${d} of ${u.lessons.length} lessons done">${u.lessons.map((_,i)=>`<i class="${i<d?"on":""}"></i>`).join("")}<small>${d}/${u.lessons.length} lessons</small></span>
+    <span class="mass"><span>Quiz ${starStr(student?bestStars(student,u.id,"quiz"):0)}</span><span>Test ${starStr(student?bestStars(student,u.id,"test"):0)}</span></span>
+  </button>`;
+}
+function continueCard(){
+  if (!student) return "";
+  const ip = inprog[student], last = P().last;
+  if (ip) return `<button class="cont" id="cont"><span class="eyebrow">Pick up where you left off</span><b>${kindLabel(ip.kind)}: ${esc(titleOf(ip.unit))}</b><small>Question ${ip.i+1} of ${ip.qs.length} · your answers so far are saved</small><span class="arrow">→</span></button>`;
+  if (last){ const u = unitById(last.unit); return `<button class="cont" id="cont"><span class="eyebrow">Continue</span><b>Lesson ${u.n}.${last.lesson+1}: ${esc(u.lessons[last.lesson].t)}</b><small>${esc(u.name)}</small><span class="arrow">→</span></button>`; }
+  return `<button class="cont" id="cont"><span class="eyebrow">Start here</span><b>Lesson 1.1: ${esc(UNITS[0].lessons[0].t)}</b><small>${esc(UNITS[0].name)}</small><span class="arrow">→</span></button>`;
+}
+function renderHome(){
+  const st = student ? starTotal(student) : 0;
+  app.innerHTML = `
+  <section class="hero">
+    <span class="eyebrow">Sixth grade · ${UNITS.length} units · ${UNITS.reduce((a,u)=>a+u.lessons.length,0)} lessons</span>
+    <h1>${student ? `Hi ${esc(student)}! You have ${st} of ${STAR_MAX} stars.` : "Pick a unit to study."}</h1>
+    ${student ? `<div class="starbar" aria-hidden="true"><i style="width:${pct(st,STAR_MAX)}%"></i></div>` : ""}
+    <p>Read a lesson and finish it for a star. Quizzes, tests, and vocab games earn up to 3 stars each. Collect badges on the Progress page.</p>
+  </section>
+  ${student ? continueCard() : `<button class="cont" id="addfirst"><span class="eyebrow">First</span><b>Add your name to start earning stars</b><span class="arrow">→</span></button>`}
+  <div class="table">
+    ${UNITS.map(tileHTML).join("")}
+    <button class="tile" style="--c:var(--u6)" data-final="1">
+      <span class="num">6</span><span class="sym">Fx</span><span class="nm">Final Exam: all units</span>
+      <span class="checks"><small>20 questions</small></span>
+      <span class="mass"><span>Best</span>${starStr(student?bestStars(student,"final","final"):0)}</span>
+    </button>
+  </div>
+  <p class="legend">Stars on each tile show the best quiz and test scores: ★ 60%+, ★★ 75%+, ★★★ 90%+.</p>`;
+  app.querySelectorAll("[data-unit]").forEach(b => b.onclick = () => { sfx.click(); go({page:"unit", unit:b.dataset.unit, lesson:0}); });
+  app.querySelector("[data-final]").onclick = () => startQuiz("final","final");
+  const c = $("#cont"); if (c) c.onclick = () => {
+    const ip = inprog[student], last = P().last;
+    if (ip) return startQuiz(ip.unit, ip.kind);
+    if (last) return go({page:"unit", unit:last.unit, lesson:last.lesson});
+    go({page:"unit", unit:UNITS[0].id, lesson:0});
+  };
+  const af = $("#addfirst"); if (af) af.onclick = () => go({page:"progress", adding:true});
+}
+
+function renderUnit(){
+  const u = unitById(view.unit), L = u.lessons[view.lesson], key = u.id+"-"+view.lesson, F = FIG[key], W = WATCH[key];
+  if (student){ P().last = {unit:u.id, lesson:view.lesson}; saveAll(); }
+  const done = student && P().done[key];
+  const sq = student?bestStars(student,u.id,"quiz"):0, stt = student?bestStars(student,u.id,"test"):0, sg = student?bestStars(student,u.id,"game"):0;
+  app.innerHTML = `
+  <button class="back" id="back">← All units</button>
+  <div class="unithead" style="--c:var(${u.color})">
+    <div class="badge" style="--c:var(${u.color})">${u.sym}</div>
+    <div><span class="eyebrow">Unit ${u.n}</span><h1>${esc(u.name)}</h1><p>${esc(u.blurb)}</p></div>
+  </div>
+  <div class="cols" style="--c:var(${u.color})">
+    <nav class="lessonlist" aria-label="Lessons">
+      ${u.lessons.map((l,i)=>{ const dn = student && P().done[u.id+"-"+i];
+        return `<button data-l="${i}" aria-current="${i===view.lesson}"><span class="ck ${dn?"on":""}" aria-label="${dn?"done":"not done"}">${dn?"✓":u.n+"."+(i+1)}</span>${esc(l.t)}</button>`; }).join("")}
+      <div class="sep"></div>
+      <button class="act" id="takeg"><span>${starStr(sg)}</span>Vocab match game</button>
+      <button class="act" id="takeq"><span>${starStr(sq)}</span>Unit quiz</button>
+      <button class="act" id="taket"><span>${starStr(stt)}</span>Unit test</button>
+    </nav>
+    <article class="lesson">
+      <span class="eyebrow">Lesson ${u.n}.${view.lesson+1}</span>
+      <h2>${esc(L.t)}</h2>
+      ${F ? `<figure class="fig" id="fig"><span class="figtag">${F.tag}</span>${F.html}<figcaption>${esc(F.cap)}</figcaption></figure>` : ""}
+      ${L.body}
+      <div class="tryit"><b>Try it</b>${esc(L.tryit)}</div>
+      ${W ? `<div class="watch"><h3>Watch</h3><a class="vid" href="https://www.youtube.com/watch?v=${W.id}" target="_blank" rel="noopener"><span class="play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="#fff"/></svg></span><span><b>${esc(W.title)}</b><small>${esc(W.by)} · YouTube</small></span></a><p>Opens on YouTube in a new tab. Not working? <a href="${YT(W.more)}" target="_blank" rel="noopener">Find more videos on this topic</a>.</p></div>` : ""}
+      <div class="vocab"><h3>Key vocabulary</h3><dl>${L.vocab.map(v=>`<dt>${esc(v[0])}</dt><dd>${esc(v[1])}</dd>`).join("")}</dl></div>
+      <div class="finish ${done?"is-done":""}">
+        ${done ? `<span class="got">✓ Lesson finished · <span class="st">★</span> earned</span>` : `<button class="btn big" id="finish">I finished this lesson <span class="st">+★</span></button>`}
+      </div>
+      <div class="lessonnav">
+        <button class="btn ghost" id="prev" ${view.lesson===0?"disabled":""}>← Previous</button>
+        ${view.lesson<u.lessons.length-1 ? `<button class="btn" id="next">Next lesson →</button>` : `<button class="btn" id="toquiz">Play the vocab game →</button>`}
+      </div>
+    </article>
+  </div>`;
+  const markDone = () => { if (!student || P().done[key]) return false; P().done[key] = true; saveAll(); return true; };
+  $("#back").onclick = () => go({page:"home"});
+  app.querySelectorAll("[data-l]").forEach(b => b.onclick = () => go({page:"unit", unit:u.id, lesson:+b.dataset.l}));
+  $("#takeq").onclick = () => startQuiz(u.id,"quiz");
+  $("#taket").onclick = () => startQuiz(u.id,"test");
+  $("#takeg").onclick = () => startGame(u.id);
+  const f=$("#finish"); if(f) f.onclick = () => { if (needStudent()) return; if (markDone()){ sfx.star(); confetti(); } render(); };
+  const p=$("#prev"); if(p) p.onclick = () => go({page:"unit", unit:u.id, lesson:view.lesson-1});
+  const n=$("#next"); if(n) n.onclick = () => go({page:"unit", unit:u.id, lesson:view.lesson+1});
+  const tq=$("#toquiz"); if(tq) tq.onclick = () => startGame(u.id);
+  if (F && F.init){ try{ const stop = F.init($("#fig")); if (stop) figStops.push(stop); }catch(e){ console.error(e); } }
+}
+
+/* ---------- quizzes & tests ---------- */
+function startQuiz(unitId, kind, fresh){
+  if (needStudent()) return;
+  const saved = inprog[student];
+  if (!fresh && saved && saved.unit===unitId && saved.kind===kind){ view = Object.assign({page:"quiz", resumed:true}, saved); render(); window.scrollTo({top:0}); return; }
+  let qs = kind==="final" ? shuffle(UNITS.flatMap(u => shuffle(u.quiz.concat(u.test)).slice(0,4))) : shuffle(unitById(unitId)[kind]);
+  go({page:"quiz", unit:unitId, kind, qs:qs.map(prepQ), i:0, picks:[], checked:false, streak:0, bestStreak:0});
+}
+function saveQuiz(){ const v = view; inprog[student] = {unit:v.unit, kind:v.kind, qs:v.qs, i:v.i, picks:v.picks, checked:v.checked, streak:v.streak||0, bestStreak:v.bestStreak||0}; saveAll(); }
+
+function renderQuiz(){
+  const v = view, Q = v.qs[v.i], picked = v.picks[v.i];
+  const practice = v.kind==="quiz", locked = practice && v.checked;
+  app.innerHTML = `
+  <div class="quiz" style="--c:var(${colorOf(v.unit)})">
+    ${v.resumed ? `<p class="resumed">Welcome back! Your answers were saved. <button class="linkbtn" id="restart">Start over instead</button></p>` : ""}
+    <div class="qhead"><span class="kind">${kindLabel(v.kind)} · ${esc(titleOf(v.unit))}</span><span class="eyebrow">Question ${v.i+1} of ${v.qs.length}</span></div>
+    <div class="meter"><i style="width:${pct(v.i+(locked||(!practice&&picked!=null)?1:0), v.qs.length)}%"></i></div>
+    ${practice && (v.streak||0)>=2 ? `<p class="streak">${v.streak} in a row!</p>` : ""}
+    <div class="qcard">
+      <p class="qtext">${esc(Q.q)}</p>
+      <div class="choices" role="radiogroup">
+        ${Q.choices.map((c,i)=>{
+          let cls = "choice";
+          if (locked){ if (i===Q.answer) cls+=" right"; else if (i===picked) cls+=" wrong shake"; }
+          else if (i===picked) cls+=" picked";
+          return `<button class="${cls}" data-c="${i}" role="radio" aria-checked="${i===picked}" ${locked?"disabled":""}><span class="l">${"ABCD"[i]}</span><span>${esc(c)}</span></button>`;
+        }).join("")}
+      </div>
+      ${locked ? `<div class="explain ${picked===Q.answer?"ok":"no"}"><strong>${picked===Q.answer?"Correct!":"Not quite. The answer is "+"ABCD"[Q.answer]+"."}</strong>${esc(Q.why)}</div>` : ""}
+    </div>
+    <div class="qfoot">
+      <button class="btn ghost" id="quit">Save and exit</button>
+      ${practice
+        ? (locked ? `<button class="btn" id="next">${v.i<v.qs.length-1?"Next question →":"See my stars"}</button>`
+                  : `<button class="btn" id="check" ${picked==null?"disabled":""}>Check answer</button>`)
+        : `<div style="display:flex;gap:10px"><button class="btn ghost" id="prevq" ${v.i===0?"disabled":""}>← Back</button><button class="btn" id="next" ${picked==null?"disabled":""}>${v.i<v.qs.length-1?"Next →":"Finish"}</button></div>`}
+    </div>
+  </div>`;
+  app.querySelectorAll("[data-c]").forEach(b => b.onclick = () => { v.picks[v.i] = +b.dataset.c; v.resumed = false; saveQuiz(); renderQuiz(); });
+  $("#quit").onclick = () => { saveQuiz(); go(v.unit==="final" ? {page:"home"} : {page:"unit", unit:v.unit, lesson:0}); };
+  const rsb=$("#restart"); if(rsb) rsb.onclick = () => { delete inprog[student]; saveAll(); startQuiz(v.unit, v.kind, true); };
+  const ch=$("#check"); if(ch) ch.onclick = () => {
+    v.checked = true;
+    if (v.picks[v.i]===Q.answer){ v.streak=(v.streak||0)+1; v.bestStreak=Math.max(v.bestStreak||0,v.streak); sfx.right(); } else { v.streak=0; sfx.wrong(); }
+    saveQuiz(); renderQuiz();
+  };
+  const pv=$("#prevq"); if(pv) pv.onclick = () => { v.i--; saveQuiz(); renderQuiz(); };
+  const nx=$("#next"); if(nx) nx.onclick = () => {
+    if (v.i < v.qs.length-1){ v.i++; v.checked=false; v.resumed=false; saveQuiz(); renderQuiz(); window.scrollTo({top:0}); }
+    else finishQuiz();
+  };
+}
+
+function recordResult(r){
+  const before = badges(student).filter(b=>b.got).map(b=>b.name);
+  results = results.concat([r]); saveAll();
+  const after = badges(student).filter(b=>b.got && !before.includes(b.name));
+  return after;
+}
+function finishQuiz(){
+  const v = view;
+  const score = v.qs.reduce((a,Q,i)=>a+(v.picks[i]===Q.answer?1:0),0), p = pct(score, v.qs.length);
+  const r = { id:"r"+Date.now().toString(36)+Math.random().toString(36).slice(2,6), student, unit:v.unit, kind:v.kind, score, total:v.qs.length, pct:p, stars:starsFor(p), bestStreak:v.bestStreak||0, at:new Date().toISOString(),
+    items: v.qs.map((Q,i)=>({q:Q.q, choices:Q.choices, answer:Q.answer, picked:v.picks[i]??null, why:Q.why})) };
+  delete inprog[student];
+  const newBadges = recordResult(r);
+  view = { page:"done", r, newBadges };
+  render(); window.scrollTo({top:0});
+  if (r.stars>=2 || newBadges.length){ confetti(); sfx.star(); }
+}
+
+function renderDone(){
+  const {r, newBadges} = view, items = r.items || [];
+  const msg = r.stars===3?"Outstanding! Three stars!":r.stars===2?"Great job! Two stars!":r.stars===1?"Nice work. One star! Review the ones you missed and try for more.":"Keep practicing. Reread the lessons and try again for a star.";
+  const isGame = r.kind==="game";
+  app.innerHTML = `
+  <div class="quiz" style="--c:var(${colorOf(r.unit)})">
+    <div class="result">
+      <span class="eyebrow">${kindLabel(r.kind)} · ${esc(titleOf(r.unit))}</span>
+      <div class="bigstars">${[0,1,2].map(i=>`<span class="${i<r.stars?"on":""}" style="animation-delay:${i*.25}s">★</span>`).join("")}</div>
+      <div class="big">${r.pct}%</div>
+      <div class="sub">${isGame ? `${r.total} matches · ${r.mistakes} mistake${r.mistakes===1?"":"s"} · ${r.secs}s` : `${r.score} of ${r.total} correct · grade ${grade(r.pct)}`}</div>
+      <div class="msg">${msg}</div>
+      ${newBadges && newBadges.length ? `<div class="newbadge">New badge${newBadges.length>1?"s":""}: ${newBadges.map(b=>`<b>${esc(b.name)}</b>`).join(", ")}</div>` : ""}
+    </div>
+    <div class="qfoot" style="margin-bottom:18px">
+      <button class="btn ghost" id="back">${r.unit==="final"?"Back to units":"Back to unit"}</button>
+      <button class="btn" id="again">Play again</button>
+    </div>
+    ${items.length ? `<div class="section-h"><h2>Review</h2></div>
+    <div class="review">${items.map((Q,i)=>{ const ok = Q.picked===Q.answer;
+      return `<div class="item ${ok?"":"miss"}"><p class="q">${i+1}. ${esc(Q.q)}</p>
+        <p>${ok?"✓ ":"✗ Your answer: "+esc(Q.choices[Q.picked]??"none")+" · "}Correct: <b>${esc(Q.choices[Q.answer])}</b></p>
+        <p class="muted">${esc(Q.why)}</p></div>`; }).join("")}</div>` : ""}
+    <p class="note">Saved on this device.</p>
+  </div>`;
+  $("#back").onclick = () => go(r.unit==="final" ? {page:"home"} : {page:"unit", unit:r.unit, lesson:0});
+  $("#again").onclick = () => isGame ? startGame(r.unit) : startQuiz(r.unit, r.kind, true);
+}
+
+/* ---------- vocab match game ---------- */
+function startGame(unitId){
+  if (needStudent()) return;
+  const u = unitById(unitId), pairs = shuffle(u.lessons.flatMap(l => l.vocab)).slice(0,6);
+  go({page:"game", unit:unitId, pairs, left:shuffle(pairs.map((p,i)=>i)), right:shuffle(pairs.map((p,i)=>i)), sel:null, matched:[], mistakes:0, t0:Date.now(), flash:null});
+}
+function renderGame(){
+  const v = view, u = unitById(v.unit);
+  const secs = Math.round((Date.now()-v.t0)/1000);
+  app.innerHTML = `
+  <div class="quiz game" style="--c:var(${u.color})">
+    <div class="qhead"><span class="kind">Vocab match · ${esc(titleOf(v.unit))}</span><span class="eyebrow" id="gclock">${v.matched.length}/${v.pairs.length} matched · ${secs}s</span></div>
+    <p class="howto">Tap a word, then tap its meaning. Fewer mistakes means more stars.</p>
+    <div class="board">
+      <div class="colw">${v.left.map(i=>`<button class="tcard word ${v.matched.includes(i)?"done":""} ${v.sel===i?"sel":""} ${v.flash&&v.flash.w===i?"bad":""}" data-w="${i}" ${v.matched.includes(i)?"disabled":""}>${esc(v.pairs[i][0])}</button>`).join("")}</div>
+      <div class="colw">${v.right.map(i=>`<button class="tcard def ${v.matched.includes(i)?"done":""} ${v.flash&&v.flash.d===i?"bad":""}" data-d="${i}" ${v.matched.includes(i)?"disabled":""}>${esc(v.pairs[i][1])}</button>`).join("")}</div>
+    </div>
+    <div class="qfoot"><button class="btn ghost" id="quit">Quit game</button><span class="eyebrow">Mistakes: ${v.mistakes}</span></div>
+  </div>`;
+  app.querySelectorAll("[data-w]").forEach(b => b.onclick = () => { v.sel = +b.dataset.w; v.flash = null; sfx.click(); renderGame(); });
+  app.querySelectorAll("[data-d]").forEach(b => b.onclick = () => {
+    if (v.sel==null){ v.flash = null; renderGame(); return; }
+    const d = +b.dataset.d;
+    if (d===v.sel){ v.matched.push(d); v.sel = null; v.flash = null; sfx.right(); }
+    else { v.mistakes++; v.flash = {w:v.sel, d}; v.sel = null; sfx.wrong(); }
+    if (v.matched.length===v.pairs.length) return finishGame();
+    renderGame();
+  });
+  $("#quit").onclick = () => go({page:"unit", unit:v.unit, lesson:0});
+  clearInterval(window._gtick);
+  window._gtick = setInterval(() => { const el = $("#gclock"); if (!el || view!==v){ clearInterval(window._gtick); return; } el.textContent = `${v.matched.length}/${v.pairs.length} matched · ${Math.round((Date.now()-v.t0)/1000)}s`; }, 1000);
+}
+function finishGame(){
+  const v = view, n = v.pairs.length, p = pct(n, n+v.mistakes);
+  const stars = v.mistakes===0?3:v.mistakes<=2?2:1;
+  const r = { id:"g"+Date.now().toString(36), student, unit:v.unit, kind:"game", score:n, total:n, pct:p, stars, mistakes:v.mistakes, secs:Math.round((Date.now()-v.t0)/1000), at:new Date().toISOString() };
+  const newBadges = recordResult(r);
+  view = { page:"done", r, newBadges }; render(); window.scrollTo({top:0});
+  if (stars>=2 || newBadges.length){ confetti(); sfx.star(); }
+}
+
+/* ---------- kid progress ---------- */
+function renderProgress(){
+  const mine = results.filter(r => r.student===student).sort((a,b)=>b.at.localeCompare(a.at));
+  const st = student ? starTotal(student) : 0;
+  const bs = student ? badges(student) : [];
+  app.innerHTML = `
+  <section class="hero" style="padding-bottom:0">
+    <span class="eyebrow">Progress</span>
+    <h1>${student ? esc(student)+"'s stars and badges" : "Add your name to start"}</h1>
+  </section>
+  <div class="section-h"><h2>Students</h2></div>
+  <div class="chips">${roster.map(n=>`<button class="chip" data-s="${esc(n)}" aria-pressed="${n===student}">${esc(n)}</button>`).join("")}</div>
+  <form class="addform" id="addform">
+    <input type="text" id="newname" placeholder="Student name" maxlength="30" aria-label="New student name">
+    <button class="btn" type="submit">Add student</button>
+  </form>
+  ${student ? `
+  <div class="stats">
+    <div class="stat"><div class="v"><span class="st">★</span> ${st}<small>/${STAR_MAX}</small></div><div class="k">Stars earned</div></div>
+    <div class="stat"><div class="v">${Object.keys(P().done).length}/${UNITS.reduce((a,u)=>a+u.lessons.length,0)}</div><div class="k">Lessons finished</div></div>
+    <div class="stat"><div class="v">${bs.filter(b=>b.got).length}/${bs.length}</div><div class="k">Badges</div></div>
+  </div>
+  <div class="section-h"><h2>Badges</h2></div>
+  <div class="badges">${bs.map(b=>`<div class="bdg ${b.got?"got":""}" style="--c:var(${b.color||"--accent"})"><span class="medal">${b.got?"★":"?"}</span><b>${esc(b.name)}</b><small>${esc(b.how)}</small></div>`).join("")}</div>
+  <div class="section-h"><h2>By unit</h2></div>
+  <div class="tblwrap"><table>
+    <thead><tr><th>Unit</th><th>Lessons</th><th>Vocab game</th><th>Quiz</th><th>Test</th></tr></thead>
+    <tbody>${UNITS.map(u=>`<tr><td>${u.n}. ${esc(u.name)}</td><td class="n">${lessonsDone(student,u)}/${u.lessons.length}</td>
+      <td>${starStr(bestStars(student,u.id,"game"))}</td><td>${starStr(bestStars(student,u.id,"quiz"))}</td><td>${starStr(bestStars(student,u.id,"test"))}</td></tr>`).join("")}
+      <tr><td>Final exam</td><td></td><td></td><td></td><td>${starStr(bestStars(student,"final","final"))}</td></tr></tbody></table></div>
+  <div class="section-h"><h2>History</h2></div>
+  <div class="tblwrap">${mine.length ? `<table><thead><tr><th>When</th><th>What</th><th>Score</th><th>Stars</th></tr></thead>
+    <tbody>${mine.map(r=>`<tr><td class="n">${fmtDate(r.at)}</td><td>${esc(kindLabel(r.kind))} · ${esc(r.unit==="final"?"All units":"Unit "+unitById(r.unit).n)}</td><td class="n">${r.kind==="game"?r.mistakes+" mistakes":r.score+"/"+r.total}</td><td>${starStr(r.stars??starsFor(r.pct))}</td></tr>`).join("")}</tbody></table>`
+    : `<div class="empty">Nothing yet. Finish a lesson or play a vocab game to earn your first star.</div>`}</div>` : ""}
+  <div class="section-h"><h2>Sound</h2></div>
+  <button class="chip" id="snd" aria-pressed="${soundOn}">${soundOn?"Sounds on":"Sounds off"}</button>
+  <p class="note">Everything is saved on this iPad. Open the app from its home-screen icon every time so it always uses the same saved progress.</p>`;
+  app.querySelectorAll("[data-s]").forEach(b => b.onclick = () => { student = b.dataset.s; LS.set("g6-student", student); renderRoster(); render(); });
+  $("#addform").onsubmit = e => {
+    e.preventDefault();
+    const n = $("#newname").value.trim().slice(0,30);
+    if (!n || roster.includes(n)) return;
+    roster = roster.concat([n]); student = n; LS.set("g6-student", student); saveAll();
+    renderRoster(); go({page:"home"});
+  };
+  $("#snd").onclick = () => { soundOn = !soundOn; LS.set("g6-sound", soundOn); if (soundOn) sfx.right(); render(); };
+  if (view.adding) $("#newname").focus();
+}
+
+/* ---------- parent area (PIN) ---------- */
+function renderParent(){
+  if (!parentOK){
+    const creating = !pin;
+    app.innerHTML = `<div class="pinbox">
+      <span class="eyebrow">Parent area</span>
+      <h1>${creating ? "Create a parent PIN" : "Enter your parent PIN"}</h1>
+      <p>${creating ? "Pick 4 digits. You'll need this PIN to see answers and the answer key." : "Answers and the answer key are behind this PIN."}</p>
+      <form id="pinform"><input id="pinin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" aria-label="PIN">
+      <button class="btn" type="submit">${creating?"Save PIN":"Unlock"}</button></form><p class="pinerr" id="pinerr"></p></div>`;
+    $("#pinin").focus();
+    $("#pinform").onsubmit = e => { e.preventDefault(); const v = $("#pinin").value.trim();
+      if (!/^\d{4}$/.test(v)){ $("#pinerr").textContent = "Use exactly 4 digits."; return; }
+      if (creating){ pin = v; LS.set("g6-pin", pin); parentOK = true; render(); }
+      else if (v===pin){ parentOK = true; render(); }
+      else { $("#pinerr").textContent = "That PIN doesn't match. Try again."; $("#pinin").value = ""; } };
+    return;
+  }
+  const tab = view.tab || "scores";
+  const who = view.who && roster.includes(view.who) ? view.who : (student || roster[0] || "");
+  let body = "";
+  if (tab==="scores"){
+    const mine = results.filter(r=>r.student===who).sort((a,b)=>b.at.localeCompare(a.at));
+    body = `<div class="chips" style="margin-bottom:14px">${roster.map(n=>`<button class="chip" data-who="${esc(n)}" aria-pressed="${n===who}">${esc(n)}</button>`).join("")}</div>
+    ${who ? `<p class="note" style="margin-top:0">${esc(who)}: <span class="st">★</span> ${starTotal(who)} stars · ${(n=>n+(n===1?" lesson":" lessons"))(Object.keys((prog[who]||{}).done||{}).length)} finished${inprog[who]?` · has an unfinished ${kindLabel(inprog[who].kind).toLowerCase()}`:""}</p>` : ""}
+    ${mine.length ? mine.map(r=>`<details class="att"><summary><span class="n">${fmtDate(r.at)}</span><span>${esc(kindLabel(r.kind))} · ${esc(titleOf(r.unit))}</span><span class="pill ${pillClass(r.pct)}">${r.pct}%${r.kind==="game"?"":" "+grade(r.pct)}</span>${starStr(r.stars??starsFor(r.pct))}</summary>
+      ${r.items ? `<ol class="ans">${r.items.map(Q=>{ const ok = Q.picked===Q.answer;
+        return `<li class="${ok?"ok":"no"}"><b>${esc(Q.q)}</b><span>${ok?"✓":"✗"} Picked: ${esc(Q.choices[Q.picked]??"(no answer)")}</span>${ok?"":`<span>Correct: <b>${esc(Q.choices[Q.answer])}</b></span>`}</li>`; }).join("")}</ol>`
+        : r.kind==="game" ? `<p class="note">Vocab match: ${r.total} pairs, ${r.mistakes} mistakes, ${r.secs} seconds.</p>` : `<p class="note">Answers weren't recorded for this older attempt.</p>`}
+    </details>`).join("") : `<div class="empty">No quizzes, tests, or games yet${who?" for "+esc(who):""}.</div>`}`;
+  } else if (tab==="key"){
+    const uid = view.ku || UNITS[0].id, u = unitById(uid);
+    const qlist = (arr, label) => `<h3 class="keyh">${label}</h3><ol class="key">${arr.map(q=>`<li><b>${esc(q[0])}</b><ul>${q[1].map((c,i)=>`<li class="${i===q[2]?"right":""}">${i===q[2]?"✓ ":""}${esc(c)}</li>`).join("")}</ul><small>${esc(q[3])}</small></li>`).join("")}</ol>`;
+    body = `<div class="chips" style="margin-bottom:10px">${UNITS.map(x=>`<button class="chip" data-ku="${x.id}" aria-pressed="${x.id===uid}">Unit ${x.n}</button>`).join("")}</div>
+      <p class="note" style="margin-top:0">Answer choices appear in a shuffled order for your student. The final exam uses 4 questions from each unit below.</p>
+      ${qlist(u.quiz, `Unit ${u.n} quiz (${u.quiz.length} questions)`)}${qlist(u.test, `Unit ${u.n} test (${u.test.length} questions)`)}`;
+  } else {
+    body = `<h3 class="keyh">Back up all scores and progress</h3>
+      <p class="note" style="margin-top:0">If Safari's data gets cleared, scores on this iPad are erased. Copy this backup code and paste it into a note or text to yourself. You can restore it here later.</p>
+      <textarea id="bk" readonly rows="4"></textarea><div class="ctrl"><button class="btn small" id="bkcopy">Copy backup code</button><span class="out" id="bkmsg"></span></div>
+      <h3 class="keyh">Restore from a backup code</h3>
+      <textarea id="rs" rows="3" placeholder="Paste a backup code here"></textarea>
+      <div class="ctrl"><button class="btn small ghost" id="rsgo">Restore</button><span class="out" id="rsmsg"></span></div>
+      <h3 class="keyh">Change PIN</h3>
+      <div class="ctrl"><input id="newpin" type="password" inputmode="numeric" maxlength="4" aria-label="New PIN" style="width:90px"><button class="btn small ghost" id="pinsave">Save new PIN</button><span class="out" id="pinmsg"></span></div>
+      <h3 class="keyh">Reset a student</h3>
+      <div class="ctrl">${roster.map(n=>`<button class="btn small ghost" data-reset="${esc(n)}">Reset ${esc(n)}</button>`).join("") || "No students yet."}</div><p class="out" id="resetmsg"></p>`;
+  }
+  app.innerHTML = `
+  <section class="hero" style="padding-bottom:6px"><span class="eyebrow">Parent area</span><h1>Scores, answers, and answer key</h1></section>
+  <div class="nav ptabs" role="tablist">
+    <button data-tab="scores" aria-current="${tab==="scores"}">Her answers</button>
+    <button data-tab="key" aria-current="${tab==="key"}">Answer key</button>
+    <button data-tab="manage" aria-current="${tab==="manage"}">Backup & settings</button>
+  </div>
+  <div class="pbody">${body}</div>
+  <div class="ctrl" style="margin-top:22px"><button class="btn ghost small" id="lock">Lock parent area</button></div>`;
+  app.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => go({page:"parent", tab:b.dataset.tab, who}));
+  app.querySelectorAll("[data-who]").forEach(b => b.onclick = () => go({page:"parent", tab:"scores", who:b.dataset.who}));
+  app.querySelectorAll("[data-ku]").forEach(b => b.onclick = () => go({page:"parent", tab:"key", ku:b.dataset.ku}));
+  $("#lock").onclick = () => { parentOK = false; go({page:"home"}); };
+  if (tab==="manage"){
+    const data = {v:1, roster, results, prog, inprog};
+    let code = ""; try{ code = btoa(unescape(encodeURIComponent(JSON.stringify(data)))); }catch(e){}
+    $("#bk").value = code;
+    $("#bkcopy").onclick = () => { const ta = $("#bk");
+      navigator.clipboard?.writeText(code).then(()=>{ $("#bkmsg").textContent = "Copied."; }, ()=>{ ta.select(); $("#bkmsg").textContent = "Selected. Press copy."; })
+        ?? (ta.select(), $("#bkmsg").textContent = "Selected. Press copy."); };
+    let armed = false;
+    $("#rsgo").onclick = () => {
+      let d; try{ d = JSON.parse(decodeURIComponent(escape(atob($("#rs").value.trim())))); }catch(e){ $("#rsmsg").textContent = "That code isn't a valid backup."; return; }
+      if (!d || !Array.isArray(d.results)){ $("#rsmsg").textContent = "That code isn't a valid backup."; return; }
+      if (!armed){ armed = true; $("#rsgo").textContent = "Yes, replace everything"; $("#rsmsg").textContent = "This replaces all scores on this device."; return; }
+      roster = d.roster||[]; results = d.results; prog = d.prog||{}; inprog = d.inprog||{}; saveAll(); renderRoster();
+      $("#rsmsg").textContent = "Restored."; armed = false; $("#rsgo").textContent = "Restore";
+    };
+    $("#pinsave").onclick = () => { const v = $("#newpin").value.trim(); if (!/^\d{4}$/.test(v)){ $("#pinmsg").textContent = "Use exactly 4 digits."; return; } pin = v; LS.set("g6-pin", pin); $("#pinmsg").textContent = "PIN changed."; $("#newpin").value=""; };
+    app.querySelectorAll("[data-reset]").forEach(b => b.onclick = () => {
+      const n = b.dataset.reset;
+      if (b.dataset.armed!=="1"){ b.dataset.armed = "1"; b.textContent = `Yes, erase ${n}'s scores`; $("#resetmsg").textContent = `This erases all of ${n}'s scores, stars, and lesson checkmarks.`; return; }
+      results = results.filter(r=>r.student!==n); delete prog[n]; delete inprog[n]; saveAll(); renderStarChip();
+      $("#resetmsg").textContent = `${n}'s progress was reset.`; b.textContent = `Reset ${n}`; b.dataset.armed = "";
+    });
+  }
+}
+
+renderRoster();
+render();
+(async () => {
+  const saved = await IDB.get();
+  if (!saved) { IDB.put(snapshot()); return; }
+  const localRes = LS.get("g6-results", []), savedRes = saved["g6-results"] ? JSON.parse(saved["g6-results"]) : [];
+  const cnt = p => Object.values(p||{}).reduce((a,x)=>a+Object.keys((x&&x.done)||{}).length,0);
+  const localDone = cnt(LS.get("g6-prog", {})), savedDone = saved["g6-prog"] ? cnt(JSON.parse(saved["g6-prog"])) : 0;
+  if (savedRes.length > localRes.length || savedDone > localDone || (!roster.length && saved["g6-roster"])){
+    try{ Object.entries(saved).forEach(([k,v]) => localStorage.setItem(k,v)); }catch(e){}
+    const g = (k,d) => saved[k] ? JSON.parse(saved[k]) : d;
+    roster = g("g6-roster",[]); results = g("g6-results",[]); prog = g("g6-prog",{}); inprog = g("g6-inprog",{});
+    student = g("g6-student",""); pin = g("g6-pin",""); soundOn = g("g6-sound",true);
+    renderRoster(); if (view.page !== "quiz" && view.page !== "game") render();
+  } else IDB.put(snapshot());
+})();
+</script>
+
+</body>
+</html>

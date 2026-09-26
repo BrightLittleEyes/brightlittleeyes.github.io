@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Bible School">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" href="icon.png">
+<title>Through the Word</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+:root{
+  --bg:#F2F5F3; --surface:#FFFFFF; --surface-2:#E6EEEB; --ink:#1B2B2F; --muted:#56696B; --line:#D3DEDA;
+  --teal:#1C6E78; --purple:#6A3D8F; --blue:#2A4F9E; --gold:#C98A1A; --gold-soft:#FBEBC8; --good:#2E7D4F;
+  --display:"Baloo 2","Trebuchet MS",system-ui,sans-serif; --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root{ color-scheme:dark; --bg:#0E1A1C; --surface:#152427; --surface-2:#1D3034; --ink:#E4EEEC; --muted:#98ACAC; --line:#2A4043;
+    --teal:#5CBEC6; --purple:#C39BE3; --blue:#8FB0F0; --gold:#F0B94A; --gold-soft:#3A2E16; --good:#6FD19A; }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.55;padding:0 16px 48px}
+[hidden]{display:none!important}
+.wrap{max-width:760px;margin:0 auto}
+h1,h2{font-family:var(--display);line-height:1.15;margin:0}
+header{padding-block:32px 18px}
+header h1{font-size:clamp(32px,7vw,46px)}
+header p{margin:6px 0 0;color:var(--muted);max-width:60ch}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.sub{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:22px 0 10px}
+a.card{--c:var(--teal);display:grid;gap:8px;text-decoration:none;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px}
+a.card:hover,a.card:focus-visible{border-color:var(--c);outline:none}
+a.card .k{font-size:13px;font-weight:700;color:var(--c);letter-spacing:.06em;text-transform:uppercase}
+a.card h2{font-size:26px}
+a.card p{margin:0;color:var(--muted);font-size:15px}
+.bar{height:8px;background:var(--surface-2);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--good);border-radius:99px}
+.cnt{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;margin-top:28px;display:grid;gap:10px}
+.box h2{font-size:22px}
+.box p{margin:0;color:var(--muted);font-size:15px;max-width:62ch}
+.btn{font:inherit;font-weight:700;border:0;border-radius:12px;padding:10px 16px;background:var(--teal);color:#fff;cursor:pointer}
+.btn.ghost{background:var(--surface);color:var(--teal);border:1.5px solid var(--teal)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+textarea{width:100%;min-height:80px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:13px ui-monospace,Menlo,monospace;padding:10px;word-break:break-all}
+.st{font-size:14px;color:var(--muted)}
+.warn{background:var(--gold-soft);border-radius:14px;padding:12px 16px;margin-bottom:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 id="hi">Through the Word</h1>
+    <p>Bible lessons and the history behind them. Pick a subject to keep going. Your progress is saved on this iPad.</p>
+  </header>
+  <div class="warn" id="warn" hidden></div>
+
+  <div class="sub">Bible</div>
+  <div class="grid">
+    <a class="card" href="nt.html" style="--c:var(--teal)" data-key="ttw-progress-v1" data-total="43"><span class="k">New Testament</span><h2>Matthew and Mark</h2><p>Stories, memory verses, and quizzes</p><div class="bar"><i></i></div><span class="cnt"></span></a>
+    <a class="card" href="ot.html" style="--c:var(--teal)" data-key="ttw-ot-progress-v1" data-total="43"><span class="k">Old Testament</span><h2>Genesis and Exodus</h2><p>From Creation to the tabernacle</p><div class="bar"><i></i></div><span class="cnt"></span></a>
+  </div>
+  <div class="sub">History</div>
+  <div class="grid">
+    <a class="card" href="nt-history.html" style="--c:var(--purple)" data-key="ntw-progress-v1" data-total="43"><span class="k">New Testament World</span><h2>The world of the Gospels</h2><p>Rome, Herod, and first-century Judea</p><div class="bar"><i></i></div><span class="cnt"></span></a>
+    <a class="card" href="ot-history.html" style="--c:var(--blue)" data-key="otw-progress-v1" data-total="43"><span class="k">Old Testament World</span><h2>The world of Genesis and Exodus</h2><p>Mesopotamia, Egypt, and the Sinai</p><div class="bar"><i></i></div><span class="cnt"></span></a>
+  </div>
+
+  <section class="box">
+    <h2>Back up everything</h2>
+    <p>One code that holds your progress in all four subjects. Make one every week or two and send it to a parent. If progress is ever lost, or you move to a new device, paste it below.</p>
+    <div class="row"><button class="btn" id="mk">Make backup code</button><button class="btn ghost" id="cp" hidden>Copy code</button><span class="st" id="mkst"></span></div>
+    <textarea id="out" readonly hidden></textarea>
+    <label for="in" class="st">Restore from a backup code (an "everything" code, or a code from one subject)</label>
+    <textarea id="in" placeholder="Paste a backup code here"></textarea>
+    <div class="row"><button class="btn ghost" id="rs">Restore progress</button><span class="st" id="rsst"></span></div>
+  </section>
+</div>
+<script>
+const APPS = {NT:"ttw-progress-v1", OT:"ttw-ot-progress-v1", NTH:"ntw-progress-v1", OTH:"otw-progress-v1"};
+function get(k){ try{ return JSON.parse(localStorage.getItem(k)||"null"); }catch(e){ return null; } }
+function put(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } }
+function b64u(bytes){ let s=""; for(let i=0;i<bytes.length;i+=0x8000) s+=String.fromCharCode.apply(null, bytes.subarray(i,i+0x8000)); return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,""); }
+function unb64u(str){ str=str.replace(/-/g,"+").replace(/_/g,"/"); while(str.length%4) str+="="; const bin=atob(str); const o=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) o[i]=bin.charCodeAt(i); return o; }
+async function pack(prefix, obj){
+  const json = JSON.stringify(obj);
+  try{ const buf = await new Response(new Blob([json]).stream().pipeThrough(new CompressionStream("deflate-raw"))).arrayBuffer(); return prefix+".Z"+b64u(new Uint8Array(buf)); }
+  catch(e){ return prefix+".J"+b64u(new TextEncoder().encode(json)); }
+}
+async function unpack(code){
+  code=(code||"").replace(/\s+/g,""); const d=code.indexOf("."); if(d<0) throw 0;
+  const prefix=code.slice(0,d), kind=code[d+1], data=unb64u(code.slice(d+2));
+  const json = kind==="Z" ? await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).text() : new TextDecoder().decode(data);
+  return {prefix, obj: JSON.parse(json)};
+}
+function merge(key, p){
+  const cur = get(key) || {name:"", done:{}}; cur.done = cur.done || {}; let added = 0;
+  for(const [k,v] of Object.entries((p&&p.done)||{})){ const c = cur.done[k]; if(!c || (v.at||0) > (c.at||0)){ if(!c) added++; cur.done[k] = v; } }
+  if(!cur.name && p && p.name) cur.name = p.name;
+  put(key, cur); return added;
+}
+function paint(){
+  let name = "";
+  document.querySelectorAll("a.card").forEach(a=>{
+    const p = get(a.dataset.key), n = p && p.done ? Object.keys(p.done).length : 0, t = +a.dataset.total;
+    if(p && p.name) name = p.name;
+    a.querySelector(".bar i").style.width = Math.round(n/t*100)+"%";
+    a.querySelector(".cnt").textContent = n ? `${n} of ${t} lessons done` : "Not started yet";
+  });
+  if(name) document.getElementById("hi").textContent = "Welcome back, "+name+"!";
+}
+const works = put("__t", 1); try{ localStorage.removeItem("__t"); }catch(e){}
+if(!works){ const w = document.getElementById("warn"); w.hidden = false; w.textContent = "This browser can't save progress right now. Open this page in Safari (not a private tab) or from its home-screen icon."; }
+try{ navigator.storage && navigator.storage.persist && navigator.storage.persist().catch(()=>{}); }catch(e){}
+paint();
+
+const out = document.getElementById("out"), cp = document.getElementById("cp");
+document.getElementById("mk").onclick = async ()=>{
+  const all = {}; let n = 0;
+  for(const [app,key] of Object.entries(APPS)){ const p = get(key); if(p){ all[app] = p; n += Object.keys(p.done||{}).length; } }
+  out.value = await pack("ALL", {v:1, apps:all}); out.hidden = false; cp.hidden = false;
+  for(const app of Object.keys(APPS)) try{ localStorage.setItem("last-backup-"+app, String(Date.now())); }catch(e){}
+  document.getElementById("mkst").textContent = n+" lessons included";
+};
+cp.onclick = ()=>{ const st = document.getElementById("mkst");
+  try{ navigator.clipboard.writeText(out.value).then(()=>st.textContent="Copied").catch(()=>{ out.select(); st.textContent="Selected. Press copy."; }); }catch(e){ out.select(); } };
+document.getElementById("rs").onclick = async ()=>{
+  const st = document.getElementById("rsst");
+  try{
+    const {prefix, obj} = await unpack(document.getElementById("in").value);
+    let added = 0;
+    if(prefix==="ALL"){ for(const [app,p] of Object.entries(obj.apps||{})) if(APPS[app]) added += merge(APPS[app], p); }
+    else if(APPS[prefix]){ added = merge(APPS[prefix], obj.p); }
+    else throw 0;
+    paint(); st.textContent = "Restored. "+added+" new lesson"+(added===1?"":"s")+" added.";
+  }catch(e){ st.textContent = "That code didn't work. Check that you copied the whole thing."; }
+};
+</script>
+</body>
+</html>

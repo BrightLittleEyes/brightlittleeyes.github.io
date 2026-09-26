@@ -307,6 +307,7 @@ async function renderLesson(cid, idx){
   const c = COURSES.find(x=>x.id===cid); const ls = await loadCourse(c); const l = ls[idx];
   if(!l){ return go({name:"home"}); }
   const done = progress.done[l.id];
+  try{ localStorage.setItem("last-lesson-"+APP_KEY, JSON.stringify({id:l.id, title:l.title, book:c.name, n:idx+1, at:Date.now()})); }catch(e){}
   const answers = new Array(l.quiz.length).fill(null);
   let h = `<button class="back" id="back">← All lessons</button>
   <section class="lhead"><span class="eyebrow">${c.name} · History lesson ${idx+1} of ${ls.length}</span><h1>${esc(l.title)}</h1><span class="era">${esc(l.era)}</span></section>

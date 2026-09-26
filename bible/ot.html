@@ -336,6 +336,7 @@ async function renderLesson(id, idx){
   const ls = await loadBook(b); const l = ls[idx];
   if(!l) return go({name:"home"});
   const done = progress.done[l.id];
+  try{ localStorage.setItem("last-lesson-"+APP_KEY, JSON.stringify({id:l.id, title:l.title, book:b.name, n:idx+1, at:Date.now()})); }catch(e){}
   const answers = new Array(l.quiz.length).fill(null);
   const words = l.verse.text.split(/(\s+)/);
   let wi = 0;

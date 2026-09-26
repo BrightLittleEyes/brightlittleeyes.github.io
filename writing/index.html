@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Writing">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.json">
+<title>Grade 6 Writing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+:root{
+  --bg:#F2F6F5; --surface:#FFFFFF; --ink:#15252A; --muted:#566A70; --line:#D3DEDC; --soft:#E6EEEC;
+  --accent:#0E7C6B; --accent-ink:#FFFFFF;
+  --good:#1D7A3A; --good-bg:#E2F3E7; --bad:#B3261E; --bad-bg:#FBE6E4;
+  --t1:#C2562D; --t2:#3B4FA3; --t3:#0E7C6B; --tip:#FFF3C4; --tip-ink:#3D3410;
+  --rule:#D9E4EC; --margin:#E8A8A0;
+  --display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0E1618; --surface:#162226; --ink:#E4EEEC; --muted:#9AB0B3; --line:#2A3A3E; --soft:#1D2B2F;
+    --accent:#3FBFA8; --accent-ink:#06201B;
+    --good:#6BD08A; --good-bg:#15301E; --bad:#FF8A80; --bad-bg:#3A1A18;
+    --t1:#E57C52; --t2:#8C9CF0; --t3:#3FBFA8; --tip:#3D3517; --tip-ink:#F7E7A8;
+    --rule:#223238; --margin:#6B3B38;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0E1618; --surface:#162226; --ink:#E4EEEC; --muted:#9AB0B3; --line:#2A3A3E; --soft:#1D2B2F;
+  --accent:#3FBFA8; --accent-ink:#06201B;
+  --good:#6BD08A; --good-bg:#15301E; --bad:#FF8A80; --bad-bg:#3A1A18;
+  --t1:#E57C52; --t2:#8C9CF0; --t3:#3FBFA8; --tip:#3D3517; --tip-ink:#F7E7A8;
+  --rule:#223238; --margin:#6B3B38;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.55;}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:16px;padding-block:0 64px}
+h1,h2,h3{font-family:var(--display);line-height:1.15;text-wrap:balance;margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;padding-block:12px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:800;font-size:20px;margin-right:auto;background:none;border:0;padding:0}
+.brand svg{width:30px;height:30px}
+.nav{display:flex;gap:4px;background:var(--soft);padding:4px;border-radius:10px}
+.nav button{border:0;background:none;padding:6px 14px;border-radius:7px;font-weight:700;font-size:15px;color:var(--muted)}
+.nav button[aria-current="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.who{display:flex;align-items:center;gap:8px;font-size:15px}
+.who label{color:var(--muted)}
+select,input[type=text]{font:inherit;font-size:15px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+
+/* home */
+.hero{padding-block:36px 20px;display:grid;gap:10px}
+.hero h1{font-size:clamp(30px,5vw,46px);font-weight:800;letter-spacing:-.01em}
+.hero p{margin:0;color:var(--muted);max-width:60ch}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.termh{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:30px}
+.termh h2{font-size:24px;color:var(--c)}
+.termh span{font-family:var(--mono);font-size:13px;color:var(--muted)}
+.table{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-top:12px}
+.tile{--c:var(--accent);position:relative;text-align:left;background:var(--surface);border:2px solid var(--c);border-radius:6px;padding:10px 12px 12px;display:grid;gap:2px;transition:transform .15s ease, box-shadow .15s ease}
+.tile:hover{transform:translateY(-2px);box-shadow:0 6px 16px -8px var(--c)}
+.tile .num{font-family:var(--mono);font-weight:700;font-size:13px;color:var(--c)}
+.tile .sym{font-family:var(--display);font-weight:800;font-size:44px;line-height:1;color:var(--c);letter-spacing:-.02em}
+.tile .nm{font-weight:700;font-size:15px;line-height:1.25;min-height:2.5em}
+.tile .checks{display:flex;align-items:center;gap:5px;margin-top:4px}
+.tile .checks i{width:12px;height:12px;border-radius:50%;border:2px solid var(--c)}
+.tile .checks i.on{background:var(--c)}
+.tile .mass{font-family:var(--mono);font-size:12px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:1px dashed var(--line);padding-top:6px;margin-top:6px}
+.tile .mass .stars{font-size:13px}
+.tile.now{box-shadow:0 0 0 3px var(--soft),0 0 0 5px var(--c)}
+.legend{margin-top:14px;font-size:13px;color:var(--muted);font-family:var(--mono)}
+.cont{position:relative;display:grid;gap:2px;text-align:left;width:100%;max-width:560px;background:var(--surface);border:2px solid var(--accent);border-radius:10px;padding:14px 56px 14px 18px;margin-top:6px}
+.cont b{font-size:18px;font-family:var(--display)}
+.cont small{color:var(--muted);font-size:14px}
+.cont .arrow{position:absolute;right:18px;top:50%;transform:translateY(-50%);font-size:26px;color:var(--accent)}
+
+/* week page */
+.back{border:0;background:none;color:var(--muted);padding:18px 0 6px;font-size:15px}
+.unithead{display:flex;gap:18px;align-items:center;padding-block:6px 20px;flex-wrap:wrap}
+.unithead .badge{--c:var(--accent);width:84px;height:84px;border:2px solid var(--c);border-radius:6px;display:grid;place-items:center;align-content:center;font-family:var(--display);font-weight:800;font-size:38px;line-height:1;color:var(--c);background:var(--surface);flex:none}
+.unithead .badge small{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.08em}
+.unithead h1{font-size:clamp(26px,4vw,38px)}
+.unithead p{margin:4px 0 0;color:var(--muted)}
+.unithead .wknav{margin-left:auto;display:flex;gap:8px}
+.cols{display:grid;grid-template-columns:230px 1fr;gap:28px;align-items:start}
+@media (max-width:760px){.cols{grid-template-columns:1fr}}
+.lessonlist{display:grid;gap:6px;position:sticky;top:80px}
+@media (max-width:760px){.lessonlist{position:static;grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}.lessonlist .sep{display:none}}
+.lessonlist button{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:10px 12px;font-size:15px;display:flex;gap:10px;align-items:baseline}
+.lessonlist button span{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.lessonlist button[aria-current="true"]{border-color:var(--c);box-shadow:inset 3px 0 0 var(--c)}
+.lessonlist .sep{height:1px;background:var(--line);margin:8px 0}
+.lessonlist .act{font-weight:700}
+.lessonlist .ck{min-width:1.6em;display:inline-block}
+.lessonlist .ck.on{color:var(--good);font-weight:700;font-size:15px}
+.lesson{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.lesson .inner{padding:24px clamp(18px,4vw,36px)}
+.lesson h2{font-size:28px;margin-bottom:6px}
+.lesson p{max-width:66ch;margin:0 0 12px}
+.lesson ul,.lesson ol{max-width:64ch;padding-left:22px;margin:0 0 12px}
+.lesson li{margin-bottom:4px}
+.dayhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.dayhead .kind{font-family:var(--mono);font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--c)}
+.stepdots{display:flex;gap:6px;flex-wrap:wrap}
+.stepdots button{width:30px;height:30px;border-radius:50%;border:2px solid var(--line);background:var(--surface);font-family:var(--mono);font-size:13px;font-weight:700;color:var(--muted);padding:0}
+.stepdots button.on{background:var(--c);border-color:var(--c);color:#fff}
+.stepdots button[aria-current="true"]{border-color:var(--c);color:var(--ink);box-shadow:0 0 0 3px var(--soft)}
+.stepdots button.on[aria-current="true"]{color:#fff}
+.page{position:relative;margin-top:14px;padding:16px 16px 16px 50px;border-radius:8px;
+  background-color:var(--surface);
+  background-image:linear-gradient(to right,transparent 34px,var(--margin) 34px,var(--margin) 35.5px,transparent 35.5px),
+                   repeating-linear-gradient(to bottom,transparent 0,transparent 31px,var(--rule) 31px,var(--rule) 32px);
+  border:1px solid var(--line)}
+.page .stepkind{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--c);font-weight:700}
+.page h3{font-size:24px;margin:2px 0 10px}
+.tipbox{background:var(--tip);color:var(--tip-ink);border-radius:8px;padding:12px 16px;font-size:16px;max-width:66ch;margin-bottom:12px}
+.tipbox b{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;display:block;font-weight:700;margin-bottom:2px}
+.timer{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.timer .clock{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:26px;font-weight:700;min-width:3.4em}
+.timer.over .clock{color:var(--good)}
+.lessonnav{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:18px;flex-wrap:wrap}
+.finish{margin-top:6px;text-align:center;display:grid;gap:8px;justify-items:center;padding:12px 0}
+.finish .got{font-weight:700;color:var(--good)}
+.linkbtn{border:0;background:none;color:var(--muted);text-decoration:underline;padding:0;font-size:15px}
+.piecebox{margin-top:18px;border-top:1px solid var(--line);padding-top:14px;font-size:15px;color:var(--muted)}
+.piecebox b{color:var(--ink)}
+
+.btn{border:0;background:var(--accent);color:var(--accent-ink);padding:10px 18px;border-radius:8px;font-weight:700;font-size:16px}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn[disabled]{opacity:.45;cursor:default}
+.btn.small{padding:6px 14px;font-size:15px}
+.btn.big{font-size:18px;padding:12px 22px}
+.btn .st{color:#FFE27A}
+
+/* quiz */
+.quiz{max-width:720px;margin:0 auto;padding-top:20px}
+.qhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.qhead .kind{font-family:var(--mono);font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--c)}
+.meter{height:6px;background:var(--soft);border-radius:3px;overflow:hidden;margin-bottom:22px}
+.meter i{display:block;height:100%;background:var(--c);transition:width .25s ease}
+.qcard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:22px clamp(16px,4vw,30px)}
+.qcard .qtext{font-size:21px;font-weight:700;margin:0 0 18px;line-height:1.35}
+.choices{display:grid;gap:10px}
+.choice{display:flex;gap:12px;align-items:flex-start;text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:8px;padding:12px 14px;font-size:17px;white-space:pre-line}
+.choice .l{font-family:var(--mono);font-weight:700;color:var(--muted);flex:none;width:1.4em}
+.choice:hover:not([disabled]){border-color:var(--c)}
+.choice.picked{border-color:var(--c);background:var(--soft)}
+.choice.right{border-color:var(--good);background:var(--good-bg)}
+.choice.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.choice[disabled]{cursor:default}
+.explain{margin-top:16px;padding:12px 16px;border-radius:8px;font-size:16px}
+.explain.ok{background:var(--good-bg);color:var(--ink)}
+.explain.no{background:var(--bad-bg);color:var(--ink)}
+.explain strong{display:block}
+.qfoot{display:flex;justify-content:space-between;gap:10px;margin-top:18px;flex-wrap:wrap}
+.streak{font-family:var(--mono);font-weight:700;color:#E0A800;margin:-12px 0 12px;font-size:15px}
+.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.result{text-align:center;padding-block:10px 24px}
+.result .big{font-family:var(--display);font-weight:800;font-size:72px;line-height:1;color:var(--c)}
+.result .sub{font-family:var(--mono);color:var(--muted);margin-top:6px}
+.result .msg{font-size:20px;font-weight:700;margin-top:12px}
+.bigstars{font-size:54px;line-height:1;margin:8px 0 4px;display:flex;justify-content:center;gap:6px}
+.bigstars span{color:var(--line)}
+.bigstars span.on{color:#F2B705;animation:pop .5s both}
+@keyframes pop{0%{transform:scale(.2);opacity:0}70%{transform:scale(1.25)}100%{transform:scale(1);opacity:1}}
+.newbadge{margin-top:12px;background:var(--soft);display:inline-block;padding:8px 14px;border-radius:8px}
+.review{display:grid;gap:10px;margin-top:10px}
+.review .item{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--good);border-radius:6px;padding:12px 14px;font-size:15px}
+.review .item.miss{border-left-color:var(--bad)}
+.review .item p{margin:0 0 4px}
+.review .item .q{font-weight:700}
+.review .item .muted{color:var(--muted)}
+.startcard{text-align:center;display:grid;gap:10px;justify-items:center;padding:10px 0}
+.confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:50}
+
+/* progress */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0 24px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.stat .v{font-family:var(--mono);font-weight:700;font-size:28px}
+.stat .v small{font-size:15px;color:var(--muted)}
+.stat .k{font-size:13px;color:var(--muted)}
+.tblwrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:15px;min-width:520px}
+th,td{padding:9px 14px;text-align:left;border-bottom:1px solid var(--line)}
+th{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500}
+td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+.pill{display:inline-block;font-family:var(--mono);font-size:12px;font-weight:700;padding:2px 8px;border-radius:99px}
+.pill.g{background:var(--good-bg);color:var(--good)}
+.pill.m{background:var(--soft);color:var(--ink)}
+.pill.b{background:var(--bad-bg);color:var(--bad)}
+.note{font-size:14px;color:var(--muted);margin-top:10px}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+.addform{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);padding:4px 12px;border-radius:99px;font-size:14px}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.section-h{display:flex;justify-content:space-between;align-items:end;gap:10px;flex-wrap:wrap;margin-top:28px;margin-bottom:10px}
+.section-h h2{font-size:22px}
+.st,.stars{color:#E0A800}
+.stars{letter-spacing:1px;font-size:15px;white-space:nowrap}
+.stars .off{color:var(--line)}
+.starchip{font-family:var(--mono);font-weight:700;background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:3px 10px;font-size:14px}
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+.bdg{background:var(--surface);border:1px dashed var(--line);border-radius:10px;padding:12px;display:grid;gap:2px;opacity:.6}
+.bdg.got{opacity:1;border:2px solid var(--c)}
+.bdg .medal{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--soft);color:var(--muted);font-weight:700;margin-bottom:4px}
+.bdg.got .medal{background:#F2B705;color:#fff}
+.bdg small{color:var(--muted);font-size:13px;line-height:1.35}
+.ctrl{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin-top:12px;font-size:15px}
+.out{font-family:var(--mono);font-size:14px;font-weight:700;margin:8px 0 0}
+
+/* parent */
+.pinbox{max-width:420px;margin:40px auto;display:grid;gap:10px;text-align:center}
+.pinbox h1{font-size:28px}.pinbox p{color:var(--muted);margin:0}
+.pinbox form{display:flex;gap:10px;justify-content:center}
+.pinbox input{font:inherit;font-family:var(--mono);font-size:26px;letter-spacing:.4em;width:150px;text-align:center;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+.pinerr{color:var(--bad);min-height:1.4em}
+.ptabs{display:inline-flex;flex-wrap:wrap;margin:10px 0 18px}
+.att{background:var(--surface);border:1px solid var(--line);border-radius:8px;margin-bottom:8px}
+.att summary{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;padding:10px 14px;cursor:pointer;font-size:15px}
+.att summary .n{font-family:var(--mono);font-size:13px;color:var(--muted)}
+.ans{margin:0;padding:4px 18px 12px 40px;display:grid;gap:8px;font-size:15px}
+.ans li{display:grid;gap:2px}
+.ans li.ok span{color:var(--good)}.ans li.no span:first-of-type{color:var(--bad)}
+.keyh{font-size:18px;margin:20px 0 8px}
+.key{padding-left:24px;display:grid;gap:12px;margin:0}
+.key ul{list-style:none;padding:0;margin:4px 0;display:grid;gap:2px;font-size:15px}
+.key li.right{color:var(--good);font-weight:700}
+.key small{color:var(--muted);font-size:13px}
+.pbody textarea{width:100%;font-family:var(--mono);font-size:12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);padding:8px}
+.rub{background:var(--surface);border:1px solid var(--line);border-radius:10px;margin-bottom:10px}
+.rub summary{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;padding:12px 14px;cursor:pointer}
+.rub summary .n{font-family:var(--mono);font-size:13px;color:var(--muted)}
+.rub .rb{padding:0 14px 14px;display:grid;gap:12px}
+.trait{display:grid;gap:6px}
+.trait > b{font-size:15px}
+.lv{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.lv button{border:2px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 8px;text-align:left;font-size:13px;line-height:1.3;display:grid;gap:2px}
+.lv button b{font-family:var(--mono);font-size:14px}
+.lv button[aria-pressed="true"]{border-color:var(--accent);background:var(--soft)}
+@media (max-width:560px){.lv{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.rub textarea{width:100%;font:inherit;font-size:15px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);padding:8px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}.bigstars span.on,.shake{animation:none!important}}
+
+.lesson .muted{color:var(--muted);font-size:15px}
+.page p:last-child{margin-bottom:0}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <button class="brand" id="brand" aria-label="Home">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="5" y="4" width="18" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 10h10M9 14h10M9 18h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M27.5 9.5l-9 13-3.2 1.4.4-3.4 9-13z" fill="var(--accent)" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+      Grade 6 Writing Workshop
+    </button>
+    <nav class="nav" aria-label="Sections">
+      <button id="nav-units" aria-current="true">Lessons</button>
+      <button id="nav-progress" aria-current="false">Progress</button>
+      <button id="nav-parent" aria-current="false">Parent</button>
+    </nav>
+    <div class="who">
+      <label for="student">Student</label>
+      <select id="student"><option value="">Add a student</option></select>
+      <span class="starchip" id="starchip" hidden></span>
+    </div>
+  </div>
+</header>
+<main class="wrap" id="app"></main>
+<script>
+const DAYS=["Monday","Tuesday","Wednesday","Thursday"];
+const W=[
+{f:`Oral to written narration`,g:`Nouns & verbs`,gt:`A noun names a person, place, thing, or idea (Almanzo, barn, courage). A verb shows action or being (ran, is, wondered).`,s:`A good narration tells what happened in order and uses the author's important words. Start with who and where, then tell the events in order using first, next, then, and finally.`,tue:`Tell Monday's narration again, aloud, using first, next, then, and finally.`,wed:`Write a second narration of a different section of the book: 5–7 sentences.`,thu:`Reread your two narrations. Circle 5 strong nouns and 5 strong verbs. Copy your best narration neatly.`,fw:`Describe your morning routine as if it were an adventure.`},
+{f:`The complete sentence`,g:`Subjects & predicates; fragments`,gt:`Every sentence needs a subject (who or what) and a predicate (what they do or are). "Ran to the barn." is a fragment. Who ran? "Almanzo ran to the barn." is complete.`,s:`A complete sentence holds one whole thought. Read each sentence by itself. If it leaves you asking "who?" or "did what?", it's a fragment.`,tue:`Find and fix 3 fragments in your narrations. If you can't find any, write 3 fragments and then fix them.`,wed:`Write 10 sentences of your own about an animal you know. Underline each subject once and each predicate twice.`,thu:`Choose your 5 best sentences from Wednesday and shape them into one short paragraph.`,fw:`If you could spend a day as any animal, which would you choose and why?`},
+{f:`Sentence variety`,g:`Compound sentences (FANBOYS); run-ons`,gt:`Join two complete sentences with a comma plus for, and, nor, but, or, yet, or so: "The storm came, so we ran inside." Two sentences jammed together with no comma and joining word make a run-on.`,s:`Good writing mixes short and long sentences. Too many short ones sound choppy. Too many long ones get tiring.`,tue:`Take 6 short sentences from one of your narrations and combine them into 3 compound sentences.`,wed:`Find one long, beautiful sentence in this week's book. Copy it, then write your own sentence that follows the same pattern on a new topic.`,thu:`Write a paragraph about a favorite place, using at least 2 short sentences and 2 compound sentences.`,fw:`Write about the best meal you have ever eaten.`},
+{f:`Topic sentence & support`,g:`Complex sentences (because, although, when)`,gt:`A complex sentence joins a full sentence with a part that can't stand alone: "When the bell rang, we ran outside." Put a comma after the starting part.`,s:`A paragraph is about one main idea. The topic sentence states it. Support sentences give details. A closing sentence wraps it up.`,tue:`Read a paragraph from your book. Find its topic sentence and list 3 supporting details.`,wed:`Choose a familiar object (a favorite mug, a bike, a quilt). Write a topic sentence, then list 5 details: how it looks, feels, sounds, and why it matters.`,thu:`Draft your descriptive paragraph: topic sentence, 4–6 detail sentences, and a closing sentence. Use at least one complex sentence.`,fw:`Write about something you own that has a story behind it.`},
+{f:`Explaining with order`,g:`Pronouns & antecedents`,gt:`A pronoun (he, she, it, they) stands in for a noun. Make sure it's clear who it means. "Mom told Sarah she was late." Who was late?`,s:`Explaining a process means giving the steps in the right order with clear signal words: first, next, after that, finally. Tell the reader what they need before they start.`,tue:`Pick something you know how to do. List every step, cross out any extra ones, and number the rest.`,wed:`Draft a how-to paragraph from your list. Begin with a topic sentence that tells what the reader will learn.`,thu:`Have someone follow your instructions exactly as written. Fix any step that confused them, then write a neat final copy.`,fw:`Teach a younger child how to do something you're good at.`},
+{f:`Opinion with reasons`,g:`Transitions; comma after introductory words`,gt:`Transitions link ideas: first, also, for example, however, finally. Put a comma after an introductory word or phrase: "However, the plan failed."`,s:`An opinion paragraph says what you think, then gives reasons with examples. Strong reasons are specific and would make sense even to someone who disagrees.`,tue:`Choose an opinion (best season? best pet? should kids have chores?). Write 3 reasons and one example for each.`,wed:`Draft your opinion paragraph: a clear opinion, 3 reasons with transitions, and a closing sentence.`,thu:`Revise and polish all three paragraphs from this unit (describe, explain, persuade). Read each aloud and fix anything that sounds wrong.`,fw:`What is one rule you would add to your family, and why?`},
+{f:`Narrative: choosing a moment`,g:`Dialogue punctuation`,gt:`Put spoken words inside quotation marks, with commas and periods inside: "Wait for me," she called. Start a new paragraph each time the speaker changes.`,s:`The best true stories zoom in on one small moment, like one afternoon or even one minute, not a whole summer. A small moment lets you slow down and show details.`,tue:`List 5 memories. For each one, circle the single most important minute.`,wed:`Pick one moment. Sketch it as 4–6 boxes like a comic strip: what happened first, next, and last.`,thu:`Tell your story aloud to someone. Notice which parts made them lean in, and jot notes on what to include.`,fw:`Write about a time you were surprised.`},
+{f:`Narrative: beginning with a hook`,g:`Consistent verb tense`,gt:`Choose past or present tense and stick with it. "I opened the door and see a dog" mixes tenses. Fix: "I opened the door and saw a dog."`,s:`A hook pulls the reader in. Try starting with action, dialogue, a sound, or a question instead of "One day I…"`,tue:`Write 3 different opening sentences for your story: one with action, one with dialogue, and one with a sound.`,wed:`Choose your best hook and draft the beginning and middle of your story.`,thu:`Finish drafting the whole story. Don't worry about making it perfect. Get it all down.`,fw:`Write about a sound you remember from when you were little.`},
+{f:`Narrative: showing, not telling`,g:`Adjectives & adverbs`,gt:`Adjectives describe nouns (the cold, gray barn). Adverbs describe verbs (ran quickly). Use them sparingly. A strong verb often beats a verb plus adverb: "sprinted" instead of "ran fast."`,s:`"Telling" says "I was scared." "Showing" lets the reader see it: "My hands shook and I couldn't swallow." Use actions and the five senses.`,tue:`Find 3 "telling" sentences in your draft. Rewrite each one to show instead.`,wed:`Add sensory details (sight, sound, smell, touch, taste) to the most important part of your story.`,thu:`Add at least 3 lines of dialogue to your story, punctuated correctly.`,fw:`Describe someone who is very excited without using the word "excited."`},
+{f:`Narrative: endings & reflection`,g:`Homophones`,gt:`Homophones sound alike but mean different things: their (belongs to them), there (a place), they're (they are); its (belongs to it), it's (it is); your / you're; to / too / two.`,s:`A strong ending shows how the moment changed you or what you learned, without preaching. You might end with a final action, a thought, or a line of dialogue.`,tue:`Write 2 possible endings for your story. Pick the one that feels most true.`,wed:`Finish the draft with your ending. Read the whole story aloud to yourself.`,thu:`Read the full story to your parent. Together, make a revision plan with 2–3 changes.`,fw:`What is something you understand now that you didn't a year ago?`},
+{f:`Revise & edit`,g:`Capitalization`,gt:`Capitalize the first word of a sentence, names of people and places, days, months, titles, and the word I. Don't capitalize seasons or ordinary nouns.`,s:`Revising changes the ideas and words: add, cut, move, replace. Editing fixes spelling, punctuation, and capitals. Revise first, edit last.`,tue:`Make the revisions from last week's plan. Cut one sentence that doesn't help the story.`,wed:`Edit with your Editing Checklist. Read one sentence at a time, starting from the end, to catch errors.`,thu:`Write or type the final copy of your personal narrative. Give it a title.`,fw:`Write a letter to yourself at the start of this school year.`},
+{f:`Review & portfolio`,g:`Review of weeks 1–11`,gt:`Look over your Editing Checklist. Pick the 2 skills that are hardest for you and write one correct example of each.`,s:`A portfolio shows your growth. Choose pieces that show your best work and pieces that show how far you've come.`,tue:`Reread everything you wrote this term. Put a star on your 3 best pieces.`,wed:`Make final fixes to your 3 starred pieces and put them in your portfolio binder.`,thu:`Write a one-paragraph reflection: What did you learn this term? What are you proudest of? What do you want to work on next?`,fw:`Free choice: write about anything you like.`},
+{f:`Precise word choice`,g:`Strong verbs & specific nouns`,gt:`"The dog went down the road" is vague. "The beagle trotted down the lane" paints a picture. Swap weak verbs (went, got, said) and general nouns (thing, stuff) for exact ones.`,s:`Writers choose the exact word. Kenneth Grahame doesn't just say the Mole "went"; he scrapes, scratches, and scrambles.`,tue:`Start a word bank in your writer's notebook: collect 20 strong verbs from this week's book.`,wed:`Rewrite this bland paragraph with strong verbs and specific nouns: "The animal went into the place. It got some food. It was good. Then it went home."`,thu:`Choose one piece from your portfolio and upgrade 5 weak words using your word bank.`,fw:`Describe a storm using strong verbs and no adjectives.`},
+{f:`Describing a place`,g:`Prepositional phrases`,gt:`A preposition shows position or time: in, under, beside, across, before. A prepositional phrase: "under the old bridge," "beside the river." They help readers see where things are.`,s:`Describe a place with all five senses and a clear order: near to far, left to right, or top to bottom. Decide on one feeling you want the reader to have.`,tue:`Choose a real place. List details for each of the five senses.`,wed:`Draft your place description (1–2 paragraphs) in a clear spatial order.`,thu:`Revise: add 3 prepositional phrases and replace 3 weak words with words from your word bank. Write the final copy.`,fw:`Describe your favorite hiding spot.`},
+{f:`Describing a person`,g:`Appositives`,gt:`An appositive renames a noun and is set off by commas: "Mr. Toad, a wealthy and boastful animal, loved motorcars." It packs extra information into one sentence.`,s:`A character sketch shows how a person looks, acts, talks, and what they care about. Actions and words reveal more than a list of traits.`,tue:`Pick a real or invented person. Make four lists: looks, actions, words, and what they care about.`,wed:`Draft a character sketch (1–2 paragraphs). Include one thing the person says.`,thu:`Revise: add 2 appositives. Write the final copy.`,fw:`Describe a grandparent or older friend doing something they love.`},
+{f:`Poetry: imagery`,g:`Similes & metaphors`,gt:`A simile compares using like or as: "The moon was like a silver coin." A metaphor says one thing is another: "The moon was a silver coin."`,s:`Poems are built from images, pictures made of words. Read a poem slowly, twice. What do you see, hear, or feel?`,tue:`Read 3 poems aloud. Find 2 similes or metaphors and copy them into your notebook.`,wed:`Brainstorm 10 similes or metaphors about one thing in nature (a tree, rain, the sun).`,thu:`Write an image poem (8–12 lines) using your best comparisons. It doesn't need to rhyme.`,fw:`Write about the view from your window as if you'd never seen it before.`},
+{f:`Poetry: form`,g:`Line breaks & punctuation in poetry`,gt:`Where a line ends tells the reader to pause. Poems can use regular punctuation or very little. Choose on purpose, and read your poem aloud to hear the breaks.`,s:`Haiku: 3 lines of 5-7-5 syllables about one moment in nature. Cinquain: 5 lines of 2-4-6-8-2 syllables. Quatrain: 4 lines, often rhyming ABAB or AABB.`,tue:`Write 3 haiku about things you can see outdoors today.`,wed:`Write a cinquain about an animal.`,thu:`Write a rhyming quatrain (or two) about a season. Copy your best three poems neatly.`,fw:`Write a list poem: "10 things in my pockets (real or imaginary)."`},
+{f:`Poetry: sound`,g:`Personification & alliteration`,gt:`Personification gives human actions to things: "The wind whispered." Alliteration repeats first sounds: "silver sliding stream."`,s:`Poems are made to be heard. Rhythm, rhyme, and repeated sounds make them musical. Choose a classic poem to memorize this week, such as Frost's "Stopping by Woods on a Snowy Evening."`,tue:`Learn the first stanza of your memory poem. Find any personification or alliteration in it.`,wed:`Write a nature poem that uses personification and alliteration.`,thu:`Recite your memorized poem to the family. Add your best poems to your portfolio.`,fw:`Give an ordinary object a voice. What would it say?`},
+{f:`Story: character & conflict`,g:`Paragraphing dialogue`,gt:`Each time a new person speaks, start a new paragraph. It keeps readers from getting lost in a conversation.`,s:`Every story needs a character who wants something and an obstacle in the way. The struggle between them is the conflict.`,tue:`Think about this week's chapters: What does Jim want? What stands in his way? Tell your parent.`,wed:`Plan your own story: main character (name, age, one trait), what they want, what stops them, and the setting.`,thu:`Write a short conversation between your character and someone who stands in their way. Paragraph it correctly.`,fw:`Write about a character who finds something they shouldn't have.`},
+{f:`Story: plot & pacing`,g:`Participial phrases`,gt:`A participial phrase starts with an -ing or -ed verb and describes a noun: "Clutching the map, Jim crept forward." Put a comma after it, and make sure it describes the right person.`,s:`A plot climbs from the beginning through rising action to the climax (the biggest moment), then comes down to the ending. Slow down at the climax; move quickly through small moments.`,tue:`Draw a plot mountain for your story and label 5 events on it.`,wed:`Draft the beginning and the rising action.`,thu:`Draft the climax and ending. Slow down the climax with detail and dialogue.`,fw:`Write the moment right before something big happens.`},
+{f:`Story: revise & publish`,g:`Semicolons`,gt:`A semicolon joins two closely related complete sentences without "and" or "but": "The ship rocked; the sailors held on." Both sides must be complete sentences.`,s:`Revise with questions: Is the conflict clear? Does the climax feel exciting? Does the ending settle the conflict? Then edit with your checklist.`,tue:`Read your story aloud to your parent. Together, pick 2–3 revisions.`,wed:`Revise and edit. Try using one semicolon correctly.`,thu:`Write the final copy with a title and read it aloud to the family.`,fw:`Write a new ending for a story you know well.`},
+{f:`Informative essay: thesis & outline`,g:`Colons & lists`,gt:`Use a colon after a complete sentence to introduce a list: "A garden needs three things: sun, water, and good soil." Don't use one right after "are" or "include."`,s:`An informative essay explains how or why something works. The thesis is one sentence that gives the main point and 3 subtopics. Each body paragraph covers one subtopic.`,tue:`Choose a topic you know well (how bread rises, why leaves change color, how a bike works). List everything you know about it.`,wed:`Write a thesis with 3 subtopics. Outline each one: a topic sentence plus 3 details.`,thu:`Draft the introduction: a hook, some background, and your thesis.`,fw:`Explain something you know that most adults don't.`},
+{f:`Informative essay: draft & revise`,g:`Active vs. passive voice`,gt:`Active: "The cat chased the mouse." Passive: "The mouse was chased by the cat." Active is usually clearer and stronger. Watch for "was ___ by."`,s:`Each body paragraph opens with a topic sentence and gives facts, examples, or steps. The conclusion restates the main idea in new words and leaves a final thought.`,tue:`Draft body paragraphs 1 and 2.`,wed:`Draft body paragraph 3 and the conclusion.`,thu:`Revise: change passive sentences to active and check your transitions. Edit, then write the final copy.`,fw:`Why do you think people like to collect things?`},
+{f:`Review & portfolio`,g:`Review of weeks 13–23`,gt:`Look over your Editing Checklist. Pick the 2 skills that are hardest for you and write one correct example of each.`,s:`Compare your Term 2 writing with Term 1. Look for stronger words, more varied sentences, and cleaner editing.`,tue:`Reread everything you wrote this term. Put a star on your 3 best pieces.`,wed:`Make final fixes to your 3 starred pieces and add them to your portfolio.`,thu:`Write a one-paragraph reflection on how your writing has grown since Term 1.`,fw:`Free choice: write about anything you like.`},
+{f:`Choosing a research question`,g:`Capitalizing & punctuating titles`,gt:`Capitalize the important words in titles. Italicize or underline book titles (Treasure Island). Put short works like poems and articles in quotation marks ("The Road Not Taken").`,s:`Good research starts with a question you're curious about. Pick a topic from history, science, or nature study, then narrow it: not "oceans" but "How do tides work?"`,tue:`Brainstorm 5 topics you're curious about. Narrow each one to a question.`,wed:`Choose one topic and write 3 guiding questions you want to answer.`,thu:`Make a two-column chart: what I already know, and what I want to find out.`,fw:`What invention would you like to know more about?`},
+{f:`Finding & judging sources`,g:`Quotation marks for exact words`,gt:`When you use an author's exact words, put them in quotation marks and name the source. Everything else must be in your own words.`,s:`Find 3–4 sources: books, an encyclopedia, and a reliable website (a museum, university, government, or established organization). Ask: Who wrote this? Is it up to date? Does it agree with other sources?`,tue:`Visit the library, or search with your parent, and gather 3–4 sources.`,wed:`Make a source card for each one: title, author, publisher or website, and date.`,thu:`Rate each source as trustworthy, maybe, or not. Write one sentence explaining each rating.`,fw:`Tell about a time you found out something you believed was wrong.`},
+{f:`Note-taking & paraphrase`,g:`Paraphrase vs. quotation`,gt:`A paraphrase restates an idea in your own words and your own sentence pattern. Read, close the book, then write. A quotation uses the exact words, inside quotation marks.`,s:`Take notes on index cards: one fact per card, in your own words, with the source and page number at the bottom.`,tue:`Take 10 note cards from your first source.`,wed:`Take 10 more note cards from your other sources.`,thu:`Choose one paragraph from a source and paraphrase it. Compare it to the original. Is it really in your own words?`,fw:`Explain your research topic to someone who has never heard of it.`},
+{f:`Organizing research`,g:`Parallel structure in outlines`,gt:`Keep items in a list in the same form: "swimming, hiking, and biking," not "swimming, to hike, and biking." Outline headings should match each other too.`,s:`Sort your cards into 3–4 piles by subtopic. Each pile becomes one section of your report. Set aside cards that don't fit.`,tue:`Sort your note cards into piles and label each pile.`,wed:`Write an outline: I. Introduction, II–IV. body sections with details, V. Conclusion.`,thu:`Look for gaps in your outline and take extra notes where a section is thin.`,fw:`Write about how you like to organize your things.`},
+{f:`Drafting with sources`,g:`Citing sources in the text`,gt:`When you use a fact from a source, name it: "According to the encyclopedia, …" or put the author and page in parentheses at the end: (Latham 45).`,s:`Draft one section at a time, following your outline and cards. Turn notes into sentences and connect them with transitions.`,tue:`Draft your introduction: a hook, background, and a thesis that tells what the report covers.`,wed:`Draft your body sections.`,thu:`Draft your conclusion: sum up what you learned and why it matters.`,fw:`What surprised you most in your research?`},
+{f:`Revising & source list`,g:`Using your Editing Checklist`,gt:`Use your whole Editing Checklist this week. You've built it all year. Check for one skill at a time as you read.`,s:`A works-cited list names every source, in alphabetical order by the author's last name: Author. Title. Publisher, Year.`,tue:`Revise: read the report aloud. Is every section clear? Is every borrowed fact cited?`,wed:`Edit with your checklist and write your works-cited list.`,thu:`Write the final copy with a title page and works-cited list. Share it with your family.`,fw:`What would you research next if you could?`},
+{f:`Argument: claim & reasons`,g:`Pronoun case (I/me, who/whom)`,gt:`Use I, he, she, we, they, who as subjects and me, him, her, us, them, whom as objects. Trick: drop the other person. "Mom and me went" becomes "me went"? No: "Mom and I went."`,s:`An argument takes a side on a question people disagree about and backs it up with reasons. The claim is one clear sentence: "Every family should keep a garden."`,tue:`Read a short speech or letter to the editor. Find the claim and the reasons.`,wed:`Choose a debatable question. Write your claim and 3 reasons.`,thu:`For each reason, write why it would convince someone who disagrees with you.`,fw:`What is something people argue about that you think is silly?`},
+{f:`Argument: evidence`,g:`Subject–verb agreement`,gt:`Singular subjects take singular verbs: "The box of apples is heavy" (the box is). Don't be fooled by the words in between.`,s:`Evidence makes reasons believable: facts, numbers, examples, and quotes from experts. After each piece of evidence, explain how it supports your reason.`,tue:`Find 2 pieces of evidence for each of your reasons.`,wed:`Draft your introduction and first body paragraph.`,thu:`Draft body paragraphs 2 and 3.`,fw:`Convince your family to try your favorite food.`},
+{f:`Argument: counterargument`,g:`Commas with nonessential clauses`,gt:`If a clause adds extra information that could be removed, set it off with commas: "My brother, who is ten, loves chess." If it's needed to tell which one, use no commas: "The boy who won is my brother."`,s:`Strong arguments are fair. State the best point the other side would make, then answer it: "Some people say ___. However, ___."`,tue:`Write down the strongest reason someone might disagree with you.`,wed:`Draft your counterargument paragraph: state the other side fairly, then answer it.`,thu:`Draft your conclusion: restate your claim and end with a call to action.`,fw:`Argue the opposite of something you believe.`},
+{f:`Argument: revise & deliver`,g:`Dashes & parentheses`,gt:`A dash adds emphasis or a sudden break: "We had one choice — run." Parentheses add quieter extra information: "The trip (our first) was long."`,s:`Speeches work best with short sentences, repeated key phrases, and pauses. Practice looking up at your listeners.`,tue:`Revise your essay with your parent. Check that every reason has evidence.`,wed:`Edit and write the final copy.`,thu:`Deliver your essay as a speech to your family.`,fw:`Write about a time someone changed your mind.`},
+{f:`Capstone: choice piece`,g:`Editing on your own`,gt:`You are your own editor now. Use your Editing Checklist without help.`,s:`Choose any form you learned this year: a story, a poem collection, a report, an essay, or a letter. Plan it the way you learned for that form.`,tue:`Choose your form and topic. Make a plan (an outline, a plot mountain, or a list).`,wed:`Draft your piece.`,thu:`Revise, edit, and write the final copy.`,fw:`Free choice.`},
+{f:`Celebration & portfolio`,g:`Year in review`,gt:`Look at your whole Editing Checklist. Put a star next to every skill you now use without thinking about it.`,s:`Look back at the whole year. Compare your first narration from Week 1 with your writing now.`,tue:`Choose pieces to read at read-aloud night and practice reading them aloud.`,wed:`Assemble your final portfolio: your best pieces from each term, with their rubrics.`,thu:`Write your year-end reflection, then hold read-aloud night.`,fw:`What kind of writer are you now?`}
+];
+function unitOf(w){
+  if(w<=3)return"Narration & the complete sentence"; if(w<=6)return"The strong paragraph"; if(w<=11)return"Personal narrative";
+  if(w===12)return"Term 1 review & portfolio"; if(w<=15)return"Descriptive writing & word choice"; if(w<=18)return"Poetry";
+  if(w<=21)return"Short story"; if(w<=23)return"Informative essay"; if(w===24)return"Term 2 review & portfolio";
+  if(w<=30)return"Research report"; if(w<=34)return"Persuasive essay"; if(w===35)return"Capstone"; return"Year-end celebration";
+}
+function bookOf(w){
+  if(w<=6)return"<i>Farmer Boy</i> (Laura Ingalls Wilder)"; if(w<=12)return"<i>Little Britches</i> (Ralph Moody)";
+  if(w<=15)return"<i>The Wind in the Willows</i> (Kenneth Grahame)"; if(w<=18)return"<i>A Child's Garden of Verses</i> and your poetry anthology";
+  if(w<=24)return"<i>Treasure Island</i> (Robert Louis Stevenson)"; if(w<=30)return"<i>Carry On, Mr. Bowditch</i> (Jean Lee Latham)";
+  if(w<=34)return"<i>My First Summer in the Sierra</i> (John Muir) and famous short speeches"; return"a favorite book from this year";
+}
+const termOf=w=>w<=12?1:w<=24?2:3;
+const poetry=w=>w>=16&&w<=18;
+
+function stepsFor(w,d){
+  const x=W[w-1], book=bookOf(w);
+  const S=[];
+  if(d===0){
+    S.push({k:"Copywork",t:"Copy a passage slowly and exactly",min:10,body:`<p>Open your copywork notebook. Copy the passage your parent marked from ${book}.</p><ul><li>Look at a whole phrase, then write it without peeking.</li><li>Copy every comma, capital, and quotation mark.</li><li>When you finish, check each word against the book.</li></ul>`});
+    if(poetry(w)){
+      S.push({k:"Read",t:"Read two or three poems aloud",body:`<p>Read 2–3 poems from ${book}. Read each one slowly, twice, out loud.</p>`});
+      S.push({k:"Narrate",t:"Tell back one poem",body:`<p>Close the book. Tell your parent what one poem was about and what picture it made in your mind.</p>`});
+      S.push({k:"Written narration",t:"Write about the poem",min:15,body:`<p>Write a few sentences about the poem: what happens in it and how it made you feel. Then copy your favorite line.</p><p class="muted">This week's focus: ${x.f}.</p>`});
+    }else{
+      S.push({k:"Read",t:"Read the next section",body:`<p>Read the next chapter or section of ${book}, or listen while your parent reads it aloud.</p>`});
+      S.push({k:"Narrate",t:"Tell it back aloud",body:`<p>Close the book. Tell back everything you remember, in order and in your own words. Use names and important words from the story.</p>`});
+      S.push({k:"Written narration",t:w===1?"Write 5–7 sentences":"Write one narration paragraph",min:15,body:`<p>${w===1?"Write your narration in 5–7 sentences.":"Write a one-paragraph narration (5–8 sentences) of what you read."} Start with who and where, then tell what happened in order.</p><p class="muted">This week's focus: ${x.f}.</p>`});
+    }
+  }
+  if(d===1){
+    S.push({k:"Grammar spotlight",t:x.g,tip:x.gt,body:`<p>Read the tip below with your parent. Say an example of your own out loud.</p>`});
+    S.push({k:"Grammar hunt",t:"Find it in your copywork",body:`<p>Look at Monday's copywork passage. Find an example of <b>${x.g.toLowerCase()}</b> and underline it. If there isn't one, find one in ${book}.</p>`});
+    S.push({k:"Grammar practice",t:"Write three sentences",min:8,body:`<p>Write 3 sentences of your own that use <b>${x.g.toLowerCase()}</b> correctly.</p>`});
+    S.push({k:"Skill lesson",t:x.f,tip:x.s,tipLabel:"Mini-lesson",body:`<p>Read the mini-lesson with your parent. Talk about how the author of ${book} does this.</p>`});
+    S.push({k:"Try it",t:"Practice the skill",min:15,body:`<p>${x.tue}</p>`});
+  }
+  if(d===2){
+    S.push({k:"Dictation · study",t:"Study the passage",min:5,body:`<p>Your parent will choose a short passage (it can be Monday's copywork). Read it and notice:</p><ul><li>Tricky spellings</li><li>Commas, capitals, and quotation marks</li><li>Where each sentence starts and ends</li></ul>`});
+    S.push({k:"Dictation · write",t:"Write it from dictation",body:`<p>Close the book. Your parent reads the passage aloud <b>one phrase at a time, only once</b>. Write each phrase carefully.</p>`});
+    S.push({k:"Dictation · check",t:"Check and correct",body:`<p>Open the book and compare your copy word by word. Circle each mistake and write the word correctly above it.</p>`});
+    S.push({k:"Composition",t:"Main writing work",min:20,body:`<p>${x.wed}</p><p class="muted">Unit: ${unitOf(w)}.</p>`});
+  }
+  if(d===3){
+    S.push({k:"Free write",t:"Ten minutes, no stopping",min:10,body:`<p>Prompt: <b>${x.fw}</b></p><p>Keep your pencil moving the whole time. This one is never graded, and spelling doesn't count.</p>`});
+    S.push({k:"Composition",t:"Main writing work",min:20,body:`<p>${x.thu}</p>`});
+    S.push({k:"Writing conference",t:"Share with your parent",body:`<ol><li>Read your work aloud.</li><li>Your parent names one specific strength.</li><li>Your parent names one thing to work on for <b>${x.f.toLowerCase()}</b>.</li><li>Write that goal at the top of your draft.</li></ol>`});
+    const review=[12,24,30,35,36].includes(w);
+    S.push({k:"Editing checklist",t:review?"Look over your checklist":"Add this week's skill",body:review?`<p>Read over the Editing Checklist at the front of your writer's notebook. Circle the skill you most want to keep practicing.</p>`:`<p>Add <b>${x.g}</b> to the Editing Checklist at the front of your writer's notebook, with one short example.</p>`});
+  }
+  return S;
+}
+
+const GQ = {
+1:[
+["Which word in this sentence is a noun? \"The horse galloped quickly.\"",["galloped","quickly","horse","The"],2,"A noun names a person, place, thing, or idea. \"Horse\" is a thing."],
+["Which word is a verb? \"Almanzo carried the heavy pail.\"",["carried","heavy","pail","Almanzo"],0,"A verb shows action or being. \"Carried\" is the action."],
+["Which word is a noun that names an idea?",["run","courage","brave","slowly"],1,"\"Courage\" is an idea you can't touch, but it's still a noun."],
+["Which word is a verb that shows being, not action?",["jumped","is","barn","green"],1,"\"Is\" is a being verb. Other being verbs: am, are, was, were."],
+["How many nouns are in this sentence? \"Father drove the team to town.\"",["1","2","3","4"],2,"Father, team, and town are all nouns."]
+],
+2:[
+["Which is a complete sentence?",["Ran to the barn.","Because the cow was loose.","The cow ran to the barn.","After breakfast on Monday."],2,"It has a subject (the cow) and a predicate (ran to the barn) and makes a whole thought."],
+["What is the simple subject? \"The tired old dog slept by the stove.\"",["tired","dog","slept","stove"],1,"The subject tells who or what the sentence is about: the dog."],
+["What is the predicate? \"My little brother laughed at the joke.\"",["My little brother","laughed at the joke","brother laughed","the joke"],1,"The predicate tells what the subject does."],
+["Which is a fragment?",["She smiled.","The snow fell all night.","Walking through the deep snow.","We walked home."],2,"\"Walking through the deep snow\" has no subject and no main verb, so it's a fragment."],
+["How could you fix the fragment \"Under the bridge.\"?",["Under the bridge!","The troll lived under the bridge.","Under the old bridge.","Bridge, under the."],1,"Adding a subject and a verb turns it into a complete thought."]
+],
+3:[
+["Which is a correctly written compound sentence?",["The rain stopped, so we went outside.","The rain stopped so, we went outside.","The rain stopped we went outside.","The rain, stopped so we went outside."],0,"Use a comma before the joining word (so) when it connects two complete sentences."],
+["Which word is one of the FANBOYS joining words?",["because","but","when","although"],1,"FANBOYS: for, and, nor, but, or, yet, so."],
+["Which is a run-on sentence?",["I like apples, and she likes pears.","I like apples she likes pears.","I like apples.","She likes pears, but I like apples."],1,"Two complete sentences are jammed together with no comma and no joining word."],
+["Choose the best way to join: \"The ship was fast. It could not escape the storm.\"",["The ship was fast, but it could not escape the storm.","The ship was fast, so it could not escape the storm.","The ship was fast it could not escape the storm.","The ship was fast, and, it could not escape the storm."],0,"\"But\" shows the contrast between being fast and still not escaping."],
+["Where does the comma go? \"We could read a book or we could play outside.\"",["after read","after book","after could","after play"],1,"The comma goes right before \"or\": \"We could read a book, or we could play outside.\""]
+],
+4:[
+["Which is a complex sentence?",["The bell rang.","When the bell rang, we ran outside.","The bell rang, and we ran outside.","We ran outside."],1,"It joins a complete sentence with a part that can't stand alone (When the bell rang)."],
+["Which part cannot stand alone as a sentence?",["we went home","because it was late","the sun set","it was late"],1,"\"Because it was late\" leaves you waiting for the rest of the thought."],
+["Which sentence is punctuated correctly?",["Although it was cold we swam.","Although it was cold, we swam.","Although, it was cold we swam.","Although it was, cold we swam."],1,"Put a comma after the starting part when it comes first."],
+["Which word usually starts a part that can't stand alone?",["and","but","although","so"],2,"Words like although, because, when, and if start dependent parts."],
+["Which sentence needs NO comma?",["We stayed inside because it was raining.","Because it was raining we stayed inside.","When the storm ended we played.","If you finish early you may read."],0,"When the \"because\" part comes at the end, you usually don't need a comma."]
+],
+5:[
+["What does \"it\" refer to? \"Mole found a boat, and he climbed into it.\"",["Mole","boat","he","climbed"],1,"The pronoun \"it\" stands for the boat."],
+["Which sentence has an unclear pronoun?",["Sarah hugged her dog.","Mom told Sarah that she was late.","The boys ate their lunch.","Jim lost his map."],1,"We can't tell if \"she\" means Mom or Sarah."],
+["Choose the correct pronoun: \"Each girl brought ___ own pencil.\"",["their","her","its","them"],1,"\"Each girl\" is singular, so use the singular pronoun \"her.\""],
+["Which pronoun fits? \"The birds built ___ nest in the oak.\"",["its","their","his","her"],1,"\"Birds\" is plural, so use \"their.\""],
+["How could you fix: \"When Dad talked to Ben, he was upset.\"?",["When Dad talked to Ben, Ben was upset.","When he talked to him, he was upset.","When Dad talked to Ben, they was upset.","When Dad talked to Ben he was upset."],0,"Replacing the pronoun with a name makes it clear who was upset."]
+],
+6:[
+["Which sentence uses a comma correctly after an introductory word?",["However the plan failed.","However, the plan failed.","However the, plan failed.","However the plan, failed."],1,"Put a comma after an introductory word like however."],
+["Which transition shows an example is coming?",["For example","Finally","However","First"],0,"\"For example\" introduces an example."],
+["Which transition shows a contrast?",["Also","In addition","On the other hand","Next"],2,"\"On the other hand\" shows the opposite side."],
+["Where does the comma go? \"After lunch we fed the chickens.\"",["After, lunch","After lunch, we","we, fed","fed the, chickens"],1,"Put a comma after an introductory phrase: \"After lunch, we fed the chickens.\""],
+["Which transition best starts a closing sentence?",["First","For instance","In conclusion","Meanwhile"],2,"\"In conclusion\" signals the end."]
+],
+7:[
+["Which is punctuated correctly?",["\"Wait for me\", she called.","\"Wait for me,\" she called.","\"Wait for me\" she called.","Wait for me, \"she called.\""],1,"The comma goes inside the quotation marks."],
+["Which is punctuated correctly?",["He asked, \"Where are you going?\"","He asked, \"Where are you going\"?","He asked \"Where are you going?\"","He asked, Where are you going?"],0,"The question mark belongs to the spoken words, so it goes inside."],
+["When do you start a new paragraph in dialogue?",["After every three sentences","Each time the speaker changes","Only at the end of the story","Never"],1,"A new speaker gets a new paragraph."],
+["Which needs a capital letter? she said, \"we leave at dawn.\"",["she and we","only she","only we","dawn"],0,"Capitalize the first word of the sentence (She) and the first word of the quote (We)."],
+["Which is correct?",["\"I'm hungry\" said Tom.","\"I'm hungry,\" said Tom.","\"I'm hungry.\" said Tom.","I'm hungry, \"said Tom.\""],1,"Use a comma, not a period, before the speaker tag."]
+],
+8:[
+["Which sentence keeps the same tense?",["I opened the door and see a dog.","I opened the door and saw a dog.","I open the door and saw a dog.","I will open the door and saw a dog."],1,"Both verbs are in the past tense."],
+["Choose the verb that fits: \"Yesterday we ___ to the pond.\"",["walk","walked","walking","will walk"],1,"\"Yesterday\" tells us to use past tense."],
+["Which sentence is in the present tense?",["She runs to the gate.","She ran to the gate.","She will run to the gate.","She had run to the gate."],0,"\"Runs\" is happening now."],
+["Find the tense mistake: \"The wind howled, the shutters banged, and the lamp flickers.\"",["howled","banged","flickers","none"],2,"The other verbs are past, so it should be \"flickered.\""],
+["What is the past tense of \"catch\"?",["catched","caught","catching","catches"],1,"\"Catch\" has an irregular past tense: caught."]
+],
+9:[
+["Which word is an adverb? \"The fox crept silently into the yard.\"",["fox","crept","silently","yard"],2,"\"Silently\" tells how the fox crept."],
+["Which word is an adjective? \"The muddy boots sat by the door.\"",["muddy","sat","by","door"],0,"\"Muddy\" describes the boots."],
+["Which is the strongest choice?",["ran very fast","sprinted","ran quickly","went fast"],1,"One strong verb usually beats a verb plus an adverb."],
+["Which is correct?",["She sang beautiful.","She sang beautifully.","She beautiful sang.","She sang beautifuller."],1,"Use the adverb (beautifully) to describe how she sang."],
+["How many adjectives? \"A small, gray kitten slept.\"",["1","2","3","0"],1,"\"Small\" and \"gray\" both describe the kitten."]
+],
+10:[
+["Choose the right word: \"___ going to the fair.\"",["Their","There","They're","Thier"],2,"\"They're\" means \"they are.\""],
+["Choose the right word: \"The dog wagged ___ tail.\"",["it's","its","its'","it"],1,"\"Its\" shows belonging. \"It's\" means \"it is.\""],
+["Choose the right word: \"Put the books over ___.\"",["their","there","they're","they"],1,"\"There\" names a place."],
+["Choose the right word: \"I want to come ___.\"",["to","two","too","tow"],2,"\"Too\" means \"also.\""],
+["Choose the right word: \"___ the best writer I know.\"",["Your","You're","Yore","Youre"],1,"\"You're\" means \"you are.\""]
+],
+11:[
+["Which is capitalized correctly?",["we visited ohio in july.","We visited Ohio in July.","We Visited Ohio in july.","we visited Ohio In July."],1,"Capitalize the first word, place names, and months."],
+["Which should NOT be capitalized?",["Monday","summer","Grandma Rose","Mississippi River"],1,"Seasons like summer are not capitalized."],
+["Which is correct?",["My aunt and i went fishing.","My Aunt and I went fishing.","My aunt and I went fishing.","my aunt and I went fishing."],2,"Always capitalize \"I.\" \"Aunt\" is only capitalized when it's used as a name."],
+["Which title is capitalized correctly?",["The wind in the willows","The Wind in the Willows","The Wind In The Willows","the Wind in the Willows"],1,"Capitalize the first word and important words. Small words like \"in\" and \"the\" stay lowercase in the middle."],
+["Which is correct?",["I asked Dad for help.","I asked dad for help.","i asked Dad for help.","I Asked Dad for help."],0,"\"Dad\" is used as a name here, so it's capitalized."]
+],
+13:[
+["Which verb paints the clearest picture?",["went","moved","scurried","got"],2,"\"Scurried\" shows exactly how something moved."],
+["Which noun is most specific?",["bird","animal","cardinal","thing"],2,"\"Cardinal\" names exactly which bird."],
+["Choose a stronger way to say \"said loudly.\"",["talked","shouted","said","told"],1,"\"Shouted\" says it in one strong word."],
+["Which sentence uses the most precise words?",["The thing went down the road.","The animal moved down the path.","The beagle trotted down the lane.","It went there."],2,"Specific nouns (beagle, lane) and a strong verb (trotted) paint a picture."],
+["Which word should you replace in \"We got some stuff at the store\"?",["We","store","stuff","at"],2,"\"Stuff\" is vague. Name what you bought."]
+],
+14:[
+["Which is a prepositional phrase?",["the old bridge","under the old bridge","ran quickly","very tall"],1,"It begins with a preposition (under) and ends with a noun (bridge)."],
+["Which word is a preposition?",["beside","quietly","beautiful","jump"],0,"\"Beside\" shows position."],
+["Find the prepositional phrase: \"The cat hid behind the woodpile.\"",["The cat","hid behind","behind the woodpile","the cat hid"],2,"\"Behind the woodpile\" tells where the cat hid."],
+["How many prepositional phrases? \"We walked across the field to the barn.\"",["1","2","3","0"],1,"\"Across the field\" and \"to the barn.\""],
+["What does a prepositional phrase often tell the reader?",["Who is speaking","Where or when something happens","The main idea","The author's name"],1,"Prepositional phrases often show place or time."]
+],
+15:[
+["Find the appositive: \"Mr. Toad, a boastful animal, loved motorcars.\"",["Mr. Toad","a boastful animal","loved motorcars","motorcars"],1,"The appositive renames Mr. Toad."],
+["Which sentence uses commas correctly with an appositive?",["My teacher Mrs. Lee, smiled.","My teacher, Mrs. Lee smiled.","My teacher, Mrs. Lee, smiled.","My, teacher Mrs. Lee smiled."],2,"Put commas on both sides of the appositive."],
+["What does an appositive do?",["Shows action","Renames a noun","Joins two sentences","Asks a question"],1,"An appositive renames or explains a noun right next to it."],
+["Combine: \"Rat was Mole's friend. Rat loved the river.\"",["Rat, Mole's friend, loved the river.","Rat Mole's friend loved the river.","Rat loved, Mole's friend, the river.","Rat was loved by the river."],0,"The appositive packs both facts into one sentence."],
+["Which contains an appositive?",["The dog barked at night.","Our dog, a shaggy collie, barked.","The dog barked loudly.","Barking, the dog ran."],1,"\"A shaggy collie\" renames our dog."]
+],
+16:[
+["Which is a simile?",["The moon was a silver coin.","The moon was like a silver coin.","The moon shone.","The moon rose early."],1,"A simile compares using \"like\" or \"as.\""],
+["Which is a metaphor?",["Her voice was music.","Her voice was like music.","She sang loudly.","Her voice was as sweet as music."],0,"A metaphor says one thing IS another, without like or as."],
+["What two things are compared? \"The fog crept in like a cat.\"",["fog and cat","fog and crept","cat and in","crept and cat"],0,"The fog is compared to a cat."],
+["Which uses \"as\" to make a simile?",["As I walked, it rained.","He was as quiet as snow.","As usual, we ate.","She left as soon as possible."],1,"\"As quiet as snow\" compares him to snow."],
+["Why do writers use similes and metaphors?",["To make writing longer","To help readers picture things","To add commas","To end a paragraph"],1,"Comparisons create images in the reader's mind."]
+],
+17:[
+["How many syllables are in each line of a haiku?",["5-7-5","3-5-3","7-7-7","2-4-6-8-2"],0,"A haiku has lines of 5, 7, and 5 syllables."],
+["How many syllables are in \"butterfly\"?",["2","3","4","1"],1,"but-ter-fly has three syllables."],
+["A cinquain has how many lines?",["3","4","5","8"],2,"\"Cinq\" means five."],
+["Which rhyme pattern means lines 1 and 3 rhyme and lines 2 and 4 rhyme?",["AABB","ABAB","ABBA","AAAA"],1,"In ABAB, the first and third lines share a rhyme, and so do the second and fourth."],
+["What does a line break do in a poem?",["Ends the poem","Makes the reader pause","Starts a new stanza","Adds a rhyme"],1,"Where a line ends tells the reader to pause briefly."]
+],
+18:[
+["Which sentence uses personification?",["The wind whispered through the trees.","The wind was strong.","It was a windy day.","The trees were tall."],0,"Wind can't really whisper. That's a human action."],
+["Which is an example of alliteration?",["big red barn","silver sliding stream","the tall tree","a quiet night"],1,"The \"s\" sound repeats at the start of each word."],
+["Which uses personification?",["The old house groaned in the storm.","The old house was gray.","The storm was loud.","We sat in the old house."],0,"A house can't groan like a person."],
+["Which sound repeats in \"Peter picked purple plums\"?",["r","p","l","m"],1,"The \"p\" sound repeats at the start of the words."],
+["Why do poets use alliteration?",["To make the poem musical","To make it shorter","To explain facts","To add dialogue"],0,"Repeating sounds makes a poem pleasing to hear."]
+],
+19:[
+["When should you start a new paragraph in a conversation?",["Every time a new person speaks","Every five lines","Only when a new character appears","Never"],0,"Each new speaker gets a new paragraph."],
+["Why do we paragraph dialogue?",["To make pages longer","So readers can tell who is speaking","Because it's a rule for poems","To add rhymes"],1,"New paragraphs help readers follow the conversation."],
+["Where does the speaker's action belong?",["In any paragraph","In the same paragraph as that speaker's words","In the next speaker's paragraph","At the end of the story"],1,"Keep a character's actions with their own words."],
+["Which is correct?",["\"Where's the map?\" asked Jim. \"In my coat,\" said the captain.","\"Where's the map?\" asked Jim.\n\"In my coat,\" said the captain.","Jim asked where's the map the captain said in my coat.","\"Where's the map? In my coat,\" said Jim."],1,"The captain's reply starts on a new line because he's a new speaker."],
+["If one speaker says two sentences in a row, you...",["start a new paragraph for each sentence","keep them in the same paragraph","skip quotation marks","use a semicolon"],1,"Same speaker, same paragraph."]
+],
+20:[
+["Find the participial phrase: \"Clutching the map, Jim crept forward.\"",["Clutching the map","Jim crept","crept forward","the map, Jim"],0,"It starts with an -ing verb and describes Jim."],
+["Which is punctuated correctly?",["Tired from the trip we slept.","Tired from the trip, we slept.","Tired, from the trip we slept.","Tired from, the trip we slept."],1,"Put a comma after an opening participial phrase."],
+["Which sentence has a confusing (dangling) phrase?",["Running to the bus, Sam dropped his hat.","Running to the bus, the hat fell off.","Sam, running to the bus, dropped his hat.","Sam dropped his hat while running."],1,"The hat wasn't running! The phrase must describe the right noun."],
+["Which is a participial phrase?",["the tall oak","covered in snow","because it snowed","and it snowed"],1,"\"Covered in snow\" starts with an -ed verb and describes a noun."],
+["Combine: \"The pirate laughed. He waved his sword.\"",["Laughing, the pirate waved his sword.","Laughing the pirate, waved his sword.","The pirate laughing waved, his sword.","Waving, his sword laughed."],0,"The participial phrase \"Laughing\" describes the pirate."]
+],
+21:[
+["Which uses a semicolon correctly?",["The ship rocked; the sailors held on.","The ship; rocked the sailors held on.","The ship rocked; and the sailors held on.","The ship rocked the; sailors held on."],0,"A semicolon joins two complete, related sentences."],
+["Which could be joined with a semicolon?",["We ran. Because it rained.","The sun set. The sky turned pink.","After dinner. We read.","The dog. The cat."],1,"Both are complete sentences with related ideas."],
+["What must be on both sides of a semicolon (in this use)?",["A complete sentence","A list","A question","A name"],0,"Each side must be able to stand alone."],
+["Which is correct?",["I love poems; she loves stories.","I love poems; because they rhyme.","I love; poems and stories.","I love poems, she loves stories."],0,"Two complete sentences joined by a semicolon."],
+["Which is a comma splice that a semicolon could fix?",["It was late, we went home.","It was late, so we went home.","It was late; we went home.","Because it was late, we went home."],0,"A comma alone can't join two sentences. Use a semicolon or add \"so.\""]
+],
+22:[
+["Which uses a colon correctly?",["A garden needs three things: sun, water, and soil.","A garden needs: sun, water, and soil.","A garden: needs sun, water, and soil.","A garden needs three things, sun: water and soil."],0,"Use a colon after a complete sentence to introduce a list."],
+["Which is WRONG?",["Bring these items: a pencil, paper, and a book.","My favorite colors are: blue and green.","I have one goal: to finish my story.","We saw three animals: a fox, a deer, and an owl."],1,"Don't use a colon right after \"are.\""],
+["What comes before a colon that introduces a list?",["A complete sentence","A single word","A question mark","A comma"],0,"The words before the colon should make a complete sentence."],
+["Which is correct?",["The recipe includes: flour, eggs, and milk.","The recipe includes flour, eggs, and milk.","The recipe: includes flour, eggs, and milk.","The recipe includes flour: eggs, and milk."],1,"No colon after \"includes.\""],
+["Where does the colon go? \"You will need two tools a hammer and nails.\"",["after need","after tools","after hammer","after two"],1,"\"You will need two tools: a hammer and nails.\""]
+],
+23:[
+["Which sentence is active voice?",["The ball was thrown by Sam.","Sam threw the ball.","The ball had been thrown.","The ball was caught."],1,"The subject (Sam) does the action."],
+["Which sentence is passive voice?",["The cat chased the mouse.","The mouse was chased by the cat.","The mouse ran away.","The cat ran."],1,"The subject (mouse) receives the action. Watch for \"was ___ by.\""],
+["Change to active: \"The cake was baked by Grandma.\"",["Grandma baked the cake.","The cake baked Grandma.","The cake was baking.","Grandma was baked."],0,"Put the doer first."],
+["Why is active voice usually better?",["It is longer","It is clearer and stronger","It uses more commas","It hides who did it"],1,"Active voice shows who did what."],
+["Which clue often signals passive voice?",["was ___ by","and","because","very"],0,"\"Was eaten by,\" \"was written by\" are passive."]
+],
+25:[
+["How should a book title look in typed writing?",["\"Treasure Island\"","Treasure Island (in italics)","treasure island","TREASURE ISLAND"],1,"Book titles are italicized when typed and underlined when handwritten."],
+["How should a poem title look?",["In quotation marks","In italics","All capitals","Underlined twice"],0,"Short works like poems go in quotation marks."],
+["Which title is capitalized correctly?",["Carry on, mr. Bowditch","Carry On, Mr. Bowditch","carry On, Mr. bowditch","Carry On, mr. bowditch"],1,"Capitalize important words and names."],
+["Which is correct for an article title?",["I read \"How Tides Work.\"","I read How Tides Work.","I read how tides work.","I read HOW TIDES WORK."],0,"Article titles go in quotation marks."],
+["Which small word stays lowercase in the middle of a title?",["the","Island","Treasure","Summer"],0,"Short words like the, of, and, in stay lowercase unless they come first."]
+],
+26:[
+["When do you use quotation marks in a report?",["When you use an author's exact words","Around every fact","Around your own ideas","Around the title of your report"],0,"Exact words need quotation marks and a source."],
+["Which is correct?",["Muir wrote that the mountains \"call.\"","Muir wrote that the mountains call. (no source)","Muir wrote, the mountains call.","\"Muir\" wrote the mountains call."],0,"The exact word is in quotation marks."],
+["If you change the author's words into your own, you...",["still use quotation marks","don't use quotation marks, but still name the source","don't need a source","copy it exactly"],1,"Paraphrases don't need quotation marks, but they still need credit."],
+["What is copying words without credit called?",["Paraphrasing","Plagiarism","Citing","Summarizing"],1,"Using someone's words as your own is plagiarism."],
+["Which is a reliable source for a report?",["A museum website","A random comment online","An ad","A rumor"],0,"Museums, universities, and encyclopedias are reliable sources."]
+],
+27:[
+["What is a paraphrase?",["The author's exact words","The idea in your own words","A list of sources","A title"],1,"A paraphrase restates an idea in your own words."],
+["Original: \"Tides are caused mainly by the Moon's pull.\" Best paraphrase?",["Tides are caused mainly by the Moon's pull.","The Moon's gravity is the main reason tides rise and fall.","Tides are caused by the pull.","Moon tides pull mainly."],1,"It keeps the idea but uses new words and a new sentence pattern."],
+["A good way to paraphrase is to...",["copy and change one word","read, close the book, then write","copy the whole paragraph","skip the hard parts"],1,"Closing the book forces you to use your own words."],
+["What belongs at the bottom of each note card?",["Your name","The source and page number","A drawing","The date"],1,"Record where each fact came from."],
+["How many facts should go on each note card?",["One","Five","As many as fit","None"],0,"One fact per card makes sorting easier later."]
+],
+28:[
+["Which list is parallel?",["swimming, hiking, and biking","swimming, to hike, and biking","swim, hiking, and to bike","swimming, hike, bikes"],0,"All three items are -ing words."],
+["Which sentence is parallel?",["She likes to read, to write, and drawing.","She likes to read, to write, and to draw.","She likes reading, to write, and draw.","She likes read, write, drawing."],1,"Each item uses \"to\" + verb."],
+["Fix: \"The report was long, detailed, and it interested me.\"",["The report was long, detailed, and interesting.","The report was long, and detailed, and it interested me.","The report long, detailed, interesting.","The report was long detailed interesting me."],0,"Three adjectives in a row are parallel."],
+["Which outline headings are parallel?",["I. Early Life  II. Career at Sea  III. Later Years","I. Early Life  II. He went to sea  III. Later","I. Life early  II. Sailing  III. When he was old","I. Early  II. Went sailing  III. Old age happened"],0,"Each heading is the same kind of phrase."],
+["Why use parallel structure?",["It makes lists easy to read","It makes sentences longer","It adds commas","It hides mistakes"],0,"Matching forms help readers follow your ideas."]
+],
+29:[
+["Which gives credit to a source in the text?",["According to the encyclopedia, tides happen twice a day.","Tides happen twice a day.","I think tides happen twice a day.","Tides, twice a day."],0,"\"According to…\" names the source."],
+["What goes in parentheses at the end of a cited sentence?",["The author's last name and page","Your name","The date you wrote it","A question"],0,"For example: (Latham 45)."],
+["Which is correct?",["Bowditch taught himself Latin (Latham 45).","Bowditch taught himself Latin. (Latham 45)","Bowditch taught himself Latin (45 Latham).","(Latham) Bowditch taught himself Latin 45."],0,"The citation goes before the period."],
+["Do you need to cite a fact you learned from a source?",["Yes","No, only quotes","Only if it's long","Only in the conclusion"],0,"Facts from sources need credit even when paraphrased."],
+["What part of a report introduces the topic and main idea?",["Introduction","Works-cited list","Conclusion","Title page"],0,"The introduction hooks the reader and states the thesis."]
+],
+31:[
+["Choose the correct pronoun: \"Mom and ___ went to town.\"",["me","I","myself","mine"],1,"Drop \"Mom and\": \"I went to town.\""],
+["Choose the correct pronoun: \"Grandpa gave the book to Ben and ___.\"",["I","me","myself","mine"],1,"Drop \"Ben and\": \"gave the book to me.\""],
+["Choose: \"___ is at the door?\"",["Who","Whom","Whose","Which"],0,"\"Who\" is the subject, like \"he.\""],
+["Choose: \"To ___ did you give the letter?\"",["who","whom","whose","he"],1,"\"Whom\" is the object, like \"him.\""],
+["Which is correct?",["Her and I are friends.","She and I are friends.","Her and me are friends.","She and me are friends."],1,"Both are subjects: \"She is...\" \"I am...\""]
+],
+32:[
+["Choose the verb: \"The box of apples ___ heavy.\"",["is","are","were","be"],0,"The subject is \"box\" (singular), not \"apples.\""],
+["Choose the verb: \"My sisters ___ in the choir.\"",["sings","sing","singing","has sing"],1,"\"Sisters\" is plural, so use \"sing.\""],
+["Choose the verb: \"Each of the boys ___ a chore.\"",["has","have","having","are"],0,"\"Each\" is singular."],
+["Choose the verb: \"Neither the cat nor the dogs ___ hungry.\"",["is","are","was","be"],1,"With \"nor,\" match the closer subject: dogs are."],
+["Which is correct?",["The team are winning.","The team is winning.","The team be winning.","The teams is winning."],1,"\"Team\" is one group, so use \"is.\""]
+],
+33:[
+["Which is punctuated correctly?",["My brother who is ten loves chess.","My brother, who is ten, loves chess.","My brother, who is ten loves chess.","My, brother who is ten, loves chess."],1,"If you have one brother, \"who is ten\" is extra information, so set it off with commas."],
+["Which clause is essential (no commas)?",["The girl who won the race is my cousin.","Lisa, who won the race, is my cousin.","Our town, which is small, has one store.","Muir, who loved mountains, wrote books."],0,"\"Who won the race\" tells which girl, so it's needed."],
+["What do commas around a clause tell the reader?",["The information is extra","The information is a question","The sentence is over","It's a list"],0,"Commas mark information that could be removed."],
+["Which is correct?",["The Hudson River, which flows south, is long.","The Hudson River which flows south, is long.","The Hudson River, which flows south is long.","The, Hudson River which flows south is long."],0,"Put commas on both sides of the extra clause."],
+["If you remove a nonessential clause, the sentence...",["still makes sense","stops making sense","needs a new subject","becomes a question"],0,"That's how you know it's extra."]
+],
+34:[
+["Which uses a dash for emphasis?",["We had one choice — run.","We had one — choice run.","We — had one choice run.","We had one choice run —."],0,"The dash sets up a dramatic pause before \"run.\""],
+["Which uses parentheses correctly?",["The trip (our first) was long.","The trip (our first was long).","(The trip) our first was long.","The trip our (first was) long."],0,"Parentheses hold quieter extra information."],
+["What's the difference between dashes and parentheses?",["Dashes add emphasis; parentheses add quiet extras","They are exactly the same","Parentheses add emphasis","Dashes end sentences"],0,"Dashes draw attention; parentheses whisper."],
+["Which is correct?",["She finally found it — the key.","She finally found it (the key.","She finally — found it the key.","She (finally found) it — the key."],0,"The dash leads to the key."],
+["How many dashes are needed in the middle of a sentence to set off extra words?",["One","Two","Three","None"],1,"Use a pair: \"My aunt — a pilot — flew us home.\""]
+]
+};
+
+/* ============ WRITING PIECES (parent scores with the rubric) ============ */
+const PIECES = [
+  {id:"p1", week:6,  name:"Three paragraphs (describe, explain, persuade)"},
+  {id:"p2", week:11, name:"Personal narrative"},
+  {id:"p3", week:14, name:"Place description"},
+  {id:"p4", week:15, name:"Character sketch"},
+  {id:"p5", week:18, name:"Poetry collection"},
+  {id:"p6", week:21, name:"Short story"},
+  {id:"p7", week:23, name:"Informative essay"},
+  {id:"p8", week:30, name:"Research report"},
+  {id:"p9", week:34, name:"Persuasive essay"},
+  {id:"p10",week:35, name:"Capstone choice piece"}
+];
+const TRAITS = [
+  ["Ideas & focus",["No clear main idea","Main idea unclear or drifts","Clear main idea, mostly supported","Clear main idea, well supported throughout"]],
+  ["Organization",["Hard to follow","Some order; weak beginning or ending","Logical order with a beginning and ending","Logical order, strong beginning and ending, smooth transitions"]],
+  ["Word choice & voice",["Vague or confusing words","General or repeated words","Mostly specific words","Precise, vivid words; sounds like the writer"]],
+  ["Sentences",["Frequent sentence errors","Several fragments or run-ons","Mostly complete with some variety","Varied, complete, and easy to read aloud"]],
+  ["Mechanics",["Errors make it hard to read","Errors sometimes confuse","Minor errors that don't confuse","Few or no errors in this term's skills"]]
+];
+const LEVELS = ["Beginning","Developing","Solid","Strong"];
+
+/* ============ STATE & STORAGE (all on this device) ============ */
+const $ = s => document.querySelector(s);
+const app = $("#app");
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const LS = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } }
+};
+/* Extra safety: mirror everything into IndexedDB and ask Safari to keep it */
+const IDB = {
+  open(){ return new Promise((res,rej)=>{ try{ const r = indexedDB.open("g6writing",1); r.onupgradeneeded = () => r.result.createObjectStore("kv"); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }catch(e){ rej(e); } }); },
+  async put(v){ try{ const db = await IDB.open(); await new Promise((res,rej)=>{ const tx = db.transaction("kv","readwrite"); tx.objectStore("kv").put(v,"state"); tx.oncomplete = res; tx.onerror = () => rej(tx.error); }); }catch(e){} },
+  async get(){ try{ const db = await IDB.open(); return await new Promise((res,rej)=>{ const r = db.transaction("kv").objectStore("kv").get("state"); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }catch(e){ return null; } }
+};
+function snapshot(){ const o = {}; try{ for (let i=0;i<localStorage.length;i++){ const k = localStorage.key(i); if (k && k.startsWith("g6w-")) o[k] = localStorage.getItem(k); } }catch(e){} return o; }
+let _mirrorT = null;
+const _lsSet = LS.set;
+LS.set = (k,v) => { const ok = _lsSet(k,v); clearTimeout(_mirrorT); _mirrorT = setTimeout(() => IDB.put(snapshot()), 250); return ok; };
+try{ navigator.storage && navigator.storage.persist && navigator.storage.persist(); }catch(e){}
+
+let roster  = LS.get("g6w-roster", null);
+let student = LS.get("g6w-student", "");
+if (!roster){ /* first visit: borrow the names already added in the science app */
+  roster = LS.get("g6-roster", []); if (!student) student = LS.get("g6-student", "");
+}
+let prog    = LS.get("g6w-prog", {});      // {name:{done:{id:iso}, steps:{id:[bool]}}}
+let results = LS.get("g6w-results", []);   // grammar check attempts
+let rubrics = LS.get("g6w-rubrics", {});   // {name:{pieceId:{s:[0-4 x5], note, at}}}
+let pin     = LS.get("g6-pin", "");        // shared with the science app
+let soundOn = LS.get("g6w-sound", true);
+let parentOK = false;
+let view = { page:"home" };
+const saveAll = () => { LS.set("g6w-roster",roster); LS.set("g6w-results",results); LS.set("g6w-prog",prog); LS.set("g6w-rubrics",rubrics); };
+const P = (stu=student) => { if (!stu) return {done:{},steps:{}}; if (!prog[stu]) prog[stu] = {done:{},steps:{}}; if(!prog[stu].steps) prog[stu].steps = {}; return prog[stu]; };
+
+function pickStudent(){ return roster.includes(student) ? student : (roster[0] || ""); }
+function renderRoster(){
+  const sel = $("#student");
+  student = pickStudent();
+  sel.innerHTML = (roster.length ? roster.map(n => `<option ${n===student?"selected":""}>${esc(n)}</option>`).join("") : `<option value="">Add a student</option>`)
+    + `<option value="__add">+ Add student…</option>`;
+  renderStarChip();
+}
+function renderStarChip(){ $("#starchip").innerHTML = student ? `<span class="st">★</span> ${starTotal(student)}` : ""; $("#starchip").hidden = !student; }
+$("#student").addEventListener("change", e => {
+  if (e.target.value === "__add"){ go({page:"progress", adding:true}); renderRoster(); return; }
+  student = e.target.value; LS.set("g6w-student", student); renderRoster(); go({page:"home"});
+});
+
+/* ============ LESSONS ============ */
+const lessonId = (w,d) => `w${String(w).padStart(2,"0")}-d${d+1}`;
+const TOTAL = 36*4;
+const termColor = w => `var(--t${termOf(w)})`;
+const isDone = (stu,w,d) => !!((prog[stu]||{}).done||{})[lessonId(w,d)];
+function stepsChecked(stu,w,d){ const n = stepsFor(w,d).length; if (isDone(stu,w,d)) return Array(n).fill(true); const a = (((prog[stu]||{}).steps)||{})[lessonId(w,d)] || []; return Array.from({length:n},(_,i)=>!!a[i]); }
+function weekDone(stu,w){ return [0,1,2,3].filter(d=>isDone(stu,w,d)).length; }
+function lessonsDoneCount(stu){ return Object.keys((prog[stu]||{}).done||{}).length; }
+function nextLesson(stu){ for (let w=1;w<=36;w++) for (let d=0;d<4;d++) if (!isDone(stu,w,d)) return {w,d}; return null; }
+function firstOpenStep(stu,w,d){ const c = stepsChecked(stu,w,d); const i = c.indexOf(false); return i<0?0:i; }
+
+/* ============ GRAMMAR CHECKS ============ */
+const REVIEW = {12:[1,11,10], 24:[13,23,10], 30:[25,29,10], 35:[31,34,10], 36:[1,34,20]};
+function quizKind(w){ return w===36 ? "final" : REVIEW[w] ? "review" : "check"; }
+function kindLabel(k){ return k==="final" ? "Final grammar exam" : k==="review" ? "Grammar review" : "Grammar check"; }
+function quizPool(w){
+  if (GQ[w]) return GQ[w];
+  const [a,b] = REVIEW[w]; let pool = [];
+  for (let x=a;x<=b;x++) if (GQ[x]) pool = pool.concat(GQ[x]);
+  return pool;
+}
+function quizLen(w){ return GQ[w] ? GQ[w].length : REVIEW[w][2]; }
+function quizTopic(w){ if (GQ[w]) return W[w-1].g; const [a,b] = REVIEW[w]; return `Mixed questions from weeks ${a}–${b}`; }
+
+/* ============ SCORING, STARS, BADGES ============ */
+const pct = (a,b) => b ? Math.round(a*100/b) : 0;
+const starsFor = p => p>=90?3:p>=75?2:p>=60?1:0;
+const starStr = (n, max=3) => `<span class="stars" aria-label="${n} of ${max} stars">${"★".repeat(n)}<span class="off">${"★".repeat(max-n)}</span></span>`;
+function rs(stu, w){ return results.filter(r => r.student===stu && r.week===w); }
+function best(stu, w){ const a = rs(stu,w); return a.length ? Math.max(...a.map(r => r.pct)) : null; }
+function bestStars(stu, w){ const b = best(stu,w); return b==null ? 0 : starsFor(b); }
+function rubricOf(stu, pid){ return ((rubrics[stu]||{})[pid]) || null; }
+function rubricTotal(r){ return r && r.s && r.s.every(v=>v>0) ? r.s.reduce((a,b)=>a+b,0) : null; }
+function rubricPct(r){ const t = rubricTotal(r); return t==null ? null : pct(t,20); }
+function starTotal(stu){
+  let t = lessonsDoneCount(stu);
+  for (let w=1;w<=36;w++) t += bestStars(stu,w);
+  PIECES.forEach(p => { const q = rubricPct(rubricOf(stu,p.id)); if (q!=null) t += starsFor(q); });
+  return t;
+}
+const STAR_MAX = TOTAL + 36*3 + PIECES.length*3;
+function termLessons(stu,t){ let n=0; for (let w=(t-1)*12+1; w<=t*12; w++) n += weekDone(stu,w); return n; }
+function badges(stu){
+  const mine = results.filter(r=>r.student===stu), st = starTotal(stu);
+  const pieceAt = (pid,min) => { const t = rubricTotal(rubricOf(stu,pid)); return t!=null && t>=min; };
+  const list = [
+    ["First Steps","Finish your first lesson", lessonsDoneCount(stu)>=1],
+    ["Term 1 Complete","Finish all 48 lessons in Term 1", termLessons(stu,1)===48, "--t1"],
+    ["Term 2 Complete","Finish all 48 lessons in Term 2", termLessons(stu,2)===48, "--t2"],
+    ["Term 3 Complete","Finish all 48 lessons in Term 3", termLessons(stu,3)===48, "--t3"],
+    ["Grammar Guru","Get 100% on any grammar check", mine.some(r=>r.pct===100)],
+    ["Hot Streak","Answer 5 grammar questions in a row correctly", mine.some(r=>(r.bestStreak||0)>=5)],
+    ["Poet","Finish every lesson in the poetry weeks (16–18)", [16,17,18].every(w=>weekDone(stu,w)===4), "--t2"],
+    ["Published Author","Score 15 or more out of 20 on your short story", pieceAt("p6",15), "--t2"],
+    ["Researcher","Score 15 or more out of 20 on your research report", pieceAt("p8",15), "--t3"],
+    ["Star Collector","Earn 50 stars", st>=50],
+    ["Graduate","Score 80%+ on the final grammar exam", (best(stu,36)||0)>=80]
+  ];
+  return list.map(([name,how,got,color]) => ({name,how,got,color}));
+}
+
+/* ============ FUN: SOUND + CONFETTI ============ */
+let actx = null;
+function tone(freqs, dur=0.12){
+  if (!soundOn) return;
+  try{
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    freqs.forEach((f,i) => { const o = actx.createOscillator(), g = actx.createGain(); o.type = "triangle"; o.frequency.value = f;
+      const t0 = actx.currentTime + i*dur; g.gain.setValueAtTime(0.0001,t0); g.gain.exponentialRampToValueAtTime(0.18,t0+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t0+dur*1.6);
+      o.connect(g).connect(actx.destination); o.start(t0); o.stop(t0+dur*1.8); });
+  }catch(e){}
+}
+const sfx = { right:()=>tone([660,880]), wrong:()=>tone([220,180],.15), star:()=>tone([523,659,784,1047],.1), click:()=>tone([520],.05), done:()=>tone([392,523],.08) };
+function confetti(){
+  if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const cv = document.createElement("canvas"); cv.className = "confetti"; document.body.appendChild(cv);
+  const dpr = window.devicePixelRatio||1, Wd = innerWidth, H = innerHeight; cv.width = Wd*dpr; cv.height = H*dpr;
+  const ctx = cv.getContext("2d"); ctx.scale(dpr,dpr);
+  const cols = ["#E57C52","#E0B23C","#8DBB57","#8C9CF0","#3FBFA8","#B48AE6","#F2B705"];
+  const bits = Array.from({length:140},()=>({x:Math.random()*Wd,y:-20-Math.random()*H*0.5,vx:(Math.random()-.5)*3,vy:2+Math.random()*4,r:Math.random()*6.28,vr:(Math.random()-.5)*.3,c:cols[Math.floor(Math.random()*cols.length)],s:6+Math.random()*6}));
+  const t0 = performance.now();
+  (function f(t){ ctx.clearRect(0,0,Wd,H);
+    bits.forEach(b=>{ b.x+=b.vx; b.y+=b.vy; b.vy+=0.05; b.r+=b.vr; ctx.save(); ctx.translate(b.x,b.y); ctx.rotate(b.r); ctx.fillStyle=b.c; ctx.fillRect(-b.s/2,-b.s/4,b.s,b.s/2); ctx.restore(); });
+    if (t-t0 < 3200) requestAnimationFrame(f); else cv.remove(); })(t0);
+}
+
+/* ============ HELPERS ============ */
+function grade(p){ return p>=90?"A":p>=80?"B":p>=70?"C":p>=60?"D":"F"; }
+function pillClass(p){ return p>=80?"g":p>=60?"m":"b"; }
+function shuffle(a){ a = a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function prepQ(q){ const order = shuffle(q[1].map((_,i)=>i)); return { q:q[0], choices: order.map(i=>q[1][i]), answer: order.indexOf(q[2]), why:q[3] }; }
+function go(v){ stopTimer(); view = v; render(); window.scrollTo({top:0}); }
+const fmtDate = iso => { const d = new Date(iso); return d.toLocaleDateString(undefined,{month:"short",day:"numeric"})+" "+d.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"}); };
+const fmtDay = iso => new Date(iso).toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
+function needStudent(){ if (student) return false; go({page:"progress", adding:true}); return true; }
+
+$("#brand").onclick = () => go({page:"home"});
+$("#nav-units").onclick = () => go({page:"home"});
+$("#nav-progress").onclick = () => go({page:"progress"});
+$("#nav-parent").onclick = () => go({page:"parent", tab:"scores"});
+
+/* ============ TIMER ============ */
+let timer = {left:0,total:0,run:false,h:null};
+function stopTimer(){ clearInterval(timer.h); timer.h = null; timer.run = false; }
+function resetTimer(min){ stopTimer(); timer.total = (min||0)*60; timer.left = timer.total; }
+const fmtClock = s => Math.floor(s/60)+":"+String(s%60).padStart(2,"0");
+function paintTimer(){
+  const el = document.querySelector(".timer"); if (!el) return;
+  el.querySelector(".clock").textContent = timer.left>0 ? fmtClock(timer.left) : "Time!";
+  el.classList.toggle("over", timer.left<=0);
+  el.querySelector("[data-t=go]").textContent = timer.run ? "Pause" : (timer.left<timer.total && timer.left>0 ? "Resume" : "Start timer");
+}
+function toggleTimer(){
+  if (timer.run) stopTimer();
+  else { if (timer.left<=0) timer.left = timer.total; timer.run = true;
+    timer.h = setInterval(()=>{ timer.left--; if (timer.left<=0){ timer.left=0; stopTimer(); sfx.done(); } paintTimer(); },1000); }
+  paintTimer();
+}
+
+/* ============ VIEWS ============ */
+function render(){
+  const pg = view.page;
+  $("#nav-units").setAttribute("aria-current", String(!["progress","parent"].includes(pg)));
+  $("#nav-progress").setAttribute("aria-current", String(pg==="progress"));
+  $("#nav-parent").setAttribute("aria-current", String(pg==="parent"));
+  if (pg==="home") renderHome();
+  else if (pg==="week") renderWeek();
+  else if (pg==="quiz") renderQuiz();
+  else if (pg==="done") renderDone();
+  else if (pg==="progress") renderProgress();
+  else if (pg==="parent") renderParent();
+}
+
+function tileHTML(w){
+  const x = W[w-1], d = student ? weekDone(student,w) : 0, nx = student ? nextLesson(student) : null;
+  return `<button class="tile${nx&&nx.w===w?" now":""}" style="--c:${termColor(w)}" data-week="${w}">
+    <span class="num">Week ${w}</span>
+    <span class="sym">${String(w).padStart(2,"0")}</span>
+    <span class="nm">${esc(x.f)}</span>
+    <span class="checks">${[0,1,2,3].map(i=>`<i class="${student&&isDone(student,w,i)?"on":""}"></i>`).join("")}<small>${d}/4</small></span>
+    <span class="mass"><span>${kindLabel(quizKind(w)).replace("Grammar ","").replace("Final grammar exam","Final")}</span>${starStr(student?bestStars(student,w):0)}</span>
+  </button>`;
+}
+function continueCard(){
+  if (!student) return `<button class="cont" id="cont"><span class="eyebrow">First</span><b>Add your name to start earning stars</b><span class="arrow">→</span></button>`;
+  const nx = nextLesson(student);
+  if (!nx) return `<button class="cont" id="cont" data-w="36" data-d="0"><span class="eyebrow">All done</span><b>Every lesson is finished. Nice work, ${esc(student)}!</b><span class="arrow">→</span></button>`;
+  const started = stepsChecked(student,nx.w,nx.d).some(Boolean);
+  return `<button class="cont" id="cont" data-w="${nx.w}" data-d="${nx.d}"><span class="eyebrow">${started?"Keep going":"Up next"}</span><b>Week ${nx.w}, ${DAYS[nx.d]}: ${esc(W[nx.w-1].f)}</b><small>${esc(unitOf(nx.w))} · ${stepsFor(nx.w,nx.d).length} steps</small><span class="arrow">→</span></button>`;
+}
+function renderHome(){
+  const terms = [["Term 1","Foundations"],["Term 2","Craft & creativity"],["Term 3","Research & argument"]];
+  app.innerHTML = `
+  <section class="hero">
+    <span class="eyebrow">Sixth grade · 36 weeks · ${TOTAL} lessons</span>
+    <h1>Pick up your pencil.</h1>
+    <p>Each lesson walks you through copywork, narration, grammar, and writing one step at a time. Finish a lesson for a star. Grammar checks earn up to 3 stars each.</p>
+    ${continueCard()}
+  </section>
+  ${terms.map((t,i)=>`<div class="termh" style="--c:var(--t${i+1})"><h2>${t[0]}: ${t[1]}</h2><span>${student?termLessons(student,i+1):0}/48 lessons</span></div>
+    <div class="table">${Array.from({length:12},(_,k)=>tileHTML(i*12+k+1)).join("")}</div>`).join("")}
+  <p class="legend">Dots show Monday–Thursday lessons. Stars show the best grammar check score: ★ 60%+, ★★ 75%+, ★★★ 90%+.</p>`;
+  app.querySelectorAll("[data-week]").forEach(b => b.onclick = () => { sfx.click(); openWeek(+b.dataset.week); });
+  $("#cont").onclick = e => { const b = e.currentTarget; if (!student){ needStudent(); return; } openWeek(+b.dataset.w, +b.dataset.d); };
+}
+
+function openWeek(w, d){
+  if (d===undefined){ d = 0; if (student){ const nd = [0,1,2,3].find(i=>!isDone(student,w,i)); d = nd===undefined ? 0 : nd; } }
+  const step = d==="g" ? 0 : (student ? firstOpenStep(student,w,d) : 0);
+  go({page:"week", week:w, day:d, step});
+  if (d!=="g") { resetTimer(stepsFor(w,d)[step].min); paintTimer(); }
+}
+function setStep(i){ view.step = i; view.finished = false; resetTimer(stepsFor(view.week,view.day)[i].min); render(); }
+
+function renderWeek(){
+  const w = view.week, x = W[w-1], c = termColor(w), day = view.day;
+  const list = [0,1,2,3].map(i=>{ const dn = student && isDone(student,w,i), k = student ? stepsChecked(student,w,i).filter(Boolean).length : 0, n = stepsFor(w,i).length;
+    return `<button data-day="${i}" aria-current="${day===i}"><span class="ck ${dn?"on":""}">${dn?"✓":k?k+"/"+n:"·"}</span>${DAYS[i]}</button>`; }).join("")
+    + `<div class="sep"></div><button class="act" data-day="g" aria-current="${day==="g"}"><span>${starStr(student?bestStars(student,w):0)}</span>${kindLabel(quizKind(w))}</button>`;
+  const piece = PIECES.find(p=>p.week===w);
+  const pieceHTML = piece ? (()=>{ const t = student ? rubricTotal(rubricOf(student,piece.id)) : null;
+    return `<div class="piecebox">Writing piece this week: <b>${esc(piece.name)}</b>. ${t!=null ? `Your parent scored it <b>${t}/20</b> ${starStr(starsFor(pct(t,20)))}` : "When it's finished, your parent will score it with the writing rubric for up to 3 stars."}</div>`; })() : "";
+  let panel;
+  if (day==="g") panel = grammarPanel(w) + pieceHTML;
+  else panel = dayPanel(w, day) + pieceHTML;
+  app.innerHTML = `
+  <button class="back" id="back">← All weeks</button>
+  <div class="unithead" style="--c:${c}">
+    <div class="badge" style="--c:${c}"><small>WEEK</small>${w}</div>
+    <div><span class="eyebrow">Term ${termOf(w)} · ${esc(unitOf(w))}</span><h1>${esc(x.f)}</h1><p>Grammar: ${esc(x.g)} · Reading: ${bookOf(w)}</p></div>
+    <div class="wknav"><button class="btn ghost small" id="pw" ${w===1?"disabled":""} aria-label="Previous week">‹ Week ${Math.max(1,w-1)}</button><button class="btn ghost small" id="nw" ${w===36?"disabled":""} aria-label="Next week">Week ${Math.min(36,w+1)} ›</button></div>
+  </div>
+  <div class="cols" style="--c:${c}">
+    <nav class="lessonlist" aria-label="This week's lessons">${list}</nav>
+    <section class="lesson">${panel}</section>
+  </div>`;
+  $("#back").onclick = () => go({page:"home"});
+  $("#pw").onclick = () => openWeek(w-1);
+  $("#nw").onclick = () => openWeek(w+1);
+  app.querySelectorAll("[data-day]").forEach(b => b.onclick = () => { const v = b.dataset.day; openWeek(w, v==="g" ? "g" : +v); });
+  if (day==="g") { const s = $("#startq"); if (s) s.onclick = () => startQuiz(w); return; }
+  wireDay(w, day);
+  paintTimer();
+}
+
+function dayPanel(w, d){
+  const steps = stepsFor(w,d), chk = student ? stepsChecked(student,w,d) : steps.map(()=>false);
+  const done = student && isDone(student,w,d);
+  const dots = steps.map((s,i)=>`<button data-step="${i}" class="${chk[i]?"on":""}" aria-current="${i===view.step&&!view.finished}" aria-label="Step ${i+1}: ${esc(s.t)}${chk[i]?" (done)":""}">${chk[i]?"✓":i+1}</button>`).join("");
+  const head = `<div class="dayhead"><span class="kind">${DAYS[d]} · Lesson ${d+1} of 4</span><div class="stepdots">${dots}</div></div>`;
+  if (view.finished){
+    const at = ((prog[student]||{}).done||{})[lessonId(w,d)];
+    const nx = nextLesson(student);
+    return `<div class="inner">${head}<div class="finish">
+      <div class="bigstars"><span class="on">★</span></div>
+      <h2>${DAYS[d]}'s lesson is done!</h2>
+      <p class="got">You earned a star${at?" on "+esc(fmtDay(at)):""}.</p>
+      <p class="note" style="margin:0">Put today's pages in your writer's notebook folder.</p>
+      <div class="ctrl" style="justify-content:center">${nx?`<button class="btn big" id="nextl">Next: Week ${nx.w}, ${DAYS[nx.d]} →</button>`:""}<button class="btn ghost" id="revl">Look back at the steps</button></div>
+    </div></div>`;
+  }
+  const s = steps[view.step], isChk = chk[view.step], last = view.step===steps.length-1;
+  const nextLabel = done ? (last ? "Back to summary" : "Next step") : (last ? (isChk ? "Finish lesson" : "Done — finish lesson") : (isChk ? "Next step" : "Done, next step"));
+  return `<div class="inner">${head}
+    <div class="page">
+      <span class="stepkind">Step ${view.step+1} of ${steps.length} · ${esc(s.k)}${s.min?` · about ${s.min} min`:""}</span>
+      <h3>${esc(s.t)}</h3>
+      ${s.tip?`<div class="tipbox"><b>${s.tipLabel||"Grammar tip"}</b>${esc(s.tip)}</div>`:""}
+      ${s.body}
+      ${s.min?`<div class="timer"><span class="clock">${fmtClock(timer.left)}</span><button class="btn ghost small" data-t="go">Start timer</button><button class="btn ghost small" data-t="reset">Reset</button></div>`:""}
+    </div>
+    <div class="lessonnav">
+      <button class="btn ghost" id="sback" ${view.step===0?"disabled":""}>Back</button>
+      ${isChk&&!done?`<button class="linkbtn" id="uncheck">Uncheck this step</button>`:""}
+      ${done?`<button class="linkbtn" id="redo">Redo this lesson</button>`:""}
+      <button class="btn" id="snext">${nextLabel}</button>
+    </div></div>`;
+}
+function wireDay(w, d){
+  app.querySelectorAll("[data-step]").forEach(b => b.onclick = () => setStep(+b.dataset.step));
+  const q = id => document.getElementById(id);
+  if (q("nextl")) q("nextl").onclick = () => { const nx = nextLesson(student); openWeek(nx.w, nx.d); };
+  if (q("revl")) q("revl").onclick = () => setStep(0);
+  if (q("sback")) q("sback").onclick = () => setStep(view.step-1);
+  const tg = app.querySelector("[data-t=go]"); if (tg) tg.onclick = toggleTimer;
+  const tr = app.querySelector("[data-t=reset]"); if (tr) tr.onclick = () => { resetTimer(stepsFor(w,d)[view.step].min); paintTimer(); };
+  if (q("uncheck")) q("uncheck").onclick = () => { const p = P(); const id = lessonId(w,d); const a = stepsChecked(student,w,d); a[view.step] = false; p.steps[id] = a; saveAll(); render(); };
+  if (q("redo")){ let armed = false; q("redo").onclick = e => {
+    if (!armed){ armed = true; e.currentTarget.textContent = "Yes, clear this lesson's checkmarks"; return; }
+    const p = P(), id = lessonId(w,d); delete p.done[id]; delete p.steps[id]; saveAll(); renderStarChip(); setStep(0); }; }
+  if (q("snext")) q("snext").onclick = () => {
+    if (needStudent()) return;
+    const n = stepsFor(w,d).length, id = lessonId(w,d), p = P();
+    if (isDone(student,w,d)){ if (view.step===n-1){ view.finished = true; stopTimer(); render(); } else setStep(view.step+1); return; }
+    const a = stepsChecked(student,w,d); a[view.step] = true; p.steps[id] = a;
+    if (a.every(Boolean)){
+      const before = badges(student).filter(b=>b.got).map(b=>b.name);
+      p.done[id] = new Date().toISOString(); delete p.steps[id]; saveAll(); renderStarChip();
+      view.finished = true; stopTimer(); sfx.star(); confetti(); render();
+      const nb = badges(student).filter(b=>b.got && !before.includes(b.name));
+      if (nb.length){ const f = app.querySelector(".finish"); if (f) f.insertAdjacentHTML("beforeend", `<div class="newbadge">New badge: <b>${nb.map(b=>esc(b.name)).join(", ")}</b></div>`); }
+      return;
+    }
+    saveAll(); sfx.click();
+    let nx = a.findIndex((v,i)=>!v && i>view.step); if (nx<0) nx = a.indexOf(false);
+    setStep(nx);
+  };
+}
+
+function grammarPanel(w){
+  const k = quizKind(w), n = quizLen(w), b = student ? best(student,w) : null, tries = student ? rs(student,w).length : 0;
+  return `<div class="inner"><div class="startcard">
+    <span class="eyebrow">${esc(kindLabel(k))} · ${n} questions</span>
+    <h2>${esc(quizTopic(w))}</h2>
+    <p style="margin:0">${k==="check"?"Do this after Tuesday's grammar lesson. ":""}Answer each question, check it, and read why. 60% earns ★, 75% ★★, 90% ★★★.</p>
+    ${b!=null?`<p class="note" style="margin:0">Best score: <b>${b}%</b> ${starStr(starsFor(b))} · ${tries} ${tries===1?"try":"tries"}</p>`:""}
+    <button class="btn big" id="startq">${b!=null?"Try again":"Start"}</button>
+  </div></div>`;
+}
+
+/* ---------- quiz ---------- */
+function startQuiz(w){
+  if (needStudent()) return;
+  const pool = quizPool(w), n = quizLen(w);
+  const qs = (GQ[w] ? shuffle(pool) : shuffle(pool).slice(0,n)).map(prepQ);
+  go({page:"quiz", week:w, qs, i:0, picks:Array(qs.length).fill(null), checked:false, streak:0, bestStreak:0});
+}
+function renderQuiz(){
+  const v = view, Q = v.qs[v.i], c = termColor(v.week), picked = v.picks[v.i];
+  app.innerHTML = `<div class="quiz" style="--c:${c}">
+    <div class="qhead"><span class="kind">${esc(kindLabel(quizKind(v.week)))} · Week ${v.week}</span><span class="eyebrow">Question ${v.i+1} of ${v.qs.length}</span></div>
+    <div class="meter"><i style="width:${pct(v.i+(v.checked?1:0), v.qs.length)}%"></i></div>
+    ${v.streak>=3?`<div class="streak">${v.streak} in a row!</div>`:""}
+    <div class="qcard" id="qcard">
+      <p class="qtext">${esc(Q.q)}</p>
+      <div class="choices">${Q.choices.map((ch,i)=>{
+        let cls = "choice"; if (v.checked){ if (i===Q.answer) cls += " right"; else if (i===picked) cls += " wrong"; } else if (i===picked) cls += " picked";
+        return `<button class="${cls}" data-c="${i}" ${v.checked?"disabled":""}><span class="l">${"ABCD"[i]}</span><span>${esc(ch)}</span></button>`; }).join("")}</div>
+      ${v.checked?`<div class="explain ${picked===Q.answer?"ok":"no"}"><strong>${picked===Q.answer?"Correct!":"Not quite. The answer is "+"ABCD"[Q.answer]+"."}</strong>${esc(Q.why)}</div>`:""}
+    </div>
+    <div class="qfoot"><button class="btn ghost" id="quit">Stop</button>
+      ${v.checked?`<button class="btn" id="qnext">${v.i===v.qs.length-1?"See my score":"Next question"}</button>`:`<button class="btn" id="qcheck" ${picked==null?"disabled":""}>Check answer</button>`}</div>
+  </div>`;
+  app.querySelectorAll("[data-c]").forEach(b => b.onclick = () => { v.picks[v.i] = +b.dataset.c; sfx.click(); renderQuiz(); });
+  $("#quit").onclick = () => openWeek(v.week, "g");
+  if ($("#qcheck")) $("#qcheck").onclick = () => {
+    v.checked = true;
+    if (v.picks[v.i]===Q.answer){ v.streak++; v.bestStreak = Math.max(v.bestStreak, v.streak); sfx.right(); }
+    else { v.streak = 0; sfx.wrong(); }
+    renderQuiz();
+    if (v.picks[v.i]!==Q.answer){ const qc = $("#qcard"); qc.classList.add("shake"); }
+  };
+  if ($("#qnext")) $("#qnext").onclick = () => { if (v.i===v.qs.length-1) finishQuiz(); else { v.i++; v.checked = false; renderQuiz(); window.scrollTo({top:0}); } };
+}
+function finishQuiz(){
+  const v = view, before = badges(student).filter(b=>b.got).map(b=>b.name);
+  const score = v.qs.reduce((a,Q,i)=>a+(v.picks[i]===Q.answer?1:0),0), p = pct(score, v.qs.length);
+  const prevBest = best(student, v.week);
+  const r = { id:"r"+Date.now().toString(36)+Math.random().toString(36).slice(2,6), student, week:v.week, kind:quizKind(v.week), score, total:v.qs.length, pct:p, stars:starsFor(p), bestStreak:v.bestStreak, at:new Date().toISOString(),
+    items: v.qs.map((Q,i)=>({q:Q.q, choices:Q.choices, answer:Q.answer, picked:v.picks[i]})) };
+  results.push(r); saveAll(); renderStarChip();
+  const newBadges = badges(student).filter(b=>b.got && !before.includes(b.name));
+  go({page:"done", r, newBadges, improved: prevBest==null || p>prevBest });
+  if (r.stars) { sfx.star(); if (r.stars===3) confetti(); }
+}
+function renderDone(){
+  const {r,newBadges} = view, c = termColor(r.week);
+  const msg = r.pct>=90 ? "Outstanding!" : r.pct>=75 ? "Great work!" : r.pct>=60 ? "Good job. Keep practicing!" : "Let's review and try again.";
+  app.innerHTML = `<div class="quiz" style="--c:${c}">
+    <div class="result"><span class="eyebrow">${esc(kindLabel(r.kind))} · Week ${r.week}</span>
+      <div class="bigstars">${[1,2,3].map(i=>`<span class="${i<=r.stars?"on":""}" style="animation-delay:${i*.18}s">★</span>`).join("")}</div>
+      <div class="big">${r.pct}%</div><div class="sub">${r.score} of ${r.total} correct · grade ${grade(r.pct)}</div>
+      <div class="msg">${msg}</div>
+      ${newBadges.length?`<div class="newbadge">New badge: <b>${newBadges.map(b=>esc(b.name)).join(", ")}</b></div>`:""}
+    </div>
+    <div class="ctrl" style="justify-content:center;margin-bottom:18px"><button class="btn" id="again">Try again</button><button class="btn ghost" id="toweek">Back to week ${r.week}</button></div>
+    <div class="section-h"><h2>Review</h2></div>
+    <div class="review">${r.items.map(Q=>{ const ok = Q.picked===Q.answer; return `<div class="item ${ok?"":"miss"}"><p class="q">${esc(Q.q)}</p>
+      <p>${ok?"✓":"✗"} You picked: ${esc(Q.choices[Q.picked]??"(no answer)")}</p>${ok?"":`<p class="muted">Correct answer: <b>${esc(Q.choices[Q.answer])}</b></p>`}</div>`; }).join("")}</div>
+  </div>`;
+  $("#again").onclick = () => startQuiz(r.week);
+  $("#toweek").onclick = () => openWeek(r.week, "g");
+}
+
+/* ---------- progress ---------- */
+function renderProgress(){
+  const mine = results.filter(r => r.student===student).sort((a,b)=>b.at.localeCompare(a.at));
+  const st = student ? starTotal(student) : 0, bs = student ? badges(student) : [];
+  app.innerHTML = `
+  <section class="hero" style="padding-bottom:0">
+    <span class="eyebrow">Progress</span>
+    <h1>${student ? esc(student)+"'s stars and badges" : "Add your name to start"}</h1>
+  </section>
+  <div class="section-h"><h2>Students</h2></div>
+  <div class="chips">${roster.map(n=>`<button class="chip" data-s="${esc(n)}" aria-pressed="${n===student}">${esc(n)}</button>`).join("")}</div>
+  <form class="addform" id="addform">
+    <input type="text" id="newname" placeholder="Student name" maxlength="30" aria-label="New student name">
+    <button class="btn" type="submit">Add student</button>
+  </form>
+  ${student ? `
+  <div class="stats">
+    <div class="stat"><div class="v"><span class="st">★</span> ${st}<small>/${STAR_MAX}</small></div><div class="k">Stars earned</div></div>
+    <div class="stat"><div class="v">${lessonsDoneCount(student)}<small>/${TOTAL}</small></div><div class="k">Lessons finished</div></div>
+    <div class="stat"><div class="v">${new Set(mine.map(r=>r.week)).size}<small>/36</small></div><div class="k">Grammar checks taken</div></div>
+    <div class="stat"><div class="v">${bs.filter(b=>b.got).length}<small>/${bs.length}</small></div><div class="k">Badges</div></div>
+  </div>
+  <div class="section-h"><h2>Badges</h2></div>
+  <div class="badges">${bs.map(b=>`<div class="bdg ${b.got?"got":""}" style="--c:var(${b.color||"--accent"})"><span class="medal">${b.got?"★":"?"}</span><b>${esc(b.name)}</b><small>${esc(b.how)}</small></div>`).join("")}</div>
+  <div class="section-h"><h2>Writing pieces</h2></div>
+  <div class="tblwrap"><table><thead><tr><th>Week</th><th>Piece</th><th>Score</th><th>Stars</th></tr></thead>
+    <tbody>${PIECES.map(p=>{ const r = rubricOf(student,p.id), t = rubricTotal(r); return `<tr><td class="n">${p.week}</td><td>${esc(p.name)}</td><td class="n">${t!=null?t+"/20":"—"}</td><td>${t!=null?starStr(starsFor(pct(t,20))):`<span class="note" style="margin:0">Not scored yet</span>`}</td></tr>`; }).join("")}</tbody></table></div>
+  <div class="section-h"><h2>By week</h2></div>
+  <div class="tblwrap"><table><thead><tr><th>Week</th><th>Focus</th><th>Lessons</th><th>Grammar</th></tr></thead>
+    <tbody>${W.map((x,i)=>`<tr><td class="n">${i+1}</td><td>${esc(x.f)}</td><td class="n">${weekDone(student,i+1)}/4</td><td>${starStr(bestStars(student,i+1))}</td></tr>`).join("")}</tbody></table></div>
+  <div class="section-h"><h2>Grammar history</h2></div>
+  <div class="tblwrap">${mine.length ? `<table><thead><tr><th>When</th><th>What</th><th>Score</th><th>Stars</th></tr></thead>
+    <tbody>${mine.map(r=>`<tr><td class="n">${fmtDate(r.at)}</td><td>${esc(kindLabel(r.kind))} · Week ${r.week}</td><td class="n">${r.score}/${r.total}</td><td>${starStr(r.stars)}</td></tr>`).join("")}</tbody></table>`
+    : `<div class="empty">No grammar checks yet. Each week has one after Tuesday's lesson.</div>`}</div>` : ""}
+  <div class="section-h"><h2>Sound</h2></div>
+  <button class="chip" id="snd" aria-pressed="${soundOn}">${soundOn?"Sounds on":"Sounds off"}</button>
+  <p class="note">Everything is saved on this iPad. Open the app from its home-screen icon every time so it always uses the same saved progress.</p>`;
+  app.querySelectorAll("[data-s]").forEach(b => b.onclick = () => { student = b.dataset.s; LS.set("g6w-student", student); renderRoster(); render(); });
+  $("#addform").onsubmit = e => {
+    e.preventDefault();
+    const n = $("#newname").value.trim().slice(0,30);
+    if (!n || roster.includes(n)) return;
+    roster = roster.concat([n]); student = n; LS.set("g6w-student", student); saveAll();
+    renderRoster(); go({page:"home"});
+  };
+  $("#snd").onclick = () => { soundOn = !soundOn; LS.set("g6w-sound", soundOn); if (soundOn) sfx.right(); render(); };
+  if (view.adding) $("#newname").focus();
+}
+
+/* ---------- parent area (PIN) ---------- */
+function renderParent(){
+  if (!parentOK){
+    pin = LS.get("g6-pin", pin);
+    const creating = !pin;
+    app.innerHTML = `<div class="pinbox">
+      <span class="eyebrow">Parent area</span>
+      <h1>${creating ? "Create a parent PIN" : "Enter your parent PIN"}</h1>
+      <p>${creating ? "Pick 4 digits. You'll need this PIN to score writing and see answers." : "Use the same PIN as the science app."}</p>
+      <form id="pinform"><input id="pinin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" aria-label="PIN">
+      <button class="btn" type="submit">${creating?"Save PIN":"Unlock"}</button></form><p class="pinerr" id="pinerr"></p></div>`;
+    $("#pinin").focus();
+    $("#pinform").onsubmit = e => { e.preventDefault(); const v = $("#pinin").value.trim();
+      if (!/^\d{4}$/.test(v)){ $("#pinerr").textContent = "Use exactly 4 digits."; return; }
+      if (creating){ pin = v; LS.set("g6-pin", pin); parentOK = true; render(); }
+      else if (v===pin){ parentOK = true; render(); }
+      else { $("#pinerr").textContent = "That PIN doesn't match. Try again."; $("#pinin").value = ""; } };
+    return;
+  }
+  const tab = view.tab || "scores";
+  const who = view.who && roster.includes(view.who) ? view.who : (student || roster[0] || "");
+  const whoChips = `<div class="chips" style="margin-bottom:14px">${roster.map(n=>`<button class="chip" data-who="${esc(n)}" aria-pressed="${n===who}">${esc(n)}</button>`).join("")}</div>`;
+  let body = "";
+  if (tab==="scores"){
+    const mine = results.filter(r=>r.student===who).sort((a,b)=>b.at.localeCompare(a.at));
+    const nx = who ? nextLesson(who) : null;
+    body = `${whoChips}
+    ${who ? `<p class="note" style="margin-top:0">${esc(who)}: <span class="st">★</span> ${starTotal(who)} stars · ${lessonsDoneCount(who)} of ${TOTAL} lessons finished${nx?` · up next: Week ${nx.w}, ${DAYS[nx.d]}`:""}</p>` : ""}
+    ${mine.length ? mine.map(r=>`<details class="att"><summary><span class="n">${fmtDate(r.at)}</span><span>${esc(kindLabel(r.kind))} · Week ${r.week}</span><span class="pill ${pillClass(r.pct)}">${r.pct}% ${grade(r.pct)}</span>${starStr(r.stars)}</summary>
+      <ol class="ans">${r.items.map(Q=>{ const ok = Q.picked===Q.answer;
+        return `<li class="${ok?"ok":"no"}"><b>${esc(Q.q)}</b><span>${ok?"✓":"✗"} Picked: ${esc(Q.choices[Q.picked]??"(no answer)")}</span>${ok?"":`<span>Correct: <b>${esc(Q.choices[Q.answer])}</b></span>`}</li>`; }).join("")}</ol>
+    </details>`).join("") : `<div class="empty">No grammar checks yet${who?" for "+esc(who):""}.</div>`}`;
+  } else if (tab==="rubrics"){
+    body = `${whoChips}<p class="note" style="margin-top:0">Tap a level for each trait. A piece is scored once all five traits have a level (total out of 20). 60% = ★, 75% = ★★, 90% = ★★★.</p>
+    ${who ? PIECES.map(p=>{ const r = rubricOf(who,p.id) || {s:[0,0,0,0,0],note:""}, t = rubricTotal(r);
+      return `<details class="rub" ${view.open===p.id?"open":""} data-piece="${p.id}"><summary><span class="n">Week ${p.week}</span><b>${esc(p.name)}</b>${t!=null?`<span class="pill ${pillClass(pct(t,20))}">${t}/20</span>${starStr(starsFor(pct(t,20)))}`:`<span class="note" style="margin:0">Not scored</span>`}</summary>
+        <div class="rb">${TRAITS.map((tr,ti)=>`<div class="trait"><b>${esc(tr[0])}</b><div class="lv">${[1,2,3,4].map(l=>`<button data-p="${p.id}" data-t="${ti}" data-l="${l}" aria-pressed="${r.s[ti]===l}"><b>${l} · ${LEVELS[l-1]}</b>${esc(tr[1][l-1])}</button>`).join("")}</div></div>`).join("")}
+          <label class="trait"><b>Note for next time (optional)</b><textarea rows="2" data-note="${p.id}" placeholder="One strength and one goal">${esc(r.note||"")}</textarea></label>
+          ${r.at?`<p class="note" style="margin:0">Last scored ${esc(fmtDate(r.at))}</p>`:""}
+        </div></details>`; }).join("") : `<div class="empty">Add a student first.</div>`}`;
+  } else if (tab==="key"){
+    const kw = view.kw || 1;
+    const weeks = Object.keys(GQ).map(Number);
+    body = `<div class="chips" style="margin-bottom:10px">${weeks.map(w=>`<button class="chip" data-kw="${w}" aria-pressed="${w===kw}">Wk ${w}</button>`).join("")}</div>
+      <p class="note" style="margin-top:0">Answer choices are shuffled for your student. Review weeks (12, 24, 30, 35) and the final exam (week 36) pull random questions from earlier weeks.</p>
+      <h3 class="keyh">Week ${kw}: ${esc(W[kw-1].g)}</h3><ol class="key">${GQ[kw].map(q=>`<li><b>${esc(q[0])}</b><ul>${q[1].map((c,i)=>`<li class="${i===q[2]?"right":""}">${i===q[2]?"✓ ":""}${esc(c)}</li>`).join("")}</ul><small>${esc(q[3])}</small></li>`).join("")}</ol>`;
+  } else {
+    body = `<h3 class="keyh">Back up all scores and progress</h3>
+      <p class="note" style="margin-top:0">If Safari's data gets cleared, progress on this iPad is erased. Copy this backup code and paste it into a note or text to yourself. You can restore it here later.</p>
+      <textarea id="bk" readonly rows="4"></textarea><div class="ctrl"><button class="btn small" id="bkcopy">Copy backup code</button><span class="out" id="bkmsg"></span></div>
+      <h3 class="keyh">Restore from a backup code</h3>
+      <textarea id="rsin" rows="3" placeholder="Paste a backup code here"></textarea>
+      <div class="ctrl"><button class="btn small ghost" id="rsgo">Restore</button><span class="out" id="rsmsg"></span></div>
+      <h3 class="keyh">Change PIN</h3>
+      <p class="note" style="margin-top:0">This PIN is shared with the science app.</p>
+      <div class="ctrl"><input id="newpin" type="password" inputmode="numeric" maxlength="4" aria-label="New PIN" style="width:90px;font:inherit;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)"><button class="btn small ghost" id="pinsave">Save new PIN</button><span class="out" id="pinmsg"></span></div>
+      <h3 class="keyh">Reset a student</h3>
+      <div class="ctrl">${roster.map(n=>`<button class="btn small ghost" data-reset="${esc(n)}">Reset ${esc(n)}</button>`).join("") || "No students yet."}</div><p class="out" id="resetmsg"></p>`;
+  }
+  app.innerHTML = `
+  <section class="hero" style="padding-bottom:6px"><span class="eyebrow">Parent area</span><h1>Scores, writing, and answer key</h1></section>
+  <div class="nav ptabs" role="tablist">
+    <button data-tab="scores" aria-current="${tab==="scores"}">Grammar answers</button>
+    <button data-tab="rubrics" aria-current="${tab==="rubrics"}">Score writing</button>
+    <button data-tab="key" aria-current="${tab==="key"}">Answer key</button>
+    <button data-tab="manage" aria-current="${tab==="manage"}">Backup & settings</button>
+  </div>
+  <div class="pbody">${body}</div>
+  <div class="ctrl" style="margin-top:22px"><button class="btn ghost small" id="lock">Lock parent area</button></div>`;
+  app.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => go({page:"parent", tab:b.dataset.tab, who}));
+  app.querySelectorAll("[data-who]").forEach(b => b.onclick = () => go({page:"parent", tab, who:b.dataset.who}));
+  app.querySelectorAll("[data-kw]").forEach(b => b.onclick = () => go({page:"parent", tab:"key", kw:+b.dataset.kw}));
+  $("#lock").onclick = () => { parentOK = false; go({page:"home"}); };
+  if (tab==="rubrics"){
+    const ensure = pid => { if (!rubrics[who]) rubrics[who] = {}; if (!rubrics[who][pid]) rubrics[who][pid] = {s:[0,0,0,0,0], note:""}; return rubrics[who][pid]; };
+    app.querySelectorAll("[data-l]").forEach(b => b.onclick = () => {
+      const r = ensure(b.dataset.p); r.s[+b.dataset.t] = +b.dataset.l; r.at = new Date().toISOString(); saveAll(); renderStarChip();
+      const y = window.scrollY; view = {page:"parent", tab:"rubrics", who, open:b.dataset.p}; render(); window.scrollTo({top:y});
+    });
+    app.querySelectorAll("[data-note]").forEach(t => t.onchange = () => { const r = ensure(t.dataset.note); r.note = t.value.slice(0,500); saveAll(); });
+  }
+  if (tab==="manage"){
+    const data = {v:1, app:"g6writing", roster, results, prog, rubrics};
+    let code = ""; try{ code = btoa(unescape(encodeURIComponent(JSON.stringify(data)))); }catch(e){}
+    $("#bk").value = code;
+    $("#bkcopy").onclick = () => { const ta = $("#bk");
+      const fallback = () => { ta.select(); $("#bkmsg").textContent = "Selected. Press copy."; };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(code).then(()=>{ $("#bkmsg").textContent = "Copied."; }, fallback); else fallback(); };
+    let armed = false;
+    $("#rsgo").onclick = () => {
+      let d; try{ d = JSON.parse(decodeURIComponent(escape(atob($("#rsin").value.trim())))); }catch(e){ $("#rsmsg").textContent = "That code isn't a valid backup."; return; }
+      if (!d || !Array.isArray(d.results) || d.app!=="g6writing"){ $("#rsmsg").textContent = "That code isn't a writing backup."; return; }
+      if (!armed){ armed = true; $("#rsgo").textContent = "Yes, replace everything"; $("#rsmsg").textContent = "This replaces all writing progress on this device."; return; }
+      roster = d.roster||[]; results = d.results; prog = d.prog||{}; rubrics = d.rubrics||{}; saveAll(); renderRoster();
+      $("#rsmsg").textContent = "Restored."; armed = false; $("#rsgo").textContent = "Restore";
+    };
+    $("#pinsave").onclick = () => { const v = $("#newpin").value.trim(); if (!/^\d{4}$/.test(v)){ $("#pinmsg").textContent = "Use exactly 4 digits."; return; } pin = v; LS.set("g6-pin", pin); $("#pinmsg").textContent = "PIN changed."; $("#newpin").value=""; };
+    app.querySelectorAll("[data-reset]").forEach(b => b.onclick = () => {
+      const n = b.dataset.reset;
+      if (b.dataset.armed!=="1"){ b.dataset.armed = "1"; b.textContent = `Yes, erase ${n}'s writing progress`; $("#resetmsg").textContent = `This erases all of ${n}'s lessons, grammar scores, and writing scores in this app.`; return; }
+      results = results.filter(r=>r.student!==n); delete prog[n]; delete rubrics[n]; saveAll(); renderStarChip();
+      $("#resetmsg").textContent = `${n}'s writing progress was reset.`; b.textContent = `Reset ${n}`; b.dataset.armed = "";
+    });
+  }
+}
+
+renderRoster();
+if (student) LS.set("g6w-student", student);
+if (!localStorage.getItem("g6w-roster")) saveAll();
+render();
+(async () => {
+  const saved = await IDB.get();
+  if (!saved) { IDB.put(snapshot()); return; }
+  const g = (k,d) => { try{ return saved[k] ? JSON.parse(saved[k]) : d; }catch(e){ return d; } };
+  const cnt = p => Object.values(p||{}).reduce((a,x)=>a+Object.keys((x&&x.done)||{}).length,0);
+  const savedRes = g("g6w-results",[]), savedProg = g("g6w-prog",{});
+  if (savedRes.length > results.length || cnt(savedProg) > cnt(prog) || (!roster.length && saved["g6w-roster"])){
+    try{ Object.entries(saved).forEach(([k,v]) => localStorage.setItem(k,v)); }catch(e){}
+    roster = g("g6w-roster",[]); results = savedRes; prog = savedProg; rubrics = g("g6w-rubrics",{});
+    student = g("g6w-student",""); soundOn = g("g6w-sound",true);
+    renderRoster(); if (view.page !== "quiz") render();
+  } else IDB.put(snapshot());
+})();
+
+</script>
+</body>
+</html>

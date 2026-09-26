@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Homeschool Attendance Register</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+:root{
+  --bg:#F3F5F2; --surface:#FFFFFF; --ink:#1D2A2B; --muted:#5E6E6C; --line:#D9E0DC;
+  --accent:#2E6B5B; --accent-soft:#DDEDE6; --pencil:#E2AE38; --pencil-soft:#FBF0D3;
+  --absent:#B5523F; --absent-soft:#F6E1DC; --off:#E7EAE8;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible",ui-sans-serif,system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;--bg:#141B1B;--surface:#1C2524;--ink:#E7EEEB;--muted:#9AABA7;--line:#2E3A39;
+  --accent:#6CC0A6;--accent-soft:#1F3A33;--pencil:#E9BC55;--pencil-soft:#3A3220;--absent:#E08A76;--absent-soft:#3D2521;--off:#252F2E;}}
+:root[data-theme="dark"]{
+  color-scheme:dark;--bg:#141B1B;--surface:#1C2524;--ink:#E7EEEB;--muted:#9AABA7;--line:#2E3A39;
+  --accent:#6CC0A6;--accent-soft:#1F3A33;--pencil:#E9BC55;--pencil-soft:#3A3220;--absent:#E08A76;--absent-soft:#3D2521;--off:#252F2E;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;padding:0 16px}
+.wrap{max-width:1040px;margin:0 auto;padding-block:24px 48px;display:grid;gap:20px}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;line-height:1.15}
+h1{font-size:clamp(1.6rem,4vw,2.2rem);font-weight:700}
+h2{font-size:1.2rem;font-weight:700}
+.eyebrow{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+header{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:end;justify-content:space-between}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px}
+button,select,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--surface);padding:8px 14px}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface);font-weight:700}
+:focus-visible{outline:3px solid var(--pencil);outline-offset:2px}
+input,select,textarea{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+label.f{display:grid;gap:4px;font-size:.85rem;color:var(--muted);font-weight:700}
+.banner{border-radius:8px;padding:10px 14px;background:var(--pencil-soft);font-size:.9rem}
+
+/* progress */
+.progress{display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:center}
+.big{font-family:var(--mono);font-size:clamp(2.6rem,8vw,3.6rem);line-height:1;font-weight:500}
+.big small{font-size:.4em;color:var(--muted)}
+.bar{height:14px;border-radius:7px;background:var(--off);overflow:hidden;position:relative}
+.bar>i{position:absolute;inset:0 auto 0 0;background:var(--accent);border-radius:7px}
+.stats{display:flex;flex-wrap:wrap;gap:8px 24px;margin-top:10px;font-size:.9rem;color:var(--muted)}
+.stats b{color:var(--ink);font-family:var(--mono);font-weight:500}
+
+.grid2{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:760px){.grid2,.progress{grid-template-columns:1fr}}
+
+/* day editor */
+.dayhead{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px}
+.dayhead input{width:auto}
+.status{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.status button[aria-pressed="true"][data-s="present"]{background:var(--accent-soft);border-color:var(--accent);font-weight:700}
+.status button[aria-pressed="true"][data-s="absent"]{background:var(--absent-soft);border-color:var(--absent);font-weight:700}
+.status button[aria-pressed="true"][data-s="off"]{background:var(--off);border-color:var(--muted);font-weight:700}
+.subjects{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:14px}
+.subj{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;background:var(--bg)}
+.subj input{width:18px;height:18px;accent-color:var(--accent);margin:0}
+.subj.on{border-color:var(--accent);background:var(--accent-soft)}
+.subj .min{margin-left:auto;width:58px;padding:4px 6px;font-size:.85rem;text-align:right}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.saved{font-size:.85rem;color:var(--muted)}
+
+/* calendar */
+.calhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.calhead button{padding:4px 12px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal .dow{font-size:.7rem;text-align:center;color:var(--muted);font-weight:700;letter-spacing:.06em}
+.cal button{aspect-ratio:1;padding:0;font-family:var(--mono);font-size:.85rem;border-radius:6px;background:var(--bg);position:relative;max-width:100%}
+.cal button.present{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.cal button.absent{background:var(--absent-soft);border-color:var(--absent);color:var(--absent)}
+.cal button.off{background:var(--off);color:var(--muted)}
+.cal button.sel{outline:3px solid var(--pencil);outline-offset:1px}
+.cal button.today::after{content:"";position:absolute;bottom:4px;left:50%;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:currentColor}
+.cal button.out{opacity:.35}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin-top:10px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+
+/* subject tallies */
+.tally{display:grid;gap:8px}
+.tally .t{display:grid;grid-template-columns:110px 1fr 110px;gap:10px;align-items:center;font-size:.9rem}
+.tally .bar{height:8px}
+.tally .bar>i{background:var(--pencil)}
+.tally .v{text-align:right;color:var(--muted)}
+
+/* log */
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+td.d{font-family:var(--mono);white-space:nowrap}
+.pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.78rem;font-weight:700}
+.pill.present{background:var(--accent-soft);color:var(--accent)}
+.pill.absent{background:var(--absent-soft);color:var(--absent)}
+.pill.off{background:var(--off);color:var(--muted)}
+tr.click{cursor:pointer} tr.click:hover td{background:var(--bg)}
+
+.btnlike{border:1px solid var(--line);border-radius:8px;padding:8px 14px;background:var(--surface);color:var(--ink);font-weight:400}
+.btnlike:hover{border-color:var(--accent)}
+@media print{body{background:#fff;color:#000}.panel{border:none;padding:0}.grid2,#banner,button,.btnlike,details,.law{display:none!important}tr{break-inside:avoid}}
+details summary{cursor:pointer;font-family:var(--display);font-weight:700;font-size:1.1rem}
+.settings{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:14px}
+.law{font-size:.92rem;color:var(--muted);max-width:68ch}
+.law li{margin-bottom:4px}
+@media (prefers-reduced-motion:no-preference){.bar>i{transition:width .5s ease}}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">Indiana home school · attendance register</div>
+      <h1 id="title">Attendance</h1>
+    </div>
+    <div class="row">
+      <span class="eyebrow">School year</span>
+      <strong class="num" id="yearLabel"></strong>
+    </div>
+  </header>
+
+  <div id="banner" class="banner" hidden></div>
+
+  <section class="panel progress" aria-label="Progress toward 180 days">
+    <div class="big num"><span id="daysDone">0</span><small> / <span id="goalShow">180</span> days</small></div>
+    <div>
+      <div class="bar" role="progressbar" aria-valuemin="0" id="pbar"><i id="pfill" style="width:0%"></i></div>
+      <div class="stats">
+        <span>Remaining <b id="sRemain">180</b></span>
+        <span>Absences <b id="sAbsent">0</b></span>
+        <span>This month <b id="sMonth">0</b></span>
+        <span>Last 7 days <b id="sWeek">0</b></span>
+        <span id="sPace"></span>
+      </div>
+    </div>
+  </section>
+
+  <div class="grid2">
+    <section class="panel" aria-label="Record a day">
+      <div class="dayhead">
+        <h2 id="dayTitle">Today</h2>
+        <input type="date" id="dayPick" aria-label="Choose date">
+      </div>
+      <div class="status" role="group" aria-label="Day status">
+        <button data-s="present" aria-pressed="false">School day</button>
+        <button data-s="absent" aria-pressed="false">Absent / sick</button>
+        <button data-s="off" aria-pressed="false">No school</button>
+        <button data-s="" aria-pressed="false" id="clearBtn">Clear</button>
+      </div>
+      <div class="eyebrow" style="margin-bottom:8px">Subjects covered <span style="text-transform:none;letter-spacing:0;font-weight:400">(minutes optional)</span></div>
+      <div class="subjects" id="subjects"></div>
+      <div class="row" style="margin-bottom:12px">
+        <button id="allBtn">Check all subjects</button>
+      </div>
+      <label class="f">Notes (field trip, co-op, test, sick, etc.)
+        <textarea id="notes" rows="2"></textarea>
+      </label>
+      <div class="row" style="margin-top:12px;justify-content:space-between">
+        <span class="saved" id="savedMsg"></span>
+        <button class="primary" id="saveBtn">Save day</button>
+      </div>
+    </section>
+
+    <section class="panel" aria-label="Calendar">
+      <div class="calhead">
+        <button id="prevM" aria-label="Previous month">‹</button>
+        <h2 id="monthLabel"></h2>
+        <button id="nextM" aria-label="Next month">›</button>
+      </div>
+      <div class="cal" id="cal"></div>
+      <div class="legend">
+        <span><i style="background:var(--accent)"></i>School day</span>
+        <span><i style="background:var(--absent-soft);border:1px solid var(--absent)"></i>Absent</span>
+        <span><i style="background:var(--off)"></i>No school</span>
+      </div>
+    </section>
+  </div>
+
+  <section class="panel" aria-label="Subject totals">
+    <h2 style="margin-bottom:14px">Days per subject</h2>
+    <div class="tally" id="tally"></div>
+  </section>
+
+  <section class="panel" aria-label="Attendance log">
+    <div class="row" style="justify-content:space-between;margin-bottom:10px">
+      <h2>Attendance log</h2>
+      <div class="row"><button id="csvBtn">Download record (CSV)</button><button id="printBtn">Print</button></div>
+    </div>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Date</th><th>Status</th><th>Subjects</th><th>Notes</th></tr></thead>
+      <tbody id="log"></tbody>
+    </table></div>
+    <p class="saved" id="logEmpty">No days recorded yet. Pick a date above and mark it as a school day.</p>
+  </section>
+
+  <section class="panel">
+    <details>
+      <summary>Settings</summary>
+      <div class="settings">
+        <label class="f">Student name<input id="setName" placeholder="Student's name"></label>
+        <label class="f">School year starts<input type="date" id="setStart"></label>
+        <label class="f">School year ends<input type="date" id="setEnd"></label>
+        <label class="f">Day goal<input type="number" id="setGoal" min="1" max="366"></label>
+        <label class="f" style="grid-column:1/-1">Subjects (comma separated)<input id="setSubjects"></label>
+      </div>
+      <div class="banner" style="margin-top:14px">Records are saved in this browser on this device only. Download a backup often, and use Restore to load it on another device or after clearing your browser.</div>
+      <div class="row" style="margin-top:12px"><button id="backupBtn">Download backup</button><label class="f" style="display:inline-flex;align-items:center;gap:8px;cursor:pointer"><span class="btnlike">Restore from backup</span><input type="file" id="restore" accept=".json,application/json" hidden></label></div>
+      <div class="row" style="margin-top:12px"><button class="primary" id="saveSettings">Save settings</button><span class="saved" id="setMsg"></span></div>
+    </details>
+  </section>
+
+  <section class="panel law">
+    <h2 style="margin-bottom:8px;color:var(--ink)">What Indiana asks for</h2>
+    <ul>
+      <li>Indiana treats a home school as a non-accredited private school. Parents must keep <strong>attendance records</strong> for each student.</li>
+      <li>Instruction must be for the same number of days as public schools: <strong>180 days</strong> a year. There is no hourly or subject-hour requirement.</li>
+      <li>Records do not get filed anywhere. Keep them on hand in case the local superintendent or the Department of Education asks to see them.</li>
+      <li>Download the CSV (or print the log) at the end of each school year and keep a copy with your records.</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+(function(){
+  const DEFAULT_SUBJECTS=["Language","Spelling","Math","Bible","History","Science","Writing"];
+  const iso=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  const parse=s=>{const[y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)};
+  const today=iso(new Date());
+  const yr=new Date().getMonth()>=6?new Date().getFullYear():new Date().getFullYear()-1;
+  let settings={name:"",start:`${yr}-07-01`,end:`${yr+1}-06-30`,goal:180,subjects:DEFAULT_SUBJECTS};
+  let days={}; // date -> {status, subjects:{name:minutes|0}, notes}
+  let sel=today, view=parse(today); view.setDate(1);
+  let db=null, local=false;
+  const $=id=>document.getElementById(id);
+
+  function storageOK(){try{localStorage.setItem("_t","1");localStorage.removeItem("_t");return true}catch(e){return false}}
+  function download(name,text,type){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+  // ---- storage ----
+  const LKEY="hs-attendance-v1";
+  function loadLocal(){try{const j=JSON.parse(localStorage.getItem(LKEY)||"null");if(j){settings={...settings,...j.settings};days=j.days||{}}}catch(e){}}
+  function saveLocal(){try{localStorage.setItem(LKEY,JSON.stringify({settings,days}))}catch(e){}}
+
+  async function persistDay(date){
+    const rec=days[date];
+    if(db){
+      try{
+        if(rec) await db.doc("days/"+date).set({date,...rec,updated:Date.now()});
+        else await db.doc("days/"+date).delete();
+        return true;
+      }catch(e){showBanner("Could not save to your record: "+(e.message||e.code)+". Try again in a moment.");return false}
+    }
+    saveLocal();return true;
+  }
+  async function persistSettings(){
+    if(db){try{await db.doc("settings/main").set(settings);return true}catch(e){showBanner("Could not save settings: "+(e.message||e.code));return false}}
+    saveLocal();return true;
+  }
+  function showBanner(t){$("banner").textContent=t;$("banner").hidden=false}
+
+  // ---- computed ----
+  const inYear=d=>d>=settings.start&&d<=settings.end;
+  function counts(){
+    let present=0,absent=0,month=0,week=0;const per={};settings.subjects.forEach(s=>per[s]={days:0,min:0});
+    const mPref=today.slice(0,7);const wk=new Date();wk.setDate(wk.getDate()-6);const wkS=iso(wk);
+    for(const[d,r] of Object.entries(days)){
+      if(!inYear(d))continue;
+      if(r.status==="present"){present++;if(d.startsWith(mPref))month++;if(d>=wkS&&d<=today)week++;
+        for(const[s,m] of Object.entries(r.subjects||{})){if(!per[s])per[s]={days:0,min:0};per[s].days++;per[s].min+=Number(m)||0}}
+      if(r.status==="absent")absent++;
+    }
+    return{present,absent,month,week,per};
+  }
+
+  // ---- render ----
+  function fmtLong(s){return parse(s).toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric",year:"numeric"})}
+  function render(){
+    const c=counts(),g=Number(settings.goal)||180;
+    $("title").textContent=settings.name?settings.name+"’s Attendance":"Attendance";
+    $("yearLabel").textContent=settings.start.slice(0,4)+"–"+settings.end.slice(0,4);
+    $("daysDone").textContent=c.present;$("goalShow").textContent=g;
+    $("pfill").style.width=Math.min(100,c.present/g*100)+"%";
+    $("pbar").setAttribute("aria-valuemax",g);$("pbar").setAttribute("aria-valuenow",c.present);
+    $("sRemain").textContent=Math.max(0,g-c.present);$("sAbsent").textContent=c.absent;
+    $("sMonth").textContent=c.month;$("sWeek").textContent=c.week;
+    // pace: weekdays left in year vs days needed
+    let left=0;const e=parse(settings.end);for(let d=new Date(Math.max(parse(today),parse(settings.start)));d<=e;d.setDate(d.getDate()+1)){const w=d.getDay();if(w&&w<6&&!days[iso(d)])left++}
+    const need=Math.max(0,g-c.present);
+    $("sPace").innerHTML=need===0?"<b style='color:var(--accent)'>180-day goal met</b>":`Weekdays left in year <b>${left}</b>`;
+    renderDay();renderCal();renderTally(c.per,c.present);renderLog();
+  }
+  function renderDay(){
+    const r=days[sel]||{status:"",subjects:{},notes:""};
+    $("dayPick").value=sel;
+    $("dayTitle").textContent=sel===today?"Today":parse(sel).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});
+    document.querySelectorAll(".status button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.s===r.status&&!!r.status)));
+    const box=$("subjects");box.innerHTML="";
+    settings.subjects.forEach((s,i)=>{
+      const on=Object.prototype.hasOwnProperty.call(r.subjects||{},s);
+      const lab=document.createElement("label");lab.className="subj"+(on?" on":"");
+      lab.innerHTML=`<input type="checkbox" id="sub${i}" ${on?"checked":""}><span></span><input class="min num" id="min${i}" type="number" min="0" placeholder="min" aria-label="Minutes" value="${on&&r.subjects[s]?r.subjects[s]:""}">`;
+      lab.querySelector("span").textContent=s;
+      lab.querySelector("input[type=checkbox]").addEventListener("change",ev=>{lab.classList.toggle("on",ev.target.checked);
+        if(ev.target.checked&&!pendingStatus()) setPending("present");markDirty()});
+      lab.querySelector(".min").addEventListener("click",ev=>ev.preventDefault&&ev.stopPropagation());
+      lab.querySelector(".min").addEventListener("input",()=>{const cb=lab.querySelector("input[type=checkbox]");if(!cb.checked){cb.checked=true;lab.classList.add("on");if(!pendingStatus())setPending("present")}markDirty()});
+      box.appendChild(lab);
+    });
+    $("notes").value=r.notes||"";
+    $("savedMsg").textContent=days[sel]?"Saved":(sel>today?"Future date":"Not recorded yet");
+  }
+  function pendingStatus(){const b=document.querySelector('.status button[aria-pressed="true"]');return b?b.dataset.s:""}
+  function setPending(s){document.querySelectorAll(".status button").forEach(b=>b.setAttribute("aria-pressed",String(!!s&&b.dataset.s===s)))}
+  function markDirty(){$("savedMsg").textContent="Unsaved changes"}
+
+  function renderCal(){
+    $("monthLabel").textContent=view.toLocaleDateString(undefined,{month:"long",year:"numeric"});
+    const cal=$("cal");cal.innerHTML="";
+    ["S","M","T","W","T","F","S"].forEach(d=>{const e=document.createElement("div");e.className="dow";e.textContent=d;cal.appendChild(e)});
+    const first=new Date(view);first.setDate(1-view.getDay());
+    for(let i=0;i<42;i++){
+      const d=new Date(first);d.setDate(first.getDate()+i);const k=iso(d);
+      if(i>=35&&d.getMonth()!==view.getMonth())break;
+      const b=document.createElement("button");b.textContent=d.getDate();
+      const r=days[k];const cls=[];if(r&&r.status)cls.push(r.status);if(k===sel)cls.push("sel");if(k===today)cls.push("today");if(d.getMonth()!==view.getMonth())cls.push("out");
+      b.className=cls.join(" ");b.setAttribute("aria-label",fmtLong(k)+(r&&r.status?" – "+label(r.status):""));
+      b.addEventListener("click",()=>{sel=k;if(d.getMonth()!==view.getMonth()){view=new Date(d.getFullYear(),d.getMonth(),1)}render()});
+      cal.appendChild(b);
+    }
+  }
+  const label=s=>({present:"School day",absent:"Absent",off:"No school"}[s]||"");
+  function renderTally(per,present){
+    const t=$("tally");t.innerHTML="";
+    const max=Math.max(1,present);
+    Object.entries(per).forEach(([s,v])=>{
+      const row=document.createElement("div");row.className="t";
+      const h=v.min?` · ${(v.min/60).toFixed(1)} h`:"";
+      row.innerHTML=`<span></span><div class="bar"><i style="width:${v.days/max*100}%"></i></div><span class="v num">${v.days} d${h}</span>`;
+      row.firstChild.textContent=s;t.appendChild(row);
+    });
+  }
+  function renderLog(){
+    const tb=$("log");tb.innerHTML="";
+    const rows=Object.entries(days).filter(([d])=>inYear(d)).sort((a,b)=>b[0].localeCompare(a[0]));
+    $("logEmpty").hidden=rows.length>0;
+    rows.forEach(([d,r])=>{
+      const tr=document.createElement("tr");tr.className="click";
+      tr.innerHTML=`<td class="d">${d}</td><td><span class="pill ${r.status}">${label(r.status)}</span></td><td></td><td></td>`;
+      tr.children[2].textContent=Object.entries(r.subjects||{}).map(([s,m])=>m?`${s} (${m}m)`:s).join(", ");
+      tr.children[3].textContent=r.notes||"";
+      tr.addEventListener("click",()=>{sel=d;view=new Date(parse(d).getFullYear(),parse(d).getMonth(),1);render();window.scrollTo({top:0,behavior:"smooth"})});
+      tb.appendChild(tr);
+    });
+  }
+
+  // ---- events ----
+  document.querySelectorAll(".status button").forEach(b=>b.addEventListener("click",()=>{setPending(b.dataset.s);markDirty();if(!b.dataset.s)saveDay()}));
+  $("allBtn").addEventListener("click",()=>{document.querySelectorAll(".subj").forEach(l=>{l.querySelector("input[type=checkbox]").checked=true;l.classList.add("on")});setPending("present");markDirty()});
+  $("notes").addEventListener("input",markDirty);
+  $("dayPick").addEventListener("change",e=>{if(!e.target.value)return;sel=e.target.value;const d=parse(sel);view=new Date(d.getFullYear(),d.getMonth(),1);render()});
+  $("prevM").addEventListener("click",()=>{view=new Date(view.getFullYear(),view.getMonth()-1,1);renderCal()});
+  $("nextM").addEventListener("click",()=>{view=new Date(view.getFullYear(),view.getMonth()+1,1);renderCal()});
+  $("saveBtn").addEventListener("click",saveDay);
+  async function saveDay(){
+    const status=pendingStatus();
+    const subjects={};
+    if(status==="present") settings.subjects.forEach((s,i)=>{if($("sub"+i).checked)subjects[s]=Number($("min"+i).value)||0});
+    const notes=$("notes").value.trim();
+    if(!status){delete days[sel]}
+    else days[sel]={status,subjects,notes};
+    $("savedMsg").textContent="Saving…";
+    const ok=await persistDay(sel);
+    render();if(ok)$("savedMsg").textContent=status?"Saved":"Cleared";
+  }
+  $("saveSettings").addEventListener("click",async()=>{
+    const subs=$("setSubjects").value.split(",").map(s=>s.trim()).filter(Boolean);
+    settings={name:$("setName").value.trim(),start:$("setStart").value||settings.start,end:$("setEnd").value||settings.end,goal:Number($("setGoal").value)||180,subjects:subs.length?subs:DEFAULT_SUBJECTS};
+    const ok=await persistSettings();fillSettings();render();if(ok)$("setMsg").textContent="Settings saved";
+  });
+  function fillSettings(){$("setName").value=settings.name||"";$("setStart").value=settings.start;$("setEnd").value=settings.end;$("setGoal").value=settings.goal;$("setSubjects").value=settings.subjects.join(", ")}
+
+  $("csvBtn").addEventListener("click",async()=>{
+    const q=v=>`"${String(v??"").replace(/"/g,'""')}"`;
+    const head=["Date","Weekday","Status",...settings.subjects.map(s=>s+" (min)"),"Notes"];
+    const lines=[`${q("Student")},${q(settings.name)}`,`${q("School year")},${q(settings.start+" to "+settings.end)}`,`${q("Days of instruction")},${counts().present}`,`${q("Absences")},${counts().absent}`,"",head.map(q).join(",")];
+    Object.entries(days).filter(([d])=>inYear(d)).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([d,r])=>{
+      lines.push([d,parse(d).toLocaleDateString("en-US",{weekday:"long"}),label(r.status),...settings.subjects.map(s=>r.subjects&&s in r.subjects?(r.subjects[s]||"x"):""),r.notes].map(q).join(","));
+    });
+    const fname=`attendance-${(settings.name||"student").replace(/\W+/g,"-").toLowerCase()}-${settings.start.slice(0,4)}-${settings.end.slice(0,4)}.csv`;
+    download(fname,"\ufeff"+lines.join("\r\n"),"text/csv");
+  });
+
+  $("printBtn").addEventListener("click",()=>window.print());
+  $("backupBtn").addEventListener("click",()=>download(`attendance-backup-${today}.json`,JSON.stringify({settings,days},null,1),"application/json"));
+  $("restore").addEventListener("change",async e=>{const f=e.target.files[0];if(!f)return;
+    try{const j=JSON.parse(await f.text());if(!j.days)throw 0;settings={...settings,...j.settings};days={...days,...j.days};saveLocal();fillSettings();render();$("setMsg").textContent="Restored "+Object.keys(j.days).length+" days"}
+    catch(err){$("setMsg").textContent="That file isn't an attendance backup."}e.target.value=""});
+  // ---- boot ----
+  fillSettings();render();
+  (async()=>{
+    loadLocal();fillSettings();render();
+    if(!storageOK())showBanner("This browser is blocking saved data (private window?). Records won't be kept here.");
+  })();
+})();
+</script>
+
+</body>
+</html>

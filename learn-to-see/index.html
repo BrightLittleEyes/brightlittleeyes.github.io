@@ -84,6 +84,21 @@
     z-index:55;display:none;white-space:nowrap;max-width:76vw;overflow:hidden;
     text-align:center;}
   #spellBar.on{display:block;}
+
+  /* ---- Bright Little Eyes' selection system ---- */
+  /* The countdown ring is drawn at the cursor dot (one ring for every app), not around the targets. */
+  #ring,.cring,.kbfill,#dropRing,#stage.dropmode #dropRing{display:none !important;}
+  #gear.holding{opacity:1;background:rgba(255,255,255,.22);color:#fff;}
+  .seg{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 12px;}
+  .seg button{flex:1 1 auto;background:#222;color:#fff;border:1px solid #3a3a3a;border-radius:8px;
+    padding:9px 10px;font-size:15px;cursor:pointer;font-family:inherit;}
+  .seg button.sel{background:#fff;color:#000;border-color:#fff;font-weight:700;}
+  .stepper{display:flex;align-items:center;gap:10px;margin:4px 0 12px;}
+  .stepper button{width:52px;height:44px;border-radius:8px;background:#222;color:#fff;border:1px solid #3a3a3a;
+    font-size:24px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .stepper .sv{min-width:84px;text-align:center;font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;}
+  .alabel{display:block;font-size:15px;margin:10px 0 2px;}
+  #camPreview{margin:4px 0 4px;min-height:20px;}
   textarea#sWords{background:#222;color:#fff;border:1px solid #3a3a3a;border-radius:8px;
     padding:8px 10px;font-size:15px;width:100%;resize:vertical;font-family:inherit;}
 
@@ -144,6 +159,17 @@
   .grp.open .grphead .arw{transform:rotate(180deg);}
   .grpbody{display:none;padding:0 2px 14px;}
   .grp.open .grpbody{display:block;}
+  .dropobj{position:absolute;transform:translate(-50%,-50%);display:none;
+    align-items:center;justify-content:center;z-index:41;will-change:left,top;}
+  #dropBank{filter:drop-shadow(0 0 26px rgba(237,147,177,.6));}
+  #dropBank svg{display:block;width:100%;height:auto;}
+  @keyframes objpulse{0%,100%{transform:scale(1);}50%{transform:scale(1.07);}}
+  #dropCoin svg{width:100%;height:100%;display:block;
+    filter:drop-shadow(0 0 22px var(--gc,#ffd400));animation:objpulse 1.3s ease-in-out infinite;}
+  #dropRing{position:absolute;pointer-events:none;display:none;}
+  #dropRingP{transition:stroke-dashoffset .05s linear;}
+  #stage.dropmode .dropobj{display:flex;}
+  #stage.dropmode #dropRing{display:block;}
   #gate{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:90;display:none;
     align-items:center;justify-content:center;cursor:default;}
   #gate.open{display:flex;}
@@ -201,14 +227,18 @@
     </div>
     <div id="kbKeys"></div>
   </div>
+  <div id="dropBank" class="dropobj"></div>
+  <div id="dropCoin" class="dropobj"></div>
+  <svg id="dropRing" width="10" height="10"><circle id="dropRingP" cx="5" cy="5" r="4"
+    fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" transform="rotate(-90 5 5)"></circle></svg>
 </div>
 
 <div id="gaze"></div>
 <div id="hud">Taps: <span id="score">0</span></div>
 <div id="spellBar"></div>
-<button id="replay" title="Say it again">🔊</button>
-<button id="kbDelBtn" title="Delete last letter">⌫</button>
-<button id="gear" title="Settings">⚙</button>
+<button id="replay" title="Say it again" aria-label="Say it again">🔊</button>
+<button id="kbDelBtn" title="Delete last letter" aria-label="Delete last letter">⌫</button>
+<button id="gear" title="Settings (grown-ups: press and hold)" aria-label="Settings. Grown-ups: press and hold.">⚙</button>
 
 <!-- ---------------- Settings ---------------- -->
 <div id="panel">
@@ -236,6 +266,7 @@
           <option value="tap">Look &amp; Tap (find the target)</option>
           <option value="cause">Cause &amp; Effect (looking makes it happen)</option>
           <option value="choose">Choose (letter, number, or shape)</option>
+          <option value="drop">Drop it in (look to place)</option>
           <option value="keyboard">Keyboard &amp; Spelling</option>
         </select></div>
       <div class="row" id="rowKbTask" style="display:none"><label>Mode</label>
@@ -277,9 +308,6 @@
         <span class="val" id="vSize">200</span></div>
       <div class="row"><label>Color</label></div>
       <div class="swrow" id="colors"></div>
-      <div class="row"><label>Dwell time (look &amp; hold)</label>
-        <input type="range" id="sDwell" min="0.1" max="4" step="0.05" value="1.5">
-        <span class="val" id="vDwell">1.5s</span></div>
     </div>
   </div>
 
@@ -287,6 +315,16 @@
     <button class="grphead" type="button">Advanced <span class="arw">▾</span></button>
     <div class="grpbody">
       <div class="row" id="rowGlow"><label>Glow (backlight)</label><div class="toggle on" id="tGlow"></div></div>
+      <div class="row" id="rowDropTarget" style="display:none"><label>Drop target</label>
+        <select id="sDropTarget">
+          <option value="toybox">Toy box</option>
+          <option value="piggy">Piggy bank</option>
+          <option value="fishbowl">Fish bowl</option>
+          <option value="gumball">Gumball machine</option>
+          <option value="beadjar">Bead jar</option>
+        </select></div>
+      <div class="row" id="rowBank" style="display:none"><label>Container size</label>
+        <input type="range" id="sBank" min="220" max="640" step="10" value="380"><span class="val" id="vBank">380</span></div>
       <div class="row" id="rowPulse"><label>Pulse</label><div class="toggle on" id="tPulse"></div></div>
       <div class="row" id="rowPos"><label>Where it appears</label>
         <select id="sPos">
@@ -297,20 +335,42 @@
       <div class="row" id="rowSpeed" style="display:none"><label>Glide speed</label>
         <input type="range" id="sSpeed" min="1" max="10" step="1" value="3">
         <span class="val" id="vSpeed">3</span></div>
-      <div class="row" id="rowTol"><label>Hold steadiness</label>
-        <input type="range" id="sTol" min="0" max="200" step="10" value="80">
-        <span class="val" id="vTol">80</span></div>
       <div class="row" id="rowDelay"><label>Delay before next</label>
         <input type="range" id="sDelay" min="0" max="5" step="0.5" value="1">
         <span class="val" id="vDelay">1.0s</span></div>
-      <div class="row" id="rowSwitch"><label>Require switch to confirm</label><div class="toggle" id="tSwitch"></div></div>
-      <div class="row"><label>Look away to repeat</label><div class="toggle" id="tLookAway"></div></div>
       <div class="row"><label>Sound</label><div class="toggle on" id="tSound"></div></div>
       <div class="row"><label>Sparkles</label><div class="toggle on" id="tSpark"></div></div>
-      <div class="row"><label>Show gaze dot</label><div class="toggle on" id="tGaze"></div></div>
       <button class="act" id="btnFull">Enter full screen</button>
       <button class="act" id="btnReset">Reset tap count</button>
-      <p class="hint">Eye gaze: set the eye tracker to move the mouse pointer (gaze-to-cursor); the app treats a look-and-hold as a tap. Also works with a head-mouse, touch, or a mouse.</p>
+    </div>
+  </div>
+
+  <!-- Bright Little Eyes' selection system: the same rows, in the same order, in every app -->
+  <div class="grp open">
+    <button class="grphead" type="button">Choosing without touch <span class="arw">▾</span></button>
+    <div class="grpbody" id="accessRows">
+      <span class="alabel">How to select</span>
+      <div class="seg" id="segMode"><button type="button" data-v="tap">Touch</button><button type="button" data-v="dwell">Look and hold</button><button type="button" data-v="switch">Look and press</button></div>
+      <div id="accessMore">
+        <span class="alabel">Aim with</span>
+        <div class="seg" id="segAim"><button type="button" data-v="mouse">Pointer</button><button type="button" data-v="head">Camera</button></div>
+        <span class="alabel">How long a look</span>
+        <div class="stepper" id="stDwell"><button type="button" data-d="-1" aria-label="How long a look less">−</button><span class="sv"></span><button type="button" data-d="1" aria-label="How long a look more">+</button></div>
+        <span class="alabel">Gap between choices</span>
+        <div class="stepper" id="stCool"><button type="button" data-d="-1" aria-label="Gap between choices less">−</button><span class="sv"></span><button type="button" data-d="1" aria-label="Gap between choices more">+</button></div>
+        <span class="alabel">Show the dot</span>
+        <div class="seg" id="segDot"><button type="button" data-v="on">On</button><button type="button" data-v="off">Off</button></div>
+        <div id="cameraRows">
+          <span class="alabel">Camera</span>
+          <div id="camPreview"></div>
+          <p class="hint" id="camStatus"></p>
+          <span class="alabel">Centre</span>
+          <div class="seg"><button type="button" id="btnCentre">Set centre</button></div>
+          <span class="alabel">Head sensitivity</span>
+          <div class="stepper" id="stGain"><button type="button" data-d="-1" aria-label="Head sensitivity less">−</button><span class="sv"></span><button type="button" data-d="1" aria-label="Head sensitivity more">+</button></div>
+        </div>
+      </div>
+      <p class="hint">Touch: tap to choose. Look and hold: rest the pointer on a choice; the ring around the dot fills, then it is chosen. Look and press: point, then press a switch (Space or Enter) or click. Pointer works with Windows Eye Control, Tobii gaze-to-cursor, Mill Mouse or a head-mouse. Camera is a webcam head pointer (Windows). Grown-ups: press and hold ⚙ to open Settings.</p>
     </div>
   </div>
 </div>
@@ -334,14 +394,323 @@
 </div>
 
 <script>
+/* ===== Bright Little Eyes' selection system — the same in every Bright Little Eyes app =====
+   How a child who cannot reliably touch the screen aims at something and picks it.
+   Two separate axes:
+     accessMode — how a choice FIRES:          'tap' (Touch) | 'dwell' (Look and hold) | 'switch' (Look and press)
+     aimSource  — where the cursor COMES FROM: 'mouse' (Pointer) | 'head' (Camera)
+   Targets are the real elements on screen, hit-tested with getBoundingClientRect() every time.
+   There is NO "steady gaze" / movement-threshold rule. */
 (function(){
   "use strict";
+  var DEFAULTS = { accessMode:'tap', aimSource:'mouse', dwellMs:650, cooldownMs:320, gain:18, showDot:true };
+  var STICKY_PAD = 28, SMOOTH = 0.35, ADULT_FACTOR = 2.6, ADULT_HOLD_MS = 800, REPEAT_DWELL_MS = 420;
+
+  var S = Object.assign({}, DEFAULTS);
+  var targets = new Map(), nextId = 1;
+  var layerFn = function(){ return 'app'; };     // which layer is live: 'app' | 'sheet' | 'none'
+  var raw = {x:-9999,y:-9999}, smoothed = {x:-9999,y:-9999}, haveAim = false;
+  var hovered = null, enteredAt = 0, armed = false;
+  var lastFired = new Map(), raf = null, aimListeners = [];
+
+  // ------------------------------------------------------------ registry
+  // t = { node: Element | () => Element, run, dwellMs?: number | () => number, allowRepeat?, adult?, enabled?: () => bool, layer?: 'app'|'sheet' }
+  function register(t){
+    var id = nextId++;
+    targets.set(id, Object.assign({ layer:'app', enabled:function(){ return true; } }, t, { id:id }));
+    return function(){ targets.delete(id); if(hovered && hovered.id===id) hovered=null; };
+  }
+  function nodeOf(t){ return typeof t.node==='function' ? t.node() : t.node; }
+  function usable(t){
+    if(t.layer !== layerFn()) return null;
+    var n = nodeOf(t);
+    if(!n) return null;
+    if(!n.isConnected){ if(t.prune !== false && typeof t.node!=='function') targets.delete(t.id); return null; }  // detached
+    if(!t.enabled()) return null;
+    var cs = getComputedStyle(n);
+    if(cs.pointerEvents==='none' || cs.visibility==='hidden' || cs.display==='none') return null;
+    var r = n.getBoundingClientRect();
+    if(r.width<=0 || r.height<=0) return null;
+    return r;
+  }
+  function contains(r,p,pad){ pad=pad||0; return p.x>=r.left-pad && p.x<=r.right+pad && p.y>=r.top-pad && p.y<=r.bottom+pad; }
+
+  // strict = the SMALLEST target containing the point. Stickiness only defends against a LARGER rival or
+  // empty space, so equal neighbours hand over at once and a small target inside a larger one wins.
+  function hitTest(p){
+    var strict=null, strictArea=Infinity, hoveredRect=null;
+    targets.forEach(function(t){
+      var r=usable(t); if(!r) return;
+      if(hovered && t.id===hovered.id) hoveredRect=r;
+      if(contains(r,p)){ var a=r.width*r.height; if(a<strictArea){ strict=t; strictArea=a; } }
+    });
+    if(hovered && hoveredRect && hovered!==strict){
+      if(contains(hoveredRect,p,STICKY_PAD) && (strict===null || strictArea > hoveredRect.width*hoveredRect.height)) return hovered;
+    }
+    return strict;
+  }
+
+  function fire(t){
+    var now=performance.now();
+    if(now-(lastFired.has(t.id)?lastFired.get(t.id):-Infinity) < S.cooldownMs) return;   // refused inside cooldownMs
+    lastFired.set(t.id, now);
+    if(t.allowRepeat) enteredAt=now;   // steppers keep counting under a long look
+    else armed=false;                  // a held look does not retrigger; re-arms when the aim moves away and back
+    try{ t.run(); }catch(e){ console.warn(e); }
+  }
+  function needFor(t){
+    var d = t.dwellMs==null ? S.dwellMs : (typeof t.dwellMs==='function' ? t.dwellMs() : t.dwellMs);
+    return d * (t.adult ? ADULT_FACTOR : 1);
+  }
+
+  // ------------------------------------------------------------ the pump
+  function pump(){
+    raf=null;
+    if(S.accessMode==='tap'){ drawCursor(false,0); return; }
+    if(haveAim){
+      smoothed.x += (raw.x-smoothed.x)*SMOOTH;
+      smoothed.y += (raw.y-smoothed.y)*SMOOTH;
+      aimListeners.forEach(function(f){ f(smoothed.x, smoothed.y); });
+      var h=hitTest(smoothed);
+      if(h!==hovered){ hovered=h; enteredAt=performance.now(); armed=true; }
+      var p=-1;
+      if(S.accessMode==='dwell' && hovered){
+        p = armed ? Math.min(1,(performance.now()-enteredAt)/needFor(hovered)) : 0;
+        if(p>=1) fire(hovered);
+      }
+      drawCursor(true,p);
+    }
+    raf=requestAnimationFrame(pump);
+  }
+  function kick(){ if(raf===null && S.accessMode!=='tap') raf=requestAnimationFrame(pump); }
+
+  // ------------------------------------------------------------ the cursor
+  // A white dot with a dark keyline, and a conic-gradient countdown ring sweeping around it — drawn AT THE
+  // CURSOR (not at the target), mounted at the root of the document so nothing can clip it.
+  var cursorEl=null, ringEl=null;
+  function ensureCursor(){
+    if(cursorEl) return;
+    cursorEl=document.createElement('div');
+    cursorEl.setAttribute('data-ble-cursor','');
+    cursorEl.style.cssText='position:fixed;left:0;top:0;width:0;height:0;pointer-events:none;z-index:2147483647;display:none';
+    ringEl=document.createElement('div');
+    ringEl.style.cssText='position:absolute;left:-30px;top:-30px;width:60px;height:60px;border-radius:50%;'+
+      '-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 8px),#000 calc(100% - 7px));'+
+      'mask:radial-gradient(farthest-side,transparent calc(100% - 8px),#000 calc(100% - 7px));display:none';
+    var dot=document.createElement('div');
+    dot.style.cssText='position:absolute;left:-11px;top:-11px;width:22px;height:22px;border-radius:50%;'+
+      'background:#ffffff;box-sizing:border-box;border:3px solid #111111;box-shadow:0 0 0 1px rgba(255,255,255,.6)';
+    cursorEl.appendChild(ringEl); cursorEl.appendChild(dot);
+    document.body.appendChild(cursorEl);
+  }
+  function drawCursor(show,p){
+    ensureCursor();
+    var visible = show && S.showDot && haveAim;
+    cursorEl.style.display = visible ? 'block' : 'none';
+    if(!visible) return;
+    cursorEl.style.transform='translate('+smoothed.x+'px,'+smoothed.y+'px)';
+    if(p>0){
+      ringEl.style.display='block';
+      var deg=(p*360).toFixed(1);
+      ringEl.style.background='conic-gradient(#ffffff '+deg+'deg, rgba(0,0,0,.35) '+deg+'deg)';
+    } else ringEl.style.display='none';
+  }
+
+  // ------------------------------------------------------------ configure
+  function configure(next){
+    var was=S;
+    S=Object.assign({}, DEFAULTS, next);
+    if(S.accessMode==='tap'){ hovered=null; drawCursor(false,0); }
+    var wantCam = S.accessMode!=='tap' && S.aimSource==='head';
+    if(wantCam && !camera.on) startCamera();
+    if(!wantCam && camera.on) stopCamera();
+    if(was.aimSource!==S.aimSource) haveAim=false;
+    kick();
+  }
+
+  // ------------------------------------------------------------ input
+  function setAim(x,y,jump){
+    raw={x:x,y:y};
+    if(!haveAim || jump) smoothed={x:x,y:y};
+    haveAim=true; kick();
+  }
+  // Pointer aim simply follows the system cursor: Windows Eye Control, a Tobii tracker or Mill Mouse
+  // work with nothing extra installed.
+  addEventListener('pointermove', function(e){
+    if(S.accessMode==='tap' || S.aimSource!=='mouse') return;
+    setAim(e.clientX,e.clientY);
+  }, {passive:true});
+  // Electron / native bridges can push gaze points and switch presses too.
+  addEventListener('gaze', function(e){ var g=e.detail; if(g && S.accessMode!=='tap' && S.aimSource==='mouse') setAim(g.x,g.y); });
+  function pressSwitch(){ if(S.accessMode==='switch' && hovered && !hovered.adult) fire(hovered); }
+  addEventListener('gaze-switch', pressSwitch);
+
+  // Look-and-press: Space or Enter (what switch interfaces type) fires whatever the cursor is on.
+  addEventListener('keydown', function(e){
+    if(S.accessMode!=='switch') return;
+    if(e.key!==' ' && e.key!=='Enter' && e.code!=='Space') return;
+    var tag=e.target && e.target.tagName;
+    if(tag==='INPUT' || tag==='TEXTAREA' || tag==='SELECT') return;
+    e.preventDefault(); e.stopPropagation();
+    if(!e.repeat) pressSwitch();      // adult controls stay a hold
+  }, true);
+
+  // A pointer press on a target, in Look-and-press OR Look-and-hold, is that target's choice (a real
+  // click, a switch that clicks, or Mill Mouse's own dwell-click). The browser's own click is swallowed,
+  // so one look never chooses twice. Adult controls are left alone so their hold still works.
+  var swallowUntil=0;
+  function swallow(e){ if(e.isTrusted && performance.now()<swallowUntil){ e.stopPropagation(); e.preventDefault(); } }
+  addEventListener('pointerdown', function(e){
+    if(S.accessMode==='tap') return;
+    var pt = S.aimSource==='mouse' ? {x:e.clientX,y:e.clientY} : smoothed;
+    if(S.aimSource==='mouse') setAim(pt.x,pt.y,true);
+    var t=hitTest(pt);
+    if(t!==hovered){ hovered=t; enteredAt=performance.now(); armed=true; }
+    if(!t || t.adult) return;
+    if(S.accessMode==='switch' || armed) fire(t);
+    swallowUntil=performance.now()+700;
+    e.stopPropagation(); e.preventDefault();
+  }, true);
+  ['pointerup','mousedown','mouseup','touchstart','touchend','click'].forEach(function(ev){ addEventListener(ev, swallow, true); });
+
+  // ------------------------------------------------------------ adult controls: an 800 ms hold in every mode
+  // A tap does nothing at all; a gaze dwell on one runs 2.6× a child's.
+  function adultControl(el, run, layer){
+    var timer=null;
+    function cancel(){ if(timer){ clearTimeout(timer); timer=null; el.classList.remove('holding'); } }
+    el.addEventListener('pointerdown', function(e){
+      e.preventDefault(); cancel(); el.classList.add('holding');
+      timer=setTimeout(function(){ timer=null; el.classList.remove('holding'); run(); }, ADULT_HOLD_MS);
+    });
+    ['pointerup','pointerleave','pointercancel'].forEach(function(ev){ el.addEventListener(ev, cancel); });
+    el.addEventListener('click', function(e){ e.preventDefault(); });   // a tap does nothing
+    el.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+    return register({ node:el, run:run, adult:true, layer:layer||'app' });
+  }
+
+  // ================================================================= the camera head pointer
+  // Windows only. No model, no network, no library: the head is the centroid of skin-coloured pixels.
+  var FW=160, FH=120;
+  var camera={ on:false, stream:null, video:null, canvas:null, head:null, centre:null, noFace:false, timer:0 };
+  var banner=null, previewHost=null, camListeners=[];
+  function emit(){ camListeners.forEach(function(f){ try{ f(); }catch(e){} }); }
+  function cameraState(){ return { on:camera.on, noFace:camera.noFace, hasCentre:!!camera.centre }; }
+
+  // The skin test (YCbCr). Returns the centroid in frame pixels, or null if fewer than 120 pixels match.
+  function scanFrame(data,w,h){
+    var n=0, sx=0, sy=0;
+    for(var y=0;y<h;y++) for(var x=0;x<w;x++){
+      var i=(y*w+x)*4, r=data[i], g=data[i+1], b=data[i+2];
+      var Y=0.299*r+0.587*g+0.114*b;
+      var Cb=128-0.168736*r-0.331264*g+0.5*b;
+      var Cr=128+0.5*r-0.418688*g-0.081312*b;
+      if(Y>55 && Cb>=77 && Cb<=130 && Cr>=133 && Cr<=178){ n++; sx+=x; sy+=y; }
+    }
+    return n<120 ? null : { x:sx/n, y:sy/n, n:n };
+  }
+  function showBanner(show){
+    if(!banner){
+      banner=document.createElement('div');
+      banner.textContent='No face found — check the lighting and stay in frame';
+      banner.style.cssText='position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:2147483646;'+
+        'background:#111;color:#fff;font:600 16px -apple-system,Segoe UI,Roboto,sans-serif;padding:10px 16px;'+
+        'border-radius:10px;border:2px solid #ffd400;pointer-events:none;display:none';
+      document.body.appendChild(banner);
+    }
+    banner.style.display = show ? 'block' : 'none';
+  }
+  function startCamera(){
+    if(camera.on || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+    camera.on=true; emit();
+    navigator.mediaDevices.getUserMedia({ video:{ width:320, height:240, facingMode:'user' } }).then(function(stream){
+      if(!camera.on){ stream.getTracks().forEach(function(t){ t.stop(); }); return; }
+      camera.stream=stream;
+      if(!camera.video){
+        // kept in the document for as long as the camera runs (removing it kills the stream)
+        camera.video=document.createElement('video');
+        camera.video.muted=true; camera.video.playsInline=true; camera.video.autoplay=true;
+        camera.video.style.cssText='position:fixed;left:-10000px;top:0;width:2px;height:2px;opacity:0;pointer-events:none';
+        document.body.appendChild(camera.video);
+      }
+      camera.video.srcObject=stream;
+      var p=camera.video.play(); if(p && p.catch) p.catch(function(){});
+      if(!camera.canvas){
+        camera.canvas=document.createElement('canvas');
+        camera.canvas.width=FW; camera.canvas.height=FH;
+        camera.canvas.style.cssText='width:240px;height:180px;border-radius:10px;background:#000;display:block';
+        parkPreview();
+      }
+      loop();
+    }).catch(function(){ camera.on=false; emit(); });
+  }
+  function stopCamera(){
+    camera.on=false; clearTimeout(camera.timer);
+    if(camera.stream) camera.stream.getTracks().forEach(function(t){ t.stop(); });
+    camera.stream=null; camera.head=null; camera.centre=null; camera.noFace=false;
+    showBanner(false); emit();
+  }
+  function loop(){
+    if(!camera.on || !camera.video || !camera.canvas) return;
+    var ctx=camera.canvas.getContext('2d',{ willReadFrequently:true });
+    if(ctx && camera.video.readyState>=2){
+      // mirrored, so moving the head left moves the pointer left
+      ctx.save(); ctx.translate(FW,0); ctx.scale(-1,1); ctx.drawImage(camera.video,0,0,FW,FH); ctx.restore();
+      var found=scanFrame(ctx.getImageData(0,0,FW,FH).data,FW,FH);
+      var noFace=!found;
+      if(noFace!==camera.noFace){ camera.noFace=noFace; emit(); }
+      showBanner(noFace);
+      if(found){
+        camera.head = camera.head
+          ? { x:camera.head.x+(found.x-camera.head.x)*0.4, y:camera.head.y+(found.y-camera.head.y)*0.4 }
+          : { x:found.x, y:found.y };
+        // the first face found is the centre, so the pointer moves as soon as the camera is on
+        if(!camera.centre){ camera.centre={ x:camera.head.x, y:camera.head.y }; emit(); }
+        ctx.strokeStyle='#ffd400'; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.arc(camera.head.x,camera.head.y,7,0,Math.PI*2); ctx.stroke();
+        var W=innerWidth, H=innerHeight;
+        setAim(Math.max(0,Math.min(W, W/2+(camera.head.x-camera.centre.x)*S.gain)),
+               Math.max(0,Math.min(H, H/2+(camera.head.y-camera.centre.y)*S.gain)));
+      }
+    }
+    camera.timer=setTimeout(function(){ requestAnimationFrame(loop); },33);
+  }
+  function setCentre(){ if(camera.head){ camera.centre={ x:camera.head.x, y:camera.head.y }; emit(); } }
+  // The live preview sits in Settings while it's open, and is parked (hidden, still in the document) after.
+  function attachPreview(host){ previewHost=host; if(camera.canvas && host) host.appendChild(camera.canvas); }
+  function detachPreview(){ previewHost=null; parkPreview(); }
+  function parkPreview(){
+    if(!camera.canvas) return;
+    if(previewHost){ previewHost.appendChild(camera.canvas); return; }
+    var park=document.getElementById('ble-preview-park');
+    if(!park){ park=document.createElement('div'); park.id='ble-preview-park';
+      park.style.cssText='position:fixed;left:-10000px;top:0;pointer-events:none'; document.body.appendChild(park); }
+    park.appendChild(camera.canvas);
+  }
+
+  window.BLEAccess = {
+    DEFAULTS:DEFAULTS, KEYS:Object.keys(DEFAULTS), ADULT_HOLD_MS:ADULT_HOLD_MS, REPEAT_DWELL_MS:REPEAT_DWELL_MS,
+    settings:function(){ return S; }, configure:configure, register:register, adultControl:adultControl,
+    setLayer:function(f){ layerFn=f; hovered=null; }, onAim:function(f){ aimListeners.push(f); },
+    hitTest:hitTest, scanFrame:scanFrame, setCentre:setCentre, cameraState:cameraState,
+    onCameraChange:function(f){ camListeners.push(f); }, attachPreview:attachPreview, detachPreview:detachPreview,
+    hovered:function(){ var n=hovered && nodeOf(hovered); return n ? (n.getAttribute('aria-label')||n.id||n.textContent.trim().slice(0,12)) : null; },
+    addTestTarget:function(el,run){ return register({ node:el, run:run }); }
+  };
+  window.__bleAccess = window.BLEAccess;
+})();
+</script>
+<script>
+(function(){
+  "use strict";
+  const A=window.BLEAccess;
   // ---------- state / settings ----------
   const S = {
-    activity:"tap", content:"letters", choices:2, words:"cat dog sun hat mom", keyboard:"blocks", kbUpper:false, requireLookAway:false,
+    activity:"tap", content:"letters", choices:2, words:"cat dog sun hat mom", keyboard:"blocks", kbUpper:false, bank:380, dropTarget:"toybox", requireLookAway:false,
     size:200, color:"#ff2b2b", glow:true, pulse:true, position:"jump", speed:3,
     dwell:1.5, requireSwitch:false, tol:80, delay:1.0,
-    sound:true, spark:true, showGaze:true
+    sound:true, spark:true, showGaze:true,
+    // Bright Little Eyes' selection system (saved with each child's settings)
+    accessMode:'tap', aimSource:'mouse', dwellMs:650, cooldownMs:320, gain:18, showDot:true
   };
   const glide={vx:0,vy:0};
   let score=0, armed=false, dwellStart=0, raf=null;
@@ -349,6 +718,7 @@
   let targetShownAt=0;             // for measuring look-to-tap acquisition time
   let needRelease=false;           // touch: require a finger lift before the next dwell-select
   let chooseItems=[], chooseAnswer=null;   // Choose activity: on-screen options + the correct one
+  let dropStart=0;                         // Drop activity dwell timer
   let cursor={x:-9999,y:-9999};   // start off-screen so nothing dwells until gaze/mouse moves
   // Touch devices (iPad/phone) have no hovering pointer, so use tap-to-select
   // instead of hover-dwell (otherwise the centered target would auto-select forever).
@@ -447,47 +817,17 @@
   }
 
   // ---------- gaze / dwell loop ----------
-  function onTarget(){
-    const r=S.size/2 + S.tol;               // radius + steadiness tolerance
+  function onTarget(){   // Touch: a tap counts within the circle + its steadiness margin, as before
+    const r=S.size/2 + S.tol;
     const dx=cursor.x-target._cx, dy=cursor.y-target._cy;
     return (dx*dx+dy*dy) <= r*r;
   }
-
+  function overlayOpen(){ return $('panel').classList.contains('open')||$('gate').classList.contains('open')||$('progressPanel').classList.contains('open'); }
   function loop(){
     raf=requestAnimationFrame(loop);
-    // pause the activity while a settings/overlay screen is open
-    if($('panel').classList.contains('open')||$('gate').classList.contains('open')||$('progressPanel').classList.contains('open')){
-      dwellStart=0; return;
-    }
-    if(S.activity==='keyboard'||S.activity==='spell'){ kbLoop(); return; }
-    if(S.activity==='choose'){ chooseLoop(); return; }
-    if(!armed){ return; }
-    if(S.position==='glide' && !switchReady) glideStep();
-    if(!onTarget()) needRelease=false;   // gaze/finger left the target → ready to select again
-    const now=performance.now();
-    if(onTarget() && !(needRelease && S.requireLookAway)){
-      if(!dwellStart) dwellStart=now;
-      // Cause & Effect responds to a quick look; Look & Tap uses the full dwell
-      const dwellSec = (S.activity==='cause') ? Math.min(S.dwell,0.6) : S.dwell;
-      const p=Math.min(1,(now-dwellStart)/(dwellSec*1000));
-      setRing(p);
-      if(p>=1){
-        if(S.requireSwitch && S.activity!=='cause'){
-          if(!switchReady){ switchReady=true; shape.style.boxShadow=
-            '0 0 80px 30px '+S.color; } // "lit up, ready" — wait for switch
-        } else {
-          select();
-        }
-      }
-    } else {
-      // gaze left the target — reset (unless already lit & waiting for switch)
-      if(!switchReady){ dwellStart=0; setRing(0); }
-    }
-  }
-
-  function pressSwitch(){
-    // switch only does something when target is lit and waiting
-    if(armed && switchReady){ select(); }
+    if(overlayOpen()) return;                       // pause the activity while a grown-up screen is open
+    if(S.activity==='drop'){ dropLoop(); return; }
+    if((S.activity==='tap'||S.activity==='cause') && armed && S.position==='glide') glideStep();
   }
 
   // ---------- reward / select ----------
@@ -563,13 +903,15 @@
   // reports as a touch device, so we must NOT gate this on hover capability.)
   // On touch devices we ignore mouse hover so a stray trackpad/simulator pointer
   // can't select on its own — only actual touches count there.
-  addEventListener('mousemove',e=>{ moveCursor(e.clientX,e.clientY);
+  const touchMode=()=>S.accessMode==='tap';
+  addEventListener('mousemove',e=>{ if(!touchMode()) return; moveCursor(e.clientX,e.clientY);
     if(S.showGaze){ gaze.style.display='block'; gaze.style.left=e.clientX+'px'; gaze.style.top=e.clientY+'px'; } });
+  A.onAim((x,y)=>{ if(!touchMode()) moveCursor(x,y); });
   // Touch: pressing sets the "pointer" on the target so the ring fills while held;
   // lifting resets it off-screen so it never keeps selecting on its own.
-  addEventListener('touchstart',e=>{const t=e.touches[0]; if(t) moveCursor(t.clientX,t.clientY);},{passive:true});
-  addEventListener('touchmove',e=>{const t=e.touches[0]; if(t) moveCursor(t.clientX,t.clientY);},{passive:true});
-  function endTouch(){ cursor.x=-9999; cursor.y=-9999; dwellStart=0; needRelease=false; if(!switchReady) setRing(0); }
+  addEventListener('touchstart',e=>{const t=e.touches[0]; if(t && touchMode()) moveCursor(t.clientX,t.clientY);},{passive:true});
+  addEventListener('touchmove',e=>{const t=e.touches[0]; if(t && touchMode()) moveCursor(t.clientX,t.clientY);},{passive:true});
+  function endTouch(){ if(!touchMode()) return; cursor.x=-9999; cursor.y=-9999; dwellStart=0; needRelease=false; }
   addEventListener('touchend',endTouch,{passive:true});
   addEventListener('touchcancel',endTouch,{passive:true});
 
@@ -579,21 +921,15 @@
   // Same for a hardware switch.
   //   window.dispatchEvent(new CustomEvent('gaze',{detail:{x,y}}))
   //   window.dispatchEvent(new CustomEvent('gaze-switch'))
-  addEventListener('gaze',e=>{const g=e.detail; if(g) moveCursor(g.x,g.y);});
-  addEventListener('gaze-switch',()=>pressSwitch());
-  // Bridge exposed by Electron preload (present only in the desktop app):
+  // (the selection system listens for these: a gaze point aims, a gaze-switch is Look and press)
   if(window.gazeBridge && window.gazeBridge.onGaze){
-    window.gazeBridge.onGaze((x,y)=>moveCursor(x,y));
-    window.gazeBridge.onSwitch&&window.gazeBridge.onSwitch(()=>pressSwitch());
+    window.gazeBridge.onGaze((x,y)=>dispatchEvent(new CustomEvent('gaze',{detail:{x,y}})));
+    window.gazeBridge.onSwitch&&window.gazeBridge.onSwitch(()=>dispatchEvent(new CustomEvent('gaze-switch')));
   }
 
-  // switch = any key (spacebar/switch interfaces send keys) or a click/tap on target
-  addEventListener('keydown',e=>{
-    if(e.target.closest('#panel')) return;   // don't hijack settings typing
-    if(e.code==='Space'||e.key===' '||e.code==='Enter'||e.code==='Tab'){e.preventDefault();}
-    pressSwitch();
-  });
+  // Touch: a tap on a target chooses it. (Look and hold / Look and press are run by the selection system.)
   stage.addEventListener('click',e=>{
+    if(!touchMode()) return;
     // a direct click/tap also counts (mouse testing & touch)
     moveCursor(e.clientX,e.clientY);
     if(S.activity==='keyboard'||S.activity==='spell'){
@@ -608,8 +944,13 @@
       if(!hoverDwell){ cursor.x=-9999; cursor.y=-9999; }
       return;
     }
-    if(S.requireSwitch) pressSwitch();
-    else if(armed && onTarget()) select();
+    if(S.activity==='drop'){
+      if(dropPhase==='pick' && dropOn(dropCoin)) dropPickUp();
+      else if(dropPhase==='drop' && dropOn(dropBank)) dropDrop();
+      if(!hoverDwell){ cursor.x=-9999; cursor.y=-9999; }
+      return;
+    }
+    if(armed && onTarget()) select();
     if(!hoverDwell){ cursor.x=-9999; cursor.y=-9999; }  // touch: don't leave a resting pointer
   });
 
@@ -625,13 +966,15 @@
     const opts=[ans, ans+1, ans-2].sort(()=>Math.random()-0.5);
     const box=$('gateOpts'); box.innerHTML='';
     opts.forEach(v=>{ const btn=document.createElement('button'); btn.textContent=v;
-      btn.onclick=()=>{ if(v===ans){ $('gate').classList.remove('open'); $('panel').classList.add('open'); } else { openGate(); } };
+      btn.onclick=()=>{ if(v===ans){ $('gate').classList.remove('open'); openPanel(); } else { openGate(); } };
       box.appendChild(btn); });
     $('gate').classList.add('open');
   }
-  $('gear').onclick=openGate;
+  A.adultControl($('gear'), openGate);
   $('gateCancel').onclick=()=>$('gate').classList.remove('open');
-  $('closePanel').onclick=()=>$('panel').classList.remove('open');
+  function openPanel(){ syncAccessRows(); $('panel').classList.add('open'); A.attachPreview($('camPreview')); }
+  function closePanel(){ $('panel').classList.remove('open'); A.detachPreview(); }
+  $('closePanel').onclick=closePanel;
 
   // collapsible groups
   $('panel').addEventListener('click', e=>{
@@ -648,16 +991,14 @@
     V('rowChoices', a==='choose'||a==='spell');
     V('rowWords', a==='spell');
     V('rowKb', grp); V('rowKbCase', grp);
-    V('rowSize', !grp); V('rowGlow', !grp);
-    V('rowPulse', single); V('rowPos', single);
+    V('rowSize', !grp); V('rowGlow', !grp && a!=='drop');
+    V('rowBank', a==='drop'); V('rowDropTarget', a==='drop');
+    V('rowPulse', single); V('rowPos', single || a==='drop');
     V('rowSpeed', single && S.position==='glide');
     V('rowDelay', a!=='keyboard');              // spell keeps pacing; free typing doesn't
-    V('rowSwitch', a==='tap');
   }
 
-  $('sSize').oninput=e=>{S.size=+e.target.value;$('vSize').textContent=S.size;applyLook();placeTarget();};
-  $('sDwell').oninput=e=>{S.dwell=+e.target.value;$('vDwell').textContent=S.dwell.toFixed(1)+'s';};
-  $('sTol').oninput=e=>{S.tol=+e.target.value;$('vTol').textContent=S.tol;};
+  $('sSize').oninput=e=>{S.size=+e.target.value;$('vSize').textContent=S.size;applyLook();placeTarget(); if(S.activity==='drop') dropApply();};
   $('sDelay').oninput=e=>{S.delay=+e.target.value;$('vDelay').textContent=S.delay.toFixed(1)+'s';};
   $('sActivity').onchange=e=>{S.activity=e.target.value; updateMenuVisibility(); resetActivity();};
   $('sKbTask').onchange=e=>{S.activity=e.target.value; updateMenuVisibility(); resetActivity();};
@@ -666,6 +1007,8 @@
   $('sWords').oninput=e=>{S.words=e.target.value;};
   $('sWords').onchange=()=>{ if(S.activity==='spell') startSpellRound(); };
   $('sKeyboard').onchange=e=>{S.keyboard=e.target.value; rebuildKeys();};
+  $('sBank').oninput=e=>{S.bank=+e.target.value;$('vBank').textContent=S.bank; if(S.activity==='drop') dropApply();};
+  $('sDropTarget').onchange=e=>{S.dropTarget=e.target.value; if(S.activity==='drop') dropApply();};
   toggle($('tKbUpper'),'kbUpper', rebuildKeys);
   function rebuildKeys(){
     if(S.activity==='keyboard') buildKeyboard();
@@ -684,11 +1027,8 @@
 
   toggle($('tGlow'),'glow',applyLook);
   toggle($('tPulse'),'pulse',applyLook);
-  toggle($('tSwitch'),'requireSwitch',()=>{if(!S.requireSwitch){switchReady=false;shape.style.boxShadow='';}});
-  toggle($('tLookAway'),'requireLookAway');
   toggle($('tSound'),'sound');
   toggle($('tSpark'),'spark');
-  toggle($('tGaze'),'showGaze',()=>{gaze.style.display=S.showGaze?'block':'none';});
 
   // color swatches
   const cw=$('colors');
@@ -696,7 +1036,7 @@
     const d=document.createElement('div');
     d.className='swatch'; d.dataset.c=c;
     d.style.background=c;
-    d.onclick=()=>{S.color=c;applyLook();markSwatch(); if(S.activity==='keyboard') buildKeyboard();};
+    d.onclick=()=>{S.color=c;applyLook();markSwatch(); if(S.activity==='keyboard') buildKeyboard(); if(S.activity==='drop') dropApply();};
     cw.appendChild(d);
   });
   function markSwatch(){ [...cw.children].forEach(x=>x.classList.toggle('sel', x.dataset.c===S.color)); }
@@ -711,8 +1051,9 @@
   let store=null;
   function loadStore(){ try{const r=localStorage.getItem(KEY); if(r) return JSON.parse(r);}catch(e){} return null; }
   function saveStore(){ try{ localStorage.setItem(KEY, JSON.stringify(store)); }catch(e){} }
-  function defaults(){ return {activity:"tap",content:"letters",choices:2,words:"cat dog sun hat mom",keyboard:"blocks",kbUpper:false,size:200,color:"#ff2b2b",glow:true,pulse:true,position:"jump",
-    speed:3,dwell:1.5,requireSwitch:false,requireLookAway:false,tol:80,delay:1.0,sound:true,spark:true,showGaze:true}; }
+  function defaults(){ return {activity:"tap",content:"letters",choices:2,words:"cat dog sun hat mom",keyboard:"blocks",kbUpper:false,bank:380,dropTarget:"toybox",size:200,color:"#ff2b2b",glow:true,pulse:true,position:"jump",
+    speed:3,dwell:1.5,requireSwitch:false,requireLookAway:false,tol:80,delay:1.0,sound:true,spark:true,showGaze:true,
+    ...A.DEFAULTS}; }
   function ensureStore(){
     store=loadStore();
     if(!store||!store.profiles||!store.activeId||!store.profiles[store.activeId]){
@@ -729,14 +1070,25 @@
       });
       store.migJump=true; saveStore();
     }
+    // one-time migration to Bright Little Eyes' selection system: everyone starts on Touch, keeping their
+    // look-and-hold time and gaze-dot choice for when Look and hold is turned on
+    if(!store.migAccess){
+      Object.keys(store.profiles).forEach(id=>{
+        const s=store.profiles[id].settings; if(!s || s.accessMode) return;
+        const ms=Math.round((+s.dwell||1.5)*1000/50)*50;
+        Object.assign(s, A.DEFAULTS, { dwellMs:Math.max(250,Math.min(2000,ms)), showDot:s.showGaze!==false });
+      });
+      store.migAccess=true; saveStore();
+    }
   }
   function activeProfile(){ return store.profiles[store.activeId]; }
   function applyActiveProfile(){ Object.assign(S, defaults(), activeProfile().settings||{}); }
   function saveActiveSettings(){
     const p=activeProfile(); if(!p) return;
-    p.settings={activity:S.activity,content:S.content,choices:S.choices,words:S.words,keyboard:S.keyboard,kbUpper:S.kbUpper,size:S.size,color:S.color,glow:S.glow,pulse:S.pulse,position:S.position,
+    p.settings={activity:S.activity,content:S.content,choices:S.choices,words:S.words,keyboard:S.keyboard,kbUpper:S.kbUpper,bank:S.bank,dropTarget:S.dropTarget,size:S.size,color:S.color,glow:S.glow,pulse:S.pulse,position:S.position,
       speed:S.speed,dwell:S.dwell,requireSwitch:S.requireSwitch,requireLookAway:S.requireLookAway,tol:S.tol,delay:S.delay,
       sound:S.sound,spark:S.spark,showGaze:S.showGaze};
+    A.KEYS.forEach(k=>{ p.settings[k]=S[k]; });
     saveStore();
   }
   function recordTap(acqMs, correct){
@@ -758,22 +1110,18 @@
     $('sContent').value=S.content; $('sChoices').value=String(S.choices);
     $('sKeyboard').value=S.keyboard; $('tKbUpper').classList.toggle('on',S.kbUpper);
     $('sWords').value=S.words;
+    $('sBank').value=S.bank; $('vBank').textContent=S.bank; $('sDropTarget').value=S.dropTarget;
     $('sSize').value=S.size; $('vSize').textContent=S.size;
-    $('sDwell').value=S.dwell; $('vDwell').textContent=S.dwell.toFixed(1)+'s';
-    $('sTol').value=S.tol; $('vTol').textContent=S.tol;
     $('sDelay').value=S.delay; $('vDelay').textContent=S.delay.toFixed(1)+'s';
     $('sSpeed').value=S.speed; $('vSpeed').textContent=S.speed;
     $('sPos').value=S.position;
     updateMenuVisibility();
     $('tGlow').classList.toggle('on',S.glow);
     $('tPulse').classList.toggle('on',S.pulse);
-    $('tSwitch').classList.toggle('on',S.requireSwitch);
-    $('tLookAway').classList.toggle('on',S.requireLookAway);
     $('tSound').classList.toggle('on',S.sound);
     $('tSpark').classList.toggle('on',S.spark);
-    $('tGaze').classList.toggle('on',S.showGaze);
-    gaze.style.display=S.showGaze?'block':'none';
     markSwatch(); applyLook(); placeTarget();
+    applyAccess();
   }
   function renderProfiles(){
     const sel=$('sProfile'); sel.innerHTML='';
@@ -939,7 +1287,9 @@
     svg.appendChild(ring); el.appendChild(svg);
     el.appendChild(makeItemNode(item,sz,asShape));
     stage.appendChild(el);
-    return {el,cx:x,cy:y,dwellStart:0,correct,prog:ring,circ};
+    const choice={el,cx:x,cy:y,dwellStart:0,correct,prog:ring,circ};
+    A.register({ node:el.lastChild, run:()=>chooseSelect(choice), enabled:()=>armed && S.activity==='choose' });
+    return choice;
   }
   function clearChoose(){ chooseItems.forEach(c=>c.el.remove()); chooseItems=[]; }
 
@@ -961,25 +1311,9 @@
     speak(promptText(chooseAnswer));
   }
 
-  function onAnyChoice(){ const r=S.size/2+S.tol;
-    return chooseItems.some(c=>{const dx=cursor.x-c.cx,dy=cursor.y-c.cy; return dx*dx+dy*dy<=r*r;}); }
   function choiceAt(x,y){ const r=S.size/2+S.tol;
     return chooseItems.find(c=>{const dx=x-c.cx,dy=y-c.cy; return dx*dx+dy*dy<=r*r;}); }
 
-  function chooseLoop(){
-    if(!armed) return;
-    const now=performance.now();
-    if(!onAnyChoice()) needRelease=false;
-    chooseItems.forEach(c=>{
-      const r=S.size/2+S.tol, dx=cursor.x-c.cx, dy=cursor.y-c.cy;
-      if(dx*dx+dy*dy<=r*r && !(needRelease && S.requireLookAway)){
-        if(!c.dwellStart) c.dwellStart=now;
-        const p=Math.min(1,(now-c.dwellStart)/(S.dwell*1000));
-        c.prog.style.strokeDashoffset=c.circ*(1-p);
-        if(p>=1) chooseSelect(c);
-      } else { c.dwellStart=0; c.prog.style.strokeDashoffset=c.circ; }
-    });
-  }
   function chooseSelect(c){
     if(!armed) return;
     if(c.correct){
@@ -1066,12 +1400,14 @@
     if(kb) $('spellBar').textContent=kbText;             // free typing shows the typed text
     $('kb').classList.toggle('on', grp);
     $('kb').classList.toggle('spellmode', sp);
+    stage.classList.toggle('dropmode', S.activity==='drop');
     $('hud').style.display='none';   // Taps counter hidden for a clean child screen (still in the report)
   }
   function startRound(){
     applyMode();
     if(S.activity==='keyboard'){ buildKeyboard(); return; }
     if(S.activity==='spell'){ startSpellRound(); return; }
+    if(S.activity==='drop'){ dropApply(); newDropCoin(); return; }
     if(S.activity==='choose') startChooseRound(); else showTarget();
   }
   function resetActivity(){
@@ -1114,7 +1450,8 @@
         const g=document.createElement('div'); g.className='kbglyph';
         g.textContent=S.kbUpper?ch.toUpperCase():ch;
         k.appendChild(fill); k.appendChild(g); rEl.appendChild(k);
-        kbKeys.push({el:k,fill,ch,dwellStart:0});
+        const key={el:k,fill,ch,dwellStart:0}; kbKeys.push(key);
+        A.register({ node:k, run:()=>kbSelectKey(key), enabled:()=>!key.blurred && (S.activity==='keyboard'||S.activity==='spell') });
       });
       wrap.appendChild(rEl);
     });
@@ -1136,28 +1473,141 @@
     k.el.animate([{transform:'scale(1)'},{transform:'scale(1.12)'},{transform:'scale(1)'}],{duration:250});
     if(kbMode==='spell') spellKeyPicked(k.ch); else kbAppend(k.ch);
   }
-  function kbLoop(){
-    const now=performance.now(); let onAny=false; const pad=10;
-    kbKeys.forEach(k=>{
-      if(k.blurred) return;
-      const on=Math.abs(cursor.x-k.cx)<=k.hw+pad && Math.abs(cursor.y-k.cy)<=k.hh+pad;
-      if(on) onAny=true;
-      if(on && !(needRelease && S.requireLookAway)){
-        if(!k.dwellStart) k.dwellStart=now;
-        const p=Math.min(1,(now-k.dwellStart)/(S.dwell*1000));
-        k.fill.style.transform='scaleY('+p+')';
-        if(p>=1) kbSelectKey(k);
-      } else { k.dwellStart=0; k.fill.style.transform='scaleY(0)'; }
-    });
-    if(!onAny) needRelease=false;
+
+  // ---------- Drop it in (coin -> piggy bank) ----------
+  const dropCoin=$('dropCoin'), dropBank=$('dropBank'), dropRing=$('dropRing'), dropRingP=$('dropRingP');
+  let dropPhase='pick', dropCarry=false, dropObjSize=120;
+  function dropSizeRing(r){ const sw=8, box=r*2+sw*2, c=box/2;
+    dropRing.setAttribute('width',box); dropRing.setAttribute('height',box);
+    dropRingP.setAttribute('cx',c); dropRingP.setAttribute('cy',c); dropRingP.setAttribute('r',r);
+    dropRingP.setAttribute('stroke-width',sw); dropRingP.setAttribute('transform','rotate(-90 '+c+' '+c+')');
+    const circ=2*Math.PI*r; dropRingP.style.strokeDasharray=circ; dropRingP.style.strokeDashoffset=circ; dropRing._circ=circ; }
+  function dropSetRing(p){ dropRingP.style.strokeDashoffset=dropRing._circ*(1-p); }
+  function dropRingAt(x,y){ dropRing.style.left=x+'px'; dropRing.style.top=y+'px'; dropRing.style.transform='translate(-50%,-50%)'; }
+  const BANKS={
+    piggy:'<svg viewBox="0 0 200 196"><rect x="58" y="177" width="20" height="17" rx="5" fill="#D4537E"/><rect x="122" y="177" width="20" height="17" rx="5" fill="#D4537E"/><polygon points="52,46 80,18 86,54" fill="#D4537E"/><polygon points="148,46 120,18 114,54" fill="#D4537E"/><ellipse cx="100" cy="114" rx="80" ry="72" fill="#ED93B1"/><ellipse cx="100" cy="134" rx="36" ry="27" fill="#F4C0D1"/><ellipse cx="88" cy="134" rx="5.5" ry="9" fill="#99355a"/><ellipse cx="112" cy="134" rx="5.5" ry="9" fill="#99355a"/><circle cx="72" cy="98" r="8.5" fill="#4b1528"/><circle cx="128" cy="98" r="8.5" fill="#4b1528"/><rect x="72" y="6" width="56" height="14" rx="7" fill="#2c0a16"/></svg>',
+    fishbowl:'<svg viewBox="0 0 200 200"><path d="M48 66 Q38 178 100 188 Q162 178 152 66 Z" fill="#9FE1CB" opacity="0.7"/><path d="M56 96 Q48 174 100 183 Q152 174 144 96 Z" fill="#5DCAA5"/><ellipse cx="100" cy="64" rx="54" ry="14" fill="none" stroke="#1D9E75" stroke-width="8"/><ellipse cx="95" cy="140" rx="26" ry="16" fill="#ff7a00"/><polygon points="121,140 144,126 144,154" fill="#ff7a00"/><circle cx="83" cy="136" r="4.5" fill="#4a1b0c"/></svg>',
+    gumball:'<svg viewBox="0 0 200 210"><rect x="54" y="150" width="92" height="48" rx="12" fill="#E24B4A"/><rect x="70" y="170" width="60" height="10" rx="5" fill="#501313"/><rect x="90" y="146" width="20" height="10" fill="#8a2a2a"/><circle cx="100" cy="86" r="74" fill="#B5D4F4" opacity="0.5"/><circle cx="80" cy="76" r="13" fill="#ff2b2b"/><circle cx="116" cy="66" r="13" fill="#ffd400"/><circle cx="122" cy="102" r="13" fill="#2ecc40"/><circle cx="76" cy="106" r="13" fill="#b84dff"/><circle cx="100" cy="92" r="13" fill="#ff7a00"/><circle cx="100" cy="86" r="74" fill="none" stroke="#378ADD" stroke-width="7"/></svg>',
+    beadjar:'<svg viewBox="0 0 200 210"><rect x="68" y="16" width="64" height="20" rx="6" fill="#888780"/><rect x="52" y="42" width="96" height="150" rx="22" fill="#B5D4F4" opacity="0.4"/><circle cx="80" cy="150" r="13" fill="#ff2b2b"/><circle cx="116" cy="160" r="13" fill="#ffd400"/><circle cx="100" cy="134" r="13" fill="#2ecc40"/><circle cx="120" cy="128" r="13" fill="#b84dff"/><circle cx="76" cy="122" r="13" fill="#ff7a00"/><rect x="52" y="42" width="96" height="150" rx="22" fill="none" stroke="#85B7EB" stroke-width="6"/></svg>',
+    toybox:'<svg viewBox="0 0 200 200"><rect x="40" y="92" width="120" height="95" rx="10" fill="#BA7517"/><polygon points="32,94 100,58 168,94 168,82 100,48 32,82" fill="#8a5a2b"/><circle cx="72" cy="80" r="17" fill="#ff2b2b"/><rect x="96" y="62" width="28" height="28" rx="5" fill="#2ecc40"/><circle cx="140" cy="78" r="15" fill="#1e90ff"/><rect x="40" y="92" width="120" height="95" rx="10" fill="none" stroke="#633806" stroke-width="4"/><rect x="54" y="150" width="92" height="9" fill="#854f0b"/></svg>'
+  };
+  const OBJKIND={piggy:'coin',fishbowl:'fish',gumball:'gumball',beadjar:'bead',toybox:'block'};
+  function objSvg(kind,color){
+    if(kind==='fish') return '<svg viewBox="0 0 100 100"><ellipse cx="45" cy="52" rx="34" ry="22" fill="'+color+'"/><polygon points="72,52 97,34 97,70" fill="'+color+'"/><circle cx="31" cy="48" r="4.5" fill="#0b0b0b"/></svg>';
+    if(kind==='gumball') return '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="'+color+'"/><circle cx="36" cy="36" r="11" fill="rgba(255,255,255,.55)"/></svg>';
+    if(kind==='bead') return '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="'+color+'"/><circle cx="36" cy="36" r="11" fill="rgba(255,255,255,.55)"/></svg>';
+    if(kind==='block') return '<svg viewBox="0 0 100 100"><rect x="8" y="8" width="84" height="84" rx="14" fill="'+color+'"/><rect x="28" y="28" width="44" height="44" rx="8" fill="rgba(255,255,255,.28)"/></svg>';
+    return '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="'+color+'"/><circle cx="50" cy="50" r="46" fill="none" stroke="rgba(0,0,0,.28)" stroke-width="5"/><circle cx="50" cy="50" r="30" fill="none" stroke="rgba(0,0,0,.2)" stroke-width="4"/></svg>';
   }
+  function dropApply(){
+    // Scale the dropped object to the container so it visibly "fits" into it.
+    // Object diameter ~40% of the container, but never smaller than 40px, and
+    // capped by the teacher's Size slider so it can be made a bit smaller.
+    dropObjSize=Math.max(40, Math.min(S.size, Math.round(S.bank*0.26)));
+    dropCoin.style.width=dropCoin.style.height=dropObjSize+'px';
+    dropCoin.style.setProperty('--gc',S.color);
+    dropCoin.innerHTML=objSvg(OBJKIND[S.dropTarget]||'coin', S.color);
+    dropCoin._r=dropObjSize/2;
+    dropBank.innerHTML=BANKS[S.dropTarget]||BANKS.toybox;
+    dropBank.style.width=S.bank+'px'; dropBank._r=S.bank*0.42;
+    dropBank._cx=innerWidth/2; dropBank._cy=innerHeight - S.bank*0.5;
+    dropBank.style.left=dropBank._cx+'px'; dropBank.style.top=dropBank._cy+'px';
+  }
+  function newDropCoin(){
+    dropCoin.getAnimations().forEach(a=>a.cancel());   // clear a lingering drop animation
+    dropCoin._r=dropObjSize/2;
+    const m=dropObjSize/2+50;
+    if(S.position==='still'){ dropCoin._cx=innerWidth/2; dropCoin._cy=innerHeight*0.32; }
+    else { dropCoin._cx=m+Math.random()*Math.max(20,innerWidth-2*m);
+           dropCoin._cy=m+Math.random()*Math.max(20,innerHeight*0.55-m); }
+    dropCoin.style.left=dropCoin._cx+'px'; dropCoin.style.top=dropCoin._cy+'px';
+    dropCoin.style.transform='translate(-50%,-50%)'; dropCoin.style.visibility='visible'; dropCoin.style.opacity='1';
+    dropPhase='pick'; dropCarry=false; needRelease=false; dropStart=0; targetShownAt=performance.now();
+    dropSizeRing(dropObjSize/2+22); dropSetRing(0);
+    dropBank.style.transform='translate(-50%,-50%) scale(1)';
+  }
+  function dropOn(o){ const r=(o._r||S.size/2)+S.tol, dx=cursor.x-o._cx, dy=cursor.y-o._cy; return dx*dx+dy*dy<=r*r; }
+  function dropLoop(){   // the picked-up object follows the cursor (the selection system does the choosing)
+    if(dropCarry){ dropCoin.style.left=cursor.x+'px'; dropCoin.style.top=cursor.y+'px'; }
+  }
+  function dropPickUp(){ dropCarry=true; dropPhase='drop'; dropStart=0; needRelease=true;
+    dropSizeRing(dropBank._r+22); dropSetRing(0); beep([660,880]);
+    dropBank.animate([{transform:'translate(-50%,-50%) scale(1)'},{transform:'translate(-50%,-50%) scale(1.12)'},{transform:'translate(-50%,-50%) scale(1)'}],{duration:600}); }
+  function dropDrop(){ if(dropPhase!=='drop') return; dropCarry=false; dropStart=0; needRelease=true; dropPhase='done';
+    score++; scoreEl.textContent=score;
+    recordTap(Math.min(30000,Math.max(0,performance.now()-targetShownAt)));
+    beep([523,659,784,1047]);
+    dropCoin.animate([{left:dropCoin.style.left,top:dropCoin.style.top,opacity:1,transform:'translate(-50%,-50%) scale(1)'},
+      {left:dropBank._cx+'px',top:dropBank._cy+'px',opacity:0,transform:'translate(-50%,-50%) scale(0.2)'}],
+      {duration:450,easing:'ease-in',fill:'forwards'}).onfinish=()=>{ dropCoin.style.visibility='hidden'; };
+    dropBank.animate([{transform:'translate(-50%,-50%) scale(1)'},{transform:'translate(-50%,-50%) scale(1.3)'},{transform:'translate(-50%,-50%) scale(1)'}],{duration:600});
+    if(S.spark) sparkle(dropBank._cx,dropBank._cy);
+    dropSetRing(0);
+    setTimeout(()=>{ if(S.activity==='drop') newDropCoin(); }, Math.max(500,S.delay*1000));
+  }
+  addEventListener('resize',()=>{ if(S.activity==='drop') dropApply(); });
+
+  // ---------- Bright Little Eyes' selection system: targets, settings rows ----------
+  // Which targets are live: the child's screen, the settings sheet's controls, or nothing (parent gate / report).
+  A.setLayer(()=> $('panel').classList.contains('open') ? 'sheet'
+    : ($('gate').classList.contains('open')||$('progressPanel').classList.contains('open')) ? 'none' : 'app');
+  // Look & Tap / Cause & Effect: the circle. Cause & Effect answers a quick look, as it always has.
+  A.register({ node:shape, run:()=>{ if(armed) select(); },
+    enabled:()=>armed && (S.activity==='tap'||S.activity==='cause') && target.style.visibility!=='hidden',
+    dwellMs:()=> S.activity==='cause' ? Math.min(S.dwellMs,600) : S.dwellMs });
+  // Drop it in: the object, then the container. (While the object follows the cursor it is NOT a target.)
+  A.register({ node:dropCoin, run:()=>{ if(dropPhase==='pick') dropPickUp(); },
+    enabled:()=>S.activity==='drop' && dropPhase==='pick' && dropCoin.style.visibility!=='hidden' });
+  A.register({ node:dropBank, run:()=>dropDrop(), enabled:()=>S.activity==='drop' && dropPhase==='drop' });
+  // The child's buttons
+  A.register({ node:$('replay'), run:()=>$('replay').onclick() });
+  A.register({ node:$('kbDelBtn'), run:()=>$('kbDelBtn').onclick() });
+  // The settings sheet's own controls can be chosen too, while it's open (steppers keep counting)
+  document.querySelectorAll('#closePanel, #panel .grphead, #panel .toggle, #panel .swatch, #btnReset, #accessRows .seg button')
+    .forEach(el=>A.register({ node:el, run:()=>el.click(), layer:'sheet' }));
+  document.querySelectorAll('#accessRows .stepper button')
+    .forEach(el=>A.register({ node:el, run:()=>el.click(), layer:'sheet', allowRepeat:true, dwellMs:A.REPEAT_DWELL_MS }));
+
+  function accessOf(){ const o={}; A.KEYS.forEach(k=>o[k]=S[k]); return o; }
+  function applyAccess(){
+    A.configure(accessOf());
+    const tap=S.accessMode==='tap';
+    gaze.style.display=(tap && S.showGaze)?'block':'none';   // in Touch mode the old gaze ring follows the mouse, as before
+    if(!tap){ gaze.style.left='-100px'; gaze.style.top='-100px'; }
+    syncAccessRows();
+  }
+  function syncAccessRows(){
+    const mark=(id,v)=>$(id).querySelectorAll('button').forEach(b=>b.classList.toggle('sel', b.dataset.v===v));
+    mark('segMode',S.accessMode); mark('segAim',S.aimSource); mark('segDot',S.showDot?'on':'off');
+    $('stDwell').querySelector('.sv').textContent=S.dwellMs+' ms';
+    $('stCool').querySelector('.sv').textContent=S.cooldownMs+' ms';
+    $('stGain').querySelector('.sv').textContent=S.gain+'×';
+    // everything below "How to select" only when it isn't Touch; the camera rows only when Aim with = Camera
+    $('accessMore').style.display=S.accessMode==='tap'?'none':'block';
+    $('cameraRows').style.display=S.aimSource==='head'?'block':'none';
+    const c=A.cameraState();
+    $('camStatus').textContent = !c.on ? (S.aimSource==='head' ? 'Starting the camera… (allow it if the browser asks)' : '')
+      : c.noFace ? 'No face found — check the lighting and stay in frame' : 'The yellow circle shows the face it found.';
+  }
+  A.onCameraChange(syncAccessRows);
+  function setAccess(k,v){ S[k]=v; applyAccess(); saveActiveSettings(); }
+  $('segMode').addEventListener('click',e=>{ const b=e.target.closest('button'); if(b) setAccess('accessMode',b.dataset.v); });
+  $('segAim').addEventListener('click',e=>{ const b=e.target.closest('button'); if(b) setAccess('aimSource',b.dataset.v); });
+  $('segDot').addEventListener('click',e=>{ const b=e.target.closest('button'); if(b) setAccess('showDot',b.dataset.v==='on'); });
+  function stepper(id,key,step,min,max){
+    $(id).addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return;
+      setAccess(key, Math.max(min,Math.min(max,S[key]+step*(+b.dataset.d)))); });
+  }
+  stepper('stDwell','dwellMs',50,250,2000);
+  stepper('stCool','cooldownMs',40,80,1200);
+  stepper('stGain','gain',2,6,40);
+  $('btnCentre').onclick=()=>A.setCentre();
 
   // ---------- go ----------
   ensureStore();
   applyActiveProfile();
   renderProfiles();
   syncControls();        // pushes the active child's settings into the UI + applyLook
-  gaze.style.display=S.showGaze?'block':'none';   // gaze dot follows the mouse/eye cursor (mousemove)
   applyMode();                                    // set the right mode immediately (hide circle if not tap/cause)
   loop();
   setTimeout(startRound, S.delay*1000);

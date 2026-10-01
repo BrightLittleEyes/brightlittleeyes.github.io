@@ -51,21 +51,19 @@
   .choiceGlyph{font-weight:800;color:#fff;line-height:1;
     display:flex;align-items:center;justify-content:center;}
   #replay{position:fixed;top:calc(14px + env(safe-area-inset-top));
-    left:calc(16px + env(safe-area-inset-left));width:84px;height:84px;border-radius:50%;
-    background:#ff2b2b;color:#fff;border:none;font-size:42px;
+    left:calc(16px + env(safe-area-inset-left));width:100px;height:100px;border-radius:50%;padding:0;
+    background:#ff2b2b;color:#fff;border:none;
     box-shadow:0 0 26px rgba(255,43,43,.55);
     display:none;align-items:center;justify-content:center;cursor:pointer;z-index:60;}
   #replay:hover{background:#ff5a4d;}
-  #replay:active{transform:scale(.94);}
   #kb{position:absolute;inset:0;display:none;flex-direction:column;z-index:40;}
   #kb.on{display:flex;}
   #kbAnswer{display:none;}
   #kbDelBtn{position:fixed;top:calc(14px + env(safe-area-inset-top));
-    right:calc(16px + env(safe-area-inset-right));width:84px;height:84px;border-radius:50%;
-    background:#333;color:#fff;border:none;font-size:38px;
+    right:calc(92px + env(safe-area-inset-right));width:100px;height:100px;border-radius:50%;padding:0;
+    background:#333;color:#fff;border:none;
     display:none;align-items:center;justify-content:center;cursor:pointer;z-index:60;}
   #kbDelBtn:hover{background:#444;}
-  #kbDelBtn:active{transform:scale(.94);}
   #kbKeys{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;
     gap:12px;padding:150px 8px 8px;}
   .kbrow{display:flex;justify-content:center;gap:12px;}
@@ -88,19 +86,6 @@
   /* ---- Bright Little Eyes' selection system ---- */
   /* The countdown ring is drawn at the cursor dot (one ring for every app), not around the targets. */
   #ring,.cring,.kbfill,#dropRing,#stage.dropmode #dropRing{display:none !important;}
-  #gear.holding{opacity:1;background:rgba(255,255,255,.22);color:#fff;}
-  .seg{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 12px;}
-  .seg button{flex:1 1 auto;background:#222;color:#fff;border:1px solid #3a3a3a;border-radius:8px;
-    padding:9px 10px;font-size:15px;cursor:pointer;font-family:inherit;}
-  .seg button.sel{background:#fff;color:#000;border-color:#fff;font-weight:700;}
-  .stepper{display:flex;align-items:center;gap:10px;margin:4px 0 12px;}
-  .stepper button{width:52px;height:44px;border-radius:8px;background:#222;color:#fff;border:1px solid #3a3a3a;
-    font-size:24px;font-weight:700;cursor:pointer;font-family:inherit;}
-  .stepper .sv{min-width:84px;text-align:center;font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;}
-  .alabel{display:block;font-size:15px;margin:10px 0 2px;}
-  #camPreview{margin:4px 0 4px;min-height:20px;}
-  textarea#sWords{background:#222;color:#fff;border:1px solid #3a3a3a;border-radius:8px;
-    padding:8px 10px;font-size:15px;width:100%;resize:vertical;font-family:inherit;}
 
   /* ---- Gaze dot (shows where the tracker cursor is) ---- */
   #gaze{position:fixed;width:26px;height:26px;border-radius:50%;
@@ -111,54 +96,14 @@
   #hud{position:fixed;top:calc(10px + env(safe-area-inset-top));
     left:calc(14px + env(safe-area-inset-left));color:var(--ui);font-size:15px;
     z-index:60;user-select:none;display:none;}
-  #gear{position:fixed;top:calc(8px + env(safe-area-inset-top));
-    right:calc(10px + env(safe-area-inset-right));width:44px;height:44px;border-radius:50%;
-    background:rgba(255,255,255,.06);color:var(--ui);border:none;font-size:20px;opacity:.35;
-    display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:60;transition:opacity .2s;}
-  #gear:hover{background:rgba(255,255,255,.14);color:#fff;opacity:1;}
+  /* Settings: the Bright Little Eyes grey gear glyph, the same size as in I Can Learn to Read.
+     Grown-ups press and hold it (half a second); a tap does nothing. */
+  #gear{position:fixed;top:calc(12px + env(safe-area-inset-top));
+    right:calc(12px + env(safe-area-inset-right));width:64px;height:64px;padding:0;border:none;border-radius:50%;
+    background:url("data:image/png;base64,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") center/contain no-repeat;
+    cursor:pointer;z-index:60;touch-action:none;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none;
+    }
 
-  /* settings panel */
-  #panel{position:fixed;top:0;right:0;height:100%;width:340px;max-width:90vw;
-    background:#141414;border-left:1px solid #2a2a2a;
-    padding:calc(20px + env(safe-area-inset-top)) calc(22px + env(safe-area-inset-right))
-      calc(20px + env(safe-area-inset-bottom)) 22px;
-    overflow-y:auto;overflow-x:hidden;transform:translateX(105%);transition:transform .25s ease;
-    z-index:70;cursor:default;-webkit-overflow-scrolling:touch;box-sizing:border-box;}
-  #panel.open{transform:translateX(0);}
-  .row{min-width:0;}
-  .row label{min-width:0;overflow:hidden;text-overflow:ellipsis;}
-  #panel select{max-width:60%;min-width:0;box-sizing:border-box;}
-  #panel h2{margin:.2em 0 .6em;font-size:19px;}
-  #panel h3{margin:1.3em 0 .4em;font-size:13px;letter-spacing:.08em;
-    text-transform:uppercase;color:#9a9a9a;}
-  .row{display:flex;align-items:center;justify-content:space-between;
-    gap:10px;margin:10px 0;font-size:15px;}
-  .row label{flex:1;}
-  input[type=range]{width:150px;accent-color:var(--target);}
-  .val{width:52px;text-align:right;color:#bbb;font-variant-numeric:tabular-nums;}
-  .swatch{width:30px;height:30px;border-radius:50%;border:3px solid transparent;
-    cursor:pointer;}
-  .swatch.sel{border-color:#fff;}
-  .swrow{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0;}
-  select,button.act{background:#222;color:#fff;border:1px solid #3a3a3a;
-    border-radius:8px;padding:8px 10px;font-size:15px;cursor:pointer;}
-  button.act{width:100%;margin-top:6px;}
-  .toggle{position:relative;width:46px;height:26px;background:#333;border-radius:20px;
-    cursor:pointer;transition:background .2s;flex:none;}
-  .toggle.on{background:var(--target);}
-  .toggle::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;
-    border-radius:50%;background:#fff;transition:left .2s;}
-  .toggle.on::after{left:23px;}
-  .hint{color:#7a7a7a;font-size:12.5px;line-height:1.45;margin:4px 0 0;}
-  #closePanel{float:right;background:none;border:none;color:#aaa;font-size:22px;cursor:pointer;}
-  .grp{border-top:1px solid #262626;}
-  .grphead{width:100%;background:none;border:none;color:#fff;font-size:16px;font-weight:700;
-    text-align:left;padding:14px 2px;cursor:pointer;display:flex;justify-content:space-between;
-    align-items:center;font-family:inherit;}
-  .grphead .arw{color:#888;font-size:12px;transition:transform .2s;}
-  .grp.open .grphead .arw{transform:rotate(180deg);}
-  .grpbody{display:none;padding:0 2px 14px;}
-  .grp.open .grpbody{display:block;}
   .dropobj{position:absolute;transform:translate(-50%,-50%);display:none;
     align-items:center;justify-content:center;z-index:41;will-change:left,top;}
   #dropBank{filter:drop-shadow(0 0 26px rgba(237,147,177,.6));}
@@ -169,20 +114,8 @@
   #dropRing{position:absolute;pointer-events:none;display:none;}
   #dropRingP{transition:stroke-dashoffset .05s linear;}
   #stage.dropmode .dropobj{display:flex;}
+  #stage.nopulse #dropCoin svg{animation:none;}
   #stage.dropmode #dropRing{display:block;}
-  #gate{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:90;display:none;
-    align-items:center;justify-content:center;cursor:default;}
-  #gate.open{display:flex;}
-  .gate-card{background:#161616;border:1px solid #2a2a2a;border-radius:16px;
-    padding:26px 28px;text-align:center;max-width:88vw;}
-  .gate-q{color:#fff;font-size:20px;margin:0 0 18px;}
-  .gate-opts{display:flex;gap:12px;justify-content:center;}
-  .gate-opts button{width:66px;height:66px;border-radius:12px;background:#222;
-    border:1px solid #3a3a3a;color:#fff;font-size:26px;font-weight:800;cursor:pointer;}
-  .gate-opts button:hover{background:#2e2e2e;}
-  #gateCancel{margin-top:16px;background:none;border:none;color:#888;font-size:14px;cursor:pointer;}
-  .btnrow{display:flex;gap:8px;}
-  .btnrow .act{width:auto;flex:1;margin-top:6px;}
   #progressPanel{position:fixed;inset:0;background:#0c0c0c;color:#eee;z-index:80;
     display:none;overflow-y:auto;overflow-x:hidden;padding:26px 22px;cursor:default;box-sizing:border-box;}
   #progressPanel.open{display:block;}
@@ -209,6 +142,67 @@
     #btnCloseProgress,.rep-actions{display:none;}
     table.rep th,table.rep td{border-color:#ccc;}
   }
+
+  /* ---- The settings sheet (Bright Little Eyes / ABC Lite) ----
+     A popover from the gear, on the device's own light or dark look (iOS system surfaces),
+     labels over segmented controls in control-label (20px), notes in caption (14px). */
+  #panel{
+    --sb:#ffffff; --si:#000000; --ss:#3c3c43; --st:rgba(142,142,142,.3); --sg:#ffffff;
+    --sr:rgba(142,142,142,.5); --sl:rgba(142,142,142,.35); --son:#34c759; --soff:rgba(120,120,128,.32);
+  }
+  #panelArrow{--sb:#ffffff;}
+  @media (prefers-color-scheme: dark){
+    #panel{ --sb:#1c1c1e; --si:#ffffff; --ss:#aeaeb2; --sg:#636366; --soff:rgba(120,120,128,.36); --son:#30d158; }
+    #panelArrow{--sb:#1c1c1e;}
+  }
+  #panelScrim{position:fixed;inset:0;z-index:69;display:none;background:transparent;cursor:default;}
+  #panelScrim.open{display:block;}
+  #panel,#panelArrow{opacity:0;visibility:hidden;transition:opacity .1s ease-in,visibility 0s linear .1s;}
+  #panel.open,#panelArrow.open{opacity:1;visibility:visible;transition:opacity .5s ease-in;}
+  #panelArrow{position:fixed;z-index:71;right:calc(32px + env(safe-area-inset-right));top:calc(76px + env(safe-area-inset-top));
+    width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;border-bottom:12px solid var(--sb);}
+  #panel{position:fixed;z-index:70;right:calc(16px + env(safe-area-inset-right));top:calc(88px + env(safe-area-inset-top));
+    width:min(480px, calc(100vw - 32px));max-height:calc(100vh - 104px - env(safe-area-inset-top));
+    display:flex;flex-direction:column;background:var(--sb);color:var(--si);border-radius:13px;overflow:hidden;
+    border:.5px solid rgba(0,0,0,.25);box-shadow:0 8px 30px rgba(0,0,0,.35);cursor:default;
+    font-family:-apple-system,"SF Pro Text","Helvetica Neue","Segoe UI",system-ui,sans-serif;}
+  .pbar{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:.5px solid var(--sl);flex:none;}
+  .pbody{padding:6px 20px 32px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  .psec{padding:14px 0 18px;border-bottom:.5px solid var(--sl);}
+  .psec:last-child{border-bottom:none;}
+  .phead{font-size:20px;line-height:24px;font-weight:600;margin:0 0 4px;}
+  .alabel{display:block;font-size:20px;line-height:24px;margin:14px 0 8px;}
+  .caption,.hint{font-size:14px;line-height:18px;color:var(--ss);margin:8px 0 0;}
+  .tbtn{background:none;border:none;color:var(--si);font:inherit;font-size:20px;line-height:24px;padding:8px 0;cursor:pointer;}
+  .tbtn.b{font-weight:600;}
+  .btnrow{display:flex;gap:24px;flex-wrap:wrap;align-items:center;}
+  .confirm{padding:14px 0;border-bottom:.5px solid var(--sl);}
+  /* segmented control: grey track, the chosen segment raised on a chip */
+  .seg{display:inline-flex;flex-wrap:wrap;padding:2px;border-radius:9px;background:var(--st);max-width:100%;}
+  .seg button{flex:1 1 auto;padding:6px 18px;border-radius:7px;border:1px solid transparent;background:none;
+    color:var(--si);font:inherit;font-size:20px;line-height:24px;cursor:pointer;text-align:center;}
+  .seg button.sel{background:var(--sg);border-color:var(--sr);font-weight:600;}
+  .stepper{display:flex;align-items:center;gap:16px;}
+  .stepper button{min-width:64px;height:56px;border-radius:12px;border:none;background:var(--st);color:var(--si);
+    font:inherit;font-size:28px;font-weight:600;cursor:pointer;}
+  .stepper .sv{min-width:96px;text-align:center;font-size:20px;line-height:24px;font-weight:600;font-variant-numeric:tabular-nums;}
+  /* a switch row: the whole row toggles */
+  .trow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;cursor:pointer;font-size:20px;line-height:24px;}
+  .trow .alabel{margin:0;}
+  .toggle{position:relative;width:51px;height:31px;border-radius:16px;background:var(--soff);flex:none;transition:background .2s;}
+  .toggle.on{background:var(--son);}
+  .toggle::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;
+    box-shadow:0 2px 4px rgba(0,0,0,.2);transition:left .2s;}
+  .toggle.on::after{left:22px;}
+  .swrow{display:flex;gap:12px;flex-wrap:wrap;}
+  .swatch{width:44px;height:44px;border-radius:50%;border:3px solid transparent;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(0,0,0,.2);}
+  .swatch.sel{border-color:var(--si);}
+  textarea#sWords{width:100%;box-sizing:border-box;border-radius:9px;border:1px solid var(--sl);background:var(--st);
+    color:var(--si);font:inherit;font-size:20px;line-height:24px;padding:10px 12px;resize:vertical;}
+  #camPreview{margin:4px 0;min-height:20px;}
+  /* progress report buttons */
+  button.act{background:#222;color:#fff;border:1px solid #3a3a3a;border-radius:8px;padding:8px 10px;font-size:15px;cursor:pointer;}
+  @media (prefers-reduced-motion: reduce){ #panel,#panelArrow,#panel.open,#panelArrow.open{transition:none;} }
 </style>
 </head>
 <body>
@@ -217,13 +211,13 @@
     <svg id="ring" width="10" height="10"><circle id="ringProg" cx="5" cy="5" r="4"
       fill="none" stroke="var(--ring)" stroke-width="6" stroke-linecap="round"
       transform="rotate(-90 5 5)"></circle></svg>
-    <div id="targetShape"></div>
+    <div id="targetShape" role="button" aria-label="Look here"></div>
   </div>
   <div id="kb">
     <div id="kbAnswer">
-      <button id="kbSpeak" title="Read it back">🔊</button>
+      <button id="kbSpeak" title="Read it back" aria-label="Read it back"><svg width="54" height="54" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 4V5L7 9H3z" fill="#fff"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18 6a8.5 8.5 0 0 1 0 12" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
       <span id="kbText"></span>
-      <button id="kbDel" title="Delete last">⌫</button>
+      <button id="kbDel" title="Delete last" aria-label="Delete last"><svg width="56" height="56" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 5H20a1.5 1.5 0 0 1 1.5 1.5v11A1.5 1.5 0 0 1 20 19H8.5L2.5 12z" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><path d="M11 9l6 6M17 9l-6 6" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></button>
     </div>
     <div id="kbKeys"></div>
   </div>
@@ -236,119 +230,72 @@
 <div id="gaze"></div>
 <div id="hud">Taps: <span id="score">0</span></div>
 <div id="spellBar"></div>
-<button id="replay" title="Say it again" aria-label="Say it again">🔊</button>
-<button id="kbDelBtn" title="Delete last letter" aria-label="Delete last letter">⌫</button>
-<button id="gear" title="Settings (grown-ups: press and hold)" aria-label="Settings. Grown-ups: press and hold.">⚙</button>
+<button id="replay" title="Say it again" aria-label="Say it again"><svg width="54" height="54" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 4V5L7 9H3z" fill="#fff"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18 6a8.5 8.5 0 0 1 0 12" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
+<button id="kbDelBtn" title="Delete last letter" aria-label="Delete last letter"><svg width="56" height="56" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 5H20a1.5 1.5 0 0 1 1.5 1.5v11A1.5 1.5 0 0 1 20 19H8.5L2.5 12z" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><path d="M11 9l6 6M17 9l-6 6" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></button>
+<button id="gear" title="Settings (grown-ups: press and hold)" aria-label="Settings. Grown-ups: press and hold."></button>
 
-<!-- ---------------- Settings ---------------- -->
-<div id="panel">
-  <button id="closePanel">✕</button>
-  <h2>Settings</h2>
-
-  <div class="grp open">
-    <button class="grphead" type="button">Child <span class="arw">▾</span></button>
-    <div class="grpbody">
-      <div class="row"><label>Active child</label><select id="sProfile"></select></div>
-      <div class="btnrow">
-        <button class="act" id="btnNewProfile">New</button>
-        <button class="act" id="btnRenameProfile">Rename</button>
-        <button class="act" id="btnDelProfile">Delete</button>
-      </div>
-      <button class="act" id="btnProgress">View progress &amp; report</button>
-    </div>
+<!-- ---------------- Settings ----------------
+     The Bright Little Eyes settings sheet (as in ABC Lite and I Can Learn to Read): a popover that drops
+     down from the gear, on the device's own light or dark look, labels over segmented controls in 20px type.
+     Every control saves on change. "Reset" (top left) restores this child's settings; "Done" closes it. -->
+<div id="panelScrim"></div>
+<div id="panelArrow"></div>
+<div id="panel" role="dialog" aria-label="Settings">
+  <div class="pbar"><button type="button" class="tbtn" id="btnResetSettings">Reset</button><button type="button" class="tbtn b" id="closePanel">Done</button></div>
+  <div class="pbody">
+  <div class="confirm" id="resetConfirm" hidden>
+    <span class="caption">Reset this child's settings? Their progress, name and access settings are kept.</span>
+    <div class="btnrow"><button type="button" class="tbtn" id="btnResetNo">Cancel</button><button type="button" class="tbtn b" id="btnResetYes">Reset</button></div>
   </div>
 
-  <div class="grp open">
-    <button class="grphead" type="button">Activity <span class="arw">▾</span></button>
-    <div class="grpbody">
-      <div class="row"><label>Type</label>
-        <select id="sActivity">
-          <option value="tap">Look &amp; Tap (find the target)</option>
-          <option value="cause">Cause &amp; Effect (looking makes it happen)</option>
-          <option value="choose">Choose (letter, number, or shape)</option>
-          <option value="drop">Drop it in (look to place)</option>
-          <option value="keyboard">Keyboard &amp; Spelling</option>
-        </select></div>
-      <div class="row" id="rowKbTask" style="display:none"><label>Mode</label>
-        <select id="sKbTask">
-          <option value="keyboard">Free typing</option>
-          <option value="spell">Spell a word</option>
-        </select></div>
-      <div class="row" id="rowContent" style="display:none"><label>What to find</label>
-        <select id="sContent">
-          <option value="letters">Letters (A B C)</option>
-          <option value="lower">Letters (a b c)</option>
-          <option value="numbers">Numbers</option>
-          <option value="shapes">Shapes</option>
-        </select></div>
-      <div class="row" id="rowChoices" style="display:none"><label>Number of choices</label>
-        <select id="sChoices">
-          <option value="1">1 (errorless — only the answer)</option>
-          <option value="2">2 (answer + one distractor)</option>
-          <option value="all">All letters (full keyboard)</option>
-        </select></div>
-      <div class="row" id="rowWords" style="display:none;flex-direction:column;align-items:stretch">
-        <label style="margin-bottom:6px">Words to spell (spaces or commas)</label>
-        <textarea id="sWords" rows="3" placeholder="cat dog sun hat mom"></textarea></div>
-      <div class="row" id="rowKb" style="display:none"><label>Keyboard layout</label>
-        <select id="sKeyboard">
-          <option value="blocks">Blocks (big, spaced)</option>
-          <option value="az">A–Z</option>
-          <option value="qwerty">QWERTY</option>
-        </select></div>
-      <div class="row" id="rowKbCase" style="display:none"><label>Uppercase letters</label><div class="toggle" id="tKbUpper"></div></div>
+  <div class="psec">
+    <span class="alabel">Child</span>
+    <div class="seg" id="segProfile"></div>
+    <div class="btnrow">
+      <button type="button" class="tbtn" id="btnNewProfile">New</button>
+      <button type="button" class="tbtn" id="btnRenameProfile">Rename</button>
+      <button type="button" class="tbtn" id="btnDelProfile">Delete</button>
     </div>
+    <button type="button" class="tbtn" id="btnProgress">View progress and report</button>
   </div>
 
-  <div class="grp open">
-    <button class="grphead" type="button">Quick settings <span class="arw">▾</span></button>
-    <div class="grpbody">
-      <div class="row" id="rowSize"><label>Size</label>
-        <input type="range" id="sSize" min="80" max="480" step="10" value="200">
-        <span class="val" id="vSize">200</span></div>
-      <div class="row"><label>Color</label></div>
-      <div class="swrow" id="colors"></div>
-    </div>
+  <div class="psec">
+    <span class="alabel">Activity</span>
+    <div class="seg" id="segActivity"><button type="button" data-v="tap">Look &amp; Tap</button><button type="button" data-v="cause">Cause &amp; Effect</button><button type="button" data-v="choose">Choose</button><button type="button" data-v="drop">Drop it in</button><button type="button" data-v="keyboard">Keyboard &amp; Spelling</button></div>
+    <div id="rowKbTask"><span class="alabel">Keyboard mode</span><div class="seg" id="segKbTask"><button type="button" data-v="keyboard">Free typing</button><button type="button" data-v="spell">Spell a word</button></div></div>
+    <div id="rowContent"><span class="alabel">What to find</span><div class="seg" id="segContent"><button type="button" data-v="letters">A B C</button><button type="button" data-v="lower">a b c</button><button type="button" data-v="numbers">Numbers</button><button type="button" data-v="shapes">Shapes</button></div></div>
+    <div id="rowChoices"><span class="alabel">Number of choices</span><div class="seg" id="segChoices"><button type="button" data-v="1">1</button><button type="button" data-v="2">2</button><button type="button" data-v="all">All letters</button></div></div>
+    <div id="rowWords"><span class="alabel">Words to spell</span><textarea id="sWords" rows="2" placeholder="cat dog sun hat mom" aria-label="Words to spell"></textarea></div>
+    <div id="rowKb"><span class="alabel">Keyboard layout</span><div class="seg" id="segKeyboard"><button type="button" data-v="blocks">Blocks</button><button type="button" data-v="az">A–Z</button><button type="button" data-v="qwerty">QWERTY</button></div></div>
+    <div class="trow" id="rowKbCase" role="switch" tabindex="0" data-toggle="tKbUpper"><span class="alabel">Uppercase letters</span><div class="toggle" id="tKbUpper"></div></div>
   </div>
 
-  <div class="grp">
-    <button class="grphead" type="button">Advanced <span class="arw">▾</span></button>
-    <div class="grpbody">
-      <div class="row" id="rowGlow"><label>Glow (backlight)</label><div class="toggle on" id="tGlow"></div></div>
-      <div class="row" id="rowDropTarget" style="display:none"><label>Drop target</label>
-        <select id="sDropTarget">
-          <option value="toybox">Toy box</option>
-          <option value="piggy">Piggy bank</option>
-          <option value="fishbowl">Fish bowl</option>
-          <option value="gumball">Gumball machine</option>
-          <option value="beadjar">Bead jar</option>
-        </select></div>
-      <div class="row" id="rowBank" style="display:none"><label>Container size</label>
-        <input type="range" id="sBank" min="220" max="640" step="10" value="380"><span class="val" id="vBank">380</span></div>
-      <div class="row" id="rowPulse"><label>Pulse</label><div class="toggle on" id="tPulse"></div></div>
-      <div class="row" id="rowPos"><label>Where it appears</label>
-        <select id="sPos">
-          <option value="still">Still (center)</option>
-          <option value="jump">Jump to a new spot each tap</option>
-          <option value="glide">Glide (child follows it)</option>
-        </select></div>
-      <div class="row" id="rowSpeed" style="display:none"><label>Glide speed</label>
-        <input type="range" id="sSpeed" min="1" max="10" step="1" value="3">
-        <span class="val" id="vSpeed">3</span></div>
-      <div class="row" id="rowDelay"><label>Delay before next</label>
-        <input type="range" id="sDelay" min="0" max="5" step="0.5" value="1">
-        <span class="val" id="vDelay">1.0s</span></div>
-      <div class="row"><label>Sound</label><div class="toggle on" id="tSound"></div></div>
-      <div class="row"><label>Sparkles</label><div class="toggle on" id="tSpark"></div></div>
-      <button class="act" id="btnFull">Enter full screen</button>
-      <button class="act" id="btnReset">Reset tap count</button>
+  <div class="psec">
+    <div id="rowSize"><span class="alabel">Size</span><div class="stepper" id="stSize"><button type="button" data-d="-1" aria-label="Size less">−</button><span class="sv"></span><button type="button" data-d="1" aria-label="Size more">+</button></div></div>
+    <span class="alabel">Color</span>
+    <div class="swrow" id="colors"></div>
+    <div class="trow" id="rowGlow" role="switch" tabindex="0" data-toggle="tGlow"><span class="alabel">Glow</span><div class="toggle" id="tGlow"></div></div>
+    <div class="trow" id="rowPulse" role="switch" tabindex="0" data-toggle="tPulse"><span class="alabel">Pulse</span><div class="toggle" id="tPulse"></div></div>
+    <div id="rowDropTarget"><span class="alabel">Drop target</span><div class="seg" id="segDropTarget"><button type="button" data-v="toybox">Toy box</button><button type="button" data-v="piggy">Piggy bank</button><button type="button" data-v="fishbowl">Fish bowl</button><button type="button" data-v="gumball">Gumball machine</button><button type="button" data-v="beadjar">Bead jar</button></div></div>
+    <div id="rowBank"><span class="alabel">Container size</span><div class="stepper" id="stBank"><button type="button" data-d="-1" aria-label="Container size less">−</button><span class="sv"></span><button type="button" data-d="1" aria-label="Container size more">+</button></div></div>
+    <div id="rowPos"><span class="alabel">Where it appears</span><div class="seg" id="segPos"><button type="button" data-v="still">Still</button><button type="button" data-v="jump">Jump</button><button type="button" data-v="glide">Glide</button></div></div>
+    <div id="rowSpeed"><span class="alabel">Glide speed</span><div class="stepper" id="stSpeed"><button type="button" data-d="-1" aria-label="Glide speed less">−</button><span class="sv"></span><button type="button" data-d="1" aria-label="Glide speed more">+</button></div></div>
+    <div id="rowDelay"><span class="alabel">Delay before next</span><div class="stepper" id="stDelay"><button type="button" data-d="-1" aria-label="Delay before next less">−</button><span class="sv"></span><button type="button" data-d="1" aria-label="Delay before next more">+</button></div></div>
+  </div>
+
+  <div class="psec">
+    <div class="trow" role="switch" tabindex="0" data-toggle="tSound"><span class="alabel">Sound</span><div class="toggle" id="tSound"></div></div>
+    <div class="trow" role="switch" tabindex="0" data-toggle="tSpark"><span class="alabel">Sparkles</span><div class="toggle" id="tSpark"></div></div>
+    <div class="btnrow">
+      <button type="button" class="tbtn" id="btnFull">Full screen</button>
+      <button type="button" class="tbtn" id="btnReset">Reset tap count</button>
     </div>
   </div>
 
   <!-- Bright Little Eyes' selection system: the same rows, in the same order, in every app -->
-  <div class="grp open">
-    <button class="grphead" type="button">Choosing without touch <span class="arw">▾</span></button>
-    <div class="grpbody" id="accessRows">
+  <div class="psec" id="accessRows">
+    <div class="phead">Choosing without touch</div>
+    <div>
       <span class="alabel">How to select</span>
       <div class="seg" id="segMode"><button type="button" data-v="tap">Touch</button><button type="button" data-v="dwell">Look and hold</button><button type="button" data-v="switch">Look and press</button></div>
       <div id="accessMore">
@@ -370,24 +317,16 @@
           <div class="stepper" id="stGain"><button type="button" data-d="-1" aria-label="Head sensitivity less">−</button><span class="sv"></span><button type="button" data-d="1" aria-label="Head sensitivity more">+</button></div>
         </div>
       </div>
-      <p class="hint">Touch: tap to choose. Look and hold: rest the pointer on a choice; the ring around the dot fills, then it is chosen. Look and press: point, then press a switch (Space or Enter) or click. Pointer works with Windows Eye Control, Tobii gaze-to-cursor, Mill Mouse or a head-mouse. Camera is a webcam head pointer (Windows). Grown-ups: press and hold ⚙ to open Settings.</p>
+      <p class="hint">Touch: tap to choose. Look and hold: rest the pointer on a choice; the ring around the dot fills, then it is chosen. Look and press: point, then press a switch (Space or Enter) or click. Pointer works with Windows Eye Control, Tobii gaze-to-cursor, Mill Mouse or a head-mouse. Camera is a webcam head pointer (Windows). Grown-ups: press and hold the gear to open Settings.</p>
     </div>
   </div>
-</div>
-
-<!-- parent gate -->
-<div id="gate">
-  <div class="gate-card">
-    <p class="gate-q">Parents: what is <span id="gateQ"></span>?</p>
-    <div class="gate-opts" id="gateOpts"></div>
-    <button id="gateCancel">Cancel</button>
   </div>
 </div>
 
 <!-- ---------------- Progress report ---------------- -->
 <div id="progressPanel">
   <div class="rep-wrap">
-    <button class="act" id="btnCloseProgress" style="width:auto;float:right">✕ Close</button>
+    <button class="act" id="btnCloseProgress" style="width:auto;float:right">Close</button>
     <h2 id="repTitle">Progress</h2>
     <div id="repBody"></div>
   </div>
@@ -404,7 +343,7 @@
 (function(){
   "use strict";
   var DEFAULTS = { accessMode:'tap', aimSource:'mouse', dwellMs:650, cooldownMs:320, gain:18, showDot:true };
-  var STICKY_PAD = 28, SMOOTH = 0.35, ADULT_FACTOR = 2.6, ADULT_HOLD_MS = 800, REPEAT_DWELL_MS = 420;
+  var STICKY_PAD = 28, SMOOTH = 0.35, ADULT_FACTOR = 2.6, ADULT_HOLD_MS = 500, REPEAT_DWELL_MS = 420;
 
   var S = Object.assign({}, DEFAULTS);
   var targets = new Map(), nextId = 1;
@@ -573,7 +512,7 @@
   }, true);
   ['pointerup','mousedown','mouseup','touchstart','touchend','click'].forEach(function(ev){ addEventListener(ev, swallow, true); });
 
-  // ------------------------------------------------------------ adult controls: an 800 ms hold in every mode
+  // ------------------------------------------------------------ adult controls: a half-second hold in every mode
   // A tap does nothing at all; a gaze dwell on one runs 2.6× a child's.
   function adultControl(el, run, layer){
     var timer=null;
@@ -713,6 +652,10 @@
     accessMode:'tap', aimSource:'mouse', dwellMs:650, cooldownMs:320, gain:18, showDot:true
   };
   const glide={vx:0,vy:0};
+  // The device's "Reduce motion" setting: no pulse, no sparkles or fireworks (the chime stays), no flying objects.
+  const RM=window.matchMedia ? matchMedia('(prefers-reduced-motion: reduce)') : null;
+  const reducedMotion=()=>!!(RM && RM.matches);
+  if(RM && RM.addEventListener) RM.addEventListener('change',()=>applyLook());
   let score=0, armed=false, dwellStart=0, raf=null;
   let switchReady=false;           // when requireSwitch: true once dwell completes
   let targetShownAt=0;             // for measuring look-to-tap acquisition time
@@ -760,7 +703,8 @@
     shape.style.width=shape.style.height=S.size+'px';
     shape.style.borderRadius='50%';
     target.classList.toggle('glow',S.glow);
-    target.classList.toggle('pulse',S.pulse);
+    target.classList.toggle('pulse',S.pulse && !reducedMotion());
+    stage.classList.toggle('nopulse',!S.pulse || reducedMotion());
     // ring sized a bit larger than the target
     const R=S.size/2+26, sw=10, box=R*2+sw*2, c=box/2, rad=R;
     ring.setAttribute('width',box); ring.setAttribute('height',box);
@@ -822,7 +766,7 @@
     const dx=cursor.x-target._cx, dy=cursor.y-target._cy;
     return (dx*dx+dy*dy) <= r*r;
   }
-  function overlayOpen(){ return $('panel').classList.contains('open')||$('gate').classList.contains('open')||$('progressPanel').classList.contains('open'); }
+  function overlayOpen(){ return $('panel').classList.contains('open')||$('progressPanel').classList.contains('open'); }
   function loop(){
     raf=requestAnimationFrame(loop);
     if(overlayOpen()) return;                       // pause the activity while a grown-up screen is open
@@ -839,9 +783,7 @@
     // record look-to-tap time for progress tracking (capped so walk-aways don't skew)
     const acq=Math.min(30000, Math.max(0, performance.now()-targetShownAt));
     recordTap(acq);
-    // celebrate: grow, then a reward sized to the activity
-    shape.animate([{transform:'scale(1)'},{transform:'scale(1.35)'},{transform:'scale(1)'}],
-      {duration:600,easing:'ease-out'});
+    // celebrate with a reward sized to the activity (nothing grows or bounces)
     if(S.activity==='cause'){
       bigCelebrate(target._cx,target._cy);            // full-screen payoff
     } else {
@@ -854,31 +796,16 @@
   }
 
   function bigCelebrate(x,y){
-    // expanding rings
-    for(let i=0;i<3;i++){
-      const r=document.createElement('div'); r.className='fx-ring';
-      r.style.left=x+'px'; r.style.top=y+'px'; r.style.borderColor=S.color;
-      stage.appendChild(r);
-      r.animate([{transform:'translate(-50%,-50%) scale(0.2)',opacity:.9},
-        {transform:'translate(-50%,-50%) scale(3.4)',opacity:0}],
-        {duration:900,delay:i*120,easing:'ease-out'}).onfinish=()=>r.remove();
-    }
-    if(S.spark){ sparkle(x,y); sparkle(x,y); }
-    // big friendly emoji pop
-    const E=['⭐','🎈','🎉','🌟','💫','🦄','🐶','🌈','🐠','🌸'];
-    const em=document.createElement('div'); em.className='fx-emoji';
-    em.textContent=E[Math.floor(Math.random()*E.length)];
-    em.style.left=x+'px'; em.style.top=y+'px'; stage.appendChild(em);
-    em.animate([{transform:'translate(-50%,-50%) scale(0.3)',opacity:0},
-      {transform:'translate(-50%,-50%) scale(1.4)',opacity:1,offset:.3},
-      {transform:'translate(-50%,-50%) scale(1.2)',opacity:1,offset:.7},
-      {transform:'translate(-50%,-50%) scale(1.7)',opacity:0}],
-      {duration:1100,easing:'ease-out'}).onfinish=()=>em.remove();
-    beep([523,659,784,1047]); // brighter 4-note chord
+    // Cause & Effect's big payoff: fireworks bursts around the screen and a brighter chord (no emoji)
+    beep([523,659,784,1047]);
+    if(!S.spark || reducedMotion()) return;
+    sparkle(x,y);
+    [[.25,.3],[.75,.3],[.5,.7]].forEach(([fx,fy],i)=>setTimeout(()=>sparkle(innerWidth*fx, innerHeight*fy), 180*(i+1)));
   }
 
   function sparkle(x,y){
-    // fireworks scaled to the circle: bigger circle -> bigger burst
+    if(reducedMotion()) return;   // Reduce motion: the chime alone
+    // fireworks scaled to the circle: bigger circle -> bigger burst (particles fly out and fade; nothing grows)
     const n=18+Math.round(S.size/16);
     const dot=Math.max(10, Math.round(S.size*0.09));
     for(let i=0;i<n;i++){
@@ -889,8 +816,8 @@
       s.style.background=PALETTE[i%PALETTE.length];
       stage.appendChild(s);
       const a=Math.random()*2*Math.PI, d=S.size*(0.55+Math.random()*0.75);   // reach ≈ circle size
-      s.animate([{transform:'translate(-50%,-50%) scale(1)',opacity:1},
-        {transform:`translate(calc(-50% + ${(Math.cos(a)*d).toFixed(1)}px), calc(-50% + ${(Math.sin(a)*d).toFixed(1)}px)) scale(0.2)`,opacity:0}],
+      s.animate([{transform:'translate(-50%,-50%)',opacity:1},
+        {transform:`translate(calc(-50% + ${(Math.cos(a)*d).toFixed(1)}px), calc(-50% + ${(Math.sin(a)*d).toFixed(1)}px))`,opacity:0}],
         {duration:820,easing:'cubic-bezier(.2,.7,.3,1)'}).onfinish=()=>s.remove();
     }
   }
@@ -959,33 +886,18 @@
   function toggle(el,key,after){
     el.addEventListener('click',()=>{S[key]=!S[key];el.classList.toggle('on',S[key]);after&&after();});
   }
-  // parent gate: a quick math check keeps the child out of the teacher settings
-  function openGate(){
-    const a=2+Math.floor(Math.random()*7), b=2+Math.floor(Math.random()*7), ans=a+b;
-    $('gateQ').textContent=a+' + '+b;
-    const opts=[ans, ans+1, ans-2].sort(()=>Math.random()-0.5);
-    const box=$('gateOpts'); box.innerHTML='';
-    opts.forEach(v=>{ const btn=document.createElement('button'); btn.textContent=v;
-      btn.onclick=()=>{ if(v===ans){ $('gate').classList.remove('open'); openPanel(); } else { openGate(); } };
-      box.appendChild(btn); });
-    $('gate').classList.add('open');
-  }
-  A.adultControl($('gear'), openGate);
-  $('gateCancel').onclick=()=>$('gate').classList.remove('open');
-  function openPanel(){ syncAccessRows(); $('panel').classList.add('open'); A.attachPreview($('camPreview')); }
-  function closePanel(){ $('panel').classList.remove('open'); A.detachPreview(); }
+  A.adultControl($('gear'), openPanel);   // the long hold is the grown-up gate
+  function openPanel(){ syncControls(false); $('resetConfirm').hidden=true;
+    ['panel','panelArrow','panelScrim'].forEach(id=>$(id).classList.add('open')); A.attachPreview($('camPreview')); }
+  function closePanel(){ ['panel','panelArrow','panelScrim'].forEach(id=>$(id).classList.remove('open')); A.detachPreview(); }
   $('closePanel').onclick=closePanel;
+  $('panelScrim').onclick=closePanel;
 
-  // collapsible groups
-  $('panel').addEventListener('click', e=>{
-    const h=e.target.closest('.grphead');
-    if(h && h.parentElement) h.parentElement.classList.toggle('open');
-  });
   // show only the settings that apply to the current activity
   function updateMenuVisibility(){
     const a=S.activity, single=(a==='tap'||a==='cause'),
           grp=(a==='keyboard'||a==='spell');   // the Keyboard & Spelling group
-    const V=(id,on,disp)=>{const el=$(id); if(el) el.style.display=on?(disp||'flex'):'none';};
+    const V=(id,on)=>{const el=$(id); if(el) el.style.display=on?'':'none';};
     V('rowKbTask', grp);                        // Free typing / Spell a word
     V('rowContent', a==='choose');
     V('rowChoices', a==='choose'||a==='spell');
@@ -998,18 +910,34 @@
     V('rowDelay', a!=='keyboard');              // spell keeps pacing; free typing doesn't
   }
 
-  $('sSize').oninput=e=>{S.size=+e.target.value;$('vSize').textContent=S.size;applyLook();placeTarget(); if(S.activity==='drop') dropApply();};
-  $('sDelay').oninput=e=>{S.delay=+e.target.value;$('vDelay').textContent=S.delay.toFixed(1)+'s';};
-  $('sActivity').onchange=e=>{S.activity=e.target.value; updateMenuVisibility(); resetActivity();};
-  $('sKbTask').onchange=e=>{S.activity=e.target.value; updateMenuVisibility(); resetActivity();};
-  $('sContent').onchange=e=>{S.content=e.target.value; resetActivity();};
-  $('sChoices').onchange=e=>{S.choices=(e.target.value==='all')?'all':+e.target.value; resetActivity();};
+  // segmented controls and steppers (every control saves on change)
+  function seg(id,get,set){
+    const el=$(id);
+    el.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b||!el.contains(b)) return; set(b.dataset.v); markSeg(id,get()); });
+    return ()=>markSeg(id,get());
+  }
+  function markSeg(id,v){ $(id).querySelectorAll('button').forEach(b=>{ const on=b.dataset.v===String(v); b.classList.toggle('sel',on); b.setAttribute('aria-pressed',on); }); }
+  function stepperRow(id,step,min,max,fmt,get,set){
+    $(id).addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return;
+      set(Math.round(Math.max(min,Math.min(max,get()+step*(+b.dataset.d)))*100)/100); show(); });
+    const show=()=>{ $(id).querySelector('.sv').textContent=fmt(get()); };
+    return show;
+  }
+  const syncers=[];
+  syncers.push(seg('segActivity',()=>S.activity==='spell'?'keyboard':S.activity,v=>{ S.activity=v; updateMenuVisibility(); resetActivity(); markSeg('segKbTask',S.activity==='spell'?'spell':'keyboard'); }));
+  syncers.push(seg('segKbTask',()=>S.activity==='spell'?'spell':'keyboard',v=>{ S.activity=v; updateMenuVisibility(); resetActivity(); }));
+  syncers.push(seg('segContent',()=>S.content,v=>{ S.content=v; resetActivity(); }));
+  syncers.push(seg('segChoices',()=>String(S.choices),v=>{ S.choices=v==='all'?'all':+v; resetActivity(); }));
+  syncers.push(seg('segKeyboard',()=>S.keyboard,v=>{ S.keyboard=v; rebuildKeys(); }));
+  syncers.push(seg('segDropTarget',()=>S.dropTarget,v=>{ S.dropTarget=v; if(S.activity==='drop') dropApply(); }));
+  syncers.push(seg('segPos',()=>S.position,v=>{ S.position=v; updateMenuVisibility(); placeTarget(); }));
+  // Nothing a child touches is under 100pt, so the smallest size is 100.
+  syncers.push(stepperRow('stSize',20,100,480,v=>v+' pt',()=>S.size,v=>{ S.size=v; applyLook(); placeTarget(); if(S.activity==='drop') dropApply(); }));
+  syncers.push(stepperRow('stBank',20,220,640,v=>v+' pt',()=>S.bank,v=>{ S.bank=v; if(S.activity==='drop') dropApply(); }));
+  syncers.push(stepperRow('stSpeed',1,1,10,v=>String(v),()=>S.speed,v=>{ S.speed=v; rescaleGlide(); }));
+  syncers.push(stepperRow('stDelay',0.5,0,5,v=>v.toFixed(1)+' s',()=>S.delay,v=>{ S.delay=v; }));
   $('sWords').oninput=e=>{S.words=e.target.value;};
   $('sWords').onchange=()=>{ if(S.activity==='spell') startSpellRound(); };
-  $('sKeyboard').onchange=e=>{S.keyboard=e.target.value; rebuildKeys();};
-  $('sBank').oninput=e=>{S.bank=+e.target.value;$('vBank').textContent=S.bank; if(S.activity==='drop') dropApply();};
-  $('sDropTarget').onchange=e=>{S.dropTarget=e.target.value; if(S.activity==='drop') dropApply();};
-  toggle($('tKbUpper'),'kbUpper', rebuildKeys);
   function rebuildKeys(){
     if(S.activity==='keyboard') buildKeyboard();
     else if(S.activity==='spell'){ buildKeyboard(); spellScaffold(); }
@@ -1020,31 +948,47 @@
     else if(S.activity==='choose' && chooseAnswer){ speak(promptText(chooseAnswer)); }
   };
   $('kbDelBtn').onclick=()=>kbDelete();
-  $('sPos').onchange=e=>{S.position=e.target.value;
-    updateMenuVisibility();
-    placeTarget();};
-  $('sSpeed').oninput=e=>{S.speed=+e.target.value;$('vSpeed').textContent=S.speed;rescaleGlide();};
 
-  toggle($('tGlow'),'glow',applyLook);
-  toggle($('tPulse'),'pulse',applyLook);
-  toggle($('tSound'),'sound');
-  toggle($('tSpark'),'spark');
+  // switch rows: the whole row toggles
+  function toggleRow(id,key,after){
+    const row=$(id).closest('.trow');
+    const flip=()=>{ S[key]=!S[key]; $(id).classList.toggle('on',S[key]); row.setAttribute('aria-checked',S[key]); after&&after(); };
+    row.addEventListener('click',flip);
+    row.addEventListener('keydown',e=>{ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); flip(); } });
+    row.setAttribute('aria-label',row.textContent.trim());
+    return ()=>{ $(id).classList.toggle('on',!!S[key]); row.setAttribute('aria-checked',!!S[key]); };
+  }
+  syncers.push(toggleRow('tKbUpper','kbUpper',rebuildKeys));
+  syncers.push(toggleRow('tGlow','glow',applyLook));
+  syncers.push(toggleRow('tPulse','pulse',applyLook));
+  syncers.push(toggleRow('tSound','sound'));
+  syncers.push(toggleRow('tSpark','spark'));
 
   // color swatches
   const cw=$('colors');
+  const COLOR_NAMES={"#ff2b2b":"Red","#ff7a00":"Orange","#ffd400":"Yellow","#2ecc40":"Green","#1e90ff":"Blue","#b84dff":"Purple","#ffffff":"White"};
   PALETTE.forEach(c=>{
-    const d=document.createElement('div');
-    d.className='swatch'; d.dataset.c=c;
+    const d=document.createElement('button');
+    d.type='button'; d.className='swatch'; d.dataset.c=c; d.setAttribute('aria-label',COLOR_NAMES[c]||c);
     d.style.background=c;
     d.onclick=()=>{S.color=c;applyLook();markSwatch(); if(S.activity==='keyboard') buildKeyboard(); if(S.activity==='drop') dropApply();};
     cw.appendChild(d);
   });
-  function markSwatch(){ [...cw.children].forEach(x=>x.classList.toggle('sel', x.dataset.c===S.color)); }
+  function markSwatch(){ [...cw.children].forEach(x=>{ x.classList.toggle('sel', x.dataset.c===S.color); x.setAttribute('aria-pressed', x.dataset.c===S.color); }); }
 
   $('btnFull').onclick=()=>{const el=document.documentElement;
     if(document.fullscreenElement){document.exitFullscreen();}
     else if(el.requestFullscreen){el.requestFullscreen();}};
   $('btnReset').onclick=()=>{score=0;scoreEl.textContent=0;};
+  // Reset (top left): this child's settings back to the defaults, after a confirm. Their name, progress
+  // and access set-up (Choosing without touch) are kept.
+  $('btnResetSettings').onclick=()=>{ $('resetConfirm').hidden=false; $('panel').querySelector('.pbody').scrollTop=0; };
+  $('btnResetNo').onclick=()=>{ $('resetConfirm').hidden=true; };
+  $('btnResetYes').onclick=()=>{
+    const keep={}; A.KEYS.forEach(k=>keep[k]=S[k]);
+    Object.assign(S, defaults(), keep); $('resetConfirm').hidden=true;
+    saveActiveSettings(); syncControls(); resetActivity();
+  };
 
   // ---------- profiles & progress (saved on this device) ----------
   const KEY='iclts_v1';
@@ -1104,45 +1048,36 @@
   }
 
   // reflect S into every control
-  function syncControls(){
-    $('sActivity').value=(S.activity==='spell'?'keyboard':S.activity);
-    $('sKbTask').value=(S.activity==='spell'?'spell':'keyboard');
-    $('sContent').value=S.content; $('sChoices').value=String(S.choices);
-    $('sKeyboard').value=S.keyboard; $('tKbUpper').classList.toggle('on',S.kbUpper);
+  function syncControls(relayout){
     $('sWords').value=S.words;
-    $('sBank').value=S.bank; $('vBank').textContent=S.bank; $('sDropTarget').value=S.dropTarget;
-    $('sSize').value=S.size; $('vSize').textContent=S.size;
-    $('sDelay').value=S.delay; $('vDelay').textContent=S.delay.toFixed(1)+'s';
-    $('sSpeed').value=S.speed; $('vSpeed').textContent=S.speed;
-    $('sPos').value=S.position;
+    syncers.forEach(f=>f());
     updateMenuVisibility();
-    $('tGlow').classList.toggle('on',S.glow);
-    $('tPulse').classList.toggle('on',S.pulse);
-    $('tSound').classList.toggle('on',S.sound);
-    $('tSpark').classList.toggle('on',S.spark);
-    markSwatch(); applyLook(); placeTarget();
+    markSwatch(); renderProfiles();
+    if(relayout!==false){ applyLook(); placeTarget(); }
     applyAccess();
   }
   function renderProfiles(){
-    const sel=$('sProfile'); sel.innerHTML='';
+    const el=$('segProfile'); el.innerHTML='';
     Object.keys(store.profiles).forEach(id=>{
-      const o=document.createElement('option'); o.value=id; o.textContent=store.profiles[id].name;
-      if(id===store.activeId) o.selected=true; sel.appendChild(o);
+      const b=document.createElement('button'); b.type='button'; b.dataset.v=id; b.textContent=store.profiles[id].name;
+      b.classList.toggle('sel',id===store.activeId); b.setAttribute('aria-pressed',id===store.activeId);
+      el.appendChild(b);
     });
+    registerSheetTargets(el);
   }
   // save settings automatically whenever a control in the panel changes
   ['input','change','click'].forEach(ev=>
     $('panel').addEventListener(ev, ()=>setTimeout(saveActiveSettings,0)));
 
-  $('sProfile').onchange=e=>{ store.activeId=e.target.value; saveStore();
-    applyActiveProfile(); syncControls(); };
+  $('segProfile').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return;
+    store.activeId=b.dataset.v; saveStore(); applyActiveProfile(); syncControls(); resetActivity(); });
   $('btnNewProfile').onclick=()=>{
     const n=(prompt('Name for the new child profile:','Child '+(Object.keys(store.profiles).length+1))||'').trim();
     if(!n) return;
     const id='p'+Date.now();
     store.profiles[id]={name:n,settings:defaults(),sessions:[]};
     store.activeId=id; saveStore();
-    applyActiveProfile(); renderProfiles(); syncControls();
+    applyActiveProfile(); syncControls(); resetActivity();
   };
   $('btnRenameProfile').onclick=()=>{
     const p=activeProfile(); const n=(prompt('Rename this child:',p.name)||'').trim();
@@ -1155,7 +1090,7 @@
     if(!confirm('Delete "'+p.name+'" and all their saved progress?')) return;
     delete store.profiles[store.activeId];
     store.activeId=Object.keys(store.profiles)[0]; saveStore();
-    applyActiveProfile(); renderProfiles(); syncControls();
+    applyActiveProfile(); syncControls(); resetActivity();
   };
 
   // ---------- progress report ----------
@@ -1287,6 +1222,9 @@
     svg.appendChild(ring); el.appendChild(svg);
     el.appendChild(makeItemNode(item,sz,asShape));
     stage.appendChild(el);
+    const face=el.lastChild;
+    face.setAttribute('role','button');
+    face.setAttribute('aria-label', S.content==='shapes' ? String(item) : S.content==='numbers' ? 'Number '+item : 'Letter '+String(item).toUpperCase());
     const choice={el,cx:x,cy:y,dwellStart:0,correct,prog:ring,circ};
     A.register({ node:el.lastChild, run:()=>chooseSelect(choice), enabled:()=>armed && S.activity==='choose' });
     return choice;
@@ -1347,7 +1285,7 @@
   function startSpellRound(){
     clearChoose(); target.style.visibility='hidden';
     spellWords=parseSpellWords();
-    if(!spellWords.length){ $('spellBar').textContent='Add words in Settings ⚙'; return; }
+    if(!spellWords.length){ $('spellBar').textContent='Add words in Settings'; return; }
     spellWord=spellWords[Math.floor(Math.random()*spellWords.length)];
     spellIndex=0; updateSpellBar();
     kbMode='spell'; buildKeyboard();     // full keyboard; letters get blurred by the scaffold
@@ -1439,8 +1377,11 @@
     const wrap=$('kbKeys'); wrap.innerHTML=''; kbKeys=[];
     const rows=KB[S.keyboard]||KB.blocks;
     const maxCols=Math.max.apply(null,rows.map(r=>r.length));
-    const size=Math.max(44, Math.min(120,
-      Math.floor(innerWidth/(maxCols+1.5)), Math.floor(innerHeight*0.62/rows.length)));
+    // Nothing a child touches is under 100pt: keys are 100–120pt wherever the layout fits the screen
+    // (Blocks fits from about 800pt wide; A–Z and QWERTY need a wider screen, and shrink to fit if not).
+    const fitW=Math.floor((innerWidth-16-(maxCols-1)*12)/maxCols);
+    const want=Math.max(100, Math.min(120, Math.floor(innerWidth/(maxCols+1.5)), Math.floor(innerHeight*0.62/rows.length)));
+    const size=Math.max(44, Math.min(want, fitW));
     rows.forEach(row=>{
       const rEl=document.createElement('div'); rEl.className='kbrow';
       row.forEach(ch=>{
@@ -1450,6 +1391,7 @@
         const g=document.createElement('div'); g.className='kbglyph';
         g.textContent=S.kbUpper?ch.toUpperCase():ch;
         k.appendChild(fill); k.appendChild(g); rEl.appendChild(k);
+        k.setAttribute('role','button'); k.setAttribute('aria-label', S.kbUpper?ch.toUpperCase():ch);
         const key={el:k,fill,ch,dwellStart:0}; kbKeys.push(key);
         A.register({ node:k, run:()=>kbSelectKey(key), enabled:()=>!key.blurred && (S.activity==='keyboard'||S.activity==='spell') });
       });
@@ -1470,7 +1412,7 @@
 
   function kbSelectKey(k){
     needRelease=true; k.dwellStart=0; k.fill.style.transform='scaleY(0)';
-    k.el.animate([{transform:'scale(1)'},{transform:'scale(1.12)'},{transform:'scale(1)'}],{duration:250});
+    k.el.animate([{opacity:.4},{opacity:1}],{duration:500,easing:'ease-in'});   // a quick fade, no grow
     if(kbMode==='spell') spellKeyPicked(k.ch); else kbAppend(k.ch);
   }
 
@@ -1503,12 +1445,16 @@
     // Scale the dropped object to the container so it visibly "fits" into it.
     // Object diameter ~40% of the container, but never smaller than 40px, and
     // capped by the teacher's Size slider so it can be made a bit smaller.
-    dropObjSize=Math.max(40, Math.min(S.size, Math.round(S.bank*0.26)));
+    dropObjSize=Math.max(100, Math.min(S.size, Math.round(S.bank*0.26)));   // never under 100pt
     dropCoin.style.width=dropCoin.style.height=dropObjSize+'px';
     dropCoin.style.setProperty('--gc',S.color);
     dropCoin.innerHTML=objSvg(OBJKIND[S.dropTarget]||'coin', S.color);
     dropCoin._r=dropObjSize/2;
     dropBank.innerHTML=BANKS[S.dropTarget]||BANKS.toybox;
+    const NAMES={toybox:['block','Toy box'],piggy:['coin','Piggy bank'],fishbowl:['fish','Fish bowl'],gumball:['gumball','Gumball machine'],beadjar:['bead','Bead jar']};
+    const nm=NAMES[S.dropTarget]||NAMES.toybox;
+    dropCoin.setAttribute('role','button'); dropCoin.setAttribute('aria-label','Pick up the '+nm[0]);
+    dropBank.setAttribute('role','button'); dropBank.setAttribute('aria-label',nm[1]);
     dropBank.style.width=S.bank+'px'; dropBank._r=S.bank*0.42;
     dropBank._cx=innerWidth/2; dropBank._cy=innerHeight - S.bank*0.5;
     dropBank.style.left=dropBank._cx+'px'; dropBank.style.top=dropBank._cy+'px';
@@ -1531,16 +1477,15 @@
     if(dropCarry){ dropCoin.style.left=cursor.x+'px'; dropCoin.style.top=cursor.y+'px'; }
   }
   function dropPickUp(){ dropCarry=true; dropPhase='drop'; dropStart=0; needRelease=true;
-    dropSizeRing(dropBank._r+22); dropSetRing(0); beep([660,880]);
-    dropBank.animate([{transform:'translate(-50%,-50%) scale(1)'},{transform:'translate(-50%,-50%) scale(1.12)'},{transform:'translate(-50%,-50%) scale(1)'}],{duration:600}); }
+    dropSizeRing(dropBank._r+22); dropSetRing(0); beep([660,880]); }
   function dropDrop(){ if(dropPhase!=='drop') return; dropCarry=false; dropStart=0; needRelease=true; dropPhase='done';
     score++; scoreEl.textContent=score;
     recordTap(Math.min(30000,Math.max(0,performance.now()-targetShownAt)));
     beep([523,659,784,1047]);
-    dropCoin.animate([{left:dropCoin.style.left,top:dropCoin.style.top,opacity:1,transform:'translate(-50%,-50%) scale(1)'},
-      {left:dropBank._cx+'px',top:dropBank._cy+'px',opacity:0,transform:'translate(-50%,-50%) scale(0.2)'}],
+    // it moves into the container and fades (nothing shrinks or bounces); Reduce motion: it just fades
+    dropCoin.animate(reducedMotion() ? [{opacity:1},{opacity:0}]
+      : [{left:dropCoin.style.left,top:dropCoin.style.top,opacity:1},{left:dropBank._cx+'px',top:dropBank._cy+'px',opacity:0}],
       {duration:450,easing:'ease-in',fill:'forwards'}).onfinish=()=>{ dropCoin.style.visibility='hidden'; };
-    dropBank.animate([{transform:'translate(-50%,-50%) scale(1)'},{transform:'translate(-50%,-50%) scale(1.3)'},{transform:'translate(-50%,-50%) scale(1)'}],{duration:600});
     if(S.spark) sparkle(dropBank._cx,dropBank._cy);
     dropSetRing(0);
     setTimeout(()=>{ if(S.activity==='drop') newDropCoin(); }, Math.max(500,S.delay*1000));
@@ -1548,9 +1493,9 @@
   addEventListener('resize',()=>{ if(S.activity==='drop') dropApply(); });
 
   // ---------- Bright Little Eyes' selection system: targets, settings rows ----------
-  // Which targets are live: the child's screen, the settings sheet's controls, or nothing (parent gate / report).
+  // Which targets are live: the child's screen, the settings sheet's controls, or nothing (the progress report).
   A.setLayer(()=> $('panel').classList.contains('open') ? 'sheet'
-    : ($('gate').classList.contains('open')||$('progressPanel').classList.contains('open')) ? 'none' : 'app');
+    : $('progressPanel').classList.contains('open') ? 'none' : 'app');
   // Look & Tap / Cause & Effect: the circle. Cause & Effect answers a quick look, as it always has.
   A.register({ node:shape, run:()=>{ if(armed) select(); },
     enabled:()=>armed && (S.activity==='tap'||S.activity==='cause') && target.style.visibility!=='hidden',
@@ -1563,10 +1508,7 @@
   A.register({ node:$('replay'), run:()=>$('replay').onclick() });
   A.register({ node:$('kbDelBtn'), run:()=>$('kbDelBtn').onclick() });
   // The settings sheet's own controls can be chosen too, while it's open (steppers keep counting)
-  document.querySelectorAll('#closePanel, #panel .grphead, #panel .toggle, #panel .swatch, #btnReset, #accessRows .seg button')
-    .forEach(el=>A.register({ node:el, run:()=>el.click(), layer:'sheet' }));
-  document.querySelectorAll('#accessRows .stepper button')
-    .forEach(el=>A.register({ node:el, run:()=>el.click(), layer:'sheet', allowRepeat:true, dwellMs:A.REPEAT_DWELL_MS }));
+  registerSheetTargets($('panel'));
 
   function accessOf(){ const o={}; A.KEYS.forEach(k=>o[k]=S[k]); return o; }
   function applyAccess(){
@@ -1602,6 +1544,16 @@
   stepper('stCool','cooldownMs',40,80,1200);
   stepper('stGain','gain',2,6,40);
   $('btnCentre').onclick=()=>A.setCentre();
+
+  // The settings sheet's own controls can be chosen with Look and hold / Look and press too, while it's open
+  // (steppers keep counting under a long look). New / Rename / Delete ask with a browser box, so they stay
+  // touch or mouse only.
+  function registerSheetTargets(root){
+    root.querySelectorAll('.pbar button, .seg button, .trow, .swatch, #btnReset, #btnResetNo, #btnResetYes, #btnProgress')
+      .forEach(el=>{ if(el._bleT) return; el._bleT=1; A.register({ node:el, run:()=>el.click(), layer:'sheet' }); });
+    root.querySelectorAll('.stepper button')
+      .forEach(el=>{ if(el._bleT) return; el._bleT=1; A.register({ node:el, run:()=>el.click(), layer:'sheet', allowRepeat:true, dwellMs:A.REPEAT_DWELL_MS }); });
+  }
 
   // ---------- go ----------
   ensureStore();

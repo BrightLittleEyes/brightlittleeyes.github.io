@@ -146,11 +146,11 @@
      labels over segmented controls in control-label (20px), notes in caption (14px). */
   #panel{
     --sb:#ffffff; --si:#000000; --ss:#3c3c43; --st:rgba(142,142,142,.3); --sg:#ffffff;
-    --sr:rgba(142,142,142,.5); --sl:rgba(142,142,142,.35); --son:#34c759; --soff:rgba(120,120,128,.32);
+    --sr:rgba(142,142,142,.5); --sl:rgba(60,60,67,.3); --son:#34c759; --soff:rgba(120,120,128,.32); --st:#f2f2f7; --sel:#0060DF;
   }
   #panelArrow{--sb:#ffffff;}
   @media (prefers-color-scheme: dark){
-    #panel{ --sb:#1c1c1e; --si:#ffffff; --ss:#aeaeb2; --sg:#636366; --soff:rgba(120,120,128,.36); --son:#30d158; }
+    #panel{ --sb:#1c1c1e; --si:#ffffff; --ss:#aeaeb2; --sg:#636366; --soff:rgba(120,120,128,.36); --son:#30d158; --st:#2c2c2e; --sl:rgba(142,142,142,.45); --sel:#0A84FF; --danger:#ff453a; }
     #panelArrow{--sb:#1c1c1e;}
   }
   #panelScrim{position:fixed;inset:0;z-index:69;display:none;background:transparent;cursor:default;}
@@ -166,35 +166,48 @@
     font-family:-apple-system,"SF Pro Text","Helvetica Neue","Segoe UI",system-ui,sans-serif;}
   .pbar{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:.5px solid var(--sl);flex:none;}
   .pbody{padding:6px 20px 32px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
-  .psec{padding:14px 0 18px;border-bottom:.5px solid var(--sl);}
+  .psec{padding:18px 0 24px;border-bottom:.5px solid var(--sl);}
   .psec:last-child{border-bottom:none;}
   .phead{font-size:20px;line-height:24px;font-weight:600;margin:0 0 4px;}
-  .alabel{display:block;font-size:20px;line-height:24px;margin:14px 0 8px;}
+  .alabel{display:block;font-size:20px;line-height:24px;font-weight:600;margin:22px 0 10px;}
   .caption,.hint{font-size:14px;line-height:18px;color:var(--ss);margin:8px 0 0;}
-  .tbtn{background:none;border:none;color:var(--si);font:inherit;font-size:20px;line-height:24px;padding:8px 0;cursor:pointer;}
-  .tbtn.b{font-weight:600;}
-  .btnrow{display:flex;gap:24px;flex-wrap:wrap;align-items:center;}
+  /* text buttons are real buttons: outlined, big enough to hit, never crowding each other */
+  .tbtn{background:none;border:2px solid var(--sl);border-radius:12px;color:var(--si);font:inherit;font-size:20px;line-height:24px;
+    font-weight:600;min-height:50px;padding:11px 18px;cursor:pointer;margin-top:12px;}
+  .pbar .tbtn{margin-top:0;}
+  .tbtn.b{background:var(--sel);border-color:var(--sel);color:#fff;}
+  .tbtn.danger{color:var(--danger,#d70015);border-color:var(--danger,#d70015);}
+  .btnrow{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
+  .btnrow .tbtn{margin-top:12px;}
+  .nameinput{display:block;width:100%;box-sizing:border-box;border-radius:9px;border:1px solid var(--sl);background:var(--st);
+    color:var(--si);font:inherit;font-size:20px;line-height:24px;padding:10px 12px;}
   .confirm{padding:14px 0;border-bottom:.5px solid var(--sl);}
   /* segmented control: grey track, the chosen segment raised on a chip */
-  .seg{display:inline-flex;flex-wrap:wrap;padding:2px;border-radius:9px;background:var(--st);max-width:100%;}
-  .seg button{flex:1 1 auto;padding:6px 18px;border-radius:7px;border:1px solid transparent;background:none;
-    color:var(--si);font:inherit;font-size:20px;line-height:24px;cursor:pointer;text-align:center;}
-  .seg button.sel{background:var(--sg);border-color:var(--sr);font-weight:600;}
+  /* choices: a fixed grid of equal buttons, so nothing shifts when one is picked.
+     2 or 4 options sit 2 across, everything else 3 across; the chosen one is solid blue with a check. */
+  .seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;width:100%;}
+  .seg:has(> button:only-child){grid-template-columns:minmax(0,1fr);max-width:220px;}
+  .seg:has(> button:nth-child(2):last-child),.seg:has(> button:nth-child(4):last-child){grid-template-columns:repeat(2,minmax(0,1fr));}
+  .seg button{min-height:56px;padding:8px 8px;border-radius:12px;border:2px solid var(--sl);background:var(--st);
+    color:var(--si);font:inherit;font-size:19px;line-height:23px;font-weight:600;cursor:pointer;text-align:center;
+    overflow-wrap:anywhere;}
+  .seg button.sel{background:var(--sel);border-color:var(--sel);color:#fff;}
+  .seg button.sel::before{content:"\2713\00a0";}
   .stepper{display:flex;align-items:center;gap:16px;}
-  .stepper button{min-width:64px;height:56px;border-radius:12px;border:none;background:var(--st);color:var(--si);
+  .stepper button{min-width:64px;height:56px;border-radius:12px;border:2px solid var(--sl);background:var(--st);color:var(--si);
     font:inherit;font-size:28px;font-weight:600;cursor:pointer;}
   .stepper .sv{min-width:96px;text-align:center;font-size:20px;line-height:24px;font-weight:600;font-variant-numeric:tabular-nums;}
   /* a switch row: the whole row toggles */
-  .trow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;cursor:pointer;font-size:20px;line-height:24px;}
+  .trow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0;min-height:60px;box-sizing:border-box;cursor:pointer;font-size:20px;line-height:24px;}
   .trow .alabel{margin:0;}
   .toggle{position:relative;width:51px;height:31px;border-radius:16px;background:var(--soff);flex:none;transition:background .2s;}
   .toggle.on{background:var(--son);}
   .toggle::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;
     box-shadow:0 2px 4px rgba(0,0,0,.2);transition:left .2s;}
   .toggle.on::after{left:22px;}
-  .swrow{display:flex;gap:12px;flex-wrap:wrap;}
-  .swatch{width:44px;height:44px;border-radius:50%;border:3px solid transparent;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(0,0,0,.2);}
-  .swatch.sel{border-color:var(--si);}
+  .swrow{display:flex;gap:10px;flex-wrap:wrap;padding:4px;}
+  .swatch{width:52px;height:52px;border-radius:50%;border:3px solid transparent;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(0,0,0,.2);}
+  .swatch.sel{border-color:var(--si);box-shadow:0 0 0 3px var(--sb),0 0 0 6px var(--sel);}
   textarea#sWords{width:100%;box-sizing:border-box;border-radius:9px;border:1px solid var(--sl);background:var(--st);
     color:var(--si);font:inherit;font-size:20px;line-height:24px;padding:10px 12px;resize:vertical;}
   #camPreview{margin:4px 0;min-height:20px;}
@@ -263,12 +276,13 @@
   </div>
 
   <div class="psec">
-    <span class="alabel">Child</span>
+    <span class="alabel">Child's name</span>
+    <input type="text" class="nameinput" id="childName" placeholder="First name" autocomplete="off" autocapitalize="words" aria-label="Child's first name">
+    <span class="alabel">Who's practicing</span>
     <div class="seg" id="segProfile"></div>
     <div class="btnrow">
-      <button type="button" class="tbtn" id="btnNewProfile">New</button>
-      <button type="button" class="tbtn" id="btnRenameProfile">Rename</button>
-      <button type="button" class="tbtn" id="btnDelProfile">Delete</button>
+      <button type="button" class="tbtn" id="btnNewProfile">Add a child</button>
+      <button type="button" class="tbtn danger" id="btnDelProfile">Delete this child</button>
     </div>
     <button type="button" class="tbtn" id="btnProgress">View progress and report</button>
   </div>
@@ -1159,6 +1173,7 @@
       el.appendChild(b);
     });
     registerSheetTargets(el);
+    const ni=$('childName'); if(ni && document.activeElement!==ni) ni.value=activeProfile().name;
   }
   // save settings automatically whenever a control in the panel changes
   ['input','change','click'].forEach(ev=>
@@ -1174,10 +1189,10 @@
     store.activeId=id; saveStore();
     applyActiveProfile(); syncControls(); resetActivity();
   };
-  $('btnRenameProfile').onclick=()=>{
-    const p=activeProfile(); const n=(prompt('Rename this child:',p.name)||'').trim();
-    if(!n) return; p.name=n; saveStore(); renderProfiles();
-  };
+  $('childName').addEventListener('input',e=>{
+    const n=e.target.value.trim(); if(!n) return; activeProfile().name=n; saveStore(); renderProfiles();
+  });
+  $('childName').addEventListener('blur',e=>{ e.target.value=activeProfile().name; });
   $('btnDelProfile').onclick=()=>{
     const ids=Object.keys(store.profiles);
     if(ids.length<=1){ alert('You need at least one child profile. Rename it instead.'); return; }

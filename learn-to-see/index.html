@@ -200,7 +200,6 @@
   #camPreview{margin:4px 0;min-height:20px;}
   /* progress report buttons */
   button.act{background:#222;color:#fff;border:1px solid #3a3a3a;border-radius:8px;padding:8px 10px;font-size:15px;cursor:pointer;}
-  @media (prefers-reduced-motion: reduce){ #panel,#panelArrow,#panel.open,#panelArrow.open{transition:none;} }
   /* ---- The Bright Little Eyes launch animation (every time the app opens) ---- */
   #launch{position:fixed;inset:0;z-index:100;background:#000;cursor:default;}
   #launch video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;}
@@ -714,10 +713,25 @@
 
   // ---------- audio (no external files) ----------
   let ac=null;
+  // Browsers keep sound asleep until the page has been touched, clicked or a key pressed once (the launch
+  // animation's "Tap for sound" is that touch). Wake it then, so every chime after that plays.
+  // iPad / iPhone: play sound even with the ring/silent switch on (it otherwise mutes these chimes), and
+  // unlock on the finger lifting, which is when iOS allows it, by playing one silent sample.
+  try{ if(navigator.audioSession) navigator.audioSession.type='playback'; }catch(e){}
+  function wakeAudio(){
+    try{
+      ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+      if(ac.state!=='running') ac.resume().catch(()=>{});
+      if(!wakeAudio.done){ const b=ac.createBuffer(1,1,22050), src=ac.createBufferSource(); src.buffer=b; src.connect(ac.destination); src.start(0); wakeAudio.done=true; }
+    }catch(e){}
+  }
+  ['pointerdown','pointerup','touchstart','touchend','mousedown','click','keydown'].forEach(ev=>addEventListener(ev,wakeAudio,{capture:true,passive:true}));
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden && ac && ac.state!=='running') ac.resume().catch(()=>{}); });
   function beep(freqs){
     if(!S.sound) return;
     try{
       ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+      if(ac.state!=='running') ac.resume().catch(()=>{});
       const t0=ac.currentTime;
       freqs.forEach((f,i)=>{
         const o=ac.createOscillator(), g=ac.createGain();
@@ -737,8 +751,7 @@
     shape.style.width=shape.style.height=S.size+'px';
     shape.style.borderRadius='50%';
     target.classList.toggle('glow',S.glow);
-    // Pulse and Sparkles follow their own switches in Settings (the grown-up decides, whatever the device's
-    // Reduce motion setting is)
+    // Pulse and Sparkles follow their own switches in Settings (the grown-up decides)
     target.classList.toggle('pulse',S.pulse);
     stage.classList.toggle('nopulse',!S.pulse);
     // ring sized a bit larger than the target
@@ -1054,9 +1067,13 @@
   let store=null;
   function loadStore(){ try{const r=localStorage.getItem(KEY); if(r) return JSON.parse(r);}catch(e){} return null; }
   function saveStore(){ try{ localStorage.setItem(KEY, JSON.stringify(store)); }catch(e){} }
+  const TOUCH_DEVICE = /iPad|iPhone|iPod|Android/i.test(navigator.userAgent) ||
+    (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);   // iPadOS reports itself as a Mac
   function defaults(){ return {activity:"tap",content:"letters",choices:2,words:"cat dog sun hat mom",keyboard:"blocks",kbUpper:false,bank:380,dropTarget:"toybox",size:200,color:"#ff2b2b",glow:true,pulse:true,position:"jump",
     speed:3,dwell:1.5,requireSwitch:false,requireLookAway:false,tol:80,delay:1.0,sound:true,spark:true,showGaze:true,
-    ...A.DEFAULTS}; }
+    ...A.DEFAULTS,
+    // as the app always worked: on a computer a look (or the pointer) resting on a target chooses it, after 1.5 s
+    accessMode: TOUCH_DEVICE ? 'tap' : 'dwell', dwellMs:1500}; }
   function ensureStore(){
     store=loadStore();
     if(!store||!store.profiles||!store.activeId||!store.profiles[store.activeId]){
@@ -1082,6 +1099,13 @@
         Object.assign(s, A.DEFAULTS, { dwellMs:Math.max(250,Math.min(2000,ms)), showDot:s.showGaze!==false });
       });
       store.migAccess=true; saveStore();
+    }
+    // back to how the app always worked on a computer: Look and hold (keeping each child's look time)
+    if(!store.migAccess2){
+      if(!TOUCH_DEVICE) Object.keys(store.profiles).forEach(id=>{
+        const s=store.profiles[id].settings; if(s && s.accessMode==='tap') s.accessMode='dwell';
+      });
+      store.migAccess2=true; saveStore();
     }
   }
   function activeProfile(){ return store.profiles[store.activeId]; }
@@ -1576,6 +1600,28 @@
     pad:()=>S.tol, progress:p=>{ if(dropPhase==='pick') dropSetRing(p); } });
   A.register({ node:dropBank, run:()=>dropDrop(), enabled:()=>S.activity==='drop' && dropPhase==='drop',
     pad:()=>S.tol, progress:p=>{ if(dropPhase==='drop') dropSetRing(p); } });
+  // Touch, as the app always worked on an iPad: hold a finger on a target and its ring (or key) fills up,
+  // and it is chosen when full. A quick tap still chooses it at once.
+  let hold=null, holdRaf=0, swallowClickUntil=0;
+  function holdNeed(t){ return t.dwellMs==null ? S.dwellMs : (typeof t.dwellMs==='function' ? t.dwellMs() : t.dwellMs); }
+  function endHold(){ if(hold && hold.t.progress) hold.t.progress(0); hold=null; if(holdRaf) cancelAnimationFrame(holdRaf); holdRaf=0; }
+  function holdTick(){
+    holdRaf=0; if(!hold) return;
+    const t=hold.t, p=Math.min(1,(performance.now()-hold.start)/holdNeed(t));
+    t.progress(p);
+    if(p>=1){ endHold(); swallowClickUntil=performance.now()+400; t.run(); return; }   // the lift won't choose it twice
+    holdRaf=requestAnimationFrame(holdTick);
+  }
+  addEventListener('pointerdown',e=>{
+    if(!touchMode() || launching) return;
+    const t=A.hitTest({x:e.clientX,y:e.clientY});
+    if(!t || t.adult || t.layer!=='app' || !t.progress) return;
+    endHold(); hold={t,start:performance.now()}; holdTick();
+  },true);
+  addEventListener('pointermove',e=>{ if(hold && A.hitTest({x:e.clientX,y:e.clientY})!==hold.t) endHold(); },true);
+  ['pointerup','pointercancel'].forEach(ev=>addEventListener(ev,()=>endHold(),true));
+  addEventListener('click',e=>{ if(performance.now()<swallowClickUntil){ e.stopPropagation(); e.preventDefault(); } },true);
+
   // The child's buttons
   A.register({ node:$('replay'), run:()=>$('replay').onclick() });
   A.register({ node:$('kbDelBtn'), run:()=>$('kbDelBtn').onclick() });

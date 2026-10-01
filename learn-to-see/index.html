@@ -200,6 +200,7 @@
   #camPreview{margin:4px 0;min-height:20px;}
   /* progress report buttons */
   button.act{background:#222;color:#fff;border:1px solid #3a3a3a;border-radius:8px;padding:8px 10px;font-size:15px;cursor:pointer;}
+  @media (prefers-reduced-motion: reduce){ #panel,#panelArrow,#panel.open,#panelArrow.open{transition:none;} }
   /* ---- The Bright Little Eyes launch animation (every time the app opens) ---- */
   #launch{position:fixed;inset:0;z-index:100;background:#000;cursor:default;}
   #launch video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;}
@@ -751,7 +752,8 @@
     shape.style.width=shape.style.height=S.size+'px';
     shape.style.borderRadius='50%';
     target.classList.toggle('glow',S.glow);
-    // Pulse and Sparkles follow their own switches in Settings (the grown-up decides)
+    // Pulse and Sparkles follow their own switches in Settings (the grown-up decides, whatever the device's
+    // Reduce motion setting is)
     target.classList.toggle('pulse',S.pulse);
     stage.classList.toggle('nopulse',!S.pulse);
     // ring sized a bit larger than the target
@@ -1107,6 +1109,16 @@
       });
       store.migAccess2=true; saveStore();
     }
+    // Sound, Sparkles and Pulse back on once: they could have been switched off by a resting mouse in Settings
+    if(!store.migFx){
+      Object.keys(store.profiles).forEach(id=>{ const s=store.profiles[id].settings; if(s){ s.sound=true; s.spark=true; s.pulse=true; } });
+      store.migFx=true; saveStore();
+    }
+    // the original look time: 1.5 s (a profile still on the new 650 ms default goes back to 1.5 s)
+    if(!store.migDwell){
+      Object.keys(store.profiles).forEach(id=>{ const s=store.profiles[id].settings; if(s && (s.dwellMs==null || s.dwellMs===650)) s.dwellMs=1500; });
+      store.migDwell=true; saveStore();
+    }
   }
   function activeProfile(){ return store.profiles[store.activeId]; }
   function applyActiveProfile(){ Object.assign(S, defaults(), activeProfile().settings||{}); }
@@ -1279,6 +1291,22 @@
     else { el=document.createElementNS(ns,'circle'); el.setAttribute('cx',50);el.setAttribute('cy',50);el.setAttribute('r',46); }
     el.setAttribute('fill',S.color); svg.appendChild(el); return svg;
   }
+  // Centre a letter by its ink, so the space above and below the letter itself is equal ("p" sits up a little,
+  // its tail filling the space below; "b" sits down a little).
+  let inkCanvas=null;
+  function inkCentre(el, text, size){
+    try{
+      inkCanvas=inkCanvas||document.createElement('canvas');
+      const ctx=inkCanvas.getContext('2d');
+      ctx.font='800 '+size+'px '+getComputedStyle(document.body).fontFamily;
+      const m=ctx.measureText(text);
+      if(m.actualBoundingBoxAscent===undefined || m.fontBoundingBoxAscent===undefined) return;
+      const boxCentre=(m.fontBoundingBoxAscent+m.fontBoundingBoxDescent)/2;
+      const inkCentreY=m.fontBoundingBoxAscent+(m.actualBoundingBoxDescent-m.actualBoundingBoxAscent)/2;
+      el.style.lineHeight='normal';
+      el.style.transform='translateY('+(boxCentre-inkCentreY).toFixed(1)+'px)';
+    }catch(e){}
+  }
   function makeItemNode(item,sz,asShape){
     if(asShape) return shapeNode(item,sz);
     const disc=document.createElement('div');
@@ -1288,6 +1316,7 @@
     if(S.glow) disc.style.boxShadow='0 0 60px 20px '+S.color;
     const g=document.createElement('div'); g.className='choiceGlyph';
     g.textContent=item; g.style.fontSize=(sz*0.62)+'px';
+    inkCentre(g, String(item), sz*0.62);
     disc.appendChild(g); return disc;
   }
   function makeChoice(item,x,y,correct,asShape){
@@ -1475,6 +1504,7 @@
         const fill=document.createElement('div'); fill.className='kbfill'; fill.style.background=S.color;
         const g=document.createElement('div'); g.className='kbglyph';
         g.textContent=S.kbUpper?ch.toUpperCase():ch;
+        inkCentre(g, g.textContent, size*0.58);
         k.appendChild(fill); k.appendChild(g); rEl.appendChild(k);
         k.setAttribute('role','button'); k.setAttribute('aria-label', S.kbUpper?ch.toUpperCase():ch);
         const key={el:k,fill,ch,dwellStart:0}; kbKeys.push(key);
@@ -1625,8 +1655,6 @@
   // The child's buttons
   A.register({ node:$('replay'), run:()=>$('replay').onclick() });
   A.register({ node:$('kbDelBtn'), run:()=>$('kbDelBtn').onclick() });
-  // The settings sheet's own controls can be chosen too, while it's open (steppers keep counting)
-  registerSheetTargets($('panel'));
 
   function accessOf(){ const o={}; A.KEYS.forEach(k=>o[k]=S[k]); return o; }
   function applyAccess(){
@@ -1663,15 +1691,9 @@
   stepper('stGain','gain',2,6,40);
   $('btnCentre').onclick=()=>A.setCentre();
 
-  // The settings sheet's own controls can be chosen with Look and hold / Look and press too, while it's open
-  // (steppers keep counting under a long look). New / Rename / Delete ask with a browser box, so they stay
-  // touch or mouse only.
-  function registerSheetTargets(root){
-    root.querySelectorAll('.pbar button, .seg button, .trow, .swatch, #btnReset, #btnResetNo, #btnResetYes, #btnProgress')
-      .forEach(el=>{ if(el._bleT) return; el._bleT=1; A.register({ node:el, run:()=>el.click(), layer:'sheet' }); });
-    root.querySelectorAll('.stepper button')
-      .forEach(el=>{ if(el._bleT) return; el._bleT=1; A.register({ node:el, run:()=>el.click(), layer:'sheet', allowRepeat:true, dwellMs:A.REPEAT_DWELL_MS }); });
-  }
+  // The settings are for a grown-up with a mouse or a finger, so nothing in them is chosen by resting the pointer
+  // on it (with Look and hold on, a resting mouse used to switch Sound, Pulse or Sparkles off by accident).
+  function registerSheetTargets(root){}
 
   // ---------- the launch animation: always, every time the app opens ----------
   let launching=true, launchTimer=0;

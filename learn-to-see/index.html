@@ -84,8 +84,6 @@
   #spellBar.on{display:block;}
 
   /* ---- Bright Little Eyes' selection system ---- */
-  /* The countdown ring is drawn at the cursor dot (one ring for every app), not around the targets. */
-  #ring,.cring,.kbfill,#dropRing,#stage.dropmode #dropRing{display:none !important;}
 
   /* ---- Gaze dot (shows where the tracker cursor is) ---- */
   #gaze{position:fixed;width:26px;height:26px;border-radius:50%;
@@ -297,6 +295,10 @@
     <div id="rowBank"><span class="alabel">Container size</span><div class="stepper" id="stBank"><button type="button" data-d="-1" aria-label="Container size less">−</button><span class="sv"></span><button type="button" data-d="1" aria-label="Container size more">+</button></div></div>
     <div id="rowPos"><span class="alabel">Where it appears</span><div class="seg" id="segPos"><button type="button" data-v="still">Still</button><button type="button" data-v="jump">Jump</button><button type="button" data-v="glide">Glide</button></div></div>
     <div id="rowSpeed"><span class="alabel">Glide speed</span><div class="stepper" id="stSpeed"><button type="button" data-d="-1" aria-label="Glide speed less">−</button><span class="sv"></span><button type="button" data-d="1" aria-label="Glide speed more">+</button></div></div>
+    <div id="rowTol"><span class="alabel">Hold steadiness</span><div class="stepper" id="stTol"><button type="button" data-d="-1" aria-label="Hold steadiness less">−</button><span class="sv"></span><button type="button" data-d="1" aria-label="Hold steadiness more">+</button></div>
+      <p class="caption">How far the look (or finger) can drift off a target and still count. 0 is exactly on it.</p></div>
+    <div class="trow" id="rowSwitch" role="switch" tabindex="0" data-toggle="tSwitch"><span class="alabel">Require switch to confirm</span><div class="toggle" id="tSwitch"></div></div>
+    <div class="trow" id="rowLookAway" role="switch" tabindex="0" data-toggle="tLookAway"><span class="alabel">Look away to repeat</span><div class="toggle" id="tLookAway"></div></div>
     <div id="rowDelay"><span class="alabel">Delay before next</span><div class="stepper" id="stDelay"><button type="button" data-d="-1" aria-label="Delay before next less">−</button><span class="sv"></span><button type="button" data-d="1" aria-label="Delay before next more">+</button></div></div>
   </div>
 
@@ -386,6 +388,9 @@
     if(cs.pointerEvents==='none' || cs.visibility==='hidden' || cs.display==='none') return null;
     var r = n.getBoundingClientRect();
     if(r.width<=0 || r.height<=0) return null;
+    // optional margin around a target (this app's "Hold steadiness"); the size used for smallest-wins stays the real one
+    var pad = t.pad==null ? 0 : (typeof t.pad==='function' ? t.pad() : t.pad);
+    if(pad>0) return { left:r.left-pad, right:r.right+pad, top:r.top-pad, bottom:r.bottom+pad, width:r.width, height:r.height };
     return r;
   }
   function contains(r,p,pad){ pad=pad||0; return p.x>=r.left-pad && p.x<=r.right+pad && p.y>=r.top-pad && p.y<=r.bottom+pad; }
@@ -409,7 +414,8 @@
     var now=performance.now();
     if(now-(lastFired.has(t.id)?lastFired.get(t.id):-Infinity) < S.cooldownMs) return;   // refused inside cooldownMs
     lastFired.set(t.id, now);
-    if(t.allowRepeat) enteredAt=now;   // steppers keep counting under a long look
+    if(t._ready){ t._ready=false; if(t.ready) try{ t.ready(false); }catch(e){} }
+    if(typeof t.allowRepeat==='function' ? t.allowRepeat() : t.allowRepeat) enteredAt=now;   // steppers keep counting under a long look
     else armed=false;                  // a held look does not retrigger; re-arms when the aim moves away and back
     try{ t.run(); }catch(e){ console.warn(e); }
   }
@@ -426,16 +432,29 @@
       smoothed.x += (raw.x-smoothed.x)*SMOOTH;
       smoothed.y += (raw.y-smoothed.y)*SMOOTH;
       aimListeners.forEach(function(f){ f(smoothed.x, smoothed.y); });
-      var h=hitTest(smoothed);
-      if(h!==hovered){ hovered=h; enteredAt=performance.now(); armed=true; }
+      setHovered(hitTest(smoothed));
       var p=-1;
       if(S.accessMode==='dwell' && hovered){
         p = armed ? Math.min(1,(performance.now()-enteredAt)/needFor(hovered)) : 0;
-        if(p>=1) fire(hovered);
+        var t=hovered;
+        if(p>=1){
+          // a target can ask for a switch to confirm: when the look completes it lights up and waits
+          if(t.confirm && t.confirm()){ if(!t._ready){ t._ready=true; if(t.ready) try{ t.ready(true); }catch(e){} } }
+          else fire(t);
+        }
+        // a target that shows its own countdown (a ring around it, a key filling up) gets it; the dot then
+        // shows no ring of its own, so there is only ever one countdown on screen
+        if(t.progress){ try{ t.progress(t===hovered && armed ? p : 0); }catch(e){} p=-1; }
       }
       drawCursor(true,p);
     }
     raf=requestAnimationFrame(pump);
+  }
+  function setHovered(h){
+    if(h===hovered) return;
+    if(hovered && hovered.progress){ try{ hovered.progress(0); }catch(e){} }
+    if(hovered && hovered._ready){ hovered._ready=false; if(hovered.ready) try{ hovered.ready(false); }catch(e){} }
+    hovered=h; enteredAt=performance.now(); armed=true;
   }
   function kick(){ if(raf===null && S.accessMode!=='tap') raf=requestAnimationFrame(pump); }
 
@@ -475,7 +494,7 @@
   function configure(next){
     var was=S;
     S=Object.assign({}, DEFAULTS, next);
-    if(S.accessMode==='tap'){ hovered=null; drawCursor(false,0); }
+    if(S.accessMode==='tap'){ setHovered(null); drawCursor(false,0); }
     var wantCam = S.accessMode!=='tap' && S.aimSource==='head';
     if(wantCam && !camera.on) startCamera();
     if(!wantCam && camera.on) stopCamera();
@@ -497,11 +516,14 @@
   }, {passive:true});
   // Electron / native bridges can push gaze points and switch presses too.
   addEventListener('gaze', function(e){ var g=e.detail; if(g && S.accessMode!=='tap' && S.aimSource==='mouse') setAim(g.x,g.y); });
-  function pressSwitch(){ if(S.accessMode==='switch' && hovered && !hovered.adult) fire(hovered); }
+  function pressSwitch(){ if(hovered && !hovered.adult && (S.accessMode==='switch' || (S.accessMode==='dwell' && hovered._ready))) fire(hovered); }
   addEventListener('gaze-switch', pressSwitch);
 
   // Look-and-press: Space or Enter (what switch interfaces type) fires whatever the cursor is on.
   addEventListener('keydown', function(e){
+    if(S.accessMode==='dwell' && hovered && hovered._ready && (e.key===' '||e.key==='Enter'||e.code==='Space')){
+      e.preventDefault(); e.stopPropagation(); if(!e.repeat) fire(hovered); return;
+    }
     if(S.accessMode!=='switch') return;
     if(e.key!==' ' && e.key!=='Enter' && e.code!=='Space') return;
     var tag=e.target && e.target.tagName;
@@ -520,7 +542,7 @@
     var pt = S.aimSource==='mouse' ? {x:e.clientX,y:e.clientY} : smoothed;
     if(S.aimSource==='mouse') setAim(pt.x,pt.y,true);
     var t=hitTest(pt);
-    if(t!==hovered){ hovered=t; enteredAt=performance.now(); armed=true; }
+    setHovered(t);
     if(!t || t.adult) return;
     if(S.accessMode==='switch' || armed) fire(t);
     swallowUntil=performance.now()+700;
@@ -645,7 +667,7 @@
   window.BLEAccess = {
     DEFAULTS:DEFAULTS, KEYS:Object.keys(DEFAULTS), ADULT_HOLD_MS:ADULT_HOLD_MS, REPEAT_DWELL_MS:REPEAT_DWELL_MS,
     settings:function(){ return S; }, configure:configure, register:register, adultControl:adultControl,
-    setLayer:function(f){ layerFn=f; hovered=null; }, onAim:function(f){ aimListeners.push(f); },
+    setLayer:function(f){ layerFn=f; setHovered(null); }, onAim:function(f){ aimListeners.push(f); },
     hitTest:hitTest, scanFrame:scanFrame, setCentre:setCentre, cameraState:cameraState,
     onCameraChange:function(f){ camListeners.push(f); }, attachPreview:attachPreview, detachPreview:detachPreview,
     hovered:function(){ var n=hovered && nodeOf(hovered); return n ? (n.getAttribute('aria-label')||n.id||n.textContent.trim().slice(0,12)) : null; },
@@ -668,11 +690,6 @@
     accessMode:'tap', aimSource:'mouse', dwellMs:650, cooldownMs:320, gain:18, showDot:true
   };
   const glide={vx:0,vy:0};
-  // The device's "Reduce motion" setting: the dropped object fades instead of flying into the container.
-  // (Pulse and Sparkles have their own switches in Settings.)
-  const RM=window.matchMedia ? matchMedia('(prefers-reduced-motion: reduce)') : null;
-  const reducedMotion=()=>!!(RM && RM.matches);
-  if(RM && RM.addEventListener) RM.addEventListener('change',()=>applyLook());
   let score=0, armed=false, dwellStart=0, raf=null;
   let switchReady=false;           // when requireSwitch: true once dwell completes
   let targetShownAt=0;             // for measuring look-to-tap acquisition time
@@ -802,7 +819,9 @@
     // record look-to-tap time for progress tracking (capped so walk-aways don't skew)
     const acq=Math.min(30000, Math.max(0, performance.now()-targetShownAt));
     recordTap(acq);
-    // celebrate with a reward sized to the activity (nothing grows or bounces)
+    // celebrate: grow, then a reward sized to the activity
+    shape.animate([{transform:'scale(1)'},{transform:'scale(1.35)'},{transform:'scale(1)'}],
+      {duration:600,easing:'ease-out'});
     if(S.activity==='cause'){
       bigCelebrate(target._cx,target._cy);            // full-screen payoff
     } else {
@@ -815,15 +834,30 @@
   }
 
   function bigCelebrate(x,y){
-    // Cause & Effect's big payoff: fireworks bursts around the screen and a brighter chord (no emoji)
-    beep([523,659,784,1047]);
-    if(!S.spark) return;
-    sparkle(x,y);
-    [[.25,.3],[.75,.3],[.5,.7]].forEach(([fx,fy],i)=>setTimeout(()=>sparkle(innerWidth*fx, innerHeight*fy), 180*(i+1)));
+    // expanding rings
+    for(let i=0;i<3;i++){
+      const r=document.createElement('div'); r.className='fx-ring';
+      r.style.left=x+'px'; r.style.top=y+'px'; r.style.borderColor=S.color;
+      stage.appendChild(r);
+      r.animate([{transform:'translate(-50%,-50%) scale(0.2)',opacity:.9},
+        {transform:'translate(-50%,-50%) scale(3.4)',opacity:0}],
+        {duration:900,delay:i*120,easing:'ease-out'}).onfinish=()=>r.remove();
+    }
+    if(S.spark){ sparkle(x,y); sparkle(x,y); }
+    // big friendly picture pop
+    const E=['⭐','🎈','🎉','🌟','💫','🦄','🐶','🌈','🐠','🌸'];
+    const em=document.createElement('div'); em.className='fx-emoji';
+    em.textContent=E[Math.floor(Math.random()*E.length)];
+    em.style.left=x+'px'; em.style.top=y+'px'; stage.appendChild(em);
+    em.animate([{transform:'translate(-50%,-50%) scale(0.3)',opacity:0},
+      {transform:'translate(-50%,-50%) scale(1.4)',opacity:1,offset:.3},
+      {transform:'translate(-50%,-50%) scale(1.2)',opacity:1,offset:.7},
+      {transform:'translate(-50%,-50%) scale(1.7)',opacity:0}],
+      {duration:1100,easing:'ease-out'}).onfinish=()=>em.remove();
+    beep([523,659,784,1047]); // brighter 4-note chord
   }
 
   function sparkle(x,y){
-    if(!S.spark) return;   // Sparkles switch off: the chime alone
     // fireworks scaled to the circle: bigger circle -> bigger burst (particles fly out and fade; nothing grows)
     const n=18+Math.round(S.size/16);
     const dot=Math.max(10, Math.round(S.size*0.09));
@@ -835,8 +869,8 @@
       s.style.background=PALETTE[i%PALETTE.length];
       stage.appendChild(s);
       const a=Math.random()*2*Math.PI, d=S.size*(0.55+Math.random()*0.75);   // reach ≈ circle size
-      s.animate([{transform:'translate(-50%,-50%)',opacity:1},
-        {transform:`translate(calc(-50% + ${(Math.cos(a)*d).toFixed(1)}px), calc(-50% + ${(Math.sin(a)*d).toFixed(1)}px))`,opacity:0}],
+      s.animate([{transform:'translate(-50%,-50%) scale(1)',opacity:1},
+        {transform:`translate(calc(-50% + ${(Math.cos(a)*d).toFixed(1)}px), calc(-50% + ${(Math.sin(a)*d).toFixed(1)}px)) scale(0.2)`,opacity:0}],
         {duration:820,easing:'cubic-bezier(.2,.7,.3,1)'}).onfinish=()=>s.remove();
     }
   }
@@ -927,6 +961,9 @@
     V('rowPulse', single || a==='drop'); V('rowPos', single || a==='drop');
     V('rowSpeed', single && S.position==='glide');
     V('rowDelay', a!=='keyboard');              // spell keeps pacing; free typing doesn't
+    // the original eye-gaze options: a switch to confirm (Look & Tap, with Look and hold), and look away to repeat
+    V('rowSwitch', a==='tap' && S.accessMode==='dwell');
+    V('rowLookAway', S.accessMode!=='tap');
   }
 
   // segmented controls and steppers (every control saves on change)
@@ -954,6 +991,7 @@
   syncers.push(stepperRow('stSize',20,100,480,v=>v+' pt',()=>S.size,v=>{ S.size=v; applyLook(); placeTarget(); if(S.activity==='drop') dropApply(); }));
   syncers.push(stepperRow('stBank',20,220,640,v=>v+' pt',()=>S.bank,v=>{ S.bank=v; if(S.activity==='drop') dropApply(); }));
   syncers.push(stepperRow('stSpeed',1,1,10,v=>String(v),()=>S.speed,v=>{ S.speed=v; rescaleGlide(); }));
+  syncers.push(stepperRow('stTol',10,0,200,v=>String(v),()=>S.tol,v=>{ S.tol=v; }));
   syncers.push(stepperRow('stDelay',0.5,0,5,v=>v.toFixed(1)+' s',()=>S.delay,v=>{ S.delay=v; }));
   $('sWords').oninput=e=>{S.words=e.target.value;};
   $('sWords').onchange=()=>{ if(S.activity==='spell') startSpellRound(); };
@@ -982,6 +1020,8 @@
   syncers.push(toggleRow('tPulse','pulse',applyLook));
   syncers.push(toggleRow('tSound','sound'));
   syncers.push(toggleRow('tSpark','spark'));
+  syncers.push(toggleRow('tSwitch','requireSwitch',()=>{ if(!S.requireSwitch){ switchReady=false; shape.style.boxShadow=''; } }));
+  syncers.push(toggleRow('tLookAway','requireLookAway'));
 
   // color swatches
   const cw=$('colors');
@@ -1245,7 +1285,9 @@
     face.setAttribute('role','button');
     face.setAttribute('aria-label', S.content==='shapes' ? String(item) : S.content==='numbers' ? 'Number '+item : 'Letter '+String(item).toUpperCase());
     const choice={el,cx:x,cy:y,dwellStart:0,correct,prog:ring,circ};
-    A.register({ node:el.lastChild, run:()=>chooseSelect(choice), enabled:()=>armed && S.activity==='choose' });
+    A.register({ node:el.lastChild, run:()=>chooseSelect(choice), enabled:()=>armed && S.activity==='choose',
+      pad:()=>S.tol, allowRepeat:()=>!S.requireLookAway,
+      progress:p=>{ choice.prog.style.strokeDashoffset=choice.circ*(1-p); } });
     return choice;
   }
   function clearChoose(){ chooseItems.forEach(c=>c.el.remove()); chooseItems=[]; }
@@ -1412,7 +1454,8 @@
         k.appendChild(fill); k.appendChild(g); rEl.appendChild(k);
         k.setAttribute('role','button'); k.setAttribute('aria-label', S.kbUpper?ch.toUpperCase():ch);
         const key={el:k,fill,ch,dwellStart:0}; kbKeys.push(key);
-        A.register({ node:k, run:()=>kbSelectKey(key), enabled:()=>!key.blurred && (S.activity==='keyboard'||S.activity==='spell') });
+        A.register({ node:k, run:()=>kbSelectKey(key), enabled:()=>!key.blurred && (S.activity==='keyboard'||S.activity==='spell'),
+          pad:10, allowRepeat:()=>!S.requireLookAway, progress:p=>{ key.fill.style.transform='scaleY('+p+')'; } });
       });
       wrap.appendChild(rEl);
     });
@@ -1431,7 +1474,7 @@
 
   function kbSelectKey(k){
     needRelease=true; k.dwellStart=0; k.fill.style.transform='scaleY(0)';
-    k.el.animate([{opacity:.4},{opacity:1}],{duration:500,easing:'ease-in'});   // a quick fade, no grow
+    k.el.animate([{transform:'scale(1)'},{transform:'scale(1.12)'},{transform:'scale(1)'}],{duration:250});
     if(kbMode==='spell') spellKeyPicked(k.ch); else kbAppend(k.ch);
   }
 
@@ -1492,19 +1535,22 @@
     dropBank.style.transform='translate(-50%,-50%) scale(1)';
   }
   function dropOn(o){ const r=(o._r||S.size/2)+S.tol, dx=cursor.x-o._cx, dy=cursor.y-o._cy; return dx*dx+dy*dy<=r*r; }
-  function dropLoop(){   // the picked-up object follows the cursor (the selection system does the choosing)
+  function dropLoop(){   // the picked-up object follows the cursor; the ring sits on whichever is next
     if(dropCarry){ dropCoin.style.left=cursor.x+'px'; dropCoin.style.top=cursor.y+'px'; }
+    const tgt=(dropPhase==='pick')?dropCoin:dropBank;
+    dropRingAt(tgt._cx,tgt._cy);
   }
   function dropPickUp(){ dropCarry=true; dropPhase='drop'; dropStart=0; needRelease=true;
-    dropSizeRing(dropBank._r+22); dropSetRing(0); beep([660,880]); }
+    dropSizeRing(dropBank._r+22); dropSetRing(0); beep([660,880]);
+    dropBank.animate([{transform:'translate(-50%,-50%) scale(1)'},{transform:'translate(-50%,-50%) scale(1.12)'},{transform:'translate(-50%,-50%) scale(1)'}],{duration:600}); }
   function dropDrop(){ if(dropPhase!=='drop') return; dropCarry=false; dropStart=0; needRelease=true; dropPhase='done';
     score++; scoreEl.textContent=score;
     recordTap(Math.min(30000,Math.max(0,performance.now()-targetShownAt)));
     beep([523,659,784,1047]);
-    // it moves into the container and fades (nothing shrinks or bounces); Reduce motion: it just fades
-    dropCoin.animate(reducedMotion() ? [{opacity:1},{opacity:0}]
-      : [{left:dropCoin.style.left,top:dropCoin.style.top,opacity:1},{left:dropBank._cx+'px',top:dropBank._cy+'px',opacity:0}],
+    dropCoin.animate([{left:dropCoin.style.left,top:dropCoin.style.top,opacity:1,transform:'translate(-50%,-50%) scale(1)'},
+      {left:dropBank._cx+'px',top:dropBank._cy+'px',opacity:0,transform:'translate(-50%,-50%) scale(0.2)'}],
       {duration:450,easing:'ease-in',fill:'forwards'}).onfinish=()=>{ dropCoin.style.visibility='hidden'; };
+    dropBank.animate([{transform:'translate(-50%,-50%) scale(1)'},{transform:'translate(-50%,-50%) scale(1.3)'},{transform:'translate(-50%,-50%) scale(1)'}],{duration:600});
     if(S.spark) sparkle(dropBank._cx,dropBank._cy);
     dropSetRing(0);
     setTimeout(()=>{ if(S.activity==='drop') newDropCoin(); }, Math.max(500,S.delay*1000));
@@ -1518,11 +1564,18 @@
   // Look & Tap / Cause & Effect: the circle. Cause & Effect answers a quick look, as it always has.
   A.register({ node:shape, run:()=>{ if(armed) select(); },
     enabled:()=>armed && (S.activity==='tap'||S.activity==='cause') && target.style.visibility!=='hidden',
-    dwellMs:()=> S.activity==='cause' ? Math.min(S.dwellMs,600) : S.dwellMs });
-  // Drop it in: the object, then the container. (While the object follows the cursor it is NOT a target.)
+    dwellMs:()=> S.activity==='cause' ? Math.min(S.dwellMs,600) : S.dwellMs,
+    pad:()=>S.tol, progress:p=>setRing(p),
+    // Require switch to confirm (Look & Tap): the look lights the circle up, then a switch or click chooses it
+    confirm:()=>S.requireSwitch && S.activity==='tap',
+    ready:on=>{ switchReady=on; shape.style.boxShadow = on ? '0 0 80px 30px '+S.color : ''; } });
+  // Drop it in: the object, then the container, each with its ring. (While the object follows the cursor
+  // it is NOT a target.)
   A.register({ node:dropCoin, run:()=>{ if(dropPhase==='pick') dropPickUp(); },
-    enabled:()=>S.activity==='drop' && dropPhase==='pick' && dropCoin.style.visibility!=='hidden' });
-  A.register({ node:dropBank, run:()=>dropDrop(), enabled:()=>S.activity==='drop' && dropPhase==='drop' });
+    enabled:()=>S.activity==='drop' && dropPhase==='pick' && dropCoin.style.visibility!=='hidden',
+    pad:()=>S.tol, progress:p=>{ if(dropPhase==='pick') dropSetRing(p); } });
+  A.register({ node:dropBank, run:()=>dropDrop(), enabled:()=>S.activity==='drop' && dropPhase==='drop',
+    pad:()=>S.tol, progress:p=>{ if(dropPhase==='drop') dropSetRing(p); } });
   // The child's buttons
   A.register({ node:$('replay'), run:()=>$('replay').onclick() });
   A.register({ node:$('kbDelBtn'), run:()=>$('kbDelBtn').onclick() });
@@ -1535,7 +1588,7 @@
     const tap=S.accessMode==='tap';
     gaze.style.display=(tap && S.showGaze)?'block':'none';   // in Touch mode the old gaze ring follows the mouse, as before
     if(!tap){ gaze.style.left='-100px'; gaze.style.top='-100px'; }
-    syncAccessRows();
+    syncAccessRows(); updateMenuVisibility();
   }
   function syncAccessRows(){
     const mark=(id,v)=>$(id).querySelectorAll('button').forEach(b=>b.classList.toggle('sel', b.dataset.v===v));

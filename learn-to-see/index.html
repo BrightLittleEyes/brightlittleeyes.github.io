@@ -292,6 +292,7 @@
     <div class="swrow" id="colors"></div>
     <div class="trow" id="rowGlow" role="switch" tabindex="0" data-toggle="tGlow"><span class="alabel">Glow</span><div class="toggle" id="tGlow"></div></div>
     <div class="trow" id="rowPulse" role="switch" tabindex="0" data-toggle="tPulse"><span class="alabel">Pulse</span><div class="toggle" id="tPulse"></div></div>
+    <div class="trow" role="switch" tabindex="0" data-toggle="tSpark"><span class="alabel">Sparkles</span><div class="toggle" id="tSpark"></div></div>
     <div id="rowDropTarget"><span class="alabel">Drop target</span><div class="seg" id="segDropTarget"><button type="button" data-v="toybox">Toy box</button><button type="button" data-v="piggy">Piggy bank</button><button type="button" data-v="fishbowl">Fish bowl</button><button type="button" data-v="gumball">Gumball machine</button><button type="button" data-v="beadjar">Bead jar</button></div></div>
     <div id="rowBank"><span class="alabel">Container size</span><div class="stepper" id="stBank"><button type="button" data-d="-1" aria-label="Container size less">−</button><span class="sv"></span><button type="button" data-d="1" aria-label="Container size more">+</button></div></div>
     <div id="rowPos"><span class="alabel">Where it appears</span><div class="seg" id="segPos"><button type="button" data-v="still">Still</button><button type="button" data-v="jump">Jump</button><button type="button" data-v="glide">Glide</button></div></div>
@@ -301,7 +302,6 @@
 
   <div class="psec">
     <div class="trow" role="switch" tabindex="0" data-toggle="tSound"><span class="alabel">Sound</span><div class="toggle" id="tSound"></div></div>
-    <div class="trow" role="switch" tabindex="0" data-toggle="tSpark"><span class="alabel">Sparkles</span><div class="toggle" id="tSpark"></div></div>
     <div class="btnrow">
       <button type="button" class="tbtn" id="btnFull">Full screen</button>
       <button type="button" class="tbtn" id="btnReset">Reset tap count</button>
@@ -668,7 +668,8 @@
     accessMode:'tap', aimSource:'mouse', dwellMs:650, cooldownMs:320, gain:18, showDot:true
   };
   const glide={vx:0,vy:0};
-  // The device's "Reduce motion" setting: no pulse, no sparkles or fireworks (the chime stays), no flying objects.
+  // The device's "Reduce motion" setting: the dropped object fades instead of flying into the container.
+  // (Pulse and Sparkles have their own switches in Settings.)
   const RM=window.matchMedia ? matchMedia('(prefers-reduced-motion: reduce)') : null;
   const reducedMotion=()=>!!(RM && RM.matches);
   if(RM && RM.addEventListener) RM.addEventListener('change',()=>applyLook());
@@ -719,8 +720,10 @@
     shape.style.width=shape.style.height=S.size+'px';
     shape.style.borderRadius='50%';
     target.classList.toggle('glow',S.glow);
-    target.classList.toggle('pulse',S.pulse && !reducedMotion());
-    stage.classList.toggle('nopulse',!S.pulse || reducedMotion());
+    // Pulse and Sparkles follow their own switches in Settings (the grown-up decides, whatever the device's
+    // Reduce motion setting is)
+    target.classList.toggle('pulse',S.pulse);
+    stage.classList.toggle('nopulse',!S.pulse);
     // ring sized a bit larger than the target
     const R=S.size/2+26, sw=10, box=R*2+sw*2, c=box/2, rad=R;
     ring.setAttribute('width',box); ring.setAttribute('height',box);
@@ -814,13 +817,13 @@
   function bigCelebrate(x,y){
     // Cause & Effect's big payoff: fireworks bursts around the screen and a brighter chord (no emoji)
     beep([523,659,784,1047]);
-    if(!S.spark || reducedMotion()) return;
+    if(!S.spark) return;
     sparkle(x,y);
     [[.25,.3],[.75,.3],[.5,.7]].forEach(([fx,fy],i)=>setTimeout(()=>sparkle(innerWidth*fx, innerHeight*fy), 180*(i+1)));
   }
 
   function sparkle(x,y){
-    if(reducedMotion()) return;   // Reduce motion: the chime alone
+    if(!S.spark) return;   // Sparkles switch off: the chime alone
     // fireworks scaled to the circle: bigger circle -> bigger burst (particles fly out and fade; nothing grows)
     const n=18+Math.round(S.size/16);
     const dot=Math.max(10, Math.round(S.size*0.09));
@@ -921,7 +924,7 @@
     V('rowKb', grp); V('rowKbCase', grp);
     V('rowSize', !grp); V('rowGlow', !grp && a!=='drop');
     V('rowBank', a==='drop'); V('rowDropTarget', a==='drop');
-    V('rowPulse', single); V('rowPos', single || a==='drop');
+    V('rowPulse', single || a==='drop'); V('rowPos', single || a==='drop');
     V('rowSpeed', single && S.position==='glide');
     V('rowDelay', a!=='keyboard');              // spell keeps pacing; free typing doesn't
   }

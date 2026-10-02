@@ -251,13 +251,13 @@ const TRIBES = ['Savu','Toka','Exile','Merged'];
 const SURVIVE=2, OUT=-3, PREDICT=3, WINNER_PICK=15, LAST_EP=14;
 const GUESS=[{f:'picks',l:'Voted out',p:PREDICT},{f:'imm',l:'Wins immunity',p:2},{f:'rew',l:'Wins reward',p:2}];
 const EVENTS = [
-  {c:'team',l:'Tribe won immunity',p:2},{c:'reward',l:'Won reward',p:1},{c:'indiv',l:'Individual immunity',p:5},
+  {c:'team',l:'Tribe won immunity',p:2},{c:'reward',l:'Won reward',p:5},{c:'indiv',l:'Individual immunity',p:5},
   {c:'idol',l:'Found idol',p:4},{c:'adv',l:'Found advantage',p:2},{c:'save',l:'Idol/advantage saved someone',p:5},
   {c:'sitd',l:'Shot in the Dark worked',p:5},{c:'coin',l:'Won the coin flip',p:10},{c:'journey',l:'Won Exile/journey',p:3},
   {c:'medevac',l:'Medevac (cancels boot penalty)',p:3},
   {c:'pocket',l:'Out with idol in pocket',p:-5},{c:'quit',l:'Quit',p:-10},
-  {c:'merge',l:'Made the merge',p:5},{c:'jury',l:'Made jury',p:5},{c:'ftc',l:'Final Tribal',p:10},
-  {c:'fire',l:'Won fire-making',p:5},{c:'winner',l:'Wins the season',p:20},
+  
+  {c:'winner',l:'Wins the season',p:20},
 ];
 const EV = Object.fromEntries(EVENTS.map(e=>[e.c,e]));
 

@@ -89,6 +89,21 @@ input[type=text],input[type=number],select{font:500 14px var(--body);background:
 .pill .sw{width:6px;height:16px;border-radius:2px}
 .extras{font-size:13px;color:var(--muted);margin-top:6px}
 .empty{color:var(--muted);text-align:center;padding:26px 10px}
+body.locked header.band, body.locked main{display:none}
+.gate{min-height:100vh;display:grid;place-items:center;background:var(--band);padding:24px 16px}
+.gatebox{width:100%;max-width:400px;display:flex;flex-direction:column;gap:12px;color:var(--band-ink)}
+.gatebox h1{margin:0}
+.gatebox p{margin:0;color:#C9C4B8}
+.gatebox .glabel{color:#C9C4B8}
+.gatebox input{font:500 16px var(--body);padding:12px;border-radius:8px;border:1px solid #3A4A44;background:#0E1513;color:#F3EEE2}
+.gateerr{color:#F29A8E!important;font-weight:600}
+.guess{padding:10px 0;border-top:1px solid var(--line)}
+.guess:first-child{border-top:0;padding-top:0}
+.guessrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:6px}
+@media (max-width:520px){.guessrow{grid-template-columns:1fr}}
+.guessrow label{display:flex;flex-direction:column;gap:4px;min-width:0}
+.guessrow select{width:100%}
+.glabel{font:600 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 
 /* table */
 .tablewrap{overflow-x:auto}
@@ -145,6 +160,17 @@ td.r,th.r{text-align:right}
 <body>
 
 
+<div id="gate" class="gate" hidden>
+  <form id="gateform" class="gatebox">
+    <div class="eyebrow">Season 51 · The Open Era</div>
+    <h1>Survivor 51 Fantasy League</h1>
+    <p>This league is for invited players. Enter the league password to come in.</p>
+    <label for="gatepw" class="glabel">League password</label>
+    <input type="password" id="gatepw" autocomplete="current-password" required>
+    <button class="btn primary" type="submit">Enter the league</button>
+    <p id="gateerr" class="gateerr" hidden>That password isn't right. Check with your commissioner and try again.</p>
+  </form>
+</div>
 <header class="band">
   <div class="wrap">
     <div class="hero">
@@ -189,6 +215,8 @@ window.FIREBASE_CONFIG = {
   messagingSenderId: "593752459500",
   appId: "1:593752459500:web:4636b6e0c1baa3f5b0bdc9"
 };
+// League password (stored scrambled). Ask Claude to change it.
+window.LEAGUE_PASSWORD_HASH = "e680a9111b7e1471ec279c3d1cb01491c45d677afed28ca7250b3b7543f5f13c";
 </script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -221,14 +249,15 @@ const BY = Object.fromEntries(CAST.map(c=>[c.k,c]));
 const BASE_OUT = {aaliyah:1};
 const TRIBES = ['Savu','Toka','Exile','Merged'];
 const SURVIVE=2, OUT=-3, PREDICT=3, WINNER_PICK=15, LAST_EP=14;
+const GUESS=[{f:'picks',l:'Voted out',p:PREDICT},{f:'imm',l:'Wins immunity',p:2},{f:'rew',l:'Wins reward',p:2}];
 const EVENTS = [
   {c:'team',l:'Tribe won immunity',p:2},{c:'reward',l:'Won reward',p:1},{c:'indiv',l:'Individual immunity',p:5},
   {c:'idol',l:'Found idol',p:4},{c:'adv',l:'Found advantage',p:2},{c:'save',l:'Idol/advantage saved someone',p:5},
   {c:'sitd',l:'Shot in the Dark worked',p:5},{c:'coin',l:'Won the coin flip',p:10},{c:'journey',l:'Won Exile/journey',p:3},
-  {c:'move',l:'Led a blindside',p:3},{c:'medevac',l:'Medevac (cancels boot penalty)',p:3},
+  {c:'medevac',l:'Medevac (cancels boot penalty)',p:3},
   {c:'pocket',l:'Out with idol in pocket',p:-5},{c:'quit',l:'Quit',p:-10},
   {c:'merge',l:'Made the merge',p:5},{c:'jury',l:'Made jury',p:5},{c:'ftc',l:'Final Tribal',p:10},
-  {c:'fire',l:'Won fire-making',p:5},{c:'winner',l:'Sole Survivor',p:20},
+  {c:'fire',l:'Won fire-making',p:5},{c:'winner',l:'Wins the season',p:20},
 ];
 const EV = Object.fromEntries(EVENTS.map(e=>[e.c,e]));
 
@@ -260,19 +289,51 @@ function castPoints(){
   }
   return pts;
 }
+function pickPts(cp,p){ if(!p.from) return cp[p.c].total; return Object.entries(cp[p.c].byEp).reduce((s,[e,v])=>s+(+e>=p.from?v:0),0); }
+function draftCount(){ return M().picks.filter(p=>!p.from).length; }
+function draftDone(){ const m=M(); return m.managers.length>0 && draftCount()>=m.managers.length*m.teamSize; }
+function replCredits(mid){ const o=outMap(), mine=M().picks.filter(p=>p.m===mid); return Math.max(0, mine.filter(p=>o[p.c]).length - mine.filter(p=>p.from).length); }
+function availPool(){ const o=outMap(), taken=new Set(M().picks.map(p=>p.c)); return CAST.filter(c=>!taken.has(c.k)&&!o[c.k]); }
+function renderRepl(){
+  const m=M(); if(!draftDone()) return '';
+  const rows=m.managers.filter(mg=>replCredits(mg.id)>0); if(!rows.length) return '';
+  const pool=availPool();
+  return `<div class="panel"><h3>Replacement picks</h3><p class="sub">Lost a castaway? Pick up anyone undrafted who is still in the game. They score starting with Episode ${nextEp()}.</p>
+  <div class="stack">${rows.map(mg=>`<div class="row" style="justify-content:space-between"><span style="font-weight:600">${esc(mg.name)} <span class="extras">· ${replCredits(mg.id)} to use</span></span>
+    <span class="row"><select id="repl-${mg.id}" aria-label="Replacement for ${esc(mg.name)}" ${S.canWrite&&pool.length?'':'disabled'}><option value="">— choose —</option>${pool.map(c=>`<option value="${c.k}">${esc(c.n)}</option>`).join('')}</select>
+    <button class="btn primary needwrite" data-repl="${mg.id}" ${pool.length?'':'disabled'}>Add</button></span></div>`).join('')}</div>
+  ${pool.length?'':'<p class="extras">No undrafted castaways are left in the game.</p>'}</div>`;
+}
+function guessRight(e,f,g){
+  if(!g) return false;
+  if(f==='picks') return (e.out||[]).includes(g);
+  const ta=e.tribesAt||{}, has=(k,c)=>((e.events||{})[k]||[]).includes(c);
+  if(TRIBES.includes(g)) return CAST.some(c=>(ta[c.k]||tribeOf(c.k))===g && has(c.k, f==='imm'?'team':'reward'));
+  return has(g, f==='imm'?'indiv':'reward');
+}
+function guessHits(e,mid){ const P=S.preds[e.num]||{}; return GUESS.filter(G=>guessRight(e,G.f,(P[G.f]||{})[mid])).length; }
+function guessPts(e,mid){ const P=S.preds[e.num]||{}; return GUESS.reduce((s,G)=>s+(guessRight(e,G.f,(P[G.f]||{})[mid])?G.p:0),0); }
+function guessOpts(f,sel,alive){
+  const tribes=['Savu','Toka'].filter(t=>alive.some(c=>tribeOf(c.k)===t));
+  const o=(v,l)=>`<option value="${v}" ${sel===v?'selected':''}>${esc(l)}</option>`;
+  return '<option value="">— pick —</option>'
+    + (f!=='picks'&&tribes.length?`<optgroup label="Tribes">${tribes.map(t=>o(t,t)).join('')}</optgroup>`:'')
+    + `<optgroup label="Castaways">${alive.map(c=>o(c.k,c.n)).join('')}</optgroup>`;
+}
 function nextEp(){ const s=scoredEps(); return Math.min(LAST_EP, s.length ? s[s.length-1].num+1 : 2); }
 function managerScores(){
   const cp = castPoints(), o = outMap(), m = M();
   const winner = Object.keys(cp).find(k=>scoredEps().some(e=>((e.events||{})[k]||[]).includes('winner')));
   return m.managers.map(mg=>{
-    const team = m.picks.filter(p=>p.m===mg.id).map(p=>p.c);
-    const castTotal = team.reduce((s,k)=>s+cp[k].total,0);
-    let predHits=0;
-    for(const e of scoredEps()){ const pk=(S.preds[e.num]?.picks||{})[mg.id]; if(pk && (e.out||[]).includes(pk)) predHits++; }
+    const myPicks = m.picks.filter(p=>p.m===mg.id);
+    const team = myPicks.map(p=>p.c);
+    const castTotal = myPicks.reduce((s,p)=>s+pickPts(cp,p),0);
+    let predHits=0, predPts=0;
+    for(const e of scoredEps()){ predHits+=guessHits(e,mg.id); predPts+=guessPts(e,mg.id); }
     const wp = (m.winnerPicks||{})[mg.id];
     const winBonus = winner && wp===winner ? WINNER_PICK : 0;
     const alive = team.filter(k=>!o[k]).length;
-    return {...mg, team, castTotal, predHits, winBonus, wp, alive, total: castTotal + predHits*PREDICT + winBonus};
+    return {...mg, picks:myPicks, team, castTotal, predHits, winBonus, wp, alive, predPts, total: castTotal + predPts + winBonus};
   }).sort((a,b)=>b.total-a.total || b.alive-a.alive);
 }
 
@@ -308,12 +369,13 @@ function renderStandings(){
   const el=$('#tab-standings'), m=M(), cp=castPoints(), o=outMap();
   if(!m.managers.length){ el.innerHTML = `<div class="panel empty"><h3>No league yet</h3><p>Add your players on the Draft tab, then run the snake draft.</p><button class="btn primary needwrite" data-go="draft">Set up the draft</button></div>`; return; }
   const rows = managerScores();
-  const ep = nextEp(), preds = S.preds[ep]?.picks || {};
+  const ep = nextEp(), P = S.preds[ep] || {};
   const alive = CAST.filter(c=>!o[c.k]).sort((a,b)=>a.n.localeCompare(b.n));
-  const draftLeft = m.picks.length < m.managers.length*m.teamSize;
+  const draftLeft = !draftDone();
   el.innerHTML = `
   <div class="stack">
-    ${draftLeft?`<div class="notice"><strong>Draft in progress.</strong> ${m.picks.length} of ${m.managers.length*m.teamSize} picks made. <button class="btn" data-go="draft">Go to draft</button></div>`:''}
+    ${renderRepl()}
+    ${draftLeft?`<div class="notice"><strong>Draft in progress.</strong> ${draftCount()} of ${m.managers.length*m.teamSize} picks made. <button class="btn" data-go="draft">Go to draft</button></div>`:''}
     <div class="grid2">
       <div class="panel">
         <h2>Standings</h2>
@@ -323,23 +385,19 @@ function renderStandings(){
             <div class="rank">${i+1}</div>
             <div style="min-width:0">
               <div class="mname">${esc(r.name)}</div>
-              <div class="roster">${r.team.map(k=>`<span class="pill ${o[k]?'gone':''}"><span class="sw" style="background:${o[k]?'var(--out)':sw(k)}"></span>${esc(first(k))} <b>${cp[k].total}</b></span>`).join('') || '<span class="extras">No castaways drafted yet</span>'}</div>
-              <div class="extras">${r.alive} still in · Winner pick: ${r.wp?esc(first(r.wp)):'none'} · Boot calls: ${r.predHits} right${r.winBonus?` · +${r.winBonus} winner bonus`:''}</div>
+              <div class="roster">${r.picks.map(p=>{ const k=p.c; return `<span class="pill ${o[k]?'gone':''}" title="${p.from?'Replacement, scores from Ep '+p.from:''}"><span class="sw" style="background:${o[k]?'var(--out)':sw(k)}"></span>${esc(first(k))}${p.from?' ↺':''} <b>${pickPts(cp,p)}</b></span>`; }).join('') || '<span class="extras">No castaways drafted yet</span>'}</div>
+              <div class="extras">${r.alive} still in · Winner pick: ${r.wp?esc(first(r.wp)):'none'} · Correct calls: ${r.predHits}${r.winBonus?` · +${r.winBonus} winner bonus`:''}</div>
             </div>
             <div class="total num">${r.total}<small>points</small></div>
           </div>`).join('')}</div>
       </div>
       <div class="panel">
-        <h2>Call the boot · Ep ${ep}</h2>
-        <p class="sub">Who goes home next? A correct call is worth +${PREDICT}. Lock it in before the episode airs.</p>
-        <div class="stack">${m.managers.map(mg=>`
-          <label class="row" style="justify-content:space-between">
-            <span style="font-weight:600">${esc(mg.name)}</span>
-            <select data-pred="${mg.id}" class="needwrite-sel" aria-label="${esc(mg.name)} boot prediction" ${S.canWrite?'':'disabled'}>
-              <option value="">— pick —</option>
-              ${alive.map(c=>`<option value="${c.k}" ${preds[mg.id]===c.k?'selected':''}>${esc(c.n)}</option>`).join('')}
-            </select>
-          </label>`).join('')}
+        <h2>Tonight's picks · Ep ${ep}</h2>
+        <p class="sub">Lock these in before the episode airs. Voted out +${PREDICT}, immunity +2, reward +2. Pick a tribe before the merge and a castaway after.</p>
+        <div class="stack" style="gap:0">${m.managers.map(mg=>`
+          <div class="guess"><div style="font-weight:600">${esc(mg.name)}</div>
+            <div class="guessrow">${GUESS.map(G=>`<label><span class="glabel">${G.l}</span><select data-pred="${mg.id}" data-field="${G.f}" aria-label="${esc(mg.name)}: ${G.l}" ${S.canWrite?'':'disabled'}>${guessOpts(G.f,(P[G.f]||{})[mg.id],alive)}</select></label>`).join('')}</div>
+          </div>`).join('')}
         </div>
         ${renderPastPreds()}
       </div>
@@ -349,8 +407,8 @@ function renderStandings(){
 }
 function renderPastPreds(){
   const eps = scoredEps().slice(-3).reverse(); if(!eps.length) return '';
-  return `<h3 style="margin-top:18px">Recent calls</h3><div class="tablewrap"><table><thead><tr><th>Ep</th><th>Went home</th><th>Who called it</th></tr></thead><tbody>${
-    eps.map(e=>{ const p=S.preds[e.num]?.picks||{}; const hit=M().managers.filter(m=>(e.out||[]).includes(p[m.id])).map(m=>esc(m.name));
+  return `<h3 style="margin-top:18px">Recent nights</h3><div class="tablewrap"><table><thead><tr><th>Ep</th><th>Went home</th><th>Correct calls</th></tr></thead><tbody>${
+    eps.map(e=>{ const hit=M().managers.map(m=>[m.name,guessHits(e,m.id)]).filter(x=>x[1]>0).map(([n,h])=>esc(n)+' ('+h+')');
       return `<tr><td class="num">${e.num}</td><td>${(e.out||[]).map(k=>esc(first(k))).join(', ')||'Nobody'}</td><td>${hit.join(', ')||'Nobody'}</td></tr>`;}).join('')
   }</tbody></table></div>`;
 }
@@ -359,8 +417,8 @@ function renderEpTable(rows){
   const cp = castPoints();
   return `<div class="panel"><h3>Points by episode</h3><div class="tablewrap"><table><thead><tr><th>Player</th>${eps.map(e=>`<th class="r">Ep ${e.num}</th>`).join('')}<th class="r">Total</th></tr></thead><tbody>${
     rows.map(r=>`<tr><td>${esc(r.name)}</td>${eps.map(e=>{
-      const pk=(S.preds[e.num]?.picks||{})[r.id]; const bonus = pk && (e.out||[]).includes(pk) ? PREDICT : 0;
-      const v=r.team.reduce((s,k)=>s+(cp[k].byEp[e.num]||0),0)+bonus; return `<td class="r num">${v}</td>`;}).join('')}<td class="r num"><b>${r.total}</b></td></tr>`).join('')
+      const bonus = guessPts(e,r.id);
+      const v=r.picks.reduce((s,p)=>s+((!p.from||e.num>=p.from)?(cp[p.c].byEp[e.num]||0):0),0)+bonus; return `<td class="r num">${v}</td>`;}).join('')}<td class="r num"><b>${r.total}</b></td></tr>`).join('')
   }</tbody></table></div></div>`;
 }
 
@@ -380,18 +438,19 @@ function renderDraft(){
     </div>`;
     return;
   }
-  const total = m.managers.length*m.teamSize, done = m.picks.length>=total;
+  const total = m.managers.length*m.teamSize, done = draftDone(), dc = draftCount();
   const taken = new Set(m.picks.map(p=>p.c)), o = outMap();
   const avail = CAST.filter(c=>!taken.has(c.k) && !o[c.k]);
-  const cur = done ? null : snakeMgr(m.picks.length);
+  const cur = done ? null : snakeMgr(dc);
   el.innerHTML = `<div class="stack">
     ${done ? `<div class="onclock"><span class="who">Draft complete</span><span>Now everyone picks a Sole Survivor below.</span></div>`
-      : `<div class="onclock"><span>Pick ${m.picks.length+1} of ${total} · Round ${Math.floor(m.picks.length/m.order.length)+1}</span><span class="who">${esc(mgrName(cur))} is on the clock</span></div>`}
+      : `<div class="onclock"><span>Pick ${dc+1} of ${total} · Round ${Math.floor(dc/m.order.length)+1}</span><span class="who">${esc(mgrName(cur))} is on the clock</span></div>`}
+    ${done?renderRepl():''}
     ${done?'':`<div class="panel"><h3>Available castaways</h3><div class="avail">${avail.map(c=>`
       <button class="btn pickbtn needwrite" data-pick="${c.k}"><span>${esc(c.n)}<br><small>${c.a} · ${esc(c.j)}</small></span>${tribeChip(c.k)}</button>`).join('')}</div>
       ${S.canWrite?'':'<p class="extras">View-only: picks are made by players with edit access.</p>'}</div>`}
     <div class="panel"><h3>Teams</h3><p class="sub">Draft order: ${m.order.map(id=>esc(mgrName(id))).join(' → ')}</p>
-      <div class="rosters">${m.order.map(id=>`<div><strong>${esc(mgrName(id))}</strong><ol>${m.picks.filter(p=>p.m===id).map(p=>`<li>${esc(BY[p.c].n)}</li>`).join('')}</ol></div>`).join('')}</div>
+      <div class="rosters">${m.order.map(id=>`<div><strong>${esc(mgrName(id))}</strong><ol>${m.picks.filter(p=>p.m===id).map(p=>`<li>${esc(BY[p.c].n)}${p.from?` <span class="extras">(replacement, Ep ${p.from}+)</span>`:''}</li>`).join('')}</ol></div>`).join('')}</div>
     </div>
     <div class="panel"><h3>Sole Survivor picks</h3><p class="sub">Any castaway still in the game, drafted or not. Worth +${WINNER_PICK} at the finale. Change it any time before Episode 4 airs.</p>
       <div class="stack">${m.managers.map(mg=>`<label class="row" style="justify-content:space-between"><span style="font-weight:600">${esc(mg.name)}</span>
@@ -471,11 +530,15 @@ function renderRules(){
       <li><span>Lewis</span><span>Draftable; earns points while on Exile</span></li>
       <li><span>Ep 1 events</span><span>Context only, worth 0</span></li>
       <li><span>Sole Survivor pick</span><span>Due before Ep 4 airs</span></li>
+      <li><span>Replacements</span><span>Castaway voted out? Pick an undrafted one still in the game. They score from the next episode.</span></li>
     </ul></div>
     <div class="panel"><h3>Every episode</h3><ul class="ptlist">
-      ${li('Survives the episode',SURVIVE)}${li('Voted out',OUT)}${li('Correct boot call (per player)',PREDICT)}${li('Sole Survivor pick is right',WINNER_PICK)}
+      ${li('Survives the episode',SURVIVE)}${li('Voted out',OUT)}${GUESS.map(G=>li('Correct call: '+G.l.toLowerCase(),G.p)).join('')}
+    </ul>
+    <h3 style="margin-top:16px">Once, at the finale</h3><ul class="ptlist">
+      ${li('Your Sole Survivor pick wins (separate from your team)',WINNER_PICK)}
     </ul></div>
-    <div class="panel"><h3>Bonus events</h3><ul class="ptlist">${EVENTS.map(e=>li(e.l,e.p)).join('')}</ul></div>
+    <div class="panel"><h3>Bonus events</h3><p class="sub">Earned by the castaway, so they count for whoever drafted them.</p><ul class="ptlist">${EVENTS.map(e=>li(e.l,e.p)).join('')}</ul></div>
     <div class="panel"><h3>House rules</h3><ul class="ptlist" style="list-style:none">
       <li><span>Ties</span><span>More castaways still in wins</span></li>
       <li><span>Open Era twists</span><span>Score the closest event; commissioner decides</span></li>
@@ -507,6 +570,15 @@ let armed=null;
 document.addEventListener('click', async e=>{
   const t = e.target.closest('button'); if(!t) return;
   if(t.dataset.go){ setTab(t.dataset.go); return; }
+  if(t.dataset.repl){
+    const id=t.dataset.repl, c=$('#repl-'+id)?.value, m=M();
+    if(!c){ toast('Choose a castaway first.'); return; }
+    if(m.picks.some(p=>p.c===c)){ toast(`${first(c)} is already on a team.`); return; }
+    if(replCredits(id)<1) return;
+    t.disabled=true;
+    await writeMain({picks:[...m.picks,{m:id,c,from:nextEp()}]});
+    toast(`${mgrName(id)} picks up ${first(c)}`); return;
+  }
   if(t.dataset.rmmgr){ S.newMgrs.splice(+t.dataset.rmmgr,1); render(); return; }
   if(t.id==='startdraft'){
     const size = Math.max(1, Math.min(10, parseInt($('#teamsize').value)||1));
@@ -518,7 +590,7 @@ document.addEventListener('click', async e=>{
   }
   if(t.dataset.pick){
     const m=M(); if(m.picks.some(p=>p.c===t.dataset.pick)) return;
-    const who=snakeMgr(m.picks.length);
+    const who=snakeMgr(draftCount());
     t.disabled=true;
     await writeMain({picks:[...m.picks,{m:who,c:t.dataset.pick}]});
     toast(`${mgrName(who)} drafts ${first(t.dataset.pick)}`); return;
@@ -540,7 +612,8 @@ document.addEventListener('click', async e=>{
   }
   if(t.id==='saveep'){
     const ed=S.edit;
-    try{ await S.db.doc('episodes/ep'+ed.num).set({num:ed.num, out:ed.out, events:ed.events, savedAt:new Date().toISOString()});
+    const ta={}; CAST.forEach(c=>ta[c.k]=tribeOf(c.k));
+    try{ await S.db.doc('episodes/ep'+ed.num).set({num:ed.num, out:ed.out, events:ed.events, tribesAt:ta, savedAt:new Date().toISOString()});
       S.editDirty=false; toast(`Episode ${ed.num} saved.`); S.scoreEp=null; S.edit=null; setTab('standings'); }
     catch(err){ handleWriteErr(err); }
     return;
@@ -554,12 +627,27 @@ document.addEventListener('change', async e=>{
   if(s.dataset.wp){ await writeMain({['winnerPicks.'+s.dataset.wp]:s.value}); toast('Winner pick saved.'); return; }
   if(s.dataset.pred){
     const ep=nextEp(), ref=S.db.doc('predictions/ep'+ep);
-    try{ if(S.preds[ep]) await ref.update({['picks.'+s.dataset.pred]:s.value}); else await ref.set({num:ep,picks:{[s.dataset.pred]:s.value}}); toast('Boot call locked in.'); }
+    const f=s.dataset.field||'picks';
+    try{ if(S.preds[ep]) await ref.update({[f+'.'+s.dataset.pred]:s.value}); else await ref.set({num:ep,[f]:{[s.dataset.pred]:s.value}}); toast('Pick saved.'); }
     catch(err){ handleWriteErr(err); }
   }
 });
 
+// ---------- Password gate ----------
+async function sha256(t){ const b=await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''); }
+function unlocked(){ try{ return localStorage.getItem('s51pw')===window.LEAGUE_PASSWORD_HASH; }catch(e){ return false; } }
+function openGate(){
+  document.body.classList.add('locked'); $('#gate').hidden=false; setTimeout(()=>$('#gatepw')?.focus(),0);
+  $('#gateform').addEventListener('submit', async e=>{
+    e.preventDefault(); e.stopPropagation();
+    const h = await sha256($('#gatepw').value);
+    if(h===window.LEAGUE_PASSWORD_HASH){ try{ localStorage.setItem('s51pw',h);}catch(err){} $('#gate').hidden=true; document.body.classList.remove('locked'); boot(); }
+    else { $('#gateerr').hidden=false; $('#gatepw').select(); }
+  });
+}
+
 // ---------- Boot ----------
+function boot(){
 try{ const t=localStorage.getItem('s51tab'); if(t && document.getElementById('tab-'+t)) S.tab=t; }catch(e){}
 setTab(S.tab);
 (function(){
@@ -578,8 +666,9 @@ setTab(S.tab);
     if(S.edit && !S.editDirty) S.edit=null; render(); }, onErr);
   db.collection('predictions').onSnapshot(q=>{ S.preds={}; q.docs.forEach(d=>{ const v=d.data(); if(v && v.num) S.preds[v.num]=v; }); render(); }, onErr);
 })();
+}
+if(!window.LEAGUE_PASSWORD_HASH || unlocked()) boot(); else openGate();
 </script>
 
 </body>
 </html>
-

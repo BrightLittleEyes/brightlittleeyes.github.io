@@ -248,7 +248,8 @@ const CAST = [
 const BY = Object.fromEntries(CAST.map(c=>[c.k,c]));
 const BASE_OUT = {aaliyah:1};
 const TRIBES = ['Savu','Toka','Exile','Merged'];
-const SURVIVE=2, OUT=-3, PREDICT=3, WINNER_PICK=15, LAST_EP=14;
+const SURVIVE=2, OUT=-3, PREDICT=3, LAST_EP=14;
+const WIN_VAL={2:70,3:60,4:50,5:45,6:40,7:35,8:20,9:15,10:10,11:5,12:3,13:2,14:1};
 const GUESS=[{f:'picks',l:'Voted out',p:PREDICT},{f:'imm',l:'Wins immunity',p:2},{f:'rew',l:'Wins reward',p:2}];
 const EVENTS = [
   {c:'team',l:'Tribe won immunity',p:2},{c:'reward',l:'Won reward',p:5},{c:'indiv',l:'Individual immunity',p:5},
@@ -320,6 +321,8 @@ function guessOpts(f,sel,alive){
     + (f!=='picks'&&tribes.length?`<optgroup label="Tribes">${tribes.map(t=>o(t,t)).join('')}</optgroup>`:'')
     + `<optgroup label="Castaways">${alive.map(c=>o(c.k,c.n)).join('')}</optgroup>`;
 }
+function wpOf(mid){ const v=(M().winnerPicks||{})[mid]; if(!v) return null; if(typeof v==='string') return {c:v,ep:2}; return v.c?v:null; }
+function wpLocked(w){ return !!w && w.ep < nextEp(); }
 function nextEp(){ const s=scoredEps(); return Math.min(LAST_EP, s.length ? s[s.length-1].num+1 : 2); }
 function managerScores(){
   const cp = castPoints(), o = outMap(), m = M();
@@ -330,10 +333,10 @@ function managerScores(){
     const castTotal = myPicks.reduce((s,p)=>s+pickPts(cp,p),0);
     let predHits=0, predPts=0;
     for(const e of scoredEps()){ predHits+=guessHits(e,mg.id); predPts+=guessPts(e,mg.id); }
-    const wp = (m.winnerPicks||{})[mg.id];
-    const winBonus = winner && wp===winner ? WINNER_PICK : 0;
+    const w = wpOf(mg.id), wp = w ? w.c : null;
+    const winBonus = winner && wp===winner ? (WIN_VAL[w.ep]||0) : 0;
     const alive = team.filter(k=>!o[k]).length;
-    return {...mg, picks:myPicks, team, castTotal, predHits, winBonus, wp, alive, predPts, total: castTotal + predPts + winBonus};
+    return {...mg, picks:myPicks, team, castTotal, predHits, winBonus, wp, wpEp: w?w.ep:null, alive, predPts, total: castTotal + predPts + winBonus};
   }).sort((a,b)=>b.total-a.total || b.alive-a.alive);
 }
 
@@ -386,7 +389,7 @@ function renderStandings(){
             <div style="min-width:0">
               <div class="mname">${esc(r.name)}</div>
               <div class="roster">${r.picks.map(p=>{ const k=p.c; return `<span class="pill ${o[k]?'gone':''}" title="${p.from?'Replacement, scores from Ep '+p.from:''}"><span class="sw" style="background:${o[k]?'var(--out)':sw(k)}"></span>${esc(first(k))}${p.from?' ↺':''} <b>${pickPts(cp,p)}</b></span>`; }).join('') || '<span class="extras">No castaways drafted yet</span>'}</div>
-              <div class="extras">${r.alive} still in · Winner pick: ${r.wp?esc(first(r.wp)):'none'} · Correct calls: ${r.predHits}${r.winBonus?` · +${r.winBonus} winner bonus`:''}</div>
+              <div class="extras">${r.alive} still in · Winner pick: ${r.wp?esc(first(r.wp))+' ('+(WIN_VAL[r.wpEp]||0)+' pts'+(wpLocked(wpOf(r.id))?', locked':'')+')':'none'} · Correct calls: ${r.predHits}${r.winBonus?` · +${r.winBonus} winner bonus`:''}</div>
             </div>
             <div class="total num">${r.total}<small>points</small></div>
           </div>`).join('')}</div>
@@ -452,10 +455,12 @@ function renderDraft(){
     <div class="panel"><h3>Teams</h3><p class="sub">Draft order: ${m.order.map(id=>esc(mgrName(id))).join(' → ')}</p>
       <div class="rosters">${m.order.map(id=>`<div><strong>${esc(mgrName(id))}</strong><ol>${m.picks.filter(p=>p.m===id).map(p=>`<li>${esc(BY[p.c].n)}${p.from?` <span class="extras">(replacement, Ep ${p.from}+)</span>`:''}</li>`).join('')}</ol></div>`).join('')}</div>
     </div>
-    <div class="panel"><h3>Sole Survivor picks</h3><p class="sub">Any castaway still in the game, drafted or not. Worth +${WINNER_PICK} at the finale. Change it any time before Episode 4 airs.</p>
-      <div class="stack">${m.managers.map(mg=>`<label class="row" style="justify-content:space-between"><span style="font-weight:600">${esc(mg.name)}</span>
-        <select data-wp="${mg.id}" aria-label="${esc(mg.name)} winner pick" ${S.canWrite && nextEp()<=4?'':'disabled'}><option value="">— pick —</option>
-        ${CAST.filter(c=>!o[c.k] || (m.winnerPicks||{})[mg.id]===c.k).map(c=>`<option value="${c.k}" ${(m.winnerPicks||{})[mg.id]===c.k?'selected':''}>${esc(c.n)}</option>`).join('')}</select></label>`).join('')}</div>
+    <div class="panel"><h3>Sole Survivor picks</h3><p class="sub">Pick who you think wins it all, drafted or not. The earlier you commit, the more it's worth: picking now, during Episode ${nextEp()}, is worth <b>${WIN_VAL[nextEp()]||0} points</b> if they win. You can change your pick until Episode ${nextEp()}'s vote is scored. After that it's locked for the rest of the season.</p>
+      <div class="stack">${m.managers.map(mg=>{ const w=wpOf(mg.id), lk=wpLocked(w);
+        return `<div class="row" style="justify-content:space-between"><span style="font-weight:600">${esc(mg.name)}</span>${lk
+          ? `<span class="chip ${o[w.c]?'out':'Exile'}" style="white-space:normal">Locked: ${esc(BY[w.c].n)} · Ep ${w.ep} · ${WIN_VAL[w.ep]||0} pts</span>`
+          : `<select data-wp="${mg.id}" aria-label="${esc(mg.name)} Sole Survivor pick" ${S.canWrite?'':'disabled'}><option value="">— pick —</option>${CAST.filter(c=>!o[c.k]).map(c=>`<option value="${c.k}" ${w&&w.c===c.k?'selected':''}>${esc(c.n)}</option>`).join('')}</select>`}</div>`; }).join('')}</div>
+      <p class="extras">Point scale by the episode you lock in: ${Object.entries(WIN_VAL).map(([e,v])=>`Ep ${e}: ${v}`).join(' · ')}</p>
     </div>
     <div class="row needwrite">
       <button class="btn" id="undopick" ${m.picks.length?'':'disabled'}>Undo last pick</button>
@@ -529,14 +534,14 @@ function renderRules(){
       <li><span>Format</span><span>Snake draft, random order</span></li>
       <li><span>Lewis</span><span>Draftable; earns points while on Exile</span></li>
       <li><span>Ep 1 events</span><span>Context only, worth 0</span></li>
-      <li><span>Sole Survivor pick</span><span>Due before Ep 4 airs</span></li>
+      <li><span>Sole Survivor pick</span><span>One pick, on the Draft tab. Locks once that episode's vote is scored.</span></li>
       <li><span>Replacements</span><span>Castaway voted out? Pick an undrafted one still in the game. They score from the next episode.</span></li>
     </ul></div>
     <div class="panel"><h3>Every episode</h3><ul class="ptlist">
       ${li('Survives the episode',SURVIVE)}${li('Voted out',OUT)}${GUESS.map(G=>li('Correct call: '+G.l.toLowerCase(),G.p)).join('')}
     </ul>
     <h3 style="margin-top:16px">Once, at the finale</h3><ul class="ptlist">
-      ${li('Your Sole Survivor pick wins (separate from your team)',WINNER_PICK)}
+      ${Object.entries(WIN_VAL).map(([e,v])=>li('Sole Survivor pick locked in Ep '+e,v)).join('')}
     </ul></div>
     <div class="panel"><h3>Bonus events</h3><p class="sub">Earned by the castaway, so they count for whoever drafted them.</p><ul class="ptlist">${EVENTS.map(e=>li(e.l,e.p)).join('')}</ul></div>
     <div class="panel"><h3>House rules</h3><ul class="ptlist" style="list-style:none">
@@ -624,7 +629,7 @@ document.addEventListener('change', async e=>{
   if(s.id==='epsel'){ S.scoreEp=+s.value; S.edit=null; render(); return; }
   if(s.id==='teamsize'){ S.teamSize=+s.value; return; }
   if(s.dataset.tribe){ await writeMain({['tribes.'+s.dataset.tribe]:s.value}); toast(`${first(s.dataset.tribe)} moved to ${s.value}`); return; }
-  if(s.dataset.wp){ await writeMain({['winnerPicks.'+s.dataset.wp]:s.value}); toast('Winner pick saved.'); return; }
+  if(s.dataset.wp){ if(wpLocked(wpOf(s.dataset.wp))){ toast('That pick is locked.'); render(); return; } await writeMain({['winnerPicks.'+s.dataset.wp]:{c:s.value, ep:nextEp()}}); toast(s.value?`Sole Survivor pick saved: worth ${WIN_VAL[nextEp()]||0} if they win.`:'Pick cleared.'); return; }
   if(s.dataset.pred){
     const ep=nextEp(), ref=S.db.doc('predictions/ep'+ep);
     const f=s.dataset.field||'picks';

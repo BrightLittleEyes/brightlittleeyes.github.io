@@ -3,128 +3,115 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Survivor 51 Fantasy League</title>
+<title>Amazing Race 39 Fantasy League</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <style>
-/* Layout: torch-lit header band, tab rail, single working column of panels; tribe colors carry state */
+/* Layout: route-marker header band (yellow/red split), tab rail, single working column of panels; leg placement carries state */
 :root{
-  --bg:#EDF0EA; --surface:#FFFFFF; --sunk:#E3E8E1; --ink:#15211D; --muted:#56665F; --line:#CDD6CF;
-  --torch:#C84D16; --torch-ink:#FFFFFF; --savu:#6A3E9E; --savu-bg:#EEE6F7; --toka:#9A7400; --toka-bg:#FBF1CC;
-  --exile:#4F5F66; --exile-bg:#E1E7EA; --out:#A23535; --out-bg:#F6E1DF; --ok:#22744A; --ok-bg:#DDF0E4;
-  --band:#13201B; --band-ink:#F3EEE2;
-  --display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
-  --body:"Figtree", "Segoe UI", system-ui, sans-serif;
+  --bg:#EEF1F4; --surface:#FFFFFF; --sunk:#E2E7EC; --ink:#121A24; --muted:#556170; --line:#CCD4DC;
+  --marker-y:#F5C400; --marker-r:#D32F23; --accent:#C2271C; --accent-ink:#FFFFFF;
+  --gold:#8A6A00; --gold-bg:#FCF0C2; --out:#A23535; --out-bg:#F6E1DF; --ok:#1F7048; --ok-bg:#DDF0E4;
+  --band:#0F2233; --band-ink:#F4F1E8; --band-muted:#AFBCC8;
+  --display:"Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --body:"Public Sans", "Segoe UI", system-ui, sans-serif;
   --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0E1513; --surface:#17211E; --sunk:#111A17; --ink:#E7EDE9; --muted:#95A59E; --line:#2A3833;
-  --torch:#F0773A; --torch-ink:#1A0D05; --savu:#B394EA; --savu-bg:#2A2138; --toka:#F0C534; --toka-bg:#332A0E;
-  --exile:#A3B4BC; --exile-bg:#22292D; --out:#EE7B74; --out-bg:#3A1C1B; --ok:#62CC93; --ok-bg:#14301F;
-  --band:#080D0B; --band-ink:#F3EEE2; color-scheme:dark}}
+  --bg:#0C141C; --surface:#152130; --sunk:#101A25; --ink:#E6ECF2; --muted:#93A3B4; --line:#263546;
+  --accent:#F2685D; --accent-ink:#1A0605; --gold:#F5C400; --gold-bg:#33290A;
+  --out:#EE7B74; --out-bg:#3A1C1B; --ok:#62CC93; --ok-bg:#14301F;
+  --band:#07101A; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0E1513; --surface:#17211E; --sunk:#111A17; --ink:#E7EDE9; --muted:#95A59E; --line:#2A3833;
-  --torch:#F0773A; --torch-ink:#1A0D05; --savu:#B394EA; --savu-bg:#2A2138; --toka:#F0C534; --toka-bg:#332A0E;
-  --exile:#A3B4BC; --exile-bg:#22292D; --out:#EE7B74; --out-bg:#3A1C1B; --ok:#62CC93; --ok-bg:#14301F;
-  --band:#080D0B; --band-ink:#F3EEE2; color-scheme:dark}
+  --bg:#0C141C; --surface:#152130; --sunk:#101A25; --ink:#E6ECF2; --muted:#93A3B4; --line:#263546;
+  --accent:#F2685D; --accent-ink:#1A0605; --gold:#F5C400; --gold-bg:#33290A;
+  --out:#EE7B74; --out-bg:#3A1C1B; --ok:#62CC93; --ok-bg:#14301F;
+  --band:#07101A; color-scheme:dark}
 *{box-sizing:border-box}
-[hidden]{display:none!important}
-img{max-width:100%}
-:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--body);margin:0}
 .wrap{max-width:1080px;margin:0 auto;padding-inline:16px}
 header.band{background:var(--band);color:var(--band-ink);position:relative;overflow:hidden}
-header.band::after{content:"";position:absolute;inset:auto -10% -60% auto;width:420px;height:420px;border-radius:50%;
-  background:radial-gradient(circle,rgba(240,119,58,.45),rgba(240,119,58,0) 65%);pointer-events:none}
+header.band::before{content:"";position:absolute;top:0;right:0;width:min(46vw,420px);height:100%;
+  background:linear-gradient(135deg,var(--marker-y) 0 50%,var(--marker-r) 50% 100%);opacity:.14;pointer-events:none}
 .hero{padding-block:28px 22px;display:flex;flex-wrap:wrap;gap:18px 32px;align-items:flex-end;justify-content:space-between;position:relative;z-index:1}
-.eyebrow{font:600 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#F0A374}
-h1{font:800 clamp(30px,6vw,52px)/1 var(--display);margin:.25em 0 .15em;text-wrap:balance;letter-spacing:-.01em}
-.hero p{margin:0;color:#C9C4B8;max-width:52ch}
-.torches{display:flex;gap:6px;align-items:flex-end;flex-wrap:wrap;max-width:330px}
-.torches span{width:10px;height:26px;border-radius:2px;background:linear-gradient(#F0773A,#7A3010);position:relative}
-.torches span.snuffed{background:#3A3F3C;height:20px}
-.torches-cap{font:500 12px var(--mono);color:#C9C4B8;margin-top:6px}
-nav.tabs{display:flex;gap:4px;overflow-x:auto;position:relative;z-index:1;padding-bottom:0}
-nav.tabs button{font:600 14px var(--body);background:transparent;color:#C9C4B8;border:0;padding:12px 14px;border-radius:8px 8px 0 0;cursor:pointer;white-space:nowrap}
+.eyebrow{font:600 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--marker-y)}
+h1{font:800 clamp(36px,7vw,64px)/.95 var(--display);margin:.2em 0 .2em;text-wrap:balance;text-transform:uppercase;letter-spacing:.01em}
+.hero p{margin:0;color:var(--band-muted);max-width:54ch}
+.markers{display:flex;gap:6px;flex-wrap:wrap;max-width:300px}
+.markers span{width:18px;height:18px;border-radius:3px;background:linear-gradient(135deg,var(--marker-y) 0 50%,var(--marker-r) 50% 100%)}
+.markers span.gone{background:#33414F}
+.markers-cap{font:500 12px var(--mono);color:var(--band-muted);margin-top:8px}
+nav.tabs{display:flex;gap:4px;overflow-x:auto;position:relative;z-index:1}
+nav.tabs button{font:600 14px var(--body);background:transparent;color:var(--band-muted);border:0;padding:12px 14px;border-radius:8px 8px 0 0;cursor:pointer;white-space:nowrap}
 nav.tabs button[aria-selected="true"]{background:var(--bg);color:var(--ink)}
-nav.tabs button:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--torch);outline-offset:2px}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 main{padding-block:22px 60px}
 .notice{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:16px;color:var(--muted)}
 .notice strong{color:var(--ink)}
-h2{font:800 24px/1.15 var(--display);margin:0 0 4px;text-wrap:balance}
+h2{font:800 30px/1.05 var(--display);margin:0 0 4px;text-transform:uppercase;letter-spacing:.01em;text-wrap:balance}
 h3{font:700 16px/1.3 var(--body);margin:0 0 8px}
 .sub{color:var(--muted);margin:0 0 16px}
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}
 .stack{display:flex;flex-direction:column;gap:16px}
 .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:16px}
 .btn{font:600 14px var(--body);border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:8px 14px;cursor:pointer}
 .btn:hover{border-color:var(--muted)}
-.btn.primary{background:var(--torch);border-color:var(--torch);color:var(--torch-ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .btn.danger{color:var(--out)}
 .btn.danger.armed{background:var(--out);color:var(--surface);border-color:var(--out)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 input[type=text],input[type=number],select{font:500 14px var(--body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 10px;max-width:100%}
 .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
-.chip{display:inline-flex;align-items:center;gap:6px;font:600 12px/1 var(--body);padding:5px 8px;border-radius:999px;white-space:nowrap}
-.chip.Savu{background:var(--savu-bg);color:var(--savu)}
-.chip.Toka{background:var(--toka-bg);color:var(--toka)}
-.chip.Exile,.chip.Merged{background:var(--exile-bg);color:var(--exile)}
+.chip{display:inline-flex;align-items:center;gap:6px;font:600 12px/1 var(--body);padding:5px 8px;border-radius:999px;white-space:nowrap;background:var(--sunk);color:var(--muted)}
+.chip.racing{background:var(--gold-bg);color:var(--gold)}
 .chip.out{background:var(--out-bg);color:var(--out)}
-.dot{width:8px;height:8px;border-radius:50%;background:currentColor;display:inline-block}
+.chip.won{background:var(--ok-bg);color:var(--ok)}
+.flag{width:10px;height:10px;border-radius:2px;display:inline-block;background:linear-gradient(135deg,var(--marker-y) 0 50%,var(--marker-r) 50% 100%)}
 
-/* standings */
 .standing{display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:start;padding:14px 0;border-top:1px solid var(--line)}
 .standing:first-child{border-top:0}
-.rank{font:800 26px/1 var(--display);color:var(--muted)}
-.standing:first-child .rank{color:var(--torch)}
+.rank{font:800 32px/1 var(--display);color:var(--muted)}
+.standing:first-child .rank{color:var(--accent)}
 .mname{font:700 17px var(--body)}
 .total{font:600 24px/1 var(--mono);text-align:right}
 .total small{display:block;font:500 11px var(--body);color:var(--muted);margin-top:4px}
 .roster{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .pill{display:inline-flex;gap:6px;align-items:center;font:500 13px var(--body);padding:4px 8px;border-radius:6px;border:1px solid var(--line);background:var(--bg)}
 .pill b{font:600 12px var(--mono)}
+.benchtag{font:600 10px var(--mono);letter-spacing:.06em;text-transform:uppercase;background:var(--sunk);color:var(--muted);border-radius:4px;padding:2px 5px}
+.benchrow{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.ev.benchbtn[aria-pressed="true"]{background:var(--sunk);border-color:var(--muted);color:var(--muted);font-weight:700}
 .pill.gone{text-decoration:line-through;color:var(--muted)}
-.pill .sw{width:6px;height:16px;border-radius:2px}
+.pill.gone .flag{background:var(--out)}
 .extras{font-size:13px;color:var(--muted);margin-top:6px}
 .empty{color:var(--muted);text-align:center;padding:26px 10px}
-body.locked header.band, body.locked main{display:none}
-.gate{min-height:100vh;display:grid;place-items:center;background:var(--band);padding:24px 16px}
-.gatebox{width:100%;max-width:400px;display:flex;flex-direction:column;gap:12px;color:var(--band-ink)}
-.gatebox h1{margin:0}
-.gatebox p{margin:0;color:#C9C4B8}
-.gatebox .glabel{color:#C9C4B8}
-.gatebox input{font:500 16px var(--body);padding:12px;border-radius:8px;border:1px solid #3A4A44;background:#0E1513;color:#F3EEE2}
-.gateerr{color:#F29A8E!important;font-weight:600}
 .guess{padding:10px 0;border-top:1px solid var(--line)}
 .guess:first-child{border-top:0;padding-top:0}
-.guessrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:6px}
-@media (max-width:520px){.guessrow{grid-template-columns:1fr}}
+.guessrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr));gap:8px;margin-top:6px}
 .guessrow label{display:flex;flex-direction:column;gap:4px;min-width:0}
 .guessrow select{width:100%}
 .glabel{font:600 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 
-/* table */
 .tablewrap{overflow-x:auto}
 table{border-collapse:collapse;width:100%;font-size:14px}
 th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
 th{font:600 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 td.r,th.r{text-align:right}
 
-/* cast */
-.castgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:12px}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px;border-left:5px solid var(--line)}
-.card.Savu{border-left-color:var(--savu)} .card.Toka{border-left-color:var(--toka)} .card.Exile,.card.Merged{border-left-color:var(--exile)}
-.card.isout{opacity:.62;border-left-color:var(--out)}
-.card .nm{font:700 16px var(--body)}
+.castgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.card.isout{opacity:.62}
+.card .nm{font:800 22px/1.05 var(--display);text-transform:uppercase}
+.card .rel{font:600 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
 .card .meta{font-size:13px;color:var(--muted)}
-.card .foot{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-top:auto;padding-top:6px}
+.card .note{font-size:13px;color:var(--ink);background:var(--gold-bg);border-radius:6px;padding:4px 8px}
+.card .foot{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-top:auto;padding-top:6px;border-top:1px dashed var(--line)}
 
-/* draft */
 .onclock{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;padding:14px 16px;border-radius:12px;background:var(--band);color:var(--band-ink)}
-.onclock .who{font:800 26px/1.1 var(--display);color:#F0A374}
-.avail{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,200px),1fr));gap:8px}
+.onclock .who{font:800 30px/1.05 var(--display);text-transform:uppercase;color:var(--marker-y)}
+.avail{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:8px}
 .pickbtn{display:flex;justify-content:space-between;align-items:center;gap:8px;text-align:left;width:100%}
 .pickbtn small{color:var(--muted);font-weight:500}
 .rosters{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:10px}
@@ -133,37 +120,47 @@ td.r,th.r{text-align:right}
 .mgrtag{display:inline-flex;gap:6px;align-items:center;padding:5px 6px 5px 10px;border-radius:999px;background:var(--sunk);font-weight:600;font-size:14px}
 .mgrtag button{border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;padding:0 4px}
 
-/* scoring */
-.scorerow{display:grid;grid-template-columns:minmax(150px,200px) 1fr;gap:10px;padding:10px 0;border-top:1px solid var(--line);align-items:start}
+.scorerow{display:grid;grid-template-columns:minmax(150px,210px) 1fr;gap:10px;padding:12px 0;border-top:1px solid var(--line);align-items:start}
 .scorerow:first-of-type{border-top:0}
 @media (max-width:620px){.scorerow{grid-template-columns:1fr}}
-.evs{display:flex;flex-wrap:wrap;gap:6px}
+.evs{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .ev{font:500 12px var(--body);padding:5px 9px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
 .ev[aria-pressed="true"]{background:var(--ok-bg);border-color:var(--ok);color:var(--ok);font-weight:700}
 .ev.neg[aria-pressed="true"]{background:var(--out-bg);border-color:var(--out);color:var(--out)}
 .ev.outbtn[aria-pressed="true"]{background:var(--out);border-color:var(--out);color:var(--surface)}
+.placesel{font:600 13px var(--mono)!important;padding:5px 8px!important}
+.placesel.dupe{border-color:var(--out);color:var(--out)}
 .epts{font:600 13px var(--mono);color:var(--muted)}
 .savebar{position:sticky;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:12px 0 calc(12px + env(safe-area-inset-bottom,0px));margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 
-/* rules */
 .rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px}
 .ptlist{list-style:none;margin:0;padding:0}
 .ptlist li{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--line)}
 .ptlist li:last-child{border-bottom:0}
+.ptlist li span:last-child{text-align:right}
 .pos{color:var(--ok)} .neg{color:var(--out)}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--band);color:var(--band-ink);padding:10px 16px;border-radius:8px;font-weight:600;z-index:10}
 .ro .needwrite{display:none!important}
-@media (prefers-reduced-motion:no-preference){.torches span:not(.snuffed){animation:flick 2.4s ease-in-out infinite alternate}.torches span:nth-child(3n){animation-delay:.6s}.torches span:nth-child(4n){animation-delay:1.1s}}
-@keyframes flick{from{filter:brightness(1)}to{filter:brightness(1.25)}}
+
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+[hidden]{display:none!important}
+img{max-width:100%}
+body.locked header.band, body.locked main{display:none}
+.gate{min-height:100vh;display:grid;place-items:center;background:var(--band);padding:24px 16px}
+.gatebox{width:100%;max-width:400px;display:flex;flex-direction:column;gap:12px;color:var(--band-ink)}
+.gatebox h1{margin:0}
+.gatebox p{margin:0;color:var(--band-muted)}
+.gatebox .glabel{color:var(--band-muted)}
+.gatebox input{font:500 16px var(--body);padding:12px;border-radius:8px;border:1px solid #33414F;background:#07101A;color:#F4F1E8}
+.gateerr{color:#F29A8E!important;font-weight:600}
 </style>
 </head>
 <body>
 
-
 <div id="gate" class="gate" hidden>
   <form id="gateform" class="gatebox">
-    <div class="eyebrow">Season 51 · The Open Era</div>
-    <h1>Survivor 51 Fantasy League</h1>
+    <div class="eyebrow">Season 39 · 12 legs · 13 teams</div>
+    <h1>Amazing Race 39 Fantasy League</h1>
     <p>This league is for invited players. Enter the league password to come in.</p>
     <label for="gatepw" class="glabel">League password</label>
     <input type="password" id="gatepw" autocomplete="current-password" required>
@@ -175,20 +172,20 @@ td.r,th.r{text-align:right}
   <div class="wrap">
     <div class="hero">
       <div>
-        <div class="eyebrow">Season 51 · The Open Era</div>
-        <h1>Survivor 51 Fantasy League</h1>
-        <p>Draft castaways, call the next boot, and pick your Sole Survivor. Episode 1 happened before the draft, so scoring starts with Episode 2.</p>
+        <div class="eyebrow">Season 39 · 12 legs · 13 teams</div>
+        <h1>Amazing Race 39 Fantasy League</h1>
+        <p>Draft teams before the first leg. Every leg, your teams score by where they finish at the Pit Stop: 12 for first, one less for each spot after, and −3 for the team eliminated.</p>
       </div>
       <div>
-        <div class="torches" id="torches" aria-hidden="true"></div>
-        <div class="torches-cap" id="torchcap"></div>
+        <div class="markers" id="markers" aria-hidden="true"></div>
+        <div class="markers-cap" id="markercap"></div>
       </div>
     </div>
     <nav class="tabs" role="tablist" aria-label="League sections">
       <button role="tab" data-tab="standings" aria-selected="true">Standings</button>
       <button role="tab" data-tab="draft" aria-selected="false">Draft</button>
-      <button role="tab" data-tab="cast" aria-selected="false">Castaways</button>
-      <button role="tab" data-tab="score" aria-selected="false">Score an Episode</button>
+      <button role="tab" data-tab="cast" aria-selected="false">Teams</button>
+      <button role="tab" data-tab="score" aria-selected="false">Score a Leg</button>
       <button role="tab" data-tab="rules" aria-selected="false">Rules</button>
     </nav>
   </div>
@@ -203,7 +200,6 @@ td.r,th.r{text-align:right}
   <section id="tab-rules" hidden></section>
 </main>
 <div class="toast" id="toast" hidden></div>
-
 
 <!-- ===== Paste your Firebase web app settings here (see README.md) ===== -->
 <script>
@@ -221,187 +217,188 @@ window.LEAGUE_PASSWORD_HASH = "e680a9111b7e1471ec279c3d1cb01491c45d677afed28ca72
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
-// ---------- Static season data (as of Episode 1) ----------
+// Saved in the same Firebase project as Survivor, in its own collections so the two leagues never mix.
+const COL = {main:'tar39_league/main', episodes:'tar39_episodes', preds:'tar39_predictions'};
+
+// ---------- Season data (pre-race, no results) ----------
 const CAST = [
-  {k:'alexis',n:'Alexis Levine',a:34,h:'Atlanta, GA',j:'Criminal defense attorney',t:'Savu'},
-  {k:'ana',n:'Ana Sani',a:34,h:'Richmond Hill, ON',j:'Voice actress',t:'Savu'},
-  {k:'carter',n:'Carter Krull',a:24,h:'Rock Rapids, IA',j:'Livestock farmer',t:'Savu'},
-  {k:'eric',n:'Eric Macksoud',a:34,h:'Lincoln, RI',j:'Mental health counselor',t:'Savu'},
-  {k:'kristin',n:'Kristin Flickinger',a:49,h:'Ketchum, ID',j:'Crisis management',t:'Savu'},
-  {k:'linnea',n:'Linnea Capobianco',a:25,h:'Kearny, NJ',j:'Entrepreneur',t:'Savu'},
-  {k:'ori',n:'Ori Jean-Charles',a:27,h:'Spring Valley, NY',j:'Personal trainer',t:'Savu'},
-  {k:'rob',n:'Rob Antonson',a:40,h:'Johnston, RI',j:'Airline gate agent',t:'Savu',note:'Found a hidden immunity idol in Ep 1'},
-  {k:'sharonda',n:'Sharonda Cox',a:34,h:'Pompano Beach, FL',j:'OB-GYN resident',t:'Savu'},
-  {k:'thienan',n:'Thien An Nguyen',a:24,h:'Fort Worth, TX',j:'Medical student',t:'Savu'},
-  {k:'brady',n:'Brady Booker',a:27,h:'La Salle, IL',j:'Pro wrestler',t:'Toka'},
-  {k:'cristian',n:'Cristian Chavez',a:26,h:'Salt Lake City, UT',j:'Head of HR',t:'Toka'},
-  {k:'devin',n:'Devin Way',a:33,h:'Lufkin, TX',j:'Actor',t:'Toka',note:'Most confessionals in Ep 1'},
-  {k:'jelly',n:'Angelica "Jelly" Loblack',a:29,h:'Garland, TX',j:'Sociology professor',t:'Toka'},
-  {k:'jenna',n:'Jenna Doore',a:30,h:'Perrysburg, OH',j:'Wedding photographer',t:'Toka',note:'Used her Shot in the Dark in Ep 1'},
-  {k:'kilby',n:'Danny "Kilby" Kilby',a:30,h:'Mount Forest, ON',j:'Game designer',t:'Toka'},
-  {k:'maggie',n:'Maggie Nestor',a:40,h:'Middleway, WV',j:'Farmer',t:'Toka'},
-  {k:'mike',n:'Mike Pinsky',a:32,h:'New York, NY',j:'Baseball executive',t:'Toka'},
-  {k:'patt',n:'Patt Cannaday',a:33,h:'Tampa, FL',j:'Federal prosecutor',t:'Toka'},
-  {k:'lewis',n:'Lewis Kelly',a:28,h:'Dublin, Ireland',j:'Farmer',t:'Exile',note:'Sent to Exile Island at the marooning'},
-  {k:'aaliyah',n:'Aaliyah Puglia',a:24,h:'Gloucester City, NJ',j:'Chef',t:'Toka',note:'First voted out, Ep 1 (6–2)'},
+  {k:'alijo',n:'Ali & Joanna',f:'Ali Krieger & Joanna Lohman',r:'Pro athletes & moms',a:'42 & 44',h:'Montclair, NJ · Silver Spring, MD',j:'Former U.S. Women’s National Team soccer players'},
+  {k:'annriley',n:'Ann-Marie & Riley',f:'Ann-Marie & Riley Tejcek',r:'Mother & daughter',a:'56 & 29',h:'Carmel, IN · San Diego, CA',j:'Healthcare executive · Marine officer',note:'Hometown team: Ann-Marie is from Carmel'},
+  {k:'anuar',n:'Anuar & Andrea',f:'Anuar & Andrea Tager Ballesca',r:'Father & daughter',a:'58 & 25',h:'Houston, TX',j:'Developer · Medical student'},
+  {k:'cody',n:'Cody & Jaime',f:'Cody Langlois & Jaime Tribo',r:'Siblings',a:'35 & 33',h:'Los Angeles, CA · Tinley Park, IL',j:'Civil engineer · Dietitian'},
+  {k:'conner',n:'Conner & Garrett',f:'Conner Wilson & Garrett McGuire',r:'Childhood friends',a:'27 & 27',h:'Loomis, CA · Rocklin, CA',j:'Media producer · Engineer'},
+  {k:'dunmore',n:'Dafina & Saran',f:'Dafina & Saran Dunmore',r:'Sisters',a:'52 & 51',h:'Chicago, IL',j:'Bond analyst & DJ · Personal trainer'},
+  {k:'daisha',n:'Daisha & Dalton',f:'Daisha Wilks & Dalton Hamby',r:'Dating',a:'28 & 27',h:'Flat Rock, AL · Jacksonville, AL',j:'Videographers'},
+  {k:'matter',n:'Doug & Dylan',f:'Doug & Dylan Matter',r:'Grandfather & grandson',a:'73 & 19',h:'San Diego, CA',j:'Retired fire chief · College student',note:'Biggest age gap in the race'},
+  {k:'erin',n:'Erin & Javi',f:'Erin Taylor & Javi Vintimilla',r:'Married',a:'28 & 30',h:'Fort Lauderdale, FL',j:'Human resources · Pilot'},
+  {k:'jody',n:'Jody & Jenn',f:'Jody Rebhun & Jenn Naso',r:'Best friends & moms',a:'44 & 44',h:'Branford, CT · Larchmont, NY',j:'History teacher · Forensic scientist'},
+  {k:'schultz',n:'Katie & Charlotte',f:'Katie & Charlotte Schultz',r:'Sisters',a:'26 & 20',h:'Murray, KY',j:'Estheticians'},
+  {k:'patterson',n:'Michelle & Matt',f:'Michelle & Matthew Patterson',r:'Married parents',a:'31 & 36',h:'Rutherford, NJ',j:'Body shop owner & realtor · Operations director'},
+  {k:'johnson',n:'Zach & Nate',f:'Zach & Nate Johnson',r:'Brothers',a:'30 & 27',h:'Dallas, TX',j:'Car sales & startup co-founder · Sales director'},
 ];
 const BY = Object.fromEntries(CAST.map(c=>[c.k,c]));
-const BASE_OUT = {aaliyah:1};
-const TRIBES = ['Savu','Toka','Exile','Merged'];
-const SURVIVE=2, OUT=-3, PREDICT=3, LAST_EP=14;
-const WIN_VAL={2:70,3:60,4:50,5:45,6:40,7:35,8:20,9:15,10:10,11:5,12:3,13:2,14:1};
-const GUESS=[{f:'picks',l:'Voted out',p:PREDICT},{f:'imm',l:'Wins immunity',p:2},{f:'rew',l:'Wins reward',p:2}];
-const EVENTS = [
-  {c:'team',l:'Tribe won immunity',p:2},{c:'reward',l:'Won reward',p:5},{c:'indiv',l:'Individual immunity',p:5},
-  {c:'idol',l:'Found idol',p:4},{c:'adv',l:'Found advantage',p:2},{c:'save',l:'Idol/advantage saved someone',p:5},
-  {c:'sitd',l:'Shot in the Dark worked',p:5},{c:'coin',l:'Won the coin flip',p:10},{c:'journey',l:'Won Exile/journey',p:3},
-  {c:'medevac',l:'Medevac (cancels boot penalty)',p:3},
-  {c:'pocket',l:'Out with idol in pocket',p:-5},{c:'quit',l:'Quit',p:-10},
-  
-  {c:'winner',l:'Wins the season',p:20},
-];
+const FIRST_EP=1, LAST_EP=12, EXPRESS_LAST=6;
+const PREDICT=3, TOP_PTS=12, OUT=-3;
+const placePts = pl => pl ? Math.max(0, TOP_PTS+1-pl) : 0;
+const WIN_VAL={1:60,2:50,3:45,4:40,5:35,6:30,7:25,8:20,9:12,10:8,11:4,12:1};
+const GUESS=[];
+const EVENTS = [];
 const EV = Object.fromEntries(EVENTS.map(e=>[e.c,e]));
 
 // ---------- State ----------
-const S = { db:null, canWrite:true, main:null, mainLoaded:false, episodes:{}, preds:{}, tab:'standings',
+const S = { db:null, canWrite:true, main:null, episodes:{}, preds:{}, tab:'standings',
   scoreEp:null, edit:null, editDirty:false, newMgrs:[], teamSize:null };
 const $ = s => document.querySelector(s);
 const esc = s => String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-const first = k => { const n = BY[k]?.n || k; const m = n.match(/"([^"]+)"/); return m ? m[1] : n.split(' ')[0]; };
+const nm = k => BY[k]?.n || k;
 function toast(msg){ const t=$('#toast'); t.textContent=msg; t.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>t.hidden=true,2200); }
-
-const M = () => S.main || {managers:[],order:[],picks:[],teamSize:0,winnerPicks:{},tribes:{}};
-const tribeOf = k => (M().tribes||{})[k] || BY[k].t;
+const M = () => S.main || {managers:[],order:[],picks:[],teamSize:0,winnerPicks:{}};
 const mgrName = id => (M().managers.find(m=>m.id===id)||{}).name || '—';
 
 // ---------- Scoring ----------
-function scoredEps(){ return Object.values(S.episodes).filter(e=>e.num>=2 && e.num<=LAST_EP).sort((a,b)=>a.num-b.num); }
-function outMap(){ const o={...BASE_OUT}; for(const e of scoredEps()) for(const k of (e.out||[])) if(!o[k]) o[k]=e.num; return o; }
+function scoredEps(){ return Object.values(S.episodes).filter(e=>e.num>=FIRST_EP && e.num<=LAST_EP).sort((a,b)=>a.num-b.num); }
+function outMap(){ const o={}; for(const e of scoredEps()) for(const k of (e.out||[])) if(!o[k]) o[k]=e.num; return o; }
+function legPts(e,k){
+  let p = (e.out||[]).includes(k) ? OUT : placePts((e.place||{})[k]);
+  for(const code of ((e.events||{})[k]||[])) p += (EV[code]?.p||0);
+  return p;
+}
 function castPoints(){
   const o = outMap(), pts = {};
   CAST.forEach(c=>pts[c.k]={total:0,byEp:{}});
-  for(const e of scoredEps()){
-    for(const c of CAST){
-      if(o[c.k] && o[c.k] < e.num) continue;
-      let p = (e.out||[]).includes(c.k) ? OUT : SURVIVE;
-      for(const code of ((e.events||{})[c.k]||[])) p += (EV[code]?.p||0);
-      pts[c.k].byEp[e.num]=p; pts[c.k].total+=p;
-    }
+  for(const e of scoredEps()) for(const c of CAST){
+    if(o[c.k] && o[c.k] < e.num) continue;
+    const p = legPts(e,c.k); pts[c.k].byEp[e.num]=p; pts[c.k].total+=p;
   }
   return pts;
 }
-function pickPts(cp,p){ if(!p.from) return cp[p.c].total; return Object.entries(cp[p.c].byEp).reduce((s,[e,v])=>s+(+e>=p.from?v:0),0); }
+function pickPts(cp,p){ return Object.entries(cp[p.c].byEp).reduce((s,[e,v])=>s+(counts(p,+e)?v:0),0); }
+// ---------- Bench (even head-to-head once no replacements are left) ----------
+function outBefore(ep){ const o=outMap(); return k=>o[k] && o[k]<ep; }
+function pickLive(p,ep){ return (!p.from || p.from<=ep) && !outBefore(ep)(p.c); }
+function benchNeeded(ep){
+  if(!draftDone()) return false;
+  const gone=outBefore(ep), taken=new Set(M().picks.filter(p=>!p.from||p.from<=ep).map(p=>p.c));
+  return !CAST.some(c=>!taken.has(c.k) && !gone(c.k));
+}
+function activeAt(mid,ep){ return M().picks.filter(p=>p.m===mid && pickLive(p,ep)); }
+function lineupSize(ep){ const n=M().managers.map(mg=>activeAt(mg.id,ep).length).filter(x=>x>0); return n.length?Math.min(...n):0; }
+function benchFor(mid,ep){
+  if(!benchNeeded(ep)) return [];
+  const act=activeAt(mid,ep).map(p=>p.c), need=act.length-lineupSize(ep);
+  if(need<=0) return [];
+  const chosen=(((S.preds[ep]||{}).bench||{})[mid]||[]).filter(k=>act.includes(k)).slice(0,need);
+  for(const k of [...act].reverse()){ if(chosen.length>=need) break; if(!chosen.includes(k)) chosen.push(k); }
+  return chosen;
+}
+function counts(p,ep){ return (!p.from || ep>=p.from) && !benchFor(p.m,ep).includes(p.c); }
+function benchedCount(p){ return scoredEps().filter(e=>(!p.from||e.num>=p.from) && benchFor(p.m,e.num).includes(p.c)).length; }
 function draftCount(){ return M().picks.filter(p=>!p.from).length; }
 function draftDone(){ const m=M(); return m.managers.length>0 && draftCount()>=m.managers.length*m.teamSize; }
 function replCredits(mid){ const o=outMap(), mine=M().picks.filter(p=>p.m===mid); return Math.max(0, mine.filter(p=>o[p.c]).length - mine.filter(p=>p.from).length); }
 function availPool(){ const o=outMap(), taken=new Set(M().picks.map(p=>p.c)); return CAST.filter(c=>!taken.has(c.k)&&!o[c.k]); }
-function renderRepl(){
-  const m=M(); if(!draftDone()) return '';
-  const rows=m.managers.filter(mg=>replCredits(mg.id)>0); if(!rows.length) return '';
-  const pool=availPool();
-  return `<div class="panel"><h3>Replacement picks</h3><p class="sub">Lost a castaway? Pick up anyone undrafted who is still in the game. They score starting with Episode ${nextEp()}.</p>
-  <div class="stack">${rows.map(mg=>`<div class="row" style="justify-content:space-between"><span style="font-weight:600">${esc(mg.name)} <span class="extras">· ${replCredits(mg.id)} to use</span></span>
-    <span class="row"><select id="repl-${mg.id}" aria-label="Replacement for ${esc(mg.name)}" ${S.canWrite&&pool.length?'':'disabled'}><option value="">— choose —</option>${pool.map(c=>`<option value="${c.k}">${esc(c.n)}</option>`).join('')}</select>
-    <button class="btn primary needwrite" data-repl="${mg.id}" ${pool.length?'':'disabled'}>Add</button></span></div>`).join('')}</div>
-  ${pool.length?'':'<p class="extras">No undrafted castaways are left in the game.</p>'}</div>`;
-}
+function nextEp(){ const s=scoredEps(); return Math.min(LAST_EP, s.length ? s[s.length-1].num+1 : FIRST_EP); }
+function guessFields(ep){ return GUESS.filter(G=>G.f!=='xp' || ep<=EXPRESS_LAST); }
 function guessRight(e,f,g){
   if(!g) return false;
-  if(f==='picks') return (e.out||[]).includes(g);
-  const ta=e.tribesAt||{}, has=(k,c)=>((e.events||{})[k]||[]).includes(c);
-  if(TRIBES.includes(g)) return CAST.some(c=>(ta[c.k]||tribeOf(c.k))===g && has(c.k, f==='imm'?'team':'reward'));
-  return has(g, f==='imm'?'indiv':'reward');
+  if(f==='picks') return g==='none' ? !(e.out||[]).length : (e.out||[]).includes(g);
+  if(f==='leg') return (e.place||{})[g]===1;
+  if(f==='xp') return g==='none' ? !CAST.some(c=>((e.events||{})[c.k]||[]).includes('express')) : ((e.events||{})[g]||[]).includes('express');
+  return false;
 }
 function guessHits(e,mid){ const P=S.preds[e.num]||{}; return GUESS.filter(G=>guessRight(e,G.f,(P[G.f]||{})[mid])).length; }
 function guessPts(e,mid){ const P=S.preds[e.num]||{}; return GUESS.reduce((s,G)=>s+(guessRight(e,G.f,(P[G.f]||{})[mid])?G.p:0),0); }
 function guessOpts(f,sel,alive){
-  const tribes=['Savu','Toka'].filter(t=>alive.some(c=>tribeOf(c.k)===t));
   const o=(v,l)=>`<option value="${v}" ${sel===v?'selected':''}>${esc(l)}</option>`;
   return '<option value="">— pick —</option>'
-    + (f!=='picks'&&tribes.length?`<optgroup label="Tribes">${tribes.map(t=>o(t,t)).join('')}</optgroup>`:'')
-    + `<optgroup label="Castaways">${alive.map(c=>o(c.k,c.n)).join('')}</optgroup>`;
+    + (f==='picks'?o('none','Nobody (non-elimination)'):'')
+    + (f==='xp'?o('none','Nobody uses one'):'')
+    + alive.map(c=>o(c.k,c.n)).join('');
 }
-function wpOf(mid){ const v=(M().winnerPicks||{})[mid]; if(!v) return null; if(typeof v==='string') return {c:v,ep:2}; return v.c?v:null; }
+function wpOf(mid){ const v=(M().winnerPicks||{})[mid]; return v && v.c ? v : null; }
 function wpLocked(w){ return !!w && w.ep < nextEp(); }
-function nextEp(){ const s=scoredEps(); return Math.min(LAST_EP, s.length ? s[s.length-1].num+1 : 2); }
 function managerScores(){
   const cp = castPoints(), o = outMap(), m = M();
-  const winner = Object.keys(cp).find(k=>scoredEps().some(e=>((e.events||{})[k]||[]).includes('winner')));
+  const winner = CAST.map(c=>c.k).find(k=>scoredEps().some(e=>((e.events||{})[k]||[]).includes('winner')));
   return m.managers.map(mg=>{
     const myPicks = m.picks.filter(p=>p.m===mg.id);
-    const team = myPicks.map(p=>p.c);
     const castTotal = myPicks.reduce((s,p)=>s+pickPts(cp,p),0);
     let predHits=0, predPts=0;
     for(const e of scoredEps()){ predHits+=guessHits(e,mg.id); predPts+=guessPts(e,mg.id); }
-    const w = wpOf(mg.id), wp = w ? w.c : null;
-    const winBonus = winner && wp===winner ? (WIN_VAL[w.ep]||0) : 0;
-    const alive = team.filter(k=>!o[k]).length;
-    return {...mg, picks:myPicks, team, castTotal, predHits, winBonus, wp, wpEp: w?w.ep:null, alive, predPts, total: castTotal + predPts + winBonus};
+    const w = wpOf(mg.id);
+    const winBonus = winner && w && w.c===winner ? (WIN_VAL[w.ep]||0) : 0;
+    const alive = myPicks.filter(p=>!o[p.c]).length;
+    return {...mg, picks:myPicks, castTotal, predHits, predPts, winBonus, w, alive, total: castTotal};
   }).sort((a,b)=>b.total-a.total || b.alive-a.alive);
 }
 
 // ---------- DB writes ----------
 async function writeMain(patch, full=false){
-  if(!S.db){ toast('Connect Firebase first (see firebaseConfig in index.html).'); return; }
-  const ref = S.db.doc('league/main');
-  try{
-    if(full || !S.main){
-      const body = JSON.parse(JSON.stringify(M()));
-      for(const [k,v] of Object.entries(patch)){ const [a,b]=k.split('.'); if(b){ body[a]=body[a]||{}; body[a][b]=v; } else body[k]=v; }
-      await ref.set(body);
-    }
-    else await ref.update(patch);
-  }catch(e){ handleWriteErr(e); }
+  if(!S.db){ toast('The league database isn’t connected.'); return; }
+  const ref = S.db.doc(COL.main);
+  try{ if(full || !S.main) await ref.set({...M(), ...patch}); else await ref.update(patch); }
+  catch(e){ handleWriteErr(e); }
 }
 function handleWriteErr(e){
-  console.error(e);
-  if(e?.code==='permission-denied') toast('Firebase blocked this save. Check the Firestore rules (see README).');
-  else toast('Could not save: '+(e?.message||'try again in a moment.'));
+  if(e?.code==='permission-denied'){ S.canWrite=false; applyRO(); toast('You have view-only access to this league.'); }
+  else toast('Could not save. Try again in a moment.');
 }
 function applyRO(){ document.body.classList.toggle('ro', !S.canWrite); render(); }
 
 // ---------- Rendering ----------
-function renderTorches(){
+function renderMarkers(){
   const o = outMap(); const out = CAST.filter(c=>o[c.k]).length;
-  $('#torches').innerHTML = CAST.map((c,i)=>`<span class="${i<out?'snuffed':''}"></span>`).join('');
-  $('#torchcap').textContent = `${CAST.length-out} of ${CAST.length} still in · next up: Episode ${nextEp()}`;
+  $('#markers').innerHTML = CAST.map((c,i)=>`<span class="${i>=CAST.length-out?'gone':''}"></span>`).join('');
+  $('#markercap').textContent = `${CAST.length-out} of ${CAST.length} teams racing · next up: Leg ${nextEp()}`;
 }
-function tribeChip(k){ const o=outMap(); if(o[k]) return `<span class="chip out">Out · Ep ${o[k]}</span>`; const t=tribeOf(k); return `<span class="chip ${t}"><span class="dot"></span>${t}</span>`; }
-function sw(k){ const t=tribeOf(k); return `var(--${t==='Savu'?'savu':t==='Toka'?'toka':'exile'})`; }
+function statusChip(k){ const o=outMap(); if(o[k]) return `<span class="chip out">Out · Leg ${o[k]}</span>`;
+  const won = scoredEps().filter(e=>(e.place||{})[k]===1).length;
+  return won ? `<span class="chip won">${won} leg win${won>1?'s':''}</span>` : `<span class="chip racing"><span class="flag"></span>Racing</span>`; }
+
+function renderRepl(){
+  const m=M(); if(!draftDone()) return '';
+  const rows=m.managers.filter(mg=>replCredits(mg.id)>0); if(!rows.length) return '';
+  const pool=availPool();
+  return `<div class="panel"><h3>Replacement picks</h3><p class="sub">Lost a team? Pick up any undrafted team still racing. They score starting with Leg ${nextEp()}.</p>
+  <div class="stack">${rows.map(mg=>`<div class="row" style="justify-content:space-between"><span style="font-weight:600">${esc(mg.name)} <span class="extras">· ${replCredits(mg.id)} to use</span></span>
+    <span class="row"><select id="repl-${mg.id}" aria-label="Replacement for ${esc(mg.name)}" ${S.canWrite&&pool.length?'':'disabled'}><option value="">— choose —</option>${pool.map(c=>`<option value="${c.k}">${esc(c.n)}</option>`).join('')}</select>
+    <button class="btn primary needwrite" data-repl="${mg.id}" ${pool.length?'':'disabled'}>Add</button></span></div>`).join('')}</div>
+  ${pool.length?'':'<p class="extras">No undrafted teams are left in the race.</p>'}</div>`;
+}
 
 function renderStandings(){
   const el=$('#tab-standings'), m=M(), cp=castPoints(), o=outMap();
-  if(!m.managers.length){ el.innerHTML = `<div class="panel empty"><h3>No league yet</h3><p>Add your players on the Draft tab, then run the snake draft.</p><button class="btn primary needwrite" data-go="draft">Set up the draft</button></div>`; return; }
+  if(!m.managers.length){ el.innerHTML = `<div class="panel empty"><h3>No league yet</h3><p>Add your players on the Draft tab, then run the snake draft before you watch Leg 1.</p><button class="btn primary needwrite" data-go="draft">Set up the draft</button></div>`; return; }
   const rows = managerScores();
   const ep = nextEp(), P = S.preds[ep] || {};
-  const alive = CAST.filter(c=>!o[c.k]).sort((a,b)=>a.n.localeCompare(b.n));
-  const draftLeft = !draftDone();
+  const alive = CAST.filter(c=>!o[c.k]);
   el.innerHTML = `
   <div class="stack">
     ${renderRepl()}
-    ${draftLeft?`<div class="notice"><strong>Draft in progress.</strong> ${draftCount()} of ${m.managers.length*m.teamSize} picks made. <button class="btn" data-go="draft">Go to draft</button></div>`:''}
+    ${!draftDone()?`<div class="notice"><strong>Draft in progress.</strong> ${draftCount()} of ${m.managers.length*m.teamSize} picks made. <button class="btn" data-go="draft">Go to draft</button></div>`:''}
     <div class="grid2">
       <div class="panel">
         <h2>Standings</h2>
-        <p class="sub">${scoredEps().length?`Through Episode ${scoredEps().slice(-1)[0].num}`:'No episodes scored yet. Score Episode 2 to get on the board.'}</p>
+        <p class="sub">${scoredEps().length?`Through Leg ${scoredEps().slice(-1)[0].num}`:'No legs scored yet. Watch Leg 1, then score it to get on the board.'}</p>
         <div>${rows.map((r,i)=>`
           <div class="standing">
             <div class="rank">${i+1}</div>
             <div style="min-width:0">
               <div class="mname">${esc(r.name)}</div>
-              <div class="roster">${r.picks.map(p=>{ const k=p.c; return `<span class="pill ${o[k]?'gone':''}" title="${p.from?'Replacement, scores from Ep '+p.from:''}"><span class="sw" style="background:${o[k]?'var(--out)':sw(k)}"></span>${esc(first(k))}${p.from?' ↺':''} <b>${pickPts(cp,p)}</b></span>`; }).join('') || '<span class="extras">No castaways drafted yet</span>'}</div>
-              <div class="extras">${r.alive} still in · Winner pick: ${r.wp?esc(first(r.wp))+' ('+(WIN_VAL[r.wpEp]||0)+' pts'+(wpLocked(wpOf(r.id))?', locked':'')+')':'none'} · Correct calls: ${r.predHits}${r.winBonus?` · +${r.winBonus} winner bonus`:''}</div>
+              <div class="roster">${r.picks.map(p=>`<span class="pill ${o[p.c]?'gone':''}" title="${p.from?'Replacement, scores from Leg '+p.from:''}${benchedCount(p)?' · benched '+benchedCount(p)+' leg(s)':''}"><span class="flag"></span>${esc(nm(p.c))}${p.from?' ↺':''}${!o[p.c]&&benchFor(r.id,ep).includes(p.c)?' <span class="benchtag">bench</span>':''} <b>${pickPts(cp,p)}</b></span>`).join('') || '<span class="extras">No teams drafted yet</span>'}</div>
+              <div class="extras">${r.alive} still racing</div>
             </div>
             <div class="total num">${r.total}<small>points</small></div>
           </div>`).join('')}</div>
       </div>
       <div class="panel">
-        <h2>Tonight's picks · Ep ${ep}</h2>
-        <p class="sub">Lock these in before the episode airs. Voted out +${PREDICT}, immunity +2, reward +2. Pick a tribe before the merge and a castaway after.</p>
-        <div class="stack" style="gap:0">${m.managers.map(mg=>`
-          <div class="guess"><div style="font-weight:600">${esc(mg.name)}</div>
-            <div class="guessrow">${GUESS.map(G=>`<label><span class="glabel">${G.l}</span><select data-pred="${mg.id}" data-field="${G.f}" aria-label="${esc(mg.name)}: ${G.l}" ${S.canWrite?'':'disabled'}>${guessOpts(G.f,(P[G.f]||{})[mg.id],alive)}</select></label>`).join('')}</div>
-          </div>`).join('')}
+        <h2>Lineups · Leg ${ep}</h2>
+        ${benchNeeded(ep)&&m.managers.some(mg=>benchFor(mg.id,ep).length)?'':`<p class="sub">Everyone plays all of their teams still racing in Leg ${ep}.</p>`}
+        ${benchNeeded(ep)?`<div class="notice" style="margin:0 0 12px"><strong>Even lineups: ${lineupSize(ep)} team${lineupSize(ep)>1?'s':''} each.</strong> No undrafted teams are left, so anyone with more teams racing sits the extra out for Leg ${ep}. A benched team scores 0 for you that leg. Pick your bench below; if you don’t, your most recently drafted team sits.</div>`:''}
+        <div class="stack" style="gap:0">${m.managers.map(mg=>{ const bn=benchFor(mg.id,ep), act=activeAt(mg.id,ep);
+          const benchUI = bn.length ? `<div class="benchrow"><span class="glabel">Bench ${bn.length} for Leg ${ep}</span><div class="evs">${act.map(p=>`<button class="ev benchbtn" data-bench="${mg.id}|${p.c}" aria-pressed="${bn.includes(p.c)}" ${S.canWrite?'':'disabled'}>${esc(nm(p.c))}${bn.includes(p.c)?' · sitting':''}</button>`).join('')}</div></div>` : '';
+          if(!benchUI) return '';
+          return `<div class="guess"><div style="font-weight:600">${esc(mg.name)}</div>${benchUI}</div>`;}).join('')}
         </div>
         ${renderPastPreds()}
       </div>
@@ -411,18 +408,17 @@ function renderStandings(){
 }
 function renderPastPreds(){
   const eps = scoredEps().slice(-3).reverse(); if(!eps.length) return '';
-  return `<h3 style="margin-top:18px">Recent nights</h3><div class="tablewrap"><table><thead><tr><th>Ep</th><th>Went home</th><th>Correct calls</th></tr></thead><tbody>${
-    eps.map(e=>{ const hit=M().managers.map(m=>[m.name,guessHits(e,m.id)]).filter(x=>x[1]>0).map(([n,h])=>esc(n)+' ('+h+')');
-      return `<tr><td class="num">${e.num}</td><td>${(e.out||[]).map(k=>esc(first(k))).join(', ')||'Nobody'}</td><td>${hit.join(', ')||'Nobody'}</td></tr>`;}).join('')
+  return `<h3 style="margin-top:18px">Recent legs</h3><div class="tablewrap"><table><thead><tr><th>Leg</th><th>1st</th><th>Eliminated</th></tr></thead><tbody>${
+    eps.map(e=>{ const w=Object.keys(e.place||{}).find(k=>e.place[k]===1);
+      return `<tr><td class="num">${e.num}</td><td>${w?esc(nm(w)):'—'}</td><td>${(e.out||[]).map(k=>esc(nm(k))).join(', ')||'Nobody'}</td></tr>`;}).join('')
   }</tbody></table></div>`;
 }
 function renderEpTable(rows){
   const eps = scoredEps(); if(!eps.length) return '';
   const cp = castPoints();
-  return `<div class="panel"><h3>Points by episode</h3><div class="tablewrap"><table><thead><tr><th>Player</th>${eps.map(e=>`<th class="r">Ep ${e.num}</th>`).join('')}<th class="r">Total</th></tr></thead><tbody>${
+  return `<div class="panel"><h3>Points by leg</h3><div class="tablewrap"><table><thead><tr><th>Player</th>${eps.map(e=>`<th class="r">Leg ${e.num}</th>`).join('')}<th class="r">Total</th></tr></thead><tbody>${
     rows.map(r=>`<tr><td>${esc(r.name)}</td>${eps.map(e=>{
-      const bonus = guessPts(e,r.id);
-      const v=r.picks.reduce((s,p)=>s+((!p.from||e.num>=p.from)?(cp[p.c].byEp[e.num]||0):0),0)+bonus; return `<td class="r num">${v}</td>`;}).join('')}<td class="r num"><b>${r.total}</b></td></tr>`).join('')
+      const v=r.picks.reduce((s,p)=>s+(counts(p,e.num)?(cp[p.c].byEp[e.num]||0):0),0)+guessPts(e,r.id); return `<td class="r num">${v}</td>`;}).join('')}<td class="r num"><b>${r.total}</b></td></tr>`).join('')
   }</tbody></table></div></div>`;
 }
 
@@ -430,13 +426,13 @@ function snakeMgr(i){ const m=M(), n=m.order.length; const r=Math.floor(i/n), p=
 function renderDraft(){
   const el=$('#tab-draft'), m=M();
   if(!m.managers.length || !m.order.length){
-    const size = S.teamSize || (S.newMgrs.length ? Math.max(1,Math.floor(20/S.newMgrs.length)) : 4);
+    const size = S.teamSize || (S.newMgrs.length ? Math.max(1,Math.floor(13/S.newMgrs.length)) : 3);
     el.innerHTML = `<div class="panel stack">
-      <div><h2>Set up the draft</h2><p class="sub">Add everyone playing. The order gets shuffled, then it's a snake draft (1→N, then N→1) from the 20 castaways still in the game.</p></div>
+      <div><h2>Set up the draft</h2><p class="sub">Add everyone playing. The order gets shuffled, then it’s a snake draft (1→N, then N→1) from all 13 teams.</p></div>
       <form id="addmgr" class="row needwrite"><input type="text" id="mgrname" placeholder="Player name" maxlength="30" autocomplete="off"><button class="btn" type="submit">Add player</button></form>
       <div class="mgrlist">${S.newMgrs.map((n,i)=>`<span class="mgrtag">${esc(n)}<button data-rmmgr="${i}" aria-label="Remove ${esc(n)}">×</button></span>`).join('') || '<span class="extras">No players added yet.</span>'}</div>
-      <label class="row">Castaways per team <input type="number" id="teamsize" min="1" max="10" value="${size}" style="width:80px"></label>
-      <p class="extras">With ${S.newMgrs.length||'N'} players, ${S.newMgrs.length?Math.floor(20/S.newMgrs.length):'20 ÷ N'} per team uses the most castaways. Leftovers go undrafted.</p>
+      <label class="row">Teams per player <input type="number" id="teamsize" min="1" max="6" value="${size}" style="width:80px"></label>
+      <p class="extras">With ${S.newMgrs.length||'N'} players, ${S.newMgrs.length?Math.floor(13/S.newMgrs.length):'13 ÷ N'} each uses the most teams. Leftovers go undrafted and become replacement picks later.</p>
       <div class="row needwrite"><button class="btn primary" id="startdraft" ${S.newMgrs.length<2?'disabled':''}>Shuffle order & start draft</button></div>
       ${S.canWrite?'':'<p class="notice">You have view-only access. Ask the league owner to set up the draft.</p>'}
     </div>`;
@@ -447,21 +443,14 @@ function renderDraft(){
   const avail = CAST.filter(c=>!taken.has(c.k) && !o[c.k]);
   const cur = done ? null : snakeMgr(dc);
   el.innerHTML = `<div class="stack">
-    ${done ? `<div class="onclock"><span class="who">Draft complete</span><span>Now everyone picks a Sole Survivor below.</span></div>`
+    ${done ? `<div class="onclock"><span class="who">Draft complete</span><span>Good luck. Score each leg after everyone has watched.</span></div>`
       : `<div class="onclock"><span>Pick ${dc+1} of ${total} · Round ${Math.floor(dc/m.order.length)+1}</span><span class="who">${esc(mgrName(cur))} is on the clock</span></div>`}
     ${done?renderRepl():''}
-    ${done?'':`<div class="panel"><h3>Available castaways</h3><div class="avail">${avail.map(c=>`
-      <button class="btn pickbtn needwrite" data-pick="${c.k}"><span>${esc(c.n)}<br><small>${c.a} · ${esc(c.j)}</small></span>${tribeChip(c.k)}</button>`).join('')}</div>
+    ${done?'':`<div class="panel"><h3>Available teams</h3><div class="avail">${avail.map(c=>`
+      <button class="btn pickbtn needwrite" data-pick="${c.k}"><span>${esc(c.n)}<br><small>${esc(c.r)} · ${esc(c.a)}</small></span></button>`).join('')}</div>
       ${S.canWrite?'':'<p class="extras">View-only: picks are made by players with edit access.</p>'}</div>`}
-    <div class="panel"><h3>Teams</h3><p class="sub">Draft order: ${m.order.map(id=>esc(mgrName(id))).join(' → ')}</p>
-      <div class="rosters">${m.order.map(id=>`<div><strong>${esc(mgrName(id))}</strong><ol>${m.picks.filter(p=>p.m===id).map(p=>`<li>${esc(BY[p.c].n)}${p.from?` <span class="extras">(replacement, Ep ${p.from}+)</span>`:''}</li>`).join('')}</ol></div>`).join('')}</div>
-    </div>
-    <div class="panel"><h3>Sole Survivor picks</h3><p class="sub">Pick who you think wins it all, drafted or not. The earlier you commit, the more it's worth: picking now, during Episode ${nextEp()}, is worth <b>${WIN_VAL[nextEp()]||0} points</b> if they win. Put your vote in when Jeff says it's time to vote. After that it's locked for the rest of the season.</p>
-      <div class="stack">${m.managers.map(mg=>{ const w=wpOf(mg.id), lk=wpLocked(w);
-        return `<div class="row" style="justify-content:space-between"><span style="font-weight:600">${esc(mg.name)}</span>${lk
-          ? `<span class="chip ${o[w.c]?'out':'Exile'}" style="white-space:normal">Locked: ${esc(BY[w.c].n)} · Ep ${w.ep} · ${WIN_VAL[w.ep]||0} pts</span>`
-          : `<select data-wp="${mg.id}" aria-label="${esc(mg.name)} Sole Survivor pick" ${S.canWrite?'':'disabled'}><option value="">— pick —</option>${CAST.filter(c=>!o[c.k]).map(c=>`<option value="${c.k}" ${w&&w.c===c.k?'selected':''}>${esc(c.n)}</option>`).join('')}</select>`}</div>`; }).join('')}</div>
-      <p class="extras">Point scale by the episode you lock in: ${Object.entries(WIN_VAL).map(([e,v])=>`Ep ${e}: ${v}`).join(' · ')}</p>
+    <div class="panel"><h3>Rosters</h3><p class="sub">Draft order: ${m.order.map(id=>esc(mgrName(id))).join(' → ')}</p>
+      <div class="rosters">${m.order.map(id=>`<div><strong>${esc(mgrName(id))}</strong><ol>${m.picks.filter(p=>p.m===id).map(p=>`<li>${esc(nm(p.c))}${p.from?` <span class="extras">(replacement, Leg ${p.from}+)</span>`:''}</li>`).join('')}</ol></div>`).join('')}</div>
     </div>
     <div class="row needwrite">
       <button class="btn" id="undopick" ${m.picks.length?'':'disabled'}>Undo last pick</button>
@@ -473,101 +462,88 @@ function renderDraft(){
 function renderCast(){
   const el=$('#tab-cast'), cp=castPoints(), o=outMap(), m=M();
   const owner = {}; m.picks.forEach(p=>owner[p.c]=p.m);
-  const sorted = [...CAST].sort((a,b)=>(!!o[a.k]-!!o[b.k]) || TRIBES.indexOf(tribeOf(a.k))-TRIBES.indexOf(tribeOf(b.k)) || a.n.localeCompare(b.n));
-  el.innerHTML = `<h2>Castaways</h2><p class="sub">21 new players, two tribes, and Lewis on Exile Island. Change a tribe here when there's a swap, Lewis rejoins, or the merge hits.</p>
+  const sorted = [...CAST].sort((a,b)=>(!!o[a.k]-!!o[b.k]) || a.n.localeCompare(b.n));
+  el.innerHTML = `<h2>The teams</h2><p class="sub">13 teams of two racing about 25,000 miles across five continents for $1,000,000.</p>
   <div class="castgrid">${sorted.map(c=>`
-    <div class="card ${o[c.k]?'isout':tribeOf(c.k)}">
-      <div class="row" style="justify-content:space-between"><span class="nm">${esc(c.n)}</span>${tribeChip(c.k)}</div>
-      <div class="meta">${c.a} · ${esc(c.j)}<br>${esc(c.h)}</div>
-      ${c.note?`<div class="meta" style="color:var(--ink)">${esc(c.note)}</div>`:''}
-      <div class="foot">
-        <span class="meta">${owner[c.k]?'Team '+esc(mgrName(owner[c.k])):'Undrafted'} · <span class="num">${cp[c.k].total} pts</span></span>
-        ${o[c.k]?'':`<select data-tribe="${c.k}" aria-label="Tribe for ${esc(c.n)}" ${S.canWrite?'':'disabled'}>${TRIBES.map(t=>`<option ${tribeOf(c.k)===t?'selected':''}>${t}</option>`).join('')}</select>`}
-      </div>
+    <div class="card ${o[c.k]?'isout':''}">
+      <div class="row" style="justify-content:space-between;align-items:flex-start"><span class="rel">${esc(c.r)}</span>${statusChip(c.k)}</div>
+      <div class="nm">${esc(c.n)}</div>
+      <div class="meta">${esc(c.f)} · ${esc(c.a)}<br>${esc(c.j)}<br>${esc(c.h)}</div>
+      ${c.note?`<div class="note">${esc(c.note)}</div>`:''}
+      <div class="foot"><span class="meta">${owner[c.k]?'Drafted by '+esc(mgrName(owner[c.k])):'Undrafted'}</span><span class="num">${cp[c.k].total} pts</span></div>
     </div>`).join('')}</div>`;
 }
 
 function loadEdit(ep){
   const e = S.episodes[ep];
-  S.edit = { num:ep, out:[...(e?.out||[])], events: JSON.parse(JSON.stringify(e?.events||{})) };
+  S.edit = { num:ep, out:[...(e?.out||[])], place:{...(e?.place||{})}, events: JSON.parse(JSON.stringify(e?.events||{})) };
   S.editDirty=false;
 }
 function renderScore(){
   const el=$('#tab-score');
-  if(!S.canWrite){ el.innerHTML = `<div class="panel empty"><h3>View-only</h3><p>Only players with edit access can score episodes.</p></div>`; return; }
-  if(S.scoreEp==null){ S.scoreEp = nextEp(); }
+  if(!S.canWrite){ el.innerHTML = `<div class="panel empty"><h3>View-only</h3><p>Only players with edit access can score legs.</p></div>`; return; }
+  if(S.scoreEp==null) S.scoreEp = nextEp();
   if(!S.edit || S.edit.num!==S.scoreEp) loadEdit(S.scoreEp);
-  const ep=S.scoreEp, ed=S.edit;
-  const o = outMap(); // outs from saved data
-  const active = CAST.filter(c=>!o[c.k] || o[c.k]>=ep).sort((a,b)=>TRIBES.indexOf(tribeOf(a.k))-TRIBES.indexOf(tribeOf(b.k))||a.n.localeCompare(b.n));
-  const ptsFor = k => (ed.out.includes(k)?OUT:SURVIVE) + (ed.events[k]||[]).reduce((s,c)=>s+(EV[c]?.p||0),0);
+  const ep=S.scoreEp, ed=S.edit, o = outMap();
+  const active = CAST.filter(c=>!o[c.k] || o[c.k]>=ep).sort((a,b)=>((ed.place[a.k]||99)-(ed.place[b.k]||99)) || a.n.localeCompare(b.n));
+  const counts={}; Object.values(ed.place).forEach(v=>counts[v]=(counts[v]||0)+1);
+  const evs = EVENTS.filter(e=>e.c!=='express' || ep<=EXPRESS_LAST);
   el.innerHTML = `<div class="panel">
     <div class="row" style="justify-content:space-between;align-items:flex-end">
-      <div><h2>Score an episode</h2><p class="sub" style="margin:0">Mark who went home and anything that earned points. Everyone else gets +${SURVIVE} for surviving.</p></div>
-      <label class="row">Episode <select id="epsel">${Array.from({length:LAST_EP-1},(_,i)=>i+2).map(n=>`<option value="${n}" ${n===ep?'selected':''}>Ep ${n}${S.episodes[n]?' ✓':''}</option>`).join('')}</select></label>
+      <div><h2>Score a leg</h2><p class="sub" style="margin:0">Set each team’s finish at the Pit Stop and mark who was eliminated.</p></div>
+      <label class="row">Leg <select id="epsel">${Array.from({length:LAST_EP},(_,i)=>i+1).map(n=>`<option value="${n}" ${n===ep?'selected':''}>Leg ${n}${S.episodes[n]?' ✓':''}</option>`).join('')}</select></label>
     </div>
-    <div class="row" style="margin:14px 0 4px">
-      <span class="extras" style="margin:0">Quick fill · tribe immunity:</span>
-      ${['Savu','Toka','Merged'].filter(t=>active.some(c=>tribeOf(c.k)===t)).map(t=>`<button class="btn" data-tribeimm="${t}">${t} won</button>`).join('')}
-    </div>
-    <div class="row" style="margin:4px 0">
-      <span class="extras" style="margin:0">Quick fill · tribe reward:</span>
-      ${['Savu','Toka','Merged'].filter(t=>active.some(c=>tribeOf(c.k)===t)).map(t=>`<button class="btn" data-triberew="${t}">${t} won</button>`).join('')}
-    </div>
-    <div>${active.map(c=>`
+    <p class="extras">Finish points: 1st = 12, 2nd = 11, 3rd = 10, and so on down. The eliminated team gets −3 instead of finish points. Double leg? Score it as one episode and mark both eliminated teams.</p>
+    <div>${active.map(c=>{ const pl=ed.place[c.k]||''; return `
       <div class="scorerow">
-        <div><div style="font-weight:700">${esc(c.n)}</div><div class="row" style="gap:6px;margin-top:4px">${tribeChip(c.k)}<span class="epts">${ptsFor(c.k)>0?'+':''}${ptsFor(c.k)}</span></div></div>
+        <div><div style="font-weight:700">${esc(c.n)}</div><div class="row" style="gap:6px;margin-top:4px"><span class="epts">${legPts(ed,c.k)>0?'+':''}${legPts(ed,c.k)}</span></div></div>
         <div class="evs">
-          <button class="ev outbtn" data-out="${c.k}" aria-pressed="${ed.out.includes(c.k)}">Voted out (${OUT})</button>
-          ${EVENTS.map(e=>`<button class="ev ${e.p<0?'neg':''}" data-ev="${c.k}|${e.c}" aria-pressed="${(ed.events[c.k]||[]).includes(e.c)}">${esc(e.l)} (${e.p>0?'+':''}${e.p})</button>`).join('')}
+          <select class="placesel ${pl&&counts[pl]>1?'dupe':''}" data-place="${c.k}" aria-label="Finish for ${esc(c.n)}"><option value="">Finish</option>${active.map((_,i)=>`<option value="${i+1}" ${+pl===i+1?'selected':''}>${ordinal(i+1)}</option>`).join('')}</select>
+          <button class="ev outbtn" data-out="${c.k}" aria-pressed="${ed.out.includes(c.k)}">Eliminated (−3)</button>
+          ${evs.map(e=>`<button class="ev ${e.p<0?'neg':''}" data-ev="${c.k}|${e.c}" aria-pressed="${(ed.events[c.k]||[]).includes(e.c)}">${esc(e.l)} (${e.p>0?'+':''}${e.p})</button>`).join('')}
         </div>
-      </div>`).join('')}</div>
+      </div>`;}).join('')}</div>
     <div class="savebar">
-      <button class="btn primary" id="saveep">${S.episodes[ep]?'Update':'Save'} Episode ${ep}</button>
+      <button class="btn primary" id="saveep">${S.episodes[ep]?'Update':'Save'} Leg ${ep}</button>
       ${S.editDirty?'<span class="extras" style="margin:0">Unsaved changes</span>':''}
-      ${S.episodes[ep]?`<button class="btn danger" id="clearep">Clear Episode ${ep}</button>`:''}
+      ${Object.values(counts).some(v=>v>1)?'<span class="extras" style="margin:0;color:var(--out)">Two teams share a finish spot</span>':''}
+      ${S.episodes[ep]?`<button class="btn danger" id="clearep">Clear Leg ${ep}</button>`:''}
     </div>
   </div>`;
 }
+function ordinal(n){ const s=['th','st','nd','rd'], v=n%100; return n+(s[(v-20)%10]||s[v]||s[0]); }
 
 function renderRules(){
   const li = (l,p)=>`<li><span>${esc(l)}</span><b class="num ${p<0?'neg':'pos'}">${p>0?'+':''}${p}</b></li>`;
-  $('#tab-rules').innerHTML = `<h2>How it works</h2><p class="sub">Built around a late start: Episode 1 already aired, so it's history, not points.</p>
+  $('#tab-rules').innerHTML = `<h2>How it works</h2><p class="sub">Draft before Leg 1, score after everyone has watched.</p>
   <div class="rules">
-    <div class="panel"><h3>The draft</h3><ul class="ptlist" style="list-style:none">
-      <li><span>Pool</span><span>20 castaways (Aaliyah is out)</span></li>
+    <div class="panel"><h3>The draft</h3><ul class="ptlist">
+      <li><span>Pool</span><span>All 13 teams</span></li>
       <li><span>Format</span><span>Snake draft, random order</span></li>
-      <li><span>Lewis</span><span>Draftable; earns points while on Exile</span></li>
-      <li><span>Ep 1 events</span><span>Context only, worth 0</span></li>
-      <li><span>Sole Survivor pick</span><span>One pick, on the Draft tab. Locks once that episode's vote is scored.</span></li>
-      <li><span>Replacements</span><span>Castaway voted out? Pick an undrafted one still in the game. They score from the next episode.</span></li>
+      <li><span>Replacements</span><span>Team eliminated? Pick an undrafted team still racing. They score from the next leg.</span></li>
     </ul></div>
-    <div class="panel"><h3>Every episode</h3><ul class="ptlist">
-      ${li('Survives the episode',SURVIVE)}${li('Voted out',OUT)}${GUESS.map(G=>li('Correct call: '+G.l.toLowerCase(),G.p)).join('')}
+    <div class="panel"><h3>Every leg</h3><ul class="ptlist">
+      ${[1,2,3,4].map(n=>li('Checked in '+ordinal(n),placePts(n))).join('')}<li><span>…and down one point per spot</span><span></span></li>${li('12th',placePts(12))}${li('Eliminated (instead of finish points)',OUT)}<li><span>Example, 7 teams left</span><span class="num">12, 11, 10, 9, 8, 7, then −3 for the eliminated team</span></li>
     </ul>
-    <h3 style="margin-top:16px">Once, at the finale</h3><ul class="ptlist">
-      ${Object.entries(WIN_VAL).map(([e,v])=>li('Sole Survivor pick locked in Ep '+e,v)).join('')}
     </ul></div>
-    <div class="panel"><h3>Bonus events</h3><p class="sub">Earned by the castaway, so they count for whoever drafted them.</p><ul class="ptlist">${EVENTS.map(e=>li(e.l,e.p)).join('')}</ul></div>
-    <div class="panel"><h3>House rules</h3><ul class="ptlist" style="list-style:none">
-      <li><span>Ties</span><span>More castaways still in wins</span></li>
-      <li><span>Open Era twists</span><span>Score the closest event; commissioner decides</span></li>
-      <li><span>Tribe swaps</span><span>Update tribes on the Castaways tab</span></li>
+    <div class="panel"><h3>House rules</h3><ul class="ptlist">
+      <li><span>Even lineups</span><span>Once no undrafted teams are left, everyone plays the same number of teams. Players with extras bench them each leg; benched teams score 0.</span></li>
+      <li><span>Ties</span><span>More teams still racing wins</span></li>
+      <li><span>Non-elimination legs</span><span>Everyone scores by finish, last place included</span></li>
       <li><span>Spoilers</span><span>Score after everyone has watched</span></li>
     </ul></div>
   </div>`;
 }
 
 function render(){
-  renderTorches();
-  const map={standings:renderStandings,draft:renderDraft,cast:renderCast,score:renderScore,rules:renderRules};
-  map[S.tab]();
+  renderMarkers();
+  ({standings:renderStandings,draft:renderDraft,cast:renderCast,score:renderScore,rules:renderRules})[S.tab]();
 }
 function setTab(t){
   S.tab=t;
   document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-selected', b.dataset.tab===t));
   document.querySelectorAll('main > section').forEach(s=>s.hidden = s.id!=='tab-'+t);
-  try{ localStorage.setItem('s51tab',t);}catch(e){}
+  try{ localStorage.setItem('tar39tab',t);}catch(e){}
   render();
 }
 
@@ -582,49 +558,48 @@ document.addEventListener('click', async e=>{
   if(t.dataset.go){ setTab(t.dataset.go); return; }
   if(t.dataset.repl){
     const id=t.dataset.repl, c=$('#repl-'+id)?.value, m=M();
-    if(!c){ toast('Choose a castaway first.'); return; }
-    if(m.picks.some(p=>p.c===c)){ toast(`${first(c)} is already on a team.`); return; }
+    if(!c){ toast('Choose a team first.'); return; }
+    if(m.picks.some(p=>p.c===c)){ toast(`${nm(c)} are already on a roster.`); return; }
     if(replCredits(id)<1) return;
-    t.disabled=true;
-    await writeMain({picks:[...m.picks,{m:id,c,from:nextEp()}]});
-    toast(`${mgrName(id)} picks up ${first(c)}`); return;
+    t.disabled=true; await writeMain({picks:[...m.picks,{m:id,c,from:nextEp()}]});
+    toast(`${mgrName(id)} picks up ${nm(c)}`); return;
+  }
+  if(t.dataset.bench){
+    const [mid,k]=t.dataset.bench.split('|'), ep=nextEp(), need=activeAt(mid,ep).length-lineupSize(ep);
+    let cur=benchFor(mid,ep); cur = cur.includes(k) ? cur : [k, ...cur].slice(0,need);
+    const ref=S.db.doc(COL.preds+'/ep'+ep), doc=S.preds[ep]||{num:ep};
+    try{ await ref.set({...doc, num:ep, bench:{...(doc.bench||{}), [mid]:cur}}); toast(`${nm(k)} sit out Leg ${ep}.`); }catch(err){ handleWriteErr(err); }
+    return;
   }
   if(t.dataset.rmmgr){ S.newMgrs.splice(+t.dataset.rmmgr,1); render(); return; }
   if(t.id==='startdraft'){
-    const size = Math.max(1, Math.min(10, parseInt($('#teamsize').value)||1));
-    if(S.newMgrs.length*size>20){ toast(`${S.newMgrs.length} × ${size} is more than 20 castaways.`); return; }
+    const size = Math.max(1, Math.min(6, parseInt($('#teamsize').value)||1));
+    if(S.newMgrs.length*size>13){ toast(`${S.newMgrs.length} × ${size} is more than 13 teams.`); return; }
     const managers = S.newMgrs.map((n,i)=>({id:'m'+Date.now().toString(36)+i, name:n}));
     const order = managers.map(m=>m.id).sort(()=>Math.random()-.5);
-    await writeMain({managers, order, teamSize:size, picks:[], winnerPicks:{}, tribes:M().tribes||{}}, true);
-    S.newMgrs=[]; toast('Draft order set. Let’s go.'); return;
+    await writeMain({managers, order, teamSize:size, picks:[], winnerPicks:{}}, true);
+    S.newMgrs=[]; toast('Draft order set. The race is on.'); return;
   }
   if(t.dataset.pick){
     const m=M(); if(m.picks.some(p=>p.c===t.dataset.pick)) return;
-    const who=snakeMgr(draftCount());
-    t.disabled=true;
+    const who=snakeMgr(draftCount()); t.disabled=true;
     await writeMain({picks:[...m.picks,{m:who,c:t.dataset.pick}]});
-    toast(`${mgrName(who)} drafts ${first(t.dataset.pick)}`); return;
+    toast(`${mgrName(who)} drafts ${nm(t.dataset.pick)}`); return;
   }
   if(t.id==='undopick'){ const m=M(); await writeMain({picks:m.picks.slice(0,-1)}); return; }
   if(t.id==='resetdraft' || t.id==='clearep'){
     if(armed!==t.id){ armed=t.id; t.classList.add('armed'); t.textContent='Click again to confirm'; setTimeout(()=>{ if(armed===t.id){armed=null; render();} },4000); return; }
     armed=null;
-    if(t.id==='resetdraft'){ await writeMain({managers:[],order:[],picks:[],teamSize:0,winnerPicks:{},tribes:M().tribes||{}}, true); toast('League reset.'); }
-    else { try{ await S.db.doc('episodes/ep'+S.scoreEp).delete(); loadEdit(S.scoreEp); toast(`Episode ${S.scoreEp} cleared.`);}catch(err){handleWriteErr(err);} }
+    if(t.id==='resetdraft'){ await writeMain({managers:[],order:[],picks:[],teamSize:0,winnerPicks:{}}, true); toast('League reset.'); }
+    else { try{ await S.db.doc(COL.episodes+'/ep'+S.scoreEp).delete(); loadEdit(S.scoreEp); toast(`Leg ${S.scoreEp} cleared.`);}catch(err){handleWriteErr(err);} }
     return;
   }
   if(t.dataset.out){ const k=t.dataset.out, ed=S.edit; ed.out = ed.out.includes(k)?ed.out.filter(x=>x!==k):[...ed.out,k]; S.editDirty=true; render(); return; }
   if(t.dataset.ev){ const [k,c]=t.dataset.ev.split('|'), ed=S.edit; const arr=ed.events[k]||[]; ed.events[k]=arr.includes(c)?arr.filter(x=>x!==c):[...arr,c]; if(!ed.events[k].length) delete ed.events[k]; S.editDirty=true; render(); return; }
-  if(t.dataset.tribeimm || t.dataset.triberew){
-    const tr=t.dataset.tribeimm||t.dataset.triberew, code=t.dataset.tribeimm?'team':'reward', o=outMap(), ed=S.edit;
-    CAST.filter(c=>(!o[c.k]||o[c.k]>=ed.num) && tribeOf(c.k)===tr).forEach(c=>{ const a=ed.events[c.k]||[]; if(!a.includes(code)) ed.events[c.k]=[...a,code]; });
-    S.editDirty=true; render(); return;
-  }
   if(t.id==='saveep'){
     const ed=S.edit;
-    const ta={}; CAST.forEach(c=>ta[c.k]=tribeOf(c.k));
-    try{ await S.db.doc('episodes/ep'+ed.num).set({num:ed.num, out:ed.out, events:ed.events, tribesAt:ta, savedAt:new Date().toISOString()});
-      S.editDirty=false; toast(`Episode ${ed.num} saved.`); S.scoreEp=null; S.edit=null; setTab('standings'); }
+    try{ await S.db.doc(COL.episodes+'/ep'+ed.num).set({num:ed.num, out:ed.out, place:ed.place, events:ed.events, savedAt:new Date().toISOString()});
+      S.editDirty=false; toast(`Leg ${ed.num} saved.`); S.scoreEp=null; S.edit=null; setTab('standings'); }
     catch(err){ handleWriteErr(err); }
     return;
   }
@@ -633,37 +608,38 @@ document.addEventListener('change', async e=>{
   const s=e.target;
   if(s.id==='epsel'){ S.scoreEp=+s.value; S.edit=null; render(); return; }
   if(s.id==='teamsize'){ S.teamSize=+s.value; return; }
-  if(s.dataset.tribe){ await writeMain({['tribes.'+s.dataset.tribe]:s.value}); toast(`${first(s.dataset.tribe)} moved to ${s.value}`); return; }
-  if(s.dataset.wp){ if(wpLocked(wpOf(s.dataset.wp))){ toast('That pick is locked.'); render(); return; } await writeMain({['winnerPicks.'+s.dataset.wp]:{c:s.value, ep:nextEp()}}); toast(s.value?`Sole Survivor pick saved: worth ${WIN_VAL[nextEp()]||0} if they win.`:'Pick cleared.'); return; }
+  if(s.dataset.place){ const ed=S.edit; if(s.value) ed.place[s.dataset.place]=+s.value; else delete ed.place[s.dataset.place]; S.editDirty=true; render(); return; }
+  if(s.dataset.wp){ if(wpLocked(wpOf(s.dataset.wp))){ toast('That pick is locked.'); render(); return; }
+    await writeMain({winnerPicks:{...(M().winnerPicks||{}),[s.dataset.wp]:s.value?{c:s.value, ep:nextEp()}:null}});
+    toast(s.value?`Champion pick saved: worth ${WIN_VAL[nextEp()]||0} if they win.`:'Pick cleared.'); return; }
   if(s.dataset.pred){
-    const ep=nextEp(), ref=S.db.doc('predictions/ep'+ep);
-    const f=s.dataset.field||'picks';
-    try{ if(S.preds[ep]) await ref.update({[f+'.'+s.dataset.pred]:s.value}); else await ref.set({num:ep,[f]:{[s.dataset.pred]:s.value}}); toast('Pick saved.'); }
+    const ep=nextEp(), ref=S.db.doc(COL.preds+'/ep'+ep), f=s.dataset.field;
+    const cur=S.preds[ep]||{num:ep};
+    try{ await ref.set({...cur, num:ep, [f]:{...(cur[f]||{}), [s.dataset.pred]:s.value}}); toast('Call saved.'); }
     catch(err){ handleWriteErr(err); }
   }
 });
 
 // ---------- Password gate ----------
 async function sha256(t){ const b=await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''); }
-function unlocked(){ try{ return localStorage.getItem('s51pw')===window.LEAGUE_PASSWORD_HASH; }catch(e){ return false; } }
+function unlocked(){ try{ return localStorage.getItem('tar39pw')===window.LEAGUE_PASSWORD_HASH; }catch(e){ return false; } }
 function openGate(){
   document.body.classList.add('locked'); $('#gate').hidden=false; setTimeout(()=>$('#gatepw')?.focus(),0);
   $('#gateform').addEventListener('submit', async e=>{
     e.preventDefault(); e.stopPropagation();
     const h = await sha256($('#gatepw').value);
-    if(h===window.LEAGUE_PASSWORD_HASH){ try{ localStorage.setItem('s51pw',h);}catch(err){} $('#gate').hidden=true; document.body.classList.remove('locked'); boot(); }
+    if(h===window.LEAGUE_PASSWORD_HASH){ try{ localStorage.setItem('tar39pw',h);}catch(err){} $('#gate').hidden=true; document.body.classList.remove('locked'); boot(); }
     else { $('#gateerr').hidden=false; $('#gatepw').select(); }
   });
 }
 
 // ---------- Boot ----------
 function boot(){
-try{ const t=localStorage.getItem('s51tab'); if(t && document.getElementById('tab-'+t)) S.tab=t; }catch(e){}
-setTab(S.tab);
-(function(){
+  try{ const t=localStorage.getItem('tar39tab'); if(t && document.getElementById('tab-'+t)) S.tab=t; }catch(e){}
+  setTab(S.tab);
   const cfg = window.FIREBASE_CONFIG;
-  if(!window.firebase || !cfg || !cfg.projectId || cfg.projectId.startsWith('PASTE')){
-    $('#status').innerHTML='<strong>Almost there.</strong> This league isn’t connected to a database yet. Paste your Firebase settings into <code>index.html</code> (see README). You can still browse the cast and rules.';
+  if(!window.firebase || !cfg || !cfg.projectId){
+    $('#status').innerHTML='<strong>Almost there.</strong> This league isn’t connected to a database yet. You can still browse the teams and rules.';
     return;
   }
   try{ firebase.initializeApp(cfg); }catch(e){}
@@ -671,11 +647,10 @@ setTab(S.tab);
   S.db = db;
   $('#status').hidden = true;
   const onErr = e => { $('#status').hidden=false; $('#status').innerHTML='<strong>Can’t reach the league database.</strong> '+esc(e?.message||'Check your Firebase settings and rules.'); };
-  db.doc('league/main').onSnapshot(snap=>{ S.main = snap.exists ? snap.data() : null; S.mainLoaded=true; render(); }, onErr);
-  db.collection('episodes').onSnapshot(q=>{ S.episodes={}; q.docs.forEach(d=>{ const v=d.data(); if(v && v.num) S.episodes[v.num]=v; });
+  db.doc(COL.main).onSnapshot(snap=>{ S.main = snap.exists ? snap.data() : null; render(); }, onErr);
+  db.collection(COL.episodes).onSnapshot(q=>{ S.episodes={}; q.docs.forEach(d=>{ const v=d.data(); if(v && v.num) S.episodes[v.num]=v; });
     if(S.edit && !S.editDirty) S.edit=null; render(); }, onErr);
-  db.collection('predictions').onSnapshot(q=>{ S.preds={}; q.docs.forEach(d=>{ const v=d.data(); if(v && v.num) S.preds[v.num]=v; }); render(); }, onErr);
-})();
+  db.collection(COL.preds).onSnapshot(q=>{ S.preds={}; q.docs.forEach(d=>{ const v=d.data(); if(v && v.num) S.preds[v.num]=v; }); render(); }, onErr);
 }
 if(!window.LEAGUE_PASSWORD_HASH || unlocked()) boot(); else openGate();
 </script>

@@ -217,8 +217,11 @@ window.LEAGUE_PASSWORD_HASH = "e680a9111b7e1471ec279c3d1cb01491c45d677afed28ca72
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
-// Saved in the same Firebase project as Survivor, in its own collections so the two leagues never mix.
-const COL = {main:'tar39_league/main', episodes:'tar39_episodes', preds:'tar39_predictions'};
+// Saved in the same Firebase collections Survivor already uses (so no rule changes are needed).
+// Race documents are named tar39_… and store the leg as "leg" (not "num"), so Survivor ignores them and vice versa.
+const COL = {main:'league/tar39', episodes:'episodes', preds:'predictions'};
+const RID = n => 'tar39_ep'+n;
+const fromDb = v => { const o={...v}; o.num=o.leg; delete o.leg; return o; };
 
 // ---------- Season data (pre-race, no results) ----------
 const CAST = [
@@ -567,8 +570,8 @@ document.addEventListener('click', async e=>{
   if(t.dataset.bench){
     const [mid,k]=t.dataset.bench.split('|'), ep=nextEp(), need=activeAt(mid,ep).length-lineupSize(ep);
     let cur=benchFor(mid,ep); cur = cur.includes(k) ? cur : [k, ...cur].slice(0,need);
-    const ref=S.db.doc(COL.preds+'/ep'+ep), doc=S.preds[ep]||{num:ep};
-    try{ await ref.set({...doc, num:ep, bench:{...(doc.bench||{}), [mid]:cur}}); toast(`${nm(k)} sit out Leg ${ep}.`); }catch(err){ handleWriteErr(err); }
+    const ref=S.db.doc(COL.preds+'/'+RID(ep)), doc=S.preds[ep]||{};
+    try{ const {num,...rest}=doc; await ref.set({...rest, leg:ep, bench:{...(doc.bench||{}), [mid]:cur}}); toast(`${nm(k)} sit out Leg ${ep}.`); }catch(err){ handleWriteErr(err); }
     return;
   }
   if(t.dataset.rmmgr){ S.newMgrs.splice(+t.dataset.rmmgr,1); render(); return; }
@@ -591,14 +594,14 @@ document.addEventListener('click', async e=>{
     if(armed!==t.id){ armed=t.id; t.classList.add('armed'); t.textContent='Click again to confirm'; setTimeout(()=>{ if(armed===t.id){armed=null; render();} },4000); return; }
     armed=null;
     if(t.id==='resetdraft'){ await writeMain({managers:[],order:[],picks:[],teamSize:0,winnerPicks:{}}, true); toast('League reset.'); }
-    else { try{ await S.db.doc(COL.episodes+'/ep'+S.scoreEp).delete(); loadEdit(S.scoreEp); toast(`Leg ${S.scoreEp} cleared.`);}catch(err){handleWriteErr(err);} }
+    else { try{ await S.db.doc(COL.episodes+'/'+RID(S.scoreEp)).delete(); loadEdit(S.scoreEp); toast(`Leg ${S.scoreEp} cleared.`);}catch(err){handleWriteErr(err);} }
     return;
   }
   if(t.dataset.out){ const k=t.dataset.out, ed=S.edit; ed.out = ed.out.includes(k)?ed.out.filter(x=>x!==k):[...ed.out,k]; S.editDirty=true; render(); return; }
   if(t.dataset.ev){ const [k,c]=t.dataset.ev.split('|'), ed=S.edit; const arr=ed.events[k]||[]; ed.events[k]=arr.includes(c)?arr.filter(x=>x!==c):[...arr,c]; if(!ed.events[k].length) delete ed.events[k]; S.editDirty=true; render(); return; }
   if(t.id==='saveep'){
     const ed=S.edit;
-    try{ await S.db.doc(COL.episodes+'/ep'+ed.num).set({num:ed.num, out:ed.out, place:ed.place, events:ed.events, savedAt:new Date().toISOString()});
+    try{ await S.db.doc(COL.episodes+'/'+RID(ed.num)).set({leg:ed.num, out:ed.out, place:ed.place, events:ed.events, savedAt:new Date().toISOString()});
       S.editDirty=false; toast(`Leg ${ed.num} saved.`); S.scoreEp=null; S.edit=null; setTab('standings'); }
     catch(err){ handleWriteErr(err); }
     return;
@@ -613,9 +616,9 @@ document.addEventListener('change', async e=>{
     await writeMain({winnerPicks:{...(M().winnerPicks||{}),[s.dataset.wp]:s.value?{c:s.value, ep:nextEp()}:null}});
     toast(s.value?`Champion pick saved: worth ${WIN_VAL[nextEp()]||0} if they win.`:'Pick cleared.'); return; }
   if(s.dataset.pred){
-    const ep=nextEp(), ref=S.db.doc(COL.preds+'/ep'+ep), f=s.dataset.field;
-    const cur=S.preds[ep]||{num:ep};
-    try{ await ref.set({...cur, num:ep, [f]:{...(cur[f]||{}), [s.dataset.pred]:s.value}}); toast('Call saved.'); }
+    const ep=nextEp(), ref=S.db.doc(COL.preds+'/'+RID(ep)), f=s.dataset.field;
+    const {num,...cur}=S.preds[ep]||{};
+    try{ await ref.set({...cur, leg:ep, [f]:{...(cur[f]||{}), [s.dataset.pred]:s.value}}); toast('Call saved.'); }
     catch(err){ handleWriteErr(err); }
   }
 });
@@ -648,9 +651,9 @@ function boot(){
   $('#status').hidden = true;
   const onErr = e => { $('#status').hidden=false; $('#status').innerHTML='<strong>Can’t reach the league database.</strong> '+esc(e?.message||'Check your Firebase settings and rules.'); };
   db.doc(COL.main).onSnapshot(snap=>{ S.main = snap.exists ? snap.data() : null; render(); }, onErr);
-  db.collection(COL.episodes).onSnapshot(q=>{ S.episodes={}; q.docs.forEach(d=>{ const v=d.data(); if(v && v.num) S.episodes[v.num]=v; });
+  db.collection(COL.episodes).onSnapshot(q=>{ S.episodes={}; q.docs.forEach(d=>{ if(!d.id.startsWith('tar39_')) return; const v=d.data(); if(v && v.leg) S.episodes[v.leg]=fromDb(v); });
     if(S.edit && !S.editDirty) S.edit=null; render(); }, onErr);
-  db.collection(COL.preds).onSnapshot(q=>{ S.preds={}; q.docs.forEach(d=>{ const v=d.data(); if(v && v.num) S.preds[v.num]=v; }); render(); }, onErr);
+  db.collection(COL.preds).onSnapshot(q=>{ S.preds={}; q.docs.forEach(d=>{ if(!d.id.startsWith('tar39_')) return; const v=d.data(); if(v && v.leg) S.preds[v.leg]=fromDb(v); }); render(); }, onErr);
 }
 if(!window.LEAGUE_PASSWORD_HASH || unlocked()) boot(); else openGate();
 </script>

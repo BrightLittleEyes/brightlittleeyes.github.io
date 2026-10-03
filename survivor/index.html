@@ -455,7 +455,7 @@ function renderDraft(){
     <div class="panel"><h3>Teams</h3><p class="sub">Draft order: ${m.order.map(id=>esc(mgrName(id))).join(' → ')}</p>
       <div class="rosters">${m.order.map(id=>`<div><strong>${esc(mgrName(id))}</strong><ol>${m.picks.filter(p=>p.m===id).map(p=>`<li>${esc(BY[p.c].n)}${p.from?` <span class="extras">(replacement, Ep ${p.from}+)</span>`:''}</li>`).join('')}</ol></div>`).join('')}</div>
     </div>
-    <div class="panel"><h3>Sole Survivor picks</h3><p class="sub">Pick who you think wins it all, drafted or not. The earlier you commit, the more it's worth: picking now, during Episode ${nextEp()}, is worth <b>${WIN_VAL[nextEp()]||0} points</b> if they win. You can change your pick until Episode ${nextEp()}'s vote is scored. After that it's locked for the rest of the season.</p>
+    <div class="panel"><h3>Sole Survivor picks</h3><p class="sub">Pick who you think wins it all, drafted or not. The earlier you commit, the more it's worth: picking now, during Episode ${nextEp()}, is worth <b>${WIN_VAL[nextEp()]||0} points</b> if they win. Put your vote in when Jeff says it's time to vote. After that it's locked for the rest of the season.</p>
       <div class="stack">${m.managers.map(mg=>{ const w=wpOf(mg.id), lk=wpLocked(w);
         return `<div class="row" style="justify-content:space-between"><span style="font-weight:600">${esc(mg.name)}</span>${lk
           ? `<span class="chip ${o[w.c]?'out':'Exile'}" style="white-space:normal">Locked: ${esc(BY[w.c].n)} · Ep ${w.ep} · ${WIN_VAL[w.ep]||0} pts</span>`
@@ -508,6 +508,10 @@ function renderScore(){
     <div class="row" style="margin:14px 0 4px">
       <span class="extras" style="margin:0">Quick fill · tribe immunity:</span>
       ${['Savu','Toka','Merged'].filter(t=>active.some(c=>tribeOf(c.k)===t)).map(t=>`<button class="btn" data-tribeimm="${t}">${t} won</button>`).join('')}
+    </div>
+    <div class="row" style="margin:4px 0">
+      <span class="extras" style="margin:0">Quick fill · tribe reward:</span>
+      ${['Savu','Toka','Merged'].filter(t=>active.some(c=>tribeOf(c.k)===t)).map(t=>`<button class="btn" data-triberew="${t}">${t} won</button>`).join('')}
     </div>
     <div>${active.map(c=>`
       <div class="scorerow">
@@ -610,9 +614,9 @@ document.addEventListener('click', async e=>{
   }
   if(t.dataset.out){ const k=t.dataset.out, ed=S.edit; ed.out = ed.out.includes(k)?ed.out.filter(x=>x!==k):[...ed.out,k]; S.editDirty=true; render(); return; }
   if(t.dataset.ev){ const [k,c]=t.dataset.ev.split('|'), ed=S.edit; const arr=ed.events[k]||[]; ed.events[k]=arr.includes(c)?arr.filter(x=>x!==c):[...arr,c]; if(!ed.events[k].length) delete ed.events[k]; S.editDirty=true; render(); return; }
-  if(t.dataset.tribeimm){
-    const tr=t.dataset.tribeimm, o=outMap(), ed=S.edit;
-    CAST.filter(c=>(!o[c.k]||o[c.k]>=ed.num) && tribeOf(c.k)===tr).forEach(c=>{ const a=ed.events[c.k]||[]; if(!a.includes('team')) ed.events[c.k]=[...a,'team']; });
+  if(t.dataset.tribeimm || t.dataset.triberew){
+    const tr=t.dataset.tribeimm||t.dataset.triberew, code=t.dataset.tribeimm?'team':'reward', o=outMap(), ed=S.edit;
+    CAST.filter(c=>(!o[c.k]||o[c.k]>=ed.num) && tribeOf(c.k)===tr).forEach(c=>{ const a=ed.events[c.k]||[]; if(!a.includes(code)) ed.events[c.k]=[...a,code]; });
     S.editDirty=true; render(); return;
   }
   if(t.id==='saveep'){

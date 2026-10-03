@@ -455,6 +455,7 @@ function renderDraft(){
     </div>
     <div class="row needwrite">
       <button class="btn" id="undopick" ${m.picks.length?'':'disabled'}>Undo last pick</button>
+      ${(!done && dc>0 && dc%m.managers.length===0)?`<button class="btn primary" id="enddraft">End draft at ${dc/m.managers.length} team${dc/m.managers.length>1?'s':''} each</button>`:''}
       <button class="btn danger" id="resetdraft">Reset league</button>
     </div>
   </div>`;
@@ -551,7 +552,7 @@ function setTab(t){
 // ---------- Events ----------
 document.querySelector('nav.tabs').addEventListener('click',e=>{ const b=e.target.closest('button[data-tab]'); if(b) setTab(b.dataset.tab); });
 document.addEventListener('submit',e=>{
-  if(e.target.id==='addmgr'){ e.preventDefault(); const v=$('#mgrname').value.trim(); if(v && !S.newMgrs.includes(v)){ S.newMgrs.push(v); S.teamSize=null; } render(); setTimeout(()=>$('#mgrname')?.focus(),0); }
+  if(e.target.id==='addmgr'){ e.preventDefault(); const v=$('#mgrname').value.trim(); if(v && !S.newMgrs.includes(v)){ S.newMgrs.push(v); } render(); setTimeout(()=>$('#mgrname')?.focus(),0); }
 });
 let armed=null;
 document.addEventListener('click', async e=>{
@@ -587,6 +588,7 @@ document.addEventListener('click', async e=>{
     await writeMain({picks:[...m.picks,{m:who,c:t.dataset.pick}]});
     toast(`${mgrName(who)} drafts ${nm(t.dataset.pick)}`); return;
   }
+  if(t.id==='enddraft'){ const m=M(), n=draftCount()/m.managers.length; if(!Number.isInteger(n)||n<1) return; await writeMain({teamSize:n}); toast(`Draft complete: ${n} teams each.`); return; }
   if(t.id==='undopick'){ const m=M(); await writeMain({picks:m.picks.slice(0,-1)}); return; }
   if(t.id==='resetdraft' || t.id==='clearep'){
     if(armed!==t.id){ armed=t.id; t.classList.add('armed'); t.textContent='Click again to confirm'; setTimeout(()=>{ if(armed===t.id){armed=null; render();} },4000); return; }

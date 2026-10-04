@@ -361,7 +361,7 @@ function renderRepl(){
   const pool=availPool();
   return `<div class="panel"><h3>Replacement picks</h3><p class="sub">Lost a team? Pick up any undrafted team still racing. They score starting with Leg ${nextEp()}.</p>
   <div class="stack">${rows.map(mg=>`<div class="row" style="justify-content:space-between"><span style="font-weight:600">${esc(mg.name)} <span class="extras">· ${replCredits(mg.id)} to use</span></span>
-    <span class="row"><select id="repl-${mg.id}" aria-label="Replacement for ${esc(mg.name)}" ${S.canWrite&&pool.length?'':'disabled'}><option value="">— choose —</option>${pool.map(c=>`<option value="${c.k}">${esc(c.n)}</option>`).join('')}</select>
+    <span class="row"><select data-replsel="${mg.id}" aria-label="Replacement for ${esc(mg.name)}" ${S.canWrite&&pool.length?'':'disabled'}><option value="">— choose —</option>${pool.map(c=>`<option value="${c.k}" ${((S.replSel||{})[mg.id]===c.k)?'selected':''}>${esc(c.n)}</option>`).join('')}</select>
     <button class="btn primary needwrite" data-repl="${mg.id}" ${pool.length?'':'disabled'}>Add</button></span></div>`).join('')}</div>
   ${pool.length?'':'<p class="extras">No undrafted teams are left in the race.</p>'}</div>`;
 }
@@ -560,7 +560,7 @@ document.addEventListener('click', async e=>{
   const t = e.target.closest('button'); if(!t) return;
   if(t.dataset.go){ setTab(t.dataset.go); return; }
   if(t.dataset.repl){
-    const id=t.dataset.repl, c=$('#repl-'+id)?.value, m=M();
+    const id=t.dataset.repl, c=(t.parentElement.querySelector('select')||{}).value || (S.replSel||{})[id], m=M();
     if(!c){ toast('Choose a team first.'); return; }
     if(m.picks.some(p=>p.c===c)){ toast(`${nm(c)} are already on a roster.`); return; }
     if(replCredits(id)<1) return;
@@ -610,6 +610,7 @@ document.addEventListener('click', async e=>{
 });
 document.addEventListener('change', async e=>{
   const s=e.target;
+  if(s.dataset.replsel){ S.replSel={...(S.replSel||{}),[s.dataset.replsel]:s.value}; return; }
   if(s.id==='epsel'){ S.scoreEp=+s.value; S.edit=null; render(); return; }
   if(s.id==='teamsize'){ S.teamSize=+s.value; return; }
   if(s.dataset.place){ const ed=S.edit; if(s.value) ed.place[s.dataset.place]=+s.value; else delete ed.place[s.dataset.place]; S.editDirty=true; render(); return; }

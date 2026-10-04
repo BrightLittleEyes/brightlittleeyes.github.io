@@ -1,0 +1,61 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===== Survivor 51 (unchanged) =====
+    // League settings, draft picks, tribes and winner picks
+    match /league/{docId} {
+      allow read: if true;
+      allow write: if docId == 'main' && request.resource.data.size() < 20;
+    }
+    // One document per scored episode (ep2 ... ep14)
+    match /episodes/{docId} {
+      allow read: if true;
+      allow write: if docId.matches('ep([2-9]|1[0-4])');
+      allow delete: if true;
+    }
+    // Weekly "who goes home" calls
+    match /predictions/{docId} {
+      allow read: if true;
+      allow write: if docId.matches('ep([2-9]|1[0-4])');
+    }
+
+    // ===== Amazing Race 39 (new) =====
+    // League settings, players and draft picks
+    match /tar39_league/{docId} {
+      allow read: if true;
+      allow write: if docId == 'main' && request.resource.data.size() < 20;
+    }
+    // One document per scored leg (ep1 ... ep12)
+    match /tar39_episodes/{docId} {
+      allow read: if true;
+      allow write: if docId.matches('ep([1-9]|1[0-2])');
+      allow delete: if true;
+    }
+    // Bench choices for each leg
+    match /tar39_predictions/{docId} {
+      allow read: if true;
+      allow write: if docId.matches('ep([1-9]|1[0-2])');
+    }
+
+    // ===== Amazing Race 15 (new) =====
+    match /tar15_league/{docId} {
+      allow read: if true;
+      allow write: if docId == 'main' && request.resource.data.size() < 20;
+    }
+    match /tar15_episodes/{docId} {
+      allow read: if true;
+      allow write: if docId.matches('ep([1-9]|1[0-2])');
+      allow delete: if true;
+    }
+    match /tar15_predictions/{docId} {
+      allow read: if true;
+      allow write: if docId.matches('ep([1-9]|1[0-2])');
+    }
+
+    // Everything else is locked
+    match /{other=**} {
+      allow read, write: if false;
+    }
+  }
+}

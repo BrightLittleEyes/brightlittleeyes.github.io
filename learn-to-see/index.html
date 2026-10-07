@@ -969,7 +969,7 @@
     el.addEventListener('click',()=>{S[key]=!S[key];el.classList.toggle('on',S[key]);after&&after();});
   }
   A.adultControl($('gear'), openPanel);   // the long hold is the grown-up gate
-  function openPanel(){ syncControls(false); $('resetConfirm').hidden=true;
+  function openPanel(){ syncControls(false); $('resetConfirm').hidden=true; registerSheetTargets($('panel'));
     ['panel','panelArrow','panelScrim'].forEach(id=>$(id).classList.add('open')); A.attachPreview($('camPreview')); }
   function closePanel(){ ['panel','panelArrow','panelScrim'].forEach(id=>$(id).classList.remove('open')); A.detachPreview(); }
   $('closePanel').onclick=closePanel;
@@ -1283,9 +1283,15 @@
       speechSynthesis.speak(u);
     }catch(e){}
   }
+  // A letter's spoken name, written so the voice says just the name. (Apple voices read a lone
+  // capital "A" as "capital A", and a lone "a" as "uh".)
+  const LETTER_NAMES={a:'ay',b:'bee',c:'see',d:'dee',e:'ee',f:'eff',g:'jee',h:'aitch',i:'eye',j:'jay',k:'kay',l:'el',m:'em',
+    n:'en',o:'oh',p:'pee',q:'cue',r:'ar',s:'ess',t:'tee',u:'you',v:'vee',w:'double you',x:'ex',y:'why',z:'zee'};
+  function letterName(ch){ return LETTER_NAMES[String(ch).toLowerCase()] || String(ch); }
   function promptText(item){
     if(S.content==='shapes') return 'Find the '+item;
     if(S.content==='numbers') return 'Find the number '+item;
+    if(S.content==='lower') return 'Find the letter '+letterName(item);
     return 'Find the letter '+item.toUpperCase();   // upper & lower are named the same
   }
 
@@ -1535,7 +1541,7 @@
   addEventListener('resize',()=>{ if(S.activity==='keyboard') buildKeyboard(); });
 
   function kbAppend(ch){ kbText+=(S.kbUpper?ch.toUpperCase():ch);
-    $('spellBar').textContent=kbText; speak(ch.toUpperCase()); }
+    $('spellBar').textContent=kbText; speak(S.kbUpper ? ch.toUpperCase() : letterName(ch)); }
   function kbDelete(){ kbText=kbText.slice(0,-1); $('spellBar').textContent=kbText; }
   function kbReadback(){ if(kbText) speak(kbText); }
   function keyAt(x,y){ const pad=10;
@@ -1708,7 +1714,19 @@
 
   // The settings are for a grown-up with a mouse or a finger, so nothing in them is chosen by resting the pointer
   // on it (with Look and hold on, a resting mouse used to switch Sound, Pulse or Sparkles off by accident).
-  function registerSheetTargets(root){}
+  // Every control in the settings sheet is a Look-and-hold / Look-and-press target too (layer 'sheet'),
+  // so a grown-up using Look and hold can work the menu. Registered once per element; elements that are
+  // re-drawn (the child buttons) are dropped from the list when they leave the page.
+  const sheetRegistered=new WeakSet();
+  function registerSheetTargets(root){
+    if(!root) return;
+    root.querySelectorAll('button, .trow, .swatch').forEach(el=>{
+      if(sheetRegistered.has(el)) return; sheetRegistered.add(el);
+      const stepperBtn=!!el.closest('.stepper');
+      A.register({ node:el, layer:'sheet', run:()=>el.click(),
+        allowRepeat:stepperBtn, dwellMs:stepperBtn ? ()=>Math.max(A.REPEAT_DWELL_MS, S.dwellMs) : undefined });
+    });
+  }
 
   // ---------- the launch animation: always, every time the app opens ----------
   let launching=true, launchTimer=0;

@@ -1,0 +1,662 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Amazing Race 13 Fantasy League</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: route-marker header band (yellow/red split), tab rail, single working column of panels; leg placement carries state */
+:root{
+  --bg:#EEF1F4; --surface:#FFFFFF; --sunk:#E2E7EC; --ink:#121A24; --muted:#556170; --line:#CCD4DC;
+  --marker-y:#F5C400; --marker-r:#D32F23; --accent:#C2271C; --accent-ink:#FFFFFF;
+  --gold:#8A6A00; --gold-bg:#FCF0C2; --out:#A23535; --out-bg:#F6E1DF; --ok:#1F7048; --ok-bg:#DDF0E4;
+  --band:#0F2233; --band-ink:#F4F1E8; --band-muted:#AFBCC8;
+  --display:"Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --body:"Public Sans", "Segoe UI", system-ui, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0C141C; --surface:#152130; --sunk:#101A25; --ink:#E6ECF2; --muted:#93A3B4; --line:#263546;
+  --accent:#F2685D; --accent-ink:#1A0605; --gold:#F5C400; --gold-bg:#33290A;
+  --out:#EE7B74; --out-bg:#3A1C1B; --ok:#62CC93; --ok-bg:#14301F;
+  --band:#07101A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0C141C; --surface:#152130; --sunk:#101A25; --ink:#E6ECF2; --muted:#93A3B4; --line:#263546;
+  --accent:#F2685D; --accent-ink:#1A0605; --gold:#F5C400; --gold-bg:#33290A;
+  --out:#EE7B74; --out-bg:#3A1C1B; --ok:#62CC93; --ok-bg:#14301F;
+  --band:#07101A; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--body);margin:0}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:16px}
+header.band{background:var(--band);color:var(--band-ink);position:relative;overflow:hidden}
+header.band::before{content:"";position:absolute;top:0;right:0;width:min(46vw,420px);height:100%;
+  background:linear-gradient(135deg,var(--marker-y) 0 50%,var(--marker-r) 50% 100%);opacity:.14;pointer-events:none}
+.hero{padding-block:28px 22px;display:flex;flex-wrap:wrap;gap:18px 32px;align-items:flex-end;justify-content:space-between;position:relative;z-index:1}
+.eyebrow{font:600 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--marker-y)}
+h1{font:800 clamp(36px,7vw,64px)/.95 var(--display);margin:.2em 0 .2em;text-wrap:balance;text-transform:uppercase;letter-spacing:.01em}
+.hero p{margin:0;color:var(--band-muted);max-width:54ch}
+.markers{display:flex;gap:6px;flex-wrap:wrap;max-width:300px}
+.markers span{width:18px;height:18px;border-radius:3px;background:linear-gradient(135deg,var(--marker-y) 0 50%,var(--marker-r) 50% 100%)}
+.markers span.gone{background:#33414F}
+.markers-cap{font:500 12px var(--mono);color:var(--band-muted);margin-top:8px}
+nav.tabs{display:flex;gap:4px;overflow-x:auto;position:relative;z-index:1}
+nav.tabs button{font:600 14px var(--body);background:transparent;color:var(--band-muted);border:0;padding:12px 14px;border-radius:8px 8px 0 0;cursor:pointer;white-space:nowrap}
+nav.tabs button[aria-selected="true"]{background:var(--bg);color:var(--ink)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{padding-block:22px 60px}
+.notice{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:16px;color:var(--muted)}
+.notice strong{color:var(--ink)}
+h2{font:800 30px/1.05 var(--display);margin:0 0 4px;text-transform:uppercase;letter-spacing:.01em;text-wrap:balance}
+h3{font:700 16px/1.3 var(--body);margin:0 0 8px}
+.sub{color:var(--muted);margin:0 0 16px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:16px}
+.btn{font:600 14px var(--body);border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:8px 14px;cursor:pointer}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.danger{color:var(--out)}
+.btn.danger.armed{background:var(--out);color:var(--surface);border-color:var(--out)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+input[type=text],input[type=number],select{font:500 14px var(--body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 10px;max-width:100%}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.chip{display:inline-flex;align-items:center;gap:6px;font:600 12px/1 var(--body);padding:5px 8px;border-radius:999px;white-space:nowrap;background:var(--sunk);color:var(--muted)}
+.chip.racing{background:var(--gold-bg);color:var(--gold)}
+.chip.out{background:var(--out-bg);color:var(--out)}
+.chip.won{background:var(--ok-bg);color:var(--ok)}
+.flag{width:10px;height:10px;border-radius:2px;display:inline-block;background:linear-gradient(135deg,var(--marker-y) 0 50%,var(--marker-r) 50% 100%)}
+
+.standing{display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:start;padding:14px 0;border-top:1px solid var(--line)}
+.standing:first-child{border-top:0}
+.rank{font:800 32px/1 var(--display);color:var(--muted)}
+.standing:first-child .rank{color:var(--accent)}
+.mname{font:700 17px var(--body)}
+.total{font:600 24px/1 var(--mono);text-align:right}
+.total small{display:block;font:500 11px var(--body);color:var(--muted);margin-top:4px}
+.roster{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.pill{display:inline-flex;gap:6px;align-items:center;font:500 13px var(--body);padding:4px 8px;border-radius:6px;border:1px solid var(--line);background:var(--bg)}
+.pill b{font:600 12px var(--mono)}
+.benchtag{font:600 10px var(--mono);letter-spacing:.06em;text-transform:uppercase;background:var(--sunk);color:var(--muted);border-radius:4px;padding:2px 5px}
+.benchrow{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.ev.benchbtn[aria-pressed="true"]{background:var(--sunk);border-color:var(--muted);color:var(--muted);font-weight:700}
+.pill.gone{text-decoration:line-through;color:var(--muted)}
+.pill.gone .flag{background:var(--out)}
+.extras{font-size:13px;color:var(--muted);margin-top:6px}
+.empty{color:var(--muted);text-align:center;padding:26px 10px}
+.guess{padding:10px 0;border-top:1px solid var(--line)}
+.guess:first-child{border-top:0;padding-top:0}
+.guessrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr));gap:8px;margin-top:6px}
+.guessrow label{display:flex;flex-direction:column;gap:4px;min-width:0}
+.guessrow select{width:100%}
+.glabel{font:600 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{font:600 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+td.r,th.r{text-align:right}
+
+.castgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.card.isout{opacity:.62}
+.card .nm{font:800 22px/1.05 var(--display);text-transform:uppercase}
+.card .rel{font:600 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.card .meta{font-size:13px;color:var(--muted)}
+.card .note{font-size:13px;color:var(--ink);background:var(--gold-bg);border-radius:6px;padding:4px 8px}
+.card .foot{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-top:auto;padding-top:6px;border-top:1px dashed var(--line)}
+
+.onclock{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;padding:14px 16px;border-radius:12px;background:var(--band);color:var(--band-ink)}
+.onclock .who{font:800 30px/1.05 var(--display);text-transform:uppercase;color:var(--marker-y)}
+.avail{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:8px}
+.pickbtn{display:flex;justify-content:space-between;align-items:center;gap:8px;text-align:left;width:100%}
+.pickbtn small{color:var(--muted);font-weight:500}
+.rosters{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:10px}
+.rosters ol{margin:6px 0 0;padding-left:20px;font-size:14px}
+.mgrlist{display:flex;flex-wrap:wrap;gap:6px}
+.mgrtag{display:inline-flex;gap:6px;align-items:center;padding:5px 6px 5px 10px;border-radius:999px;background:var(--sunk);font-weight:600;font-size:14px}
+.mgrtag button{border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;padding:0 4px}
+
+.scorerow{display:grid;grid-template-columns:minmax(150px,210px) 1fr;gap:10px;padding:12px 0;border-top:1px solid var(--line);align-items:start}
+.scorerow:first-of-type{border-top:0}
+@media (max-width:620px){.scorerow{grid-template-columns:1fr}}
+.evs{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.ev{font:500 12px var(--body);padding:5px 9px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.ev[aria-pressed="true"]{background:var(--ok-bg);border-color:var(--ok);color:var(--ok);font-weight:700}
+.ev.neg[aria-pressed="true"]{background:var(--out-bg);border-color:var(--out);color:var(--out)}
+.ev.outbtn[aria-pressed="true"]{background:var(--out);border-color:var(--out);color:var(--surface)}
+.placesel{font:600 13px var(--mono)!important;padding:5px 8px!important}
+.placesel.dupe{border-color:var(--out);color:var(--out)}
+.epts{font:600 13px var(--mono);color:var(--muted)}
+.savebar{position:sticky;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:12px 0 calc(12px + env(safe-area-inset-bottom,0px));margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px}
+.ptlist{list-style:none;margin:0;padding:0}
+.ptlist li{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--line)}
+.ptlist li:last-child{border-bottom:0}
+.ptlist li span:last-child{text-align:right}
+.pos{color:var(--ok)} .neg{color:var(--out)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--band);color:var(--band-ink);padding:10px 16px;border-radius:8px;font-weight:600;z-index:10}
+.ro .needwrite{display:none!important}
+
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+[hidden]{display:none!important}
+img{max-width:100%}
+body.locked header.band, body.locked main{display:none}
+.gate{min-height:100vh;display:grid;place-items:center;background:var(--band);padding:24px 16px}
+.gatebox{width:100%;max-width:400px;display:flex;flex-direction:column;gap:12px;color:var(--band-ink)}
+.gatebox h1{margin:0}
+.gatebox p{margin:0;color:var(--band-muted)}
+.gatebox .glabel{color:var(--band-muted)}
+.gatebox input{font:500 16px var(--body);padding:12px;border-radius:8px;border:1px solid #33414F;background:#07101A;color:#F4F1E8}
+.gateerr{color:#F29A8E!important;font-weight:600}
+</style>
+</head>
+<body>
+
+<div id="gate" class="gate" hidden>
+  <form id="gateform" class="gatebox">
+    <div class="eyebrow">Season 13 · 11 legs · 11 teams</div>
+    <h1>Amazing Race 13 Fantasy League</h1>
+    <p>This league is for invited players. Enter the league password to come in.</p>
+    <label for="gatepw" class="glabel">League password</label>
+    <input type="password" id="gatepw" autocomplete="current-password" required>
+    <button class="btn primary" type="submit">Enter the league</button>
+    <p id="gateerr" class="gateerr" hidden>That password isn't right. Check with your commissioner and try again.</p>
+  </form>
+</div>
+<header class="band">
+  <div class="wrap">
+    <div class="hero">
+      <div>
+        <div class="eyebrow">Season 13 · 11 legs · 11 teams</div>
+        <h1>Amazing Race 13 Fantasy League</h1>
+        <p>Draft teams before the first leg. Every leg, your teams score by where they finish at the Pit Stop: 12 for first, one less for each spot after, and −3 for the team eliminated.</p>
+      </div>
+      <div>
+        <div class="markers" id="markers" aria-hidden="true"></div>
+        <div class="markers-cap" id="markercap"></div>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="League sections">
+      <button role="tab" data-tab="standings" aria-selected="true">Standings</button>
+      <button role="tab" data-tab="draft" aria-selected="false">Draft</button>
+      <button role="tab" data-tab="cast" aria-selected="false">Teams</button>
+      <button role="tab" data-tab="score" aria-selected="false">Score a Leg</button>
+      <button role="tab" data-tab="rules" aria-selected="false">Rules</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" id="app">
+  <div id="status" class="notice">Connecting to the league…</div>
+  <section id="tab-standings"></section>
+  <section id="tab-draft" hidden></section>
+  <section id="tab-cast" hidden></section>
+  <section id="tab-score" hidden></section>
+  <section id="tab-rules" hidden></section>
+</main>
+<div class="toast" id="toast" hidden></div>
+
+<!-- ===== Paste your Firebase web app settings here (see README.md) ===== -->
+<script>
+window.FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBKEm0STLQ0uEByWjFLWSXEtzaAag2_P7c",
+  authDomain: "survivor51-league.firebaseapp.com",
+  projectId: "survivor51-league",
+  storageBucket: "survivor51-league.firebasestorage.app",
+  messagingSenderId: "593752459500",
+  appId: "1:593752459500:web:4636b6e0c1baa3f5b0bdc9"
+};
+// League password (stored scrambled). Ask Claude to change it.
+window.LEAGUE_PASSWORD_HASH = "e680a9111b7e1471ec279c3d1cb01491c45d677afed28ca7250b3b7543f5f13c";
+</script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+// Saved in the same Firebase project as Survivor, in its own collections (see firestore.rules).
+const COL = {main:'tar13_league/main', episodes:'tar13_episodes', preds:'tar13_predictions'};
+const RID = n => 'ep'+n;
+
+// ---------- Season data (pre-race, no results) ----------
+const CAST = [
+  {k:'jones',n:'Anita & Arthur',f:'Anita & Arthur Jones',r:'Married',a:'63 & 61',h:'Eugene, OR',j:'Beekeepers'},
+  {k:'anthony',n:'Anthony & Stephanie',f:'Anthony Marotta & Stephanie Kacandes',r:'Dating',a:'32 & 32',h:'Los Angeles, CA',j:''},
+  {k:'mark',n:'Mark & Bill',f:'Mark Yturralde & Bill Kahler',r:'Best friends',a:'41 & 42',h:'San Diego, CA',j:''},
+  {k:'marisa',n:'Marisa & Brooke',f:'Marisa Axelrod & Brooke Jackson',r:'Southern belles',a:'22 & 24',h:'Spartanburg, SC · Columbia, SC',j:''},
+  {k:'aja',n:'Aja & Ty',f:'Aja Benton & Ty White',r:'Dating long distance',a:'25 & 25',h:'Los Angeles, CA · West Bloomfield, MI',j:''},
+  {k:'kelly',n:'Kelly & Christy',f:'Kelly Crabb & Christy Cook',r:'Divorcées',a:'26 & 26',h:'Houston, TX · Austin, TX',j:''},
+  {k:'terence',n:'Terence & Sarah',f:'Terence Gerchberg & Sarah Leshner',r:'Newly dating',a:'35 & 31',h:'New York, NY',j:''},
+  {k:'imbimbo',n:'Toni & Dallas',f:'Toni & Dallas Imbimbo',r:'Mother & son',a:'51 & 22',h:'Woodside, CA',j:''},
+  {k:'andrew',n:'Andrew & Dan',f:'Andrew Lappitt & Dan Honig',r:'Frat brothers',a:'22 & 23',h:'Tucson, AZ · Wilmington, DE',j:''},
+  {k:'greene',n:'Ken & Tina',f:'Ken & Tina Greene',r:'Separated',a:'51 & 48',h:'Tampa, FL · San Diego, CA',j:'Ken is a former NFL safety'},
+  {k:'spangler',n:'Nick & Starr',f:'Nick & Starr Spangler',r:'Siblings',a:'22 & 21',h:'New York, NY · Fort Worth, TX',j:''},
+];
+const BY = Object.fromEntries(CAST.map(c=>[c.k,c]));
+const FIRST_EP=1, LAST_EP=11, EXPRESS_LAST=0;
+const PREDICT=3, TOP_PTS=12, OUT=-3;
+const placePts = pl => pl ? Math.max(0, TOP_PTS+1-pl) : 0;
+const WIN_VAL={1:60,2:50,3:45,4:40,5:35,6:30,7:25,8:20,9:12,10:8,11:4,12:1};
+const GUESS=[];
+const EVENTS = [];
+const EV = Object.fromEntries(EVENTS.map(e=>[e.c,e]));
+
+// ---------- State ----------
+const S = { db:null, canWrite:true, main:null, episodes:{}, preds:{}, tab:'standings',
+  scoreEp:null, edit:null, editDirty:false, newMgrs:[], teamSize:null };
+const $ = s => document.querySelector(s);
+const esc = s => String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+const nm = k => BY[k]?.n || k;
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>t.hidden=true,2200); }
+const M = () => S.main || {managers:[],order:[],picks:[],teamSize:0,winnerPicks:{}};
+const mgrName = id => (M().managers.find(m=>m.id===id)||{}).name || '—';
+
+// ---------- Scoring ----------
+function scoredEps(){ return Object.values(S.episodes).filter(e=>e.num>=FIRST_EP && e.num<=LAST_EP).sort((a,b)=>a.num-b.num); }
+function outMap(){ const o={}; for(const e of scoredEps()) for(const k of (e.out||[])) if(!o[k]) o[k]=e.num; return o; }
+function legPts(e,k){
+  let p = (e.out||[]).includes(k) ? OUT : placePts((e.place||{})[k]);
+  for(const code of ((e.events||{})[k]||[])) p += (EV[code]?.p||0);
+  return p;
+}
+function castPoints(){
+  const o = outMap(), pts = {};
+  CAST.forEach(c=>pts[c.k]={total:0,byEp:{}});
+  for(const e of scoredEps()) for(const c of CAST){
+    if(o[c.k] && o[c.k] < e.num) continue;
+    const p = legPts(e,c.k); pts[c.k].byEp[e.num]=p; pts[c.k].total+=p;
+  }
+  return pts;
+}
+function pickPts(cp,p){ return Object.entries(cp[p.c].byEp).reduce((s,[e,v])=>s+(counts(p,+e)?v:0),0); }
+// ---------- Bench (even head-to-head once no replacements are left) ----------
+function outBefore(ep){ const o=outMap(); return k=>o[k] && o[k]<ep; }
+function pickLive(p,ep){ return (!p.from || p.from<=ep) && !outBefore(ep)(p.c); }
+function benchNeeded(ep){
+  if(!draftDone()) return false;
+  const gone=outBefore(ep), taken=new Set(M().picks.filter(p=>!p.from||p.from<=ep).map(p=>p.c));
+  return !CAST.some(c=>!taken.has(c.k) && !gone(c.k));
+}
+function activeAt(mid,ep){ return M().picks.filter(p=>p.m===mid && pickLive(p,ep)); }
+function lineupSize(ep){ const n=M().managers.map(mg=>activeAt(mg.id,ep).length).filter(x=>x>0); return n.length?Math.min(...n):0; }
+function benchFor(mid,ep){
+  if(!benchNeeded(ep)) return [];
+  const act=activeAt(mid,ep).map(p=>p.c), need=act.length-lineupSize(ep);
+  if(need<=0) return [];
+  const chosen=(((S.preds[ep]||{}).bench||{})[mid]||[]).filter(k=>act.includes(k)).slice(0,need);
+  for(const k of [...act].reverse()){ if(chosen.length>=need) break; if(!chosen.includes(k)) chosen.push(k); }
+  return chosen;
+}
+function counts(p,ep){ return (!p.from || ep>=p.from) && !benchFor(p.m,ep).includes(p.c); }
+function benchedCount(p){ return scoredEps().filter(e=>(!p.from||e.num>=p.from) && benchFor(p.m,e.num).includes(p.c)).length; }
+function draftCount(){ return M().picks.filter(p=>!p.from).length; }
+function draftDone(){ const m=M(); return m.managers.length>0 && draftCount()>=m.managers.length*m.teamSize; }
+function replCredits(mid){ const o=outMap(), mine=M().picks.filter(p=>p.m===mid); return Math.max(0, mine.filter(p=>o[p.c]).length - mine.filter(p=>p.from).length); }
+function availPool(){ const o=outMap(), taken=new Set(M().picks.map(p=>p.c)); return CAST.filter(c=>!taken.has(c.k)&&!o[c.k]); }
+function nextEp(){ const s=scoredEps(); return Math.min(LAST_EP, s.length ? s[s.length-1].num+1 : FIRST_EP); }
+function guessFields(ep){ return GUESS.filter(G=>G.f!=='xp' || ep<=EXPRESS_LAST); }
+function guessRight(e,f,g){
+  if(!g) return false;
+  if(f==='picks') return g==='none' ? !(e.out||[]).length : (e.out||[]).includes(g);
+  if(f==='leg') return (e.place||{})[g]===1;
+  if(f==='xp') return g==='none' ? !CAST.some(c=>((e.events||{})[c.k]||[]).includes('express')) : ((e.events||{})[g]||[]).includes('express');
+  return false;
+}
+function guessHits(e,mid){ const P=S.preds[e.num]||{}; return GUESS.filter(G=>guessRight(e,G.f,(P[G.f]||{})[mid])).length; }
+function guessPts(e,mid){ const P=S.preds[e.num]||{}; return GUESS.reduce((s,G)=>s+(guessRight(e,G.f,(P[G.f]||{})[mid])?G.p:0),0); }
+function guessOpts(f,sel,alive){
+  const o=(v,l)=>`<option value="${v}" ${sel===v?'selected':''}>${esc(l)}</option>`;
+  return '<option value="">— pick —</option>'
+    + (f==='picks'?o('none','Nobody (non-elimination)'):'')
+    + (f==='xp'?o('none','Nobody uses one'):'')
+    + alive.map(c=>o(c.k,c.n)).join('');
+}
+function wpOf(mid){ const v=(M().winnerPicks||{})[mid]; return v && v.c ? v : null; }
+function wpLocked(w){ return !!w && w.ep < nextEp(); }
+function managerScores(){
+  const cp = castPoints(), o = outMap(), m = M();
+  const winner = CAST.map(c=>c.k).find(k=>scoredEps().some(e=>((e.events||{})[k]||[]).includes('winner')));
+  return m.managers.map(mg=>{
+    const myPicks = m.picks.filter(p=>p.m===mg.id);
+    const castTotal = myPicks.reduce((s,p)=>s+pickPts(cp,p),0);
+    let predHits=0, predPts=0;
+    for(const e of scoredEps()){ predHits+=guessHits(e,mg.id); predPts+=guessPts(e,mg.id); }
+    const w = wpOf(mg.id);
+    const winBonus = winner && w && w.c===winner ? (WIN_VAL[w.ep]||0) : 0;
+    const alive = myPicks.filter(p=>!o[p.c]).length;
+    return {...mg, picks:myPicks, castTotal, predHits, predPts, winBonus, w, alive, total: castTotal};
+  }).sort((a,b)=>b.total-a.total || b.alive-a.alive);
+}
+
+// ---------- DB writes ----------
+async function writeMain(patch, full=false){
+  if(!S.db){ toast('The league database isn’t connected.'); return; }
+  const ref = S.db.doc(COL.main);
+  try{ if(full || !S.main) await ref.set({...M(), ...patch}); else await ref.update(patch); }
+  catch(e){ handleWriteErr(e); }
+}
+function handleWriteErr(e){
+  if(e?.code==='permission-denied'){ S.canWrite=false; applyRO(); toast('You have view-only access to this league.'); }
+  else toast('Could not save. Try again in a moment.');
+}
+function applyRO(){ document.body.classList.toggle('ro', !S.canWrite); render(); }
+
+// ---------- Rendering ----------
+function renderMarkers(){
+  const o = outMap(); const out = CAST.filter(c=>o[c.k]).length;
+  $('#markers').innerHTML = CAST.map((c,i)=>`<span class="${i>=CAST.length-out?'gone':''}"></span>`).join('');
+  $('#markercap').textContent = `${CAST.length-out} of ${CAST.length} teams racing · next up: Leg ${nextEp()}`;
+}
+function statusChip(k){ const o=outMap(); if(o[k]) return `<span class="chip out">Out · Leg ${o[k]}</span>`;
+  const won = scoredEps().filter(e=>(e.place||{})[k]===1).length;
+  return won ? `<span class="chip won">${won} leg win${won>1?'s':''}</span>` : `<span class="chip racing"><span class="flag"></span>Racing</span>`; }
+
+function renderRepl(){
+  const m=M(); if(!draftDone()) return '';
+  const rows=m.managers.filter(mg=>replCredits(mg.id)>0); if(!rows.length) return '';
+  const pool=availPool();
+  return `<div class="panel"><h3>Replacement picks</h3><p class="sub">Lost a team? Pick up any undrafted team still racing. They score starting with Leg ${nextEp()}.</p>
+  <div class="stack">${rows.map(mg=>`<div class="row" style="justify-content:space-between"><span style="font-weight:600">${esc(mg.name)} <span class="extras">· ${replCredits(mg.id)} to use</span></span>
+    <span class="row"><select data-replsel="${mg.id}" aria-label="Replacement for ${esc(mg.name)}" ${S.canWrite&&pool.length?'':'disabled'}><option value="">— choose —</option>${pool.map(c=>`<option value="${c.k}" ${((S.replSel||{})[mg.id]===c.k)?'selected':''}>${esc(c.n)}</option>`).join('')}</select>
+    <button class="btn primary needwrite" data-repl="${mg.id}" ${pool.length?'':'disabled'}>Add</button></span></div>`).join('')}</div>
+  ${pool.length?'':'<p class="extras">No undrafted teams are left in the race.</p>'}</div>`;
+}
+
+function renderStandings(){
+  const el=$('#tab-standings'), m=M(), cp=castPoints(), o=outMap();
+  if(!m.managers.length){ el.innerHTML = `<div class="panel empty"><h3>No league yet</h3><p>Add your players on the Draft tab, then run the snake draft before you watch Leg 1.</p><button class="btn primary needwrite" data-go="draft">Set up the draft</button></div>`; return; }
+  const rows = managerScores();
+  const ep = nextEp(), P = S.preds[ep] || {};
+  const alive = CAST.filter(c=>!o[c.k]);
+  el.innerHTML = `
+  <div class="stack">
+    ${renderRepl()}
+    ${!draftDone()?`<div class="notice"><strong>Draft in progress.</strong> ${draftCount()} of ${m.managers.length*m.teamSize} picks made. <button class="btn" data-go="draft">Go to draft</button></div>`:''}
+    <div class="grid2">
+      <div class="panel">
+        <h2>Standings</h2>
+        <p class="sub">${scoredEps().length?`Through Leg ${scoredEps().slice(-1)[0].num}`:'No legs scored yet. Watch Leg 1, then score it to get on the board.'}</p>
+        <div>${rows.map((r,i)=>`
+          <div class="standing">
+            <div class="rank">${i+1}</div>
+            <div style="min-width:0">
+              <div class="mname">${esc(r.name)}</div>
+              <div class="roster">${r.picks.map(p=>`<span class="pill ${o[p.c]?'gone':''}" title="${p.from?'Replacement, scores from Leg '+p.from:''}${benchedCount(p)?' · benched '+benchedCount(p)+' leg(s)':''}"><span class="flag"></span>${esc(nm(p.c))}${p.from?' ↺':''}${!o[p.c]&&benchFor(r.id,ep).includes(p.c)?' <span class="benchtag">bench</span>':''} <b>${pickPts(cp,p)}</b></span>`).join('') || '<span class="extras">No teams drafted yet</span>'}</div>
+              <div class="extras">${r.alive} still racing</div>
+            </div>
+            <div class="total num">${r.total}<small>points</small></div>
+          </div>`).join('')}</div>
+      </div>
+      <div class="panel">
+        <h2>Lineups · Leg ${ep}</h2>
+        ${benchNeeded(ep)&&m.managers.some(mg=>benchFor(mg.id,ep).length)?'':`<p class="sub">Everyone plays all of their teams still racing in Leg ${ep}.</p>`}
+        ${benchNeeded(ep)?`<div class="notice" style="margin:0 0 12px"><strong>Even lineups: ${lineupSize(ep)} team${lineupSize(ep)>1?'s':''} each.</strong> No undrafted teams are left, so anyone with more teams racing sits the extra out for Leg ${ep}. A benched team scores 0 for you that leg. Pick your bench below; if you don’t, your most recently drafted team sits.</div>`:''}
+        <div class="stack" style="gap:0">${m.managers.map(mg=>{ const bn=benchFor(mg.id,ep), act=activeAt(mg.id,ep);
+          const benchUI = bn.length ? `<div class="benchrow"><span class="glabel">Bench ${bn.length} for Leg ${ep}</span><div class="evs">${act.map(p=>`<button class="ev benchbtn" data-bench="${mg.id}|${p.c}" aria-pressed="${bn.includes(p.c)}" ${S.canWrite?'':'disabled'}>${esc(nm(p.c))}${bn.includes(p.c)?' · sitting':''}</button>`).join('')}</div></div>` : '';
+          if(!benchUI) return '';
+          return `<div class="guess"><div style="font-weight:600">${esc(mg.name)}</div>${benchUI}</div>`;}).join('')}
+        </div>
+        ${renderPastPreds()}
+      </div>
+    </div>
+    ${renderEpTable(rows)}
+  </div>`;
+}
+function renderPastPreds(){
+  const eps = scoredEps().slice(-3).reverse(); if(!eps.length) return '';
+  return `<h3 style="margin-top:18px">Recent legs</h3><div class="tablewrap"><table><thead><tr><th>Leg</th><th>1st</th><th>Eliminated</th></tr></thead><tbody>${
+    eps.map(e=>{ const w=Object.keys(e.place||{}).find(k=>e.place[k]===1);
+      return `<tr><td class="num">${e.num}</td><td>${w?esc(nm(w)):'—'}</td><td>${(e.out||[]).map(k=>esc(nm(k))).join(', ')||'Nobody'}</td></tr>`;}).join('')
+  }</tbody></table></div>`;
+}
+function renderEpTable(rows){
+  const eps = scoredEps(); if(!eps.length) return '';
+  const cp = castPoints();
+  return `<div class="panel"><h3>Points by leg</h3><div class="tablewrap"><table><thead><tr><th>Player</th>${eps.map(e=>`<th class="r">Leg ${e.num}</th>`).join('')}<th class="r">Total</th></tr></thead><tbody>${
+    rows.map(r=>`<tr><td>${esc(r.name)}</td>${eps.map(e=>{
+      const v=r.picks.reduce((s,p)=>s+(counts(p,e.num)?(cp[p.c].byEp[e.num]||0):0),0)+guessPts(e,r.id); return `<td class="r num">${v}</td>`;}).join('')}<td class="r num"><b>${r.total}</b></td></tr>`).join('')
+  }</tbody></table></div></div>`;
+}
+
+function snakeMgr(i){ const m=M(), n=m.order.length; const r=Math.floor(i/n), p=i%n; return m.order[r%2===0?p:n-1-p]; }
+function renderDraft(){
+  const el=$('#tab-draft'), m=M();
+  if(!m.managers.length || !m.order.length){
+    const size = S.teamSize || (S.newMgrs.length ? Math.max(1,Math.floor(11/S.newMgrs.length)) : 3);
+    el.innerHTML = `<div class="panel stack">
+      <div><h2>Set up the draft</h2><p class="sub">Add everyone playing. The order gets shuffled, then it’s a snake draft (1→N, then N→1) from all 11 teams.</p></div>
+      <form id="addmgr" class="row needwrite"><input type="text" id="mgrname" placeholder="Player name" maxlength="30" autocomplete="off"><button class="btn" type="submit">Add player</button></form>
+      <div class="mgrlist">${S.newMgrs.map((n,i)=>`<span class="mgrtag">${esc(n)}<button data-rmmgr="${i}" aria-label="Remove ${esc(n)}">×</button></span>`).join('') || '<span class="extras">No players added yet.</span>'}</div>
+      <label class="row">Teams per player <input type="number" id="teamsize" min="1" max="6" value="${size}" style="width:80px"></label>
+      <p class="extras">With ${S.newMgrs.length||'N'} players, ${S.newMgrs.length?Math.floor(11/S.newMgrs.length):'11 ÷ N'} each uses the most teams. Leftovers go undrafted and become replacement picks later.</p>
+      <div class="row needwrite"><button class="btn primary" id="startdraft" ${S.newMgrs.length<2?'disabled':''}>Shuffle order & start draft</button></div>
+      ${S.canWrite?'':'<p class="notice">You have view-only access. Ask the league owner to set up the draft.</p>'}
+    </div>`;
+    return;
+  }
+  const total = m.managers.length*m.teamSize, done = draftDone(), dc = draftCount();
+  const taken = new Set(m.picks.map(p=>p.c)), o = outMap();
+  const avail = CAST.filter(c=>!taken.has(c.k) && !o[c.k]);
+  const cur = done ? null : snakeMgr(dc);
+  el.innerHTML = `<div class="stack">
+    ${done ? `<div class="onclock"><span class="who">Draft complete</span><span>Good luck. Score each leg after everyone has watched.</span></div>`
+      : `<div class="onclock"><span>Pick ${dc+1} of ${total} · Round ${Math.floor(dc/m.order.length)+1}</span><span class="who">${esc(mgrName(cur))} is on the clock</span></div>`}
+    ${done?renderRepl():''}
+    ${done?'':`<div class="panel"><h3>Available teams</h3><div class="avail">${avail.map(c=>`
+      <button class="btn pickbtn needwrite" data-pick="${c.k}"><span>${esc(c.n)}<br><small>${esc(c.r)} · ${esc(c.a)}</small></span></button>`).join('')}</div>
+      ${S.canWrite?'':'<p class="extras">View-only: picks are made by players with edit access.</p>'}</div>`}
+    <div class="panel"><h3>Rosters</h3><p class="sub">Draft order: ${m.order.map(id=>esc(mgrName(id))).join(' → ')}</p>
+      <div class="rosters">${m.order.map(id=>`<div><strong>${esc(mgrName(id))}</strong><ol>${m.picks.filter(p=>p.m===id).map(p=>`<li>${esc(nm(p.c))}${p.from?` <span class="extras">(replacement, Leg ${p.from}+)</span>`:''}</li>`).join('')}</ol></div>`).join('')}</div>
+    </div>
+    <div class="row needwrite">
+      <button class="btn" id="undopick" ${m.picks.length?'':'disabled'}>Undo last pick</button>
+      ${(!done && dc>0 && dc%m.managers.length===0)?`<button class="btn primary" id="enddraft">End draft at ${dc/m.managers.length} team${dc/m.managers.length>1?'s':''} each</button>`:''}
+      <button class="btn danger" id="resetdraft">Reset league</button>
+    </div>
+  </div>`;
+}
+
+function renderCast(){
+  const el=$('#tab-cast'), cp=castPoints(), o=outMap(), m=M();
+  const owner = {}; m.picks.forEach(p=>owner[p.c]=p.m);
+  const sorted = [...CAST].sort((a,b)=>(!!o[a.k]-!!o[b.k]) || a.n.localeCompare(b.n));
+  el.innerHTML = `<h2>The teams</h2><p class="sub">11 teams of two racing around the world for $1,000,000. First aired fall 2008.</p>
+  <div class="castgrid">${sorted.map(c=>`
+    <div class="card ${o[c.k]?'isout':''}">
+      <div class="row" style="justify-content:space-between;align-items:flex-start"><span class="rel">${esc(c.r)}</span>${statusChip(c.k)}</div>
+      <div class="nm">${esc(c.n)}</div>
+      <div class="meta">${esc(c.f)} · ${esc(c.a)}<br>${c.j?esc(c.j)+'<br>':''}${esc(c.h)}</div>
+      ${c.note?`<div class="note">${esc(c.note)}</div>`:''}
+      <div class="foot"><span class="meta">${owner[c.k]?'Drafted by '+esc(mgrName(owner[c.k])):'Undrafted'}</span><span class="num">${cp[c.k].total} pts</span></div>
+    </div>`).join('')}</div>`;
+}
+
+function loadEdit(ep){
+  const e = S.episodes[ep];
+  S.edit = { num:ep, out:[...(e?.out||[])], place:{...(e?.place||{})}, events: JSON.parse(JSON.stringify(e?.events||{})) };
+  S.editDirty=false;
+}
+function renderScore(){
+  const el=$('#tab-score');
+  if(!S.canWrite){ el.innerHTML = `<div class="panel empty"><h3>View-only</h3><p>Only players with edit access can score legs.</p></div>`; return; }
+  if(S.scoreEp==null) S.scoreEp = nextEp();
+  if(!S.edit || S.edit.num!==S.scoreEp) loadEdit(S.scoreEp);
+  const ep=S.scoreEp, ed=S.edit, o = outMap();
+  const active = CAST.filter(c=>!o[c.k] || o[c.k]>=ep).sort((a,b)=>((ed.place[a.k]||99)-(ed.place[b.k]||99)) || a.n.localeCompare(b.n));
+  const counts={}; Object.values(ed.place).forEach(v=>counts[v]=(counts[v]||0)+1);
+  const evs = EVENTS.filter(e=>e.c!=='express' || ep<=EXPRESS_LAST);
+  el.innerHTML = `<div class="panel">
+    <div class="row" style="justify-content:space-between;align-items:flex-end">
+      <div><h2>Score a leg</h2><p class="sub" style="margin:0">Set each team’s finish at the Pit Stop and mark who was eliminated.</p></div>
+      <label class="row">Leg <select id="epsel">${Array.from({length:LAST_EP},(_,i)=>i+1).map(n=>`<option value="${n}" ${n===ep?'selected':''}>Leg ${n}${S.episodes[n]?' ✓':''}</option>`).join('')}</select></label>
+    </div>
+    <p class="extras">Finish points: 1st = 12, 2nd = 11, 3rd = 10, and so on down. The eliminated team gets −3 instead of finish points. Double leg? Score it as one episode and mark both eliminated teams.</p>
+    <div>${active.map(c=>{ const pl=ed.place[c.k]||''; return `
+      <div class="scorerow">
+        <div><div style="font-weight:700">${esc(c.n)}</div><div class="row" style="gap:6px;margin-top:4px"><span class="epts">${legPts(ed,c.k)>0?'+':''}${legPts(ed,c.k)}</span></div></div>
+        <div class="evs">
+          <select class="placesel ${pl&&counts[pl]>1?'dupe':''}" data-place="${c.k}" aria-label="Finish for ${esc(c.n)}"><option value="">Finish</option>${active.map((_,i)=>`<option value="${i+1}" ${+pl===i+1?'selected':''}>${ordinal(i+1)}</option>`).join('')}</select>
+          <button class="ev outbtn" data-out="${c.k}" aria-pressed="${ed.out.includes(c.k)}">Eliminated (−3)</button>
+          ${evs.map(e=>`<button class="ev ${e.p<0?'neg':''}" data-ev="${c.k}|${e.c}" aria-pressed="${(ed.events[c.k]||[]).includes(e.c)}">${esc(e.l)} (${e.p>0?'+':''}${e.p})</button>`).join('')}
+        </div>
+      </div>`;}).join('')}</div>
+    <div class="savebar">
+      <button class="btn primary" id="saveep">${S.episodes[ep]?'Update':'Save'} Leg ${ep}</button>
+      ${S.editDirty?'<span class="extras" style="margin:0">Unsaved changes</span>':''}
+      ${Object.values(counts).some(v=>v>1)?'<span class="extras" style="margin:0;color:var(--out)">Two teams share a finish spot</span>':''}
+      ${S.episodes[ep]?`<button class="btn danger" id="clearep">Clear Leg ${ep}</button>`:''}
+    </div>
+  </div>`;
+}
+function ordinal(n){ const s=['th','st','nd','rd'], v=n%100; return n+(s[(v-20)%10]||s[v]||s[0]); }
+
+function renderRules(){
+  const li = (l,p)=>`<li><span>${esc(l)}</span><b class="num ${p<0?'neg':'pos'}">${p>0?'+':''}${p}</b></li>`;
+  $('#tab-rules').innerHTML = `<h2>How it works</h2><p class="sub">Draft before Leg 1, score after everyone has watched.</p>
+  <div class="rules">
+    <div class="panel"><h3>The draft</h3><ul class="ptlist">
+      <li><span>Pool</span><span>All 11 teams</span></li>
+      <li><span>Format</span><span>Snake draft, random order</span></li>
+      <li><span>Replacements</span><span>Team eliminated? Pick an undrafted team still racing. They score from the next leg.</span></li>
+    </ul></div>
+    <div class="panel"><h3>Every leg</h3><ul class="ptlist">
+      ${[1,2,3,4].map(n=>li('Checked in '+ordinal(n),placePts(n))).join('')}<li><span>…and down one point per spot</span><span></span></li>${li('11th',placePts(11))}${li('Eliminated (instead of finish points)',OUT)}<li><span>Example, 7 teams left</span><span class="num">12, 11, 10, 9, 8, 7, then −3 for the eliminated team</span></li>
+    </ul>
+    </ul></div>
+    <div class="panel"><h3>House rules</h3><ul class="ptlist">
+      <li><span>Even lineups</span><span>Once no undrafted teams are left, everyone plays the same number of teams. Players with extras bench them each leg; benched teams score 0.</span></li>
+      <li><span>Ties</span><span>More teams still racing wins</span></li>
+      <li><span>Non-elimination legs</span><span>Everyone scores by finish, last place included</span></li>
+      <li><span>Any elimination</span><span>A team eliminated at any point during a leg gets −3 for that leg</span></li>
+      <li><span>Spoilers</span><span>No peeking at results online. Score after everyone has watched.</span></li>
+    </ul></div>
+  </div>`;
+}
+
+function render(){
+  renderMarkers();
+  ({standings:renderStandings,draft:renderDraft,cast:renderCast,score:renderScore,rules:renderRules})[S.tab]();
+}
+function setTab(t){
+  S.tab=t;
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-selected', b.dataset.tab===t));
+  document.querySelectorAll('main > section').forEach(s=>s.hidden = s.id!=='tab-'+t);
+  try{ localStorage.setItem('tar13tab',t);}catch(e){}
+  render();
+}
+
+// ---------- Events ----------
+document.querySelector('nav.tabs').addEventListener('click',e=>{ const b=e.target.closest('button[data-tab]'); if(b) setTab(b.dataset.tab); });
+document.addEventListener('submit',e=>{
+  if(e.target.id==='addmgr'){ e.preventDefault(); const v=$('#mgrname').value.trim(); if(v && !S.newMgrs.includes(v)){ S.newMgrs.push(v); } render(); setTimeout(()=>$('#mgrname')?.focus(),0); }
+});
+let armed=null;
+document.addEventListener('click', async e=>{
+  const t = e.target.closest('button'); if(!t) return;
+  if(t.dataset.go){ setTab(t.dataset.go); return; }
+  if(t.dataset.repl){
+    const id=t.dataset.repl, c=(t.parentElement.querySelector('select')||{}).value || (S.replSel||{})[id], m=M();
+    if(!c){ toast('Choose a team first.'); return; }
+    if(m.picks.some(p=>p.c===c)){ toast(`${nm(c)} are already on a roster.`); return; }
+    if(replCredits(id)<1) return;
+    t.disabled=true; await writeMain({picks:[...m.picks,{m:id,c,from:nextEp()}]});
+    toast(`${mgrName(id)} picks up ${nm(c)}`); return;
+  }
+  if(t.dataset.bench){
+    const [mid,k]=t.dataset.bench.split('|'), ep=nextEp(), need=activeAt(mid,ep).length-lineupSize(ep);
+    let cur=benchFor(mid,ep); cur = cur.includes(k) ? cur : [k, ...cur].slice(0,need);
+    const ref=S.db.doc(COL.preds+'/'+RID(ep)), doc=S.preds[ep]||{};
+    try{ await ref.set({...doc, num:ep, bench:{...(doc.bench||{}), [mid]:cur}}); toast(`${nm(k)} sit out Leg ${ep}.`); }catch(err){ handleWriteErr(err); }
+    return;
+  }
+  if(t.dataset.rmmgr){ S.newMgrs.splice(+t.dataset.rmmgr,1); render(); return; }
+  if(t.id==='startdraft'){
+    const size = Math.max(1, Math.min(6, parseInt($('#teamsize').value)||1));
+    if(S.newMgrs.length*size>11){ toast(`${S.newMgrs.length} × ${size} is more than 11 teams.`); return; }
+    const managers = S.newMgrs.map((n,i)=>({id:'m'+Date.now().toString(36)+i, name:n}));
+    const order = managers.map(m=>m.id).sort(()=>Math.random()-.5);
+    await writeMain({managers, order, teamSize:size, picks:[], winnerPicks:{}}, true);
+    S.newMgrs=[]; toast('Draft order set. The race is on.'); return;
+  }
+  if(t.dataset.pick){
+    const m=M(); if(m.picks.some(p=>p.c===t.dataset.pick)) return;
+    const who=snakeMgr(draftCount()); t.disabled=true;
+    await writeMain({picks:[...m.picks,{m:who,c:t.dataset.pick}]});
+    toast(`${mgrName(who)} drafts ${nm(t.dataset.pick)}`); return;
+  }
+  if(t.id==='enddraft'){ const m=M(), n=draftCount()/m.managers.length; if(!Number.isInteger(n)||n<1) return; await writeMain({teamSize:n}); toast(`Draft complete: ${n} teams each.`); return; }
+  if(t.id==='undopick'){ const m=M(); await writeMain({picks:m.picks.slice(0,-1)}); return; }
+  if(t.id==='resetdraft' || t.id==='clearep'){
+    if(armed!==t.id){ armed=t.id; t.classList.add('armed'); t.textContent='Click again to confirm'; setTimeout(()=>{ if(armed===t.id){armed=null; render();} },4000); return; }
+    armed=null;
+    if(t.id==='resetdraft'){ await writeMain({managers:[],order:[],picks:[],teamSize:0,winnerPicks:{}}, true); toast('League reset.'); }
+    else { try{ await S.db.doc(COL.episodes+'/'+RID(S.scoreEp)).delete(); loadEdit(S.scoreEp); toast(`Leg ${S.scoreEp} cleared.`);}catch(err){handleWriteErr(err);} }
+    return;
+  }
+  if(t.dataset.out){ const k=t.dataset.out, ed=S.edit; ed.out = ed.out.includes(k)?ed.out.filter(x=>x!==k):[...ed.out,k]; S.editDirty=true; render(); return; }
+  if(t.dataset.ev){ const [k,c]=t.dataset.ev.split('|'), ed=S.edit; const arr=ed.events[k]||[]; ed.events[k]=arr.includes(c)?arr.filter(x=>x!==c):[...arr,c]; if(!ed.events[k].length) delete ed.events[k]; S.editDirty=true; render(); return; }
+  if(t.id==='saveep'){
+    const ed=S.edit;
+    try{ await S.db.doc(COL.episodes+'/'+RID(ed.num)).set({num:ed.num, out:ed.out, place:ed.place, events:ed.events, savedAt:new Date().toISOString()});
+      S.editDirty=false; toast(`Leg ${ed.num} saved.`); S.scoreEp=null; S.edit=null; setTab('standings'); }
+    catch(err){ handleWriteErr(err); }
+    return;
+  }
+});
+document.addEventListener('change', async e=>{
+  const s=e.target;
+  if(s.dataset.replsel){ S.replSel={...(S.replSel||{}),[s.dataset.replsel]:s.value}; return; }
+  if(s.id==='epsel'){ S.scoreEp=+s.value; S.edit=null; render(); return; }
+  if(s.id==='teamsize'){ S.teamSize=+s.value; return; }
+  if(s.dataset.place){ const ed=S.edit; if(s.value) ed.place[s.dataset.place]=+s.value; else delete ed.place[s.dataset.place]; S.editDirty=true; render(); return; }
+  if(s.dataset.wp){ if(wpLocked(wpOf(s.dataset.wp))){ toast('That pick is locked.'); render(); return; }
+    await writeMain({winnerPicks:{...(M().winnerPicks||{}),[s.dataset.wp]:s.value?{c:s.value, ep:nextEp()}:null}});
+    toast(s.value?`Champion pick saved: worth ${WIN_VAL[nextEp()]||0} if they win.`:'Pick cleared.'); return; }
+  if(s.dataset.pred){
+    const ep=nextEp(), ref=S.db.doc(COL.preds+'/'+RID(ep)), f=s.dataset.field;
+    const cur=S.preds[ep]||{};
+    try{ await ref.set({...cur, num:ep, [f]:{...(cur[f]||{}), [s.dataset.pred]:s.value}}); toast('Call saved.'); }
+    catch(err){ handleWriteErr(err); }
+  }
+});
+
+// ---------- Password gate ----------
+async function sha256(t){ const b=await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''); }
+function unlocked(){ try{ return localStorage.getItem('tar13pw')===window.LEAGUE_PASSWORD_HASH; }catch(e){ return false; } }
+function openGate(){
+  document.body.classList.add('locked'); $('#gate').hidden=false; setTimeout(()=>$('#gatepw')?.focus(),0);
+  $('#gateform').addEventListener('submit', async e=>{
+    e.preventDefault(); e.stopPropagation();
+    const h = await sha256($('#gatepw').value);
+    if(h===window.LEAGUE_PASSWORD_HASH){ try{ localStorage.setItem('tar13pw',h);}catch(err){} $('#gate').hidden=true; document.body.classList.remove('locked'); boot(); }
+    else { $('#gateerr').hidden=false; $('#gatepw').select(); }
+  });
+}
+
+// ---------- Boot ----------
+function boot(){
+  try{ const t=localStorage.getItem('tar13tab'); if(t && document.getElementById('tab-'+t)) S.tab=t; }catch(e){}
+  setTab(S.tab);
+  const cfg = window.FIREBASE_CONFIG;
+  if(!window.firebase || !cfg || !cfg.projectId){
+    $('#status').innerHTML='<strong>Almost there.</strong> This league isn’t connected to a database yet. You can still browse the teams and rules.';
+    return;
+  }
+  try{ firebase.initializeApp(cfg); }catch(e){}
+  const db = firebase.firestore();
+  S.db = db;
+  $('#status').hidden = true;
+  const onErr = e => { $('#status').hidden=false; $('#status').innerHTML='<strong>Can’t reach the league database.</strong> '+esc(e?.message||'Check your Firebase settings and rules.'); };
+  db.doc(COL.main).onSnapshot(snap=>{ S.main = snap.exists ? snap.data() : null; render(); }, onErr);
+  db.collection(COL.episodes).onSnapshot(q=>{ S.episodes={}; q.docs.forEach(d=>{ const v=d.data(); if(v && v.num) S.episodes[v.num]=v; });
+    if(S.edit && !S.editDirty) S.edit=null; render(); }, onErr);
+  db.collection(COL.preds).onSnapshot(q=>{ S.preds={}; q.docs.forEach(d=>{ const v=d.data(); if(v && v.num) S.preds[v.num]=v; }); render(); }, onErr);
+}
+if(!window.LEAGUE_PASSWORD_HASH || unlocked()) boot(); else openGate();
+</script>
+
+</body>
+</html>

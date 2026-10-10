@@ -220,6 +220,12 @@
   #launchTap{position:absolute;left:0;right:0;bottom:8%;text-align:center;color:#bfbfbf;
     font:20px -apple-system,"SF Pro Text","Segoe UI",system-ui,sans-serif;display:none;}
 </style>
+<style id="noCallout">html,body,body *{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}img{-webkit-user-drag:none}input,textarea,[contenteditable="true"]{-webkit-touch-callout:default;-webkit-user-select:text;user-select:text}</style>
+<script>/* a long press never brings up the browser's picture menu, and holding never selects (blue) the page */
+(function(){function typing(t){return t&&t.closest&&t.closest('input,textarea,[contenteditable="true"]');}
+document.addEventListener('contextmenu',function(e){if(!typing(e.target))e.preventDefault();});
+document.addEventListener('selectstart',function(e){if(!typing(e.target))e.preventDefault();});
+document.addEventListener('dragstart',function(e){e.preventDefault();});})();</script>
 </head>
 <body>
 <div id="stage">

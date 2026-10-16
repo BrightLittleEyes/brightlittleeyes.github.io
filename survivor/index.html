@@ -11,7 +11,7 @@
 /* Layout: torch-lit header band, tab rail, single working column of panels; tribe colors carry state */
 :root{
   --bg:#EDF0EA; --surface:#FFFFFF; --sunk:#E3E8E1; --ink:#15211D; --muted:#56665F; --line:#CDD6CF;
-  --torch:#C84D16; --torch-ink:#FFFFFF; --savu:#6A3E9E; --savu-bg:#EEE6F7; --toka:#9A7400; --toka-bg:#FBF1CC;
+  --torch:#C84D16; --torch-ink:#FFFFFF; --savu:#6A3E9E; --savu-bg:#EEE6F7; --toka:#9A7400; --toka-bg:#FBF1CC; --dina:#B3261E; --dina-bg:#FBE3DF;
   --exile:#4F5F66; --exile-bg:#E1E7EA; --out:#A23535; --out-bg:#F6E1DF; --ok:#22744A; --ok-bg:#DDF0E4;
   --band:#13201B; --band-ink:#F3EEE2;
   --display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
@@ -20,12 +20,12 @@
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0E1513; --surface:#17211E; --sunk:#111A17; --ink:#E7EDE9; --muted:#95A59E; --line:#2A3833;
-  --torch:#F0773A; --torch-ink:#1A0D05; --savu:#B394EA; --savu-bg:#2A2138; --toka:#F0C534; --toka-bg:#332A0E;
+  --torch:#F0773A; --torch-ink:#1A0D05; --savu:#B394EA; --savu-bg:#2A2138; --toka:#F0C534; --toka-bg:#332A0E; --dina:#FF8A7A; --dina-bg:#3D1A16;
   --exile:#A3B4BC; --exile-bg:#22292D; --out:#EE7B74; --out-bg:#3A1C1B; --ok:#62CC93; --ok-bg:#14301F;
   --band:#080D0B; --band-ink:#F3EEE2; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0E1513; --surface:#17211E; --sunk:#111A17; --ink:#E7EDE9; --muted:#95A59E; --line:#2A3833;
-  --torch:#F0773A; --torch-ink:#1A0D05; --savu:#B394EA; --savu-bg:#2A2138; --toka:#F0C534; --toka-bg:#332A0E;
+  --torch:#F0773A; --torch-ink:#1A0D05; --savu:#B394EA; --savu-bg:#2A2138; --toka:#F0C534; --toka-bg:#332A0E; --dina:#FF8A7A; --dina-bg:#3D1A16;
   --exile:#A3B4BC; --exile-bg:#22292D; --out:#EE7B74; --out-bg:#3A1C1B; --ok:#62CC93; --ok-bg:#14301F;
   --band:#080D0B; --band-ink:#F3EEE2; color-scheme:dark}
 *{box-sizing:border-box}
@@ -69,6 +69,7 @@ input[type=text],input[type=number],select{font:500 14px var(--body);background:
 .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
 .chip{display:inline-flex;align-items:center;gap:6px;font:600 12px/1 var(--body);padding:5px 8px;border-radius:999px;white-space:nowrap}
 .chip.Savu{background:var(--savu-bg);color:var(--savu)}
+.chip.Dina{background:var(--dina-bg);color:var(--dina)}
 .chip.Toka{background:var(--toka-bg);color:var(--toka)}
 .chip.Exile,.chip.Merged{background:var(--exile-bg);color:var(--exile)}
 .chip.out{background:var(--out-bg);color:var(--out)}
@@ -115,7 +116,7 @@ td.r,th.r{text-align:right}
 /* cast */
 .castgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:12px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px;border-left:5px solid var(--line)}
-.card.Savu{border-left-color:var(--savu)} .card.Toka{border-left-color:var(--toka)} .card.Exile,.card.Merged{border-left-color:var(--exile)}
+.card.Savu{border-left-color:var(--savu)} .card.Toka{border-left-color:var(--toka)} .card.Dina{border-left-color:var(--dina)} .card.Exile,.card.Merged{border-left-color:var(--exile)}
 .card.isout{opacity:.62;border-left-color:var(--out)}
 .card .nm{font:700 16px var(--body)}
 .card .meta{font-size:13px;color:var(--muted)}
@@ -223,31 +224,32 @@ window.LEAGUE_PASSWORD_HASH = "e680a9111b7e1471ec279c3d1cb01491c45d677afed28ca72
 <script>
 // ---------- Static season data (as of Episode 1) ----------
 const CAST = [
-  {k:'alexis',n:'Alexis Levine',a:34,h:'Atlanta, GA',j:'Criminal defense attorney',t:'Savu'},
+  {k:'alexis',n:'Alexis Levine',a:34,h:'Atlanta, GA',j:'Criminal defense attorney',t:'Savu',t0:'Savu'},
   {k:'ana',n:'Ana Sani',a:34,h:'Richmond Hill, ON',j:'Voice actress',t:'Savu'},
-  {k:'carter',n:'Carter Krull',a:24,h:'Rock Rapids, IA',j:'Livestock farmer',t:'Savu'},
-  {k:'eric',n:'Eric Macksoud',a:34,h:'Lincoln, RI',j:'Mental health counselor',t:'Savu'},
-  {k:'kristin',n:'Kristin Flickinger',a:49,h:'Ketchum, ID',j:'Crisis management',t:'Savu'},
-  {k:'linnea',n:'Linnea Capobianco',a:25,h:'Kearny, NJ',j:'Entrepreneur',t:'Savu'},
-  {k:'ori',n:'Ori Jean-Charles',a:27,h:'Spring Valley, NY',j:'Personal trainer',t:'Savu'},
+  {k:'carter',n:'Carter Krull',a:24,h:'Rock Rapids, IA',j:'Livestock farmer',t:'Toka',t0:'Savu'},
+  {k:'eric',n:'Eric Macksoud',a:34,h:'Lincoln, RI',j:'Mental health counselor',t:'Dina',t0:'Savu'},
+  {k:'kristin',n:'Kristin Flickinger',a:49,h:'Ketchum, ID',j:'Crisis management',t:'Toka',t0:'Savu'},
+  {k:'linnea',n:'Linnea Capobianco',a:25,h:'Kearny, NJ',j:'Entrepreneur',t:'Dina',t0:'Savu'},
+  {k:'ori',n:'Ori Jean-Charles',a:27,h:'Spring Valley, NY',j:'Personal trainer',t:'Savu',t0:'Savu'},
   {k:'rob',n:'Rob Antonson',a:40,h:'Johnston, RI',j:'Airline gate agent',t:'Savu',note:'Found a hidden immunity idol in Ep 1'},
-  {k:'sharonda',n:'Sharonda Cox',a:34,h:'Pompano Beach, FL',j:'OB-GYN resident',t:'Savu'},
-  {k:'thienan',n:'Thien An Nguyen',a:24,h:'Fort Worth, TX',j:'Medical student',t:'Savu'},
-  {k:'brady',n:'Brady Booker',a:27,h:'La Salle, IL',j:'Pro wrestler',t:'Toka'},
-  {k:'cristian',n:'Cristian Chavez',a:26,h:'Salt Lake City, UT',j:'Head of HR',t:'Toka'},
-  {k:'devin',n:'Devin Way',a:33,h:'Lufkin, TX',j:'Actor',t:'Toka',note:'Most confessionals in Ep 1'},
-  {k:'jelly',n:'Angelica "Jelly" Loblack',a:29,h:'Garland, TX',j:'Sociology professor',t:'Toka'},
-  {k:'jenna',n:'Jenna Doore',a:30,h:'Perrysburg, OH',j:'Wedding photographer',t:'Toka',note:'Used her Shot in the Dark in Ep 1'},
-  {k:'kilby',n:'Danny "Kilby" Kilby',a:30,h:'Mount Forest, ON',j:'Game designer',t:'Toka'},
-  {k:'maggie',n:'Maggie Nestor',a:40,h:'Middleway, WV',j:'Farmer',t:'Toka'},
-  {k:'mike',n:'Mike Pinsky',a:32,h:'New York, NY',j:'Baseball executive',t:'Toka'},
+  {k:'sharonda',n:'Sharonda Cox',a:34,h:'Pompano Beach, FL',j:'OB-GYN resident',t:'Dina',t0:'Savu'},
+  {k:'thienan',n:'Thien An Nguyen',a:24,h:'Fort Worth, TX',j:'Medical student',t:'Toka',t0:'Savu'},
+  {k:'brady',n:'Brady Booker',a:27,h:'La Salle, IL',j:'Pro wrestler',t:'Toka',t0:'Toka'},
+  {k:'cristian',n:'Cristian Chavez',a:26,h:'Salt Lake City, UT',j:'Head of HR',t:'Dina',t0:'Toka'},
+  {k:'devin',n:'Devin Way',a:33,h:'Lufkin, TX',j:'Actor',t:'Savu',t0:'Toka',note:'Most confessionals in Ep 1'},
+  {k:'jelly',n:'Angelica "Jelly" Loblack',a:29,h:'Garland, TX',j:'Sociology professor',t:'Savu',t0:'Toka'},
+  {k:'jenna',n:'Jenna Doore',a:30,h:'Perrysburg, OH',j:'Wedding photographer',t:'Savu',t0:'Toka',note:'Used her Shot in the Dark in Ep 1'},
+  {k:'kilby',n:'Danny "Kilby" Kilby',a:30,h:'Mount Forest, ON',j:'Game designer',t:'Dina',t0:'Toka'},
+  {k:'maggie',n:'Maggie Nestor',a:40,h:'Middleway, WV',j:'Farmer',t:'Toka',t0:'Toka'},
+  {k:'mike',n:'Mike Pinsky',a:32,h:'New York, NY',j:'Baseball executive',t:'Toka',t0:'Toka'},
   {k:'patt',n:'Patt Cannaday',a:33,h:'Tampa, FL',j:'Federal prosecutor',t:'Toka'},
-  {k:'lewis',n:'Lewis Kelly',a:28,h:'Dublin, Ireland',j:'Farmer',t:'Exile',note:'Sent to Exile Island at the marooning'},
+  {k:'lewis',n:'Lewis Kelly',a:28,h:'Dublin, Ireland',j:'Farmer',t:'Dina',t0:'Exile',note:'Sent to Exile Island at the marooning'},
   {k:'aaliyah',n:'Aaliyah Puglia',a:24,h:'Gloucester City, NJ',j:'Chef',t:'Toka',note:'First voted out, Ep 1 (6–2)'},
 ];
 const BY = Object.fromEntries(CAST.map(c=>[c.k,c]));
 const BASE_OUT = {aaliyah:1};
-const TRIBES = ['Savu','Toka','Exile','Merged'];
+const TRIBES = ['Savu','Toka','Dina','Exile','Merged'];
+const SWAP_EP = 4; // Episode 4 tribe swap added Dina
 const SURVIVE=2, OUT=-3, PREDICT=3, LAST_EP=14;
 const WIN_VAL={2:70,3:60,4:50,5:45,6:40,7:35,8:20,9:15,10:10,11:5,12:3,13:2,14:1};
 const GUESS=[{f:'picks',l:'Voted out',p:PREDICT},{f:'imm',l:'Wins immunity',p:2},{f:'rew',l:'Wins reward',p:2}];
@@ -309,13 +311,13 @@ function guessRight(e,f,g){
   if(!g) return false;
   if(f==='picks') return (e.out||[]).includes(g);
   const ta=e.tribesAt||{}, has=(k,c)=>((e.events||{})[k]||[]).includes(c);
-  if(TRIBES.includes(g)) return CAST.some(c=>(ta[c.k]||tribeOf(c.k))===g && has(c.k, f==='imm'?'team':'reward'));
+  if(TRIBES.includes(g)) return CAST.some(c=>(ta[c.k]||(e.num<SWAP_EP?(c.t0||c.t):tribeOf(c.k)))===g && has(c.k, f==='imm'?'team':'reward'));
   return has(g, f==='imm'?'indiv':'reward');
 }
 function guessHits(e,mid){ const P=S.preds[e.num]||{}; return GUESS.filter(G=>guessRight(e,G.f,(P[G.f]||{})[mid])).length; }
 function guessPts(e,mid){ const P=S.preds[e.num]||{}; return GUESS.reduce((s,G)=>s+(guessRight(e,G.f,(P[G.f]||{})[mid])?G.p:0),0); }
 function guessOpts(f,sel,alive){
-  const tribes=['Savu','Toka'].filter(t=>alive.some(c=>tribeOf(c.k)===t));
+  const tribes=['Savu','Toka','Dina'].filter(t=>alive.some(c=>tribeOf(c.k)===t));
   const o=(v,l)=>`<option value="${v}" ${sel===v?'selected':''}>${esc(l)}</option>`;
   return '<option value="">— pick —</option>'
     + (f!=='picks'&&tribes.length?`<optgroup label="Tribes">${tribes.map(t=>o(t,t)).join('')}</optgroup>`:'')
@@ -354,8 +356,9 @@ async function writeMain(patch, full=false){
   }catch(e){ handleWriteErr(e); }
 }
 function handleWriteErr(e){
-  if(e?.code==='permission-denied'){ S.canWrite=false; applyRO(); toast('You have view-only access to this league.'); }
-  else toast('Could not save. Try again in a moment.');
+  console.error(e);
+  if(e?.code==='permission-denied') toast('Firebase blocked this save. Check the Firestore rules (see README).');
+  else toast('Could not save: '+(e?.message||'try again in a moment.'));
 }
 function applyRO(){ document.body.classList.toggle('ro', !S.canWrite); render(); }
 
@@ -366,7 +369,7 @@ function renderTorches(){
   $('#torchcap').textContent = `${CAST.length-out} of ${CAST.length} still in · next up: Episode ${nextEp()}`;
 }
 function tribeChip(k){ const o=outMap(); if(o[k]) return `<span class="chip out">Out · Ep ${o[k]}</span>`; const t=tribeOf(k); return `<span class="chip ${t}"><span class="dot"></span>${t}</span>`; }
-function sw(k){ const t=tribeOf(k); return `var(--${t==='Savu'?'savu':t==='Toka'?'toka':'exile'})`; }
+function sw(k){ const t=tribeOf(k); return `var(--${t==='Savu'?'savu':t==='Toka'?'toka':t==='Dina'?'dina':'exile'})`; }
 
 function renderStandings(){
   const el=$('#tab-standings'), m=M(), cp=castPoints(), o=outMap();
@@ -473,7 +476,7 @@ function renderCast(){
   const el=$('#tab-cast'), cp=castPoints(), o=outMap(), m=M();
   const owner = {}; m.picks.forEach(p=>owner[p.c]=p.m);
   const sorted = [...CAST].sort((a,b)=>(!!o[a.k]-!!o[b.k]) || TRIBES.indexOf(tribeOf(a.k))-TRIBES.indexOf(tribeOf(b.k)) || a.n.localeCompare(b.n));
-  el.innerHTML = `<h2>Castaways</h2><p class="sub">21 new players, two tribes, and Lewis on Exile Island. Change a tribe here when there's a swap, Lewis rejoins, or the merge hits.</p>
+  el.innerHTML = `<h2>Castaways</h2><p class="sub">Three tribes since the Episode 4 swap: Savu, Toka and the new red Dina tribe. Change a tribe here when there's another swap or the merge hits.</p>
   <div class="castgrid">${sorted.map(c=>`
     <div class="card ${o[c.k]?'isout':tribeOf(c.k)}">
       <div class="row" style="justify-content:space-between"><span class="nm">${esc(c.n)}</span>${tribeChip(c.k)}</div>
@@ -507,11 +510,11 @@ function renderScore(){
     </div>
     <div class="row" style="margin:14px 0 4px">
       <span class="extras" style="margin:0">Quick fill · tribe immunity:</span>
-      ${['Savu','Toka','Merged'].filter(t=>active.some(c=>tribeOf(c.k)===t)).map(t=>`<button class="btn" data-tribeimm="${t}">${t} won</button>`).join('')}
+      ${['Savu','Toka','Dina','Merged'].filter(t=>active.some(c=>tribeOf(c.k)===t)).map(t=>`<button class="btn" data-tribeimm="${t}">${t} won</button>`).join('')}
     </div>
     <div class="row" style="margin:4px 0">
       <span class="extras" style="margin:0">Quick fill · tribe reward:</span>
-      ${['Savu','Toka','Merged'].filter(t=>active.some(c=>tribeOf(c.k)===t)).map(t=>`<button class="btn" data-triberew="${t}">${t} won</button>`).join('')}
+      ${['Savu','Toka','Dina','Merged'].filter(t=>active.some(c=>tribeOf(c.k)===t)).map(t=>`<button class="btn" data-triberew="${t}">${t} won</button>`).join('')}
     </div>
     <div>${active.map(c=>`
       <div class="scorerow">

@@ -257,8 +257,8 @@ const EVENTS = [
   {c:'team',l:'Tribe won immunity',p:2},{c:'reward',l:'Won reward',p:5},{c:'indiv',l:'Individual immunity',p:5},
   {c:'idol',l:'Found idol',p:4},{c:'adv',l:'Found advantage',p:2},{c:'save',l:'Idol/advantage saved someone',p:5},
   {c:'sitd',l:'Shot in the Dark worked',p:5},{c:'coin',l:'Won the coin flip',p:10},{c:'journey',l:'Won Exile/journey',p:3},
-  {c:'medevac',l:'Medevac (cancels boot penalty)',p:3},
-  {c:'pocket',l:'Out with idol in pocket',p:-5},{c:'quit',l:'Quit',p:-10},
+  {c:'medevac',l:'Medevac (leaves the game, no penalty)',p:0},
+  {c:'pocket',l:'Out with idol in pocket',p:-5},{c:'quit',l:'Quit (leaves the game)',p:-10},
   
   {c:'winner',l:'Wins the season',p:20},
 ];
@@ -278,14 +278,16 @@ const mgrName = id => (M().managers.find(m=>m.id===id)||{}).name || '—';
 
 // ---------- Scoring ----------
 function scoredEps(){ return Object.values(S.episodes).filter(e=>e.num>=2 && e.num<=LAST_EP).sort((a,b)=>a.num-b.num); }
-function outMap(){ const o={...BASE_OUT}; for(const e of scoredEps()) for(const k of (e.out||[])) if(!o[k]) o[k]=e.num; return o; }
+function leftIn(e){ const ks=new Set(e.out||[]); for(const [k,codes] of Object.entries(e.events||{})) if((codes||[]).some(c=>c==='quit'||c==='medevac')) ks.add(k); return [...ks]; }
+function basePts(out, codes){ if(codes.includes('quit')||codes.includes('medevac')) return 0; return out?OUT:SURVIVE; }
+function outMap(){ const o={...BASE_OUT}; for(const e of scoredEps()) for(const k of leftIn(e)) if(!o[k]) o[k]=e.num; return o; }
 function castPoints(){
   const o = outMap(), pts = {};
   CAST.forEach(c=>pts[c.k]={total:0,byEp:{}});
   for(const e of scoredEps()){
     for(const c of CAST){
       if(o[c.k] && o[c.k] < e.num) continue;
-      let p = (e.out||[]).includes(c.k) ? OUT : SURVIVE;
+      let p = basePts((e.out||[]).includes(c.k), (e.events||{})[c.k]||[]);
       for(const code of ((e.events||{})[c.k]||[])) p += (EV[code]?.p||0);
       pts[c.k].byEp[e.num]=p; pts[c.k].total+=p;
     }
@@ -502,7 +504,7 @@ function renderScore(){
   const ep=S.scoreEp, ed=S.edit;
   const o = outMap(); // outs from saved data
   const active = CAST.filter(c=>!o[c.k] || o[c.k]>=ep).sort((a,b)=>TRIBES.indexOf(tribeOf(a.k))-TRIBES.indexOf(tribeOf(b.k))||a.n.localeCompare(b.n));
-  const ptsFor = k => (ed.out.includes(k)?OUT:SURVIVE) + (ed.events[k]||[]).reduce((s,c)=>s+(EV[c]?.p||0),0);
+  const ptsFor = k => basePts(ed.out.includes(k), ed.events[k]||[]) + (ed.events[k]||[]).reduce((s,c)=>s+(EV[c]?.p||0),0);
   el.innerHTML = `<div class="panel">
     <div class="row" style="justify-content:space-between;align-items:flex-end">
       <div><h2>Score an episode</h2><p class="sub" style="margin:0">Mark who went home and anything that earned points. Everyone else gets +${SURVIVE} for surviving.</p></div>

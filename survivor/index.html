@@ -100,7 +100,7 @@ body.locked header.band, body.locked main{display:none}
 .gateerr{color:#F29A8E!important;font-weight:600}
 .guess{padding:10px 0;border-top:1px solid var(--line)}
 .guess:first-child{border-top:0;padding-top:0}
-.guessrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:6px}
+.guessrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,130px),1fr));gap:8px;margin-top:6px}
 @media (max-width:520px){.guessrow{grid-template-columns:1fr}}
 .guessrow label{display:flex;flex-direction:column;gap:4px;min-width:0}
 .guessrow select{width:100%}
@@ -253,6 +253,8 @@ const SWAP_EP = 4; // Episode 4 tribe swap added Dina
 const SURVIVE=2, OUT=-3, PREDICT=3, LAST_EP=14;
 const WIN_VAL={2:70,3:60,4:50,5:45,6:40,7:35,8:20,9:15,10:10,11:5,12:3,13:2,14:1};
 const GUESS=[{f:'picks',l:'Voted out',p:PREDICT},{f:'imm',l:'Wins immunity',p:2},{f:'rew',l:'Wins reward',p:2}];
+const DOUBLE_EPS=new Set([5]); // episodes where two people go home
+function guessesFor(ep){ return DOUBLE_EPS.has(ep) ? [{f:'picks',l:'Voted out #1',p:PREDICT},{f:'picks2',l:'Voted out #2',p:PREDICT},...GUESS.slice(1)] : GUESS; }
 const EVENTS = [
   {c:'team',l:'Tribe won immunity',p:2},{c:'reward',l:'Won reward',p:5},{c:'indiv',l:'Individual immunity',p:5},
   {c:'idol',l:'Found idol',p:4},{c:'adv',l:'Found advantage',p:2},{c:'save',l:'Idol/advantage saved someone',p:5},
@@ -309,15 +311,16 @@ function renderRepl(){
     <button class="btn primary needwrite" data-repl="${mg.id}" ${pool.length?'':'disabled'}>Add</button></span></div>`).join('')}</div>
   ${pool.length?'':'<p class="extras">No undrafted castaways are left in the game.</p>'}</div>`;
 }
-function guessRight(e,f,g){
+function guessRight(e,f,g,firstBoot){
   if(!g) return false;
-  if(f==='picks') return (e.out||[]).includes(g);
+  if(f==='picks2' && g===firstBoot) return false; // same name twice only counts once
+  if(f==='picks'||f==='picks2') return (e.out||[]).includes(g);
   const ta=e.tribesAt||{}, has=(k,c)=>((e.events||{})[k]||[]).includes(c);
   if(TRIBES.includes(g)) return CAST.some(c=>(ta[c.k]||(e.num<SWAP_EP?(c.t0||c.t):tribeOf(c.k)))===g && has(c.k, f==='imm'?'team':'reward'));
   return has(g, f==='imm'?'indiv':'reward');
 }
-function guessHits(e,mid){ const P=S.preds[e.num]||{}; return GUESS.filter(G=>guessRight(e,G.f,(P[G.f]||{})[mid])).length; }
-function guessPts(e,mid){ const P=S.preds[e.num]||{}; return GUESS.reduce((s,G)=>s+(guessRight(e,G.f,(P[G.f]||{})[mid])?G.p:0),0); }
+function guessHits(e,mid){ const P=S.preds[e.num]||{}; return guessesFor(e.num).filter(G=>guessRight(e,G.f,(P[G.f]||{})[mid],(P.picks||{})[mid])).length; }
+function guessPts(e,mid){ const P=S.preds[e.num]||{}; return guessesFor(e.num).reduce((s,G)=>s+(guessRight(e,G.f,(P[G.f]||{})[mid],(P.picks||{})[mid])?G.p:0),0); }
 function guessOpts(f,sel,alive){
   const tribes=['Savu','Toka','Dina'].filter(t=>alive.some(c=>tribeOf(c.k)===t));
   const o=(v,l)=>`<option value="${v}" ${sel===v?'selected':''}>${esc(l)}</option>`;
@@ -401,10 +404,10 @@ function renderStandings(){
       </div>
       <div class="panel">
         <h2>Tonight's picks · Ep ${ep}</h2>
-        <p class="sub">Lock these in before the episode airs. Voted out +${PREDICT}, immunity +2, reward +2. Pick a tribe before the merge and a castaway after.</p>
+        <p class="sub">Lock these in before the episode airs. Voted out +${PREDICT}, immunity +2, reward +2. Pick a tribe before the merge and a castaway after.${DOUBLE_EPS.has(ep)?` <b>Two people go home this episode, so everyone gets two voted-out guesses.</b>`:''}</p>
         <div class="stack" style="gap:0">${m.managers.map(mg=>`
           <div class="guess"><div style="font-weight:600">${esc(mg.name)}</div>
-            <div class="guessrow">${GUESS.map(G=>`<label><span class="glabel">${G.l}</span><select data-pred="${mg.id}" data-field="${G.f}" aria-label="${esc(mg.name)}: ${G.l}" ${S.canWrite?'':'disabled'}>${guessOpts(G.f,(P[G.f]||{})[mg.id],alive)}</select></label>`).join('')}</div>
+            <div class="guessrow">${guessesFor(ep).map(G=>`<label><span class="glabel">${G.l}</span><select data-pred="${mg.id}" data-field="${G.f}" aria-label="${esc(mg.name)}: ${G.l}" ${S.canWrite?'':'disabled'}>${guessOpts(G.f,(P[G.f]||{})[mg.id],alive)}</select></label>`).join('')}</div>
           </div>`).join('')}
         </div>
         ${renderPastPreds()}

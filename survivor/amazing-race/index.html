@@ -362,7 +362,7 @@ function renderRepl(){
   const pool=availPool();
   return `<div class="panel"><h3>Replacement picks</h3><p class="sub">Lost a team? Pick up any undrafted team still racing. They score starting with Leg ${nextEp()}.</p>
   <div class="stack">${rows.map(mg=>`<div class="row" style="justify-content:space-between"><span style="font-weight:600">${esc(mg.name)} <span class="extras">· ${replCredits(mg.id)} to use</span></span>
-    <span class="row"><select id="repl-${mg.id}" aria-label="Replacement for ${esc(mg.name)}" ${S.canWrite&&pool.length?'':'disabled'}><option value="">— choose —</option>${pool.map(c=>`<option value="${c.k}">${esc(c.n)}</option>`).join('')}</select>
+    <span class="row"><select data-replsel="${mg.id}" aria-label="Replacement for ${esc(mg.name)}" ${S.canWrite&&pool.length?'':'disabled'}><option value="">— choose —</option>${pool.map(c=>`<option value="${c.k}" ${((S.replSel||{})[mg.id]===c.k)?'selected':''}>${esc(c.n)}</option>`).join('')}</select>
     <button class="btn primary needwrite" data-repl="${mg.id}" ${pool.length?'':'disabled'}>Add</button></span></div>`).join('')}</div>
   ${pool.length?'':'<p class="extras">No undrafted teams are left in the race.</p>'}</div>`;
 }
@@ -451,7 +451,7 @@ function renderDraft(){
       <button class="btn pickbtn needwrite" data-pick="${c.k}"><span>${esc(c.n)}<br><small>${esc(c.r)} · ${esc(c.a)}</small></span></button>`).join('')}</div>
       ${S.canWrite?'':'<p class="extras">View-only: picks are made by players with edit access.</p>'}</div>`}
     <div class="panel"><h3>Rosters</h3><p class="sub">Draft order: ${m.order.map(id=>esc(mgrName(id))).join(' → ')}</p>
-      <div class="rosters">${m.order.map(id=>`<div><strong>${esc(mgrName(id))}</strong><ol>${m.picks.filter(p=>p.m===id).map(p=>`<li>${esc(nm(p.c))}${p.from?` <span class="extras">(replacement, Leg ${p.from}+)</span>`:''}</li>`).join('')}</ol></div>`).join('')}</div>
+      <div class="rosters">${m.order.map(id=>`<div><strong>${esc(mgrName(id))}</strong><ol>${m.picks.filter(p=>p.m===id).map(p=>`<li>${esc(nm(p.c))}${p.from?` <span class="extras">(replacement)</span> <label class="extras">scores from <select data-fromidx="${m.picks.indexOf(p)}" aria-label="First leg ${esc(nm(p.c))} scores" ${S.canWrite?'':'disabled'}>${Array.from({length:LAST_EP},(_,i)=>i+1).map(n=>`<option value="${n}" ${n===p.from?'selected':''}>Leg ${n}</option>`).join('')}</select></label>`:''}</li>`).join('')}</ol></div>`).join('')}</div>
     </div>
     <div class="row needwrite">
       <button class="btn" id="undopick" ${m.picks.length?'':'disabled'}>Undo last pick</button>
@@ -559,7 +559,7 @@ document.addEventListener('click', async e=>{
   const t = e.target.closest('button'); if(!t) return;
   if(t.dataset.go){ setTab(t.dataset.go); return; }
   if(t.dataset.repl){
-    const id=t.dataset.repl, c=$('#repl-'+id)?.value, m=M();
+    const id=t.dataset.repl, c=(t.parentElement.querySelector('select')||{}).value || (S.replSel||{})[id], m=M();
     if(!c){ toast('Choose a team first.'); return; }
     if(m.picks.some(p=>p.c===c)){ toast(`${nm(c)} are already on a roster.`); return; }
     if(replCredits(id)<1) return;
@@ -609,6 +609,8 @@ document.addEventListener('click', async e=>{
 });
 document.addEventListener('change', async e=>{
   const s=e.target;
+  if(s.dataset.fromidx){ const i=+s.dataset.fromidx, m=M(); if(!m.picks[i]||!m.picks[i].from) return; const picks=m.picks.map((x,j)=>j===i?{...x,from:+s.value}:x); await writeMain({picks}); toast(`${nm(m.picks[i].c)} now score from Leg ${s.value}.`); return; }
+  if(s.dataset.replsel){ S.replSel={...(S.replSel||{}),[s.dataset.replsel]:s.value}; return; }
   if(s.id==='epsel'){ S.scoreEp=+s.value; S.edit=null; render(); return; }
   if(s.id==='teamsize'){ S.teamSize=+s.value; return; }
   if(s.dataset.place){ const ed=S.edit; if(s.value) ed.place[s.dataset.place]=+s.value; else delete ed.place[s.dataset.place]; S.editDirty=true; render(); return; }

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Amazing Race 12 Fantasy League</title>
+<title>Amazing Race 39 Fantasy League</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
@@ -159,8 +159,8 @@ body.locked header.band, body.locked main{display:none}
 
 <div id="gate" class="gate" hidden>
   <form id="gateform" class="gatebox">
-    <div class="eyebrow">Season 12 · 11 legs · 11 teams</div>
-    <h1>Amazing Race 12 Fantasy League</h1>
+    <div class="eyebrow">Season 39 · 12 legs · 13 teams</div>
+    <h1>Amazing Race 39 Fantasy League</h1>
     <p>This league is for invited players. Enter the league password to come in.</p>
     <label for="gatepw" class="glabel">League password</label>
     <input type="password" id="gatepw" autocomplete="current-password" required>
@@ -172,8 +172,8 @@ body.locked header.band, body.locked main{display:none}
   <div class="wrap">
     <div class="hero">
       <div>
-        <div class="eyebrow">Season 12 · 11 legs · 11 teams</div>
-        <h1>Amazing Race 12 Fantasy League</h1>
+        <div class="eyebrow">Season 39 · 12 legs · 13 teams</div>
+        <h1>Amazing Race 39 Fantasy League</h1>
         <p>Draft teams before the first leg. Every leg, your teams score by where they finish at the Pit Stop: 12 for first, one less for each spot after, and −3 for the team eliminated.</p>
       </div>
       <div>
@@ -218,25 +218,27 @@ window.LEAGUE_PASSWORD_HASH = "e680a9111b7e1471ec279c3d1cb01491c45d677afed28ca72
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
 // Saved in the same Firebase project as Survivor, in its own collections (see firestore.rules).
-const COL = {main:'tar12_league/main', episodes:'tar12_episodes', preds:'tar12_predictions'};
+const COL = {main:'tar39_league/main', episodes:'tar39_episodes', preds:'tar39_predictions'};
 const RID = n => 'ep'+n;
 
 // ---------- Season data (pre-race, no results) ----------
 const CAST = [
-  {k:'ari',n:'Ari & Staella',f:'Ari Bonias & Staella Gianakakos',r:'Best friends',a:'21 & 23',h:'Fountain Valley, CA',j:''},
-  {k:'kate',n:'Kate & Pat',f:'Kate Lewis & Pat Hendrickson',r:'Married ministers',a:'49 & 65',h:'Thousand Oaks, CA',j:''},
-  {k:'ruiz',n:'Marianna & Julia',f:'Marianna & Julia Ruiz',r:'Sisters',a:'25 & 26',h:'Miami, FL',j:''},
-  {k:'lorena',n:'Lorena & Jason',f:'Lorena Segura & Jason Widener',r:'Dating',a:'27 & 33',h:'Sherman Oaks, CA',j:''},
-  {k:'shana',n:'Shana & Jennifer',f:'Shana Wall & Jennifer McCall',r:'Friends',a:'32 & 32',h:'Los Angeles, CA',j:''},
-  {k:'azene',n:'Azaria & Hendekea',f:'Azaria & Hendekea Azene',r:'Brother & sister',a:'27 & 23',h:'New Orleans, LA · Torrance, CA',j:''},
-  {k:'kynt',n:'Kynt & Vyxsin',f:'Kynt Cothron & Vyxsin Fiala',r:'Dating goths',a:'31 & 29',h:'Louisville, KY',j:''},
-  {k:'nathan',n:'Nathan & Jennifer',f:'Nathan Hagstrom & Jennifer Parker',r:'Dating',a:'24 & 23',h:'Fountain Valley, CA · Huntington Beach, CA',j:''},
-  {k:'nicolas',n:'Nicolas & Donald',f:'Nicolas Fulks & Donald Jerousek',r:'Grandson & grandfather',a:'23 & 68',h:'Chicago, IL · Elkhorn, WI',j:''},
-  {k:'hsu',n:'Ronald & Christina',f:'Ronald & Christina Hsu',r:'Father & daughter',a:'58 & 26',h:'Tacoma, WA · Washington, D.C.',j:''},
-  {k:'tk',n:'TK & Rachel',f:'TK Erwin & Rachel Rosales',r:'Newly dating',a:'22 & 23',h:'Huntington Beach, CA',j:''},
+  {k:'alijo',n:'Ali & Joanna',f:'Ali Krieger & Joanna Lohman',r:'Pro athletes & moms',a:'42 & 44',h:'Montclair, NJ · Silver Spring, MD',j:'Former U.S. Women’s National Team soccer players'},
+  {k:'annriley',n:'Ann-Marie & Riley',f:'Ann-Marie & Riley Tejcek',r:'Mother & daughter',a:'56 & 29',h:'Carmel, IN · San Diego, CA',j:'Healthcare executive · Marine officer',note:'Hometown team: Ann-Marie is from Carmel'},
+  {k:'anuar',n:'Anuar & Andrea',f:'Anuar & Andrea Tager Ballesca',r:'Father & daughter',a:'58 & 25',h:'Houston, TX',j:'Developer · Medical student'},
+  {k:'cody',n:'Cody & Jaime',f:'Cody Langlois & Jaime Tribo',r:'Siblings',a:'35 & 33',h:'Los Angeles, CA · Tinley Park, IL',j:'Civil engineer · Dietitian'},
+  {k:'conner',n:'Conner & Garrett',f:'Conner Wilson & Garrett McGuire',r:'Childhood friends',a:'27 & 27',h:'Loomis, CA · Rocklin, CA',j:'Media producer · Engineer'},
+  {k:'dunmore',n:'Dafina & Saran',f:'Dafina & Saran Dunmore',r:'Sisters',a:'52 & 51',h:'Chicago, IL',j:'Bond analyst & DJ · Personal trainer'},
+  {k:'daisha',n:'Daisha & Dalton',f:'Daisha Wilks & Dalton Hamby',r:'Dating',a:'28 & 27',h:'Flat Rock, AL · Jacksonville, AL',j:'Videographers'},
+  {k:'matter',n:'Doug & Dylan',f:'Doug & Dylan Matter',r:'Grandfather & grandson',a:'73 & 19',h:'San Diego, CA',j:'Retired fire chief · College student',note:'Biggest age gap in the race'},
+  {k:'erin',n:'Erin & Javi',f:'Erin Taylor & Javi Vintimilla',r:'Married',a:'28 & 30',h:'Fort Lauderdale, FL',j:'Human resources · Pilot'},
+  {k:'jody',n:'Jody & Jenn',f:'Jody Rebhun & Jenn Naso',r:'Best friends & moms',a:'44 & 44',h:'Branford, CT · Larchmont, NY',j:'History teacher · Forensic scientist'},
+  {k:'schultz',n:'Katie & Charlotte',f:'Katie & Charlotte Schultz',r:'Sisters',a:'26 & 20',h:'Murray, KY',j:'Estheticians'},
+  {k:'patterson',n:'Michelle & Matt',f:'Michelle & Matthew Patterson',r:'Married parents',a:'31 & 36',h:'Rutherford, NJ',j:'Body shop owner & realtor · Operations director'},
+  {k:'johnson',n:'Zach & Nate',f:'Zach & Nate Johnson',r:'Brothers',a:'30 & 27',h:'Dallas, TX',j:'Car sales & startup co-founder · Sales director'},
 ];
 const BY = Object.fromEntries(CAST.map(c=>[c.k,c]));
-const FIRST_EP=1, LAST_EP=11, EXPRESS_LAST=0;
+const FIRST_EP=1, LAST_EP=12, EXPRESS_LAST=6;
 const PREDICT=3, TOP_PTS=12, OUT=-3;
 const placePts = pl => pl ? Math.max(0, TOP_PTS+1-pl) : 0;
 const WIN_VAL={1:60,2:50,3:45,4:40,5:35,6:30,7:25,8:20,9:12,10:8,11:4,12:1};
@@ -425,13 +427,13 @@ function snakeMgr(i){ const m=M(), n=m.order.length; const r=Math.floor(i/n), p=
 function renderDraft(){
   const el=$('#tab-draft'), m=M();
   if(!m.managers.length || !m.order.length){
-    const size = S.teamSize || (S.newMgrs.length ? Math.max(1,Math.floor(11/S.newMgrs.length)) : 3);
+    const size = S.teamSize || (S.newMgrs.length ? Math.max(1,Math.floor(13/S.newMgrs.length)) : 3);
     el.innerHTML = `<div class="panel stack">
-      <div><h2>Set up the draft</h2><p class="sub">Add everyone playing. The order gets shuffled, then it’s a snake draft (1→N, then N→1) from all 11 teams.</p></div>
+      <div><h2>Set up the draft</h2><p class="sub">Add everyone playing. The order gets shuffled, then it’s a snake draft (1→N, then N→1) from all 13 teams.</p></div>
       <form id="addmgr" class="row needwrite"><input type="text" id="mgrname" placeholder="Player name" maxlength="30" autocomplete="off"><button class="btn" type="submit">Add player</button></form>
       <div class="mgrlist">${S.newMgrs.map((n,i)=>`<span class="mgrtag">${esc(n)}<button data-rmmgr="${i}" aria-label="Remove ${esc(n)}">×</button></span>`).join('') || '<span class="extras">No players added yet.</span>'}</div>
       <label class="row">Teams per player <input type="number" id="teamsize" min="1" max="6" value="${size}" style="width:80px"></label>
-      <p class="extras">With ${S.newMgrs.length||'N'} players, ${S.newMgrs.length?Math.floor(11/S.newMgrs.length):'11 ÷ N'} each uses the most teams. Leftovers go undrafted and become replacement picks later.</p>
+      <p class="extras">With ${S.newMgrs.length||'N'} players, ${S.newMgrs.length?Math.floor(13/S.newMgrs.length):'13 ÷ N'} each uses the most teams. Leftovers go undrafted and become replacement picks later.</p>
       <div class="row needwrite"><button class="btn primary" id="startdraft" ${S.newMgrs.length<2?'disabled':''}>Shuffle order & start draft</button></div>
       ${S.canWrite?'':'<p class="notice">You have view-only access. Ask the league owner to set up the draft.</p>'}
     </div>`;
@@ -463,12 +465,12 @@ function renderCast(){
   const el=$('#tab-cast'), cp=castPoints(), o=outMap(), m=M();
   const owner = {}; m.picks.forEach(p=>owner[p.c]=p.m);
   const sorted = [...CAST].sort((a,b)=>(!!o[a.k]-!!o[b.k]) || a.n.localeCompare(b.n));
-  el.innerHTML = `<h2>The teams</h2><p class="sub">11 teams of two racing around the world for $1,000,000. First aired 2007–08.</p>
+  el.innerHTML = `<h2>The teams</h2><p class="sub">13 teams of two racing about 25,000 miles across five continents for $1,000,000.</p>
   <div class="castgrid">${sorted.map(c=>`
     <div class="card ${o[c.k]?'isout':''}">
       <div class="row" style="justify-content:space-between;align-items:flex-start"><span class="rel">${esc(c.r)}</span>${statusChip(c.k)}</div>
       <div class="nm">${esc(c.n)}</div>
-      <div class="meta">${esc(c.f)} · ${esc(c.a)}<br>${c.j?esc(c.j)+'<br>':''}${esc(c.h)}</div>
+      <div class="meta">${esc(c.f)} · ${esc(c.a)}<br>${esc(c.j)}<br>${esc(c.h)}</div>
       ${c.note?`<div class="note">${esc(c.note)}</div>`:''}
       <div class="foot"><span class="meta">${owner[c.k]?'Drafted by '+esc(mgrName(owner[c.k])):'Undrafted'}</span><span class="num">${cp[c.k].total} pts</span></div>
     </div>`).join('')}</div>`;
@@ -518,20 +520,19 @@ function renderRules(){
   $('#tab-rules').innerHTML = `<h2>How it works</h2><p class="sub">Draft before Leg 1, score after everyone has watched.</p>
   <div class="rules">
     <div class="panel"><h3>The draft</h3><ul class="ptlist">
-      <li><span>Pool</span><span>All 11 teams</span></li>
+      <li><span>Pool</span><span>All 13 teams</span></li>
       <li><span>Format</span><span>Snake draft, random order</span></li>
       <li><span>Replacements</span><span>Team eliminated? Pick an undrafted team still racing. They score from the next leg.</span></li>
     </ul></div>
     <div class="panel"><h3>Every leg</h3><ul class="ptlist">
-      ${[1,2,3,4].map(n=>li('Checked in '+ordinal(n),placePts(n))).join('')}<li><span>…and down one point per spot</span><span></span></li>${li('11th',placePts(11))}${li('Eliminated (instead of finish points)',OUT)}<li><span>Example, 7 teams left</span><span class="num">12, 11, 10, 9, 8, 7, then −3 for the eliminated team</span></li>
+      ${[1,2,3,4].map(n=>li('Checked in '+ordinal(n),placePts(n))).join('')}<li><span>…and down one point per spot</span><span></span></li>${li('12th',placePts(12))}${li('Eliminated (instead of finish points)',OUT)}<li><span>Example, 7 teams left</span><span class="num">12, 11, 10, 9, 8, 7, then −3 for the eliminated team</span></li>
     </ul>
     </ul></div>
     <div class="panel"><h3>House rules</h3><ul class="ptlist">
       <li><span>Even lineups</span><span>Once no undrafted teams are left, everyone plays the same number of teams. Players with extras bench them each leg; benched teams score 0.</span></li>
       <li><span>Ties</span><span>More teams still racing wins</span></li>
       <li><span>Non-elimination legs</span><span>Everyone scores by finish, last place included</span></li>
-      <li><span>Any elimination</span><span>A team eliminated at any point during a leg gets −3 for that leg</span></li>
-      <li><span>Spoilers</span><span>No peeking at results online. Score after everyone has watched.</span></li>
+      <li><span>Spoilers</span><span>Score after everyone has watched</span></li>
     </ul></div>
   </div>`;
 }
@@ -544,7 +545,7 @@ function setTab(t){
   S.tab=t;
   document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-selected', b.dataset.tab===t));
   document.querySelectorAll('main > section').forEach(s=>s.hidden = s.id!=='tab-'+t);
-  try{ localStorage.setItem('tar12tab',t);}catch(e){}
+  try{ localStorage.setItem('tar39tab',t);}catch(e){}
   render();
 }
 
@@ -575,7 +576,7 @@ document.addEventListener('click', async e=>{
   if(t.dataset.rmmgr){ S.newMgrs.splice(+t.dataset.rmmgr,1); render(); return; }
   if(t.id==='startdraft'){
     const size = Math.max(1, Math.min(6, parseInt($('#teamsize').value)||1));
-    if(S.newMgrs.length*size>11){ toast(`${S.newMgrs.length} × ${size} is more than 11 teams.`); return; }
+    if(S.newMgrs.length*size>13){ toast(`${S.newMgrs.length} × ${size} is more than 13 teams.`); return; }
     const managers = S.newMgrs.map((n,i)=>({id:'m'+Date.now().toString(36)+i, name:n}));
     const order = managers.map(m=>m.id).sort(()=>Math.random()-.5);
     await writeMain({managers, order, teamSize:size, picks:[], winnerPicks:{}}, true);
@@ -626,20 +627,20 @@ document.addEventListener('change', async e=>{
 
 // ---------- Password gate ----------
 async function sha256(t){ const b=await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''); }
-function unlocked(){ try{ return localStorage.getItem('tar12pw')===window.LEAGUE_PASSWORD_HASH; }catch(e){ return false; } }
+function unlocked(){ try{ return localStorage.getItem('tar39pw')===window.LEAGUE_PASSWORD_HASH; }catch(e){ return false; } }
 function openGate(){
   document.body.classList.add('locked'); $('#gate').hidden=false; setTimeout(()=>$('#gatepw')?.focus(),0);
   $('#gateform').addEventListener('submit', async e=>{
     e.preventDefault(); e.stopPropagation();
     const h = await sha256($('#gatepw').value);
-    if(h===window.LEAGUE_PASSWORD_HASH){ try{ localStorage.setItem('tar12pw',h);}catch(err){} $('#gate').hidden=true; document.body.classList.remove('locked'); boot(); }
+    if(h===window.LEAGUE_PASSWORD_HASH){ try{ localStorage.setItem('tar39pw',h);}catch(err){} $('#gate').hidden=true; document.body.classList.remove('locked'); boot(); }
     else { $('#gateerr').hidden=false; $('#gatepw').select(); }
   });
 }
 
 // ---------- Boot ----------
 function boot(){
-  try{ const t=localStorage.getItem('tar12tab'); if(t && document.getElementById('tab-'+t)) S.tab=t; }catch(e){}
+  try{ const t=localStorage.getItem('tar39tab'); if(t && document.getElementById('tab-'+t)) S.tab=t; }catch(e){}
   setTab(S.tab);
   const cfg = window.FIREBASE_CONFIG;
   if(!window.firebase || !cfg || !cfg.projectId){

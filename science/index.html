@@ -358,6 +358,15 @@ tr:last-child td{border-bottom:0}
 .rvdots i{width:14px;height:14px;border-radius:50%;border:2px solid #E0A800}.rvdots i.on{background:#F2B705}
 .mastered{color:#B7860F;font-weight:700}
 .mtag{position:absolute;top:8px;right:8px;font-family:var(--mono);font-size:11px;font-weight:700;background:#F2B705;color:#15252A;border-radius:99px;padding:2px 8px}
+
+.climbsvg{width:100%;max-width:460px;display:block;margin:0 auto 10px}
+.climber{transition:transform .5s cubic-bezier(.3,1.4,.6,1)}
+.cl-count{font-family:var(--mono);font-size:13px;font-weight:700;fill:currentColor}
+.proposed{display:grid;gap:4px;background:var(--soft);border-radius:10px;padding:12px 16px;margin-bottom:14px}
+.proposed b{font-size:20px}
+.tfbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn.tf{font-size:18px;padding:14px}
+.btn.tf.yes{background:var(--good);color:#fff}.btn.tf.no{background:var(--bad);color:#fff}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}.edp{animation:none!important;opacity:1!important}.bigstars span.on,.shake,.tcard.bad{animation:none!important}.fig *{animation:none!important;opacity:1!important}}
 </style>
 
@@ -2454,18 +2463,19 @@ function lessonsDone(stu, u){ const d = (prog[stu]||{}).done||{}; return u.lesso
 function starTotal(stu){
   let t = 0; const d = (prog[stu]||{}).done||{};
   t += Object.keys(d).length;
-  UNITS.forEach(u => ["quiz","test","game"].forEach(k => t += bestStars(stu,u.id,k)));
+  UNITS.forEach(u => ["quiz","test","game","climb"].forEach(k => t += bestStars(stu,u.id,k)));
   t += bestStars(stu,"final","final") + bestStars(stu,"final2","final");
   return t;
 }
-const STAR_MAX = UNITS.reduce((a,u)=>a+u.lessons.length,0) + UNITS.length*9 + 6;
+const STAR_MAX = UNITS.reduce((a,u)=>a+u.lessons.length,0) + UNITS.length*12 + 6;
 function badges(stu){
   const d = (prog[stu]||{}).done||{}, mine = results.filter(r=>r.student===stu), st = starTotal(stu);
   const list = [
     ["First Steps","Finish your first lesson", Object.keys(d).length>=1],
     ...UNITS.map(u => [`Unit ${u.n} Master`,`Finish every ${u.name} lesson and score 80%+ on its test`, lessonsDone(stu,u)===u.lessons.length && (best(stu,u.id,"test")||0)>=80, u.color]),
-    ["Perfect Score","Get 100% on any quiz or test", mine.some(r=>r.kind!=="game" && r.pct===100)],
+    ["Perfect Score","Get 100% on any quiz or test", mine.some(r=>["quiz","test","final"].includes(r.kind) && r.pct===100)],
     ["Word Wizard","Get 3 stars in a vocabulary match game", mine.some(r=>r.kind==="game" && r.stars===3)],
+    ["Summit","Plant the flag in a Fact Climb game", mine.some(r=>r.kind==="climb" && r.top)],
     ["Hot Streak","Answer 5 practice questions in a row correctly", mine.some(r=>(r.bestStreak||0)>=5)],
     ["Star Collector","Earn 30 stars", st>=30],
     ["First Mastery","Master your first unit (80%+ on two days, review cleared)", UNITS.some(u=>mastered(stu,u.id))],
@@ -2507,7 +2517,7 @@ function pillClass(p){ return p>=80?"g":p>=60?"m":"b"; }
 function shuffle(a){ a = a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 function prepQ(q){ const order = shuffle(q[1].map((_,i)=>i)); return { q:q[0], choices: order.map(i=>q[1][i]), answer: order.indexOf(q[2]), why:q[3] }; }
 function go(v){ view = v; render(); window.scrollTo({top:0}); }
-function kindLabel(k){ return k==="quiz"?"Practice quiz":k==="test"?"Unit test":k==="game"?"Vocab match":"Final exam"; }
+function kindLabel(k){ return k==="quiz"?"Practice quiz":k==="test"?"Unit test":k==="game"?"Vocab match":k==="climb"?"Fact Climb":"Final exam"; }
 const isFinal = id => id==="final" || id==="final2";
 function colorOf(unitId){ return isFinal(unitId) ? "--u6" : unitById(unitId).color; }
 function titleOf(unitId){ return unitId==="final" ? "Units 1–5" : unitId==="final2" ? "Units 6–15" : `Unit ${unitById(unitId).n}: ${unitById(unitId).name}`; }
@@ -2556,6 +2566,7 @@ function unitPath(u){
   const items = u.lessons.map((l,i)=>({label:`Lesson ${u.n}.${i+1}: ${l.t}`, done:!!d[u.id+"-"+i], go:()=>go({page:"unit",unit:u.id,lesson:i})}));
   items.push({label:"Vocab match game", done: rs(student,u.id,"game").length>0, go:()=>startGame(u.id)});
   items.push({label:"Practice quiz", done: rs(student,u.id,"quiz").length>0, go:()=>startQuiz(u.id,"quiz")});
+  items.push({label:"Fact Climb game", done: rs(student,u.id,"climb").length>0, go:()=>startClimb(u.id)});
   items.push({label:"Unit test", done: tests.length>0, go:()=>startQuiz(u.id,"test")});
   items.push({label:"Fix up missed test questions", done: tests.length>0 && fixLeft(student,u.id)===0, go:()=>startFix(u.id)});
   items.push({label:"Score 80%+ on the test on 2 different days", done: testDays(student,u.id).length>=2, sub:`${testDays(student,u.id).length} of 2 days`, go:()=>startQuiz(u.id,"test")});
@@ -2797,6 +2808,63 @@ function renderReview(){
   $("#quit").onclick = () => go({page:"home"});
 }
 
+/* ---------- Fact Climb: a pre-test game ---------- */
+const CLIMB_N = 12, CLIMB_TOP = 10;
+function startClimb(unitId){
+  if (needStudent()) return;
+  const u = unitById(unitId);
+  const qs = shuffle(u.quiz.concat(u.test)).slice(0, CLIMB_N).map(raw => {
+    const isTrue = Math.random() < 0.5, wrong = raw[1].map((_,i)=>i).filter(i=>i!==raw[2]);
+    return { raw, show: isTrue ? raw[2] : wrong[Math.floor(Math.random()*wrong.length)], isTrue };
+  });
+  go({page:"climb", unit:unitId, qs, i:0, pos:0, right:0, mistakes:0, answer:null});
+}
+function climbSVG(pos, color){
+  const pts = Array.from({length:CLIMB_TOP+1},(_,k)=>{ const t = k/CLIMB_TOP; return [44 + t*256, 222 - t*190]; });
+  const [cx, cy] = pts[Math.min(pos, CLIMB_TOP)];
+  return `<svg viewBox="0 0 400 240" class="climbsvg" role="img" aria-label="Climber is on step ${pos} of ${CLIMB_TOP}">
+    <polygon points="20,232 300,26 390,232" fill="var(--soft)" stroke="var(--line)" stroke-width="2"/>
+    <polygon points="268,56 300,26 330,66 312,60 298,70 284,58" fill="#fff" opacity=".9"/>
+    <polyline points="${pts.map(p=>p.join(",")).join(" ")}" fill="none" stroke="var(--line)" stroke-width="3" stroke-dasharray="6 6"/>
+    ${pts.map((p,k)=>`<circle cx="${p[0]}" cy="${p[1]}" r="${k===CLIMB_TOP?0:6}" style="fill:${k<=pos?`var(${color})`:"var(--surface)"};stroke:var(${color})" stroke-width="2"/>`).join("")}
+    <line x1="${pts[CLIMB_TOP][0]}" y1="${pts[CLIMB_TOP][1]}" x2="${pts[CLIMB_TOP][0]}" y2="${pts[CLIMB_TOP][1]-30}" stroke="currentColor" stroke-width="3"/>
+    <polygon points="${pts[CLIMB_TOP][0]},${pts[CLIMB_TOP][1]-30} ${pts[CLIMB_TOP][0]+24},${pts[CLIMB_TOP][1]-23} ${pts[CLIMB_TOP][0]},${pts[CLIMB_TOP][1]-16}" fill="#F2B705"/>
+    <g class="climber" style="transform:translate(${cx}px,${cy-14}px)"><circle r="9" style="fill:var(${color})"/><circle cy="-13" r="6" fill="#F6D6CF" stroke="currentColor" stroke-width="1.5"/></g>
+    <text x="20" y="20" class="cl-count">Step ${pos} of ${CLIMB_TOP}</text></svg>`;
+}
+function renderClimb(){
+  const v = view, u = unitById(v.unit), Q = v.qs[v.i], raw = Q.raw, a = v.answer;
+  const ok = a!=null && (a===Q.isTrue);
+  app.innerHTML = `<div class="quiz climb" style="--c:var(${u.color})">
+    <div class="qhead"><span class="kind">Fact Climb · Unit ${u.n}</span><span class="eyebrow">Fact ${v.i+1} of ${v.qs.length} · Mistakes: ${v.mistakes}</span></div>
+    <p class="howto">Same rules every time: read the question and the answer. Is the answer right? Each correct call climbs one step. Reach step ${CLIMB_TOP} to plant the flag.</p>
+    ${climbSVG(v.pos, u.color)}
+    <div class="qcard">
+      <p class="qtext">${esc(raw[0])}</p>
+      <div class="proposed"><span class="eyebrow">Answer</span><b>${esc(raw[1][Q.show])}</b></div>
+      ${a==null ? `<div class="tfbtns"><button class="btn tf yes" id="tf-y">✓ That's right</button><button class="btn tf no" id="tf-n">✗ That's wrong</button></div>`
+        : `<div class="explain ${ok?"ok":"no"}"><strong>${ok?"Correct! Climb one step.":"Not quite. Stay on this step."}</strong>The right answer is <b>${esc(raw[1][raw[2]])}</b>. ${esc(raw[3])}</div>`}
+    </div>
+    <div class="qfoot"><button class="btn ghost" id="quit">Quit game</button>${a!=null ? `<button class="btn" id="nx">${v.i<v.qs.length-1 && v.pos<CLIMB_TOP ? "Next fact →" : "See my result"}</button>` : ""}</div>
+  </div>`;
+  const pick = val => { v.answer = val; if (val===Q.isTrue){ v.pos++; v.right++; sfx.right(); } else { v.mistakes++; sfx.wrong(); } renderClimb(); };
+  const y = $("#tf-y"); if (y) y.onclick = () => pick(true);
+  const n = $("#tf-n"); if (n) n.onclick = () => pick(false);
+  $("#quit").onclick = () => go({page:"unit", unit:v.unit, lesson:0});
+  const nx = $("#nx"); if (nx) nx.onclick = () => {
+    if (v.i < v.qs.length-1 && v.pos < CLIMB_TOP){ v.i++; v.answer = null; renderClimb(); window.scrollTo({top:0}); }
+    else finishClimb();
+  };
+}
+function finishClimb(){
+  const v = view, total = v.i+1, p = pct(v.right, total), top = v.pos>=CLIMB_TOP;
+  const stars = top ? (v.mistakes===0 ? 3 : v.mistakes<=1 ? 3 : 2) : (v.pos>=7 ? 1 : 0);
+  const r = { id:"c"+Date.now().toString(36), student, unit:v.unit, kind:"climb", score:v.right, total, pct:p, stars, mistakes:v.mistakes, top, at:new Date().toISOString() };
+  const newBadges = recordResult(r);
+  view = { page:"done", r, newBadges }; render(); window.scrollTo({top:0});
+  if (top){ confetti(); sfx.star(); }
+}
+
 /* ============ VIEWS ============ */
 function render(){
   stopFigs();
@@ -2815,6 +2883,7 @@ function render(){
   if (pg==="locked") return renderLocked();
   if (pg==="fix") return renderFix();
   if (pg==="review") return renderReview();
+  if (pg==="climb") return renderClimb();
 }
 
 function tileHTML(u){
@@ -2839,7 +2908,7 @@ function renderHome(){
     <span class="eyebrow">Sixth grade · ${UNITS.length} units · ${UNITS.reduce((a,u)=>a+u.lessons.length,0)} lessons</span>
     <h1>${student ? `Hi ${esc(student)}! You have ${st} of ${STAR_MAX} stars.` : "Pick a unit to study."}</h1>
     ${student ? `<div class="starbar" aria-hidden="true"><i style="width:${pct(st,STAR_MAX)}%"></i></div>` : ""}
-    <p>Every lesson has the same 6 steps: Words to Know, Read, See It, Watch, Remember, Try It. Every unit has the same path: 3 lessons, vocab game, quiz, test, fix-up, and review until it's mastered.</p>
+    <p>Every lesson has the same 6 steps: Words to Know, Read, See It, Watch, Remember, Try It. Every unit has the same path: 3 lessons, vocab game, practice quiz, Fact Climb game, test, fix-up, and review until it's mastered.</p>
   </section>
   ${student ? nextStepCard() : `<button class="cont" id="addfirst"><span class="eyebrow">First</span><b>Add your name to start earning stars</b><span class="arrow">→</span></button>`}
   <div class="section-h"><h2>Set 1: Units 1–5</h2></div>
@@ -2922,7 +2991,7 @@ function renderDone(){
       <span class="eyebrow">${kindLabel(r.kind)} · ${esc(titleOf(r.unit))}</span>
       <div class="bigstars">${[0,1,2].map(i=>`<span class="${i<r.stars?"on":""}" style="animation-delay:${i*.25}s">★</span>`).join("")}</div>
       <div class="big">${r.pct}%</div>
-      <div class="sub">${isGame ? `${r.total} matches · ${r.mistakes} mistake${r.mistakes===1?"":"s"} · ${r.secs}s` : `${r.score} of ${r.total} correct · grade ${grade(r.pct)}`}</div>
+      <div class="sub">${isGame ? `${r.total} matches · ${r.mistakes} mistake${r.mistakes===1?"":"s"} · ${r.secs}s` : r.kind==="climb" ? (r.top ? `Flag planted! ${r.mistakes} mistake${r.mistakes===1?"":"s"}` : `Reached step ${r.score} of 10`) : `${r.score} of ${r.total} correct · grade ${grade(r.pct)}`}</div>
       <div class="msg">${msg}</div>
       ${newBadges && newBadges.length ? `<div class="newbadge">New badge${newBadges.length>1?"s":""}: ${newBadges.map(b=>`<b>${esc(b.name)}</b>`).join(", ")}</div>` : ""}
     </div>
@@ -2939,7 +3008,7 @@ function renderDone(){
     <p class="note">Saved on this device.</p>
   </div>`;
   $("#back").onclick = () => go(isFinal(r.unit) ? {page:"home"} : {page:"unit", unit:r.unit, lesson:0});
-  $("#again").onclick = () => isGame ? startGame(r.unit) : startQuiz(r.unit, r.kind, true);
+  $("#again").onclick = () => isGame ? startGame(r.unit) : r.kind==="climb" ? startClimb(r.unit) : startQuiz(r.unit, r.kind, true);
   const gf = $("#gofix"); if (gf) gf.onclick = () => startFix(r.unit);
   if (r.kind==="test") $("#again").hidden = true;
 }

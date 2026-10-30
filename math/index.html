@@ -189,6 +189,16 @@ table.rt { border-collapse: collapse; width: 100%; font-variant-numeric: tabular
 .tix span { border: 2px dashed var(--accent); border-radius: 8px; padding: 8px 10px; font-weight: 600; font-size: .9rem; background: var(--accent-wash); }
 .rt td.blank { color: var(--soft); }
 
+/* decimal times */
+.vmult { display: inline-grid; grid-template-columns: auto auto; gap: 2px 14px; align-self: center; background: var(--bg);
+  border-radius: 12px; padding: 14px 20px; font-variant-numeric: tabular-nums; font-size: 1.5rem; font-weight: 600; }
+.vmult span { text-align: right; letter-spacing: .12em; }
+.vmult small { font-size: .85rem; font-weight: 500; color: var(--soft); align-self: center; letter-spacing: 0; text-align: left; }
+.vmult .rule { grid-column: 1; border-top: 2px solid var(--ink); height: 0; }
+.vmult .q { color: var(--look); }
+.places { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 1.15rem; }
+.places b { color: var(--accent); }
+
 /* what does it mean */
 .solved { font-size: 1.2rem; line-height: 2.1; }
 .solved .sn { font-size: inherit; padding: 2px 12px; margin: 0 2px; line-height: 1.4; }
@@ -236,10 +246,11 @@ const sections = {
   lcm:  { title: "Least Common Multiple", sub: "Find the first spot two jumpers both land on.", steps: ["Pick", "Guess", "Jump", "Answer"] },
   eq:   { title: "Solve & Plot", sub: "Undo the step, keep it balanced, then find the spot on the line.", steps: ["Pick", "Undo it", "Solve", "Plot", "Check"] },
   tbl:  { title: "Fill the Table", sub: "Find the price for 1, then fill in every blank.", steps: ["Pick", "Price for 1", "Fill in", "Check"] },
+  dec:  { title: "Decimal Times", sub: "Estimate, multiply without the dots, then put the dot back.", steps: ["Pick", "Estimate", "Multiply", "Dot", "Check"] },
   mean: { title: "What Does It Mean?", sub: "The math is already done. You find what each number means.", steps: ["Pick a story", "Find the numbers", "Match the math"] }
 };
 
-let state = { section: null, step: 0, onBreak: false, solved: { trip: 0, ops: 0, rate: 0, pip: 0, mean: 0, lcm: 0, eq: 0, tbl: 0 }, t: null, lc: null, lcSize: "easy", e: null, eqLevel: "pos",
+let state = { section: null, step: 0, onBreak: false, solved: { trip: 0, ops: 0, rate: 0, pip: 0, mean: 0, lcm: 0, eq: 0, tbl: 0, dec: 0 }, t: null, dc: null, lc: null, lcSize: "easy", e: null, eqLevel: "pos",
   p: null, size: "small", q: null, level: "easy", r: null, pp: null, m: null };
 try { const s = JSON.parse(localStorage.getItem("mathPlanner")); if (s && s.solved) state.solved = Object.assign(state.solved, s.solved); } catch (e) {}
 function save() { try { localStorage.setItem("mathPlanner", JSON.stringify({ solved: state.solved })); } catch (e) {} }
@@ -268,6 +279,7 @@ function render() {
   if (state.section === "lcm") return [lcmPick, lcmGuess, lcmJump, lcmDone][state.step]();
   if (state.section === "eq") return [eqPick, eqUndo, eqSolve, eqPlot, eqCheck][state.step]();
   if (state.section === "tbl") return [tblPick, tblUnit, tblFill, tblCheck][state.step]();
+  if (state.section === "dec") return [decPick, decEst, decMult, decDot, decCheck][state.step]();
   if (state.section === "mean") return [meanPick, meanTap, meanMath][state.step]();
   return [opsPick, opsSolve, opsDone][state.step]();
 }
@@ -282,6 +294,7 @@ function renderHome() {
       <button class="home-pick" type="button" data-s="tbl"><strong>Fill the Table</strong><span>Find the missing numbers when the price stays the same.</span></button>
       <button class="home-pick" type="button" data-s="lcm"><strong>Least Common Multiple</strong><span>Two frogs hop. Where do they meet first?</span></button>
       <button class="home-pick" type="button" data-s="eq"><strong>Solve &amp; Plot</strong><span>One-step equations and the number line.</span></button>
+      <button class="home-pick" type="button" data-s="dec"><strong>Decimal Times</strong><span>Word problems that multiply two decimals.</span></button>
       <button class="home-pick" type="button" data-s="pip"><strong>Help Pip</strong><span>A robot's math got tangled. You be the teacher.</span></button>
       <button class="home-pick" type="button" data-s="mean"><strong>What Does It Mean?</strong><span>No math to do. Just find what the numbers mean.</span></button>
     </div>
@@ -1633,6 +1646,189 @@ function tblCheck() {
   stage.appendChild(c);
   c.querySelector("#again").onclick = () => { state.solved.tbl++; save(); state.t = makeTbl(t.key); state.step = 1; render(); };
   c.querySelector("#pick").onclick = () => { state.solved.tbl++; save(); state.step = 0; render(); };
+}
+
+/* ---------- decimal times (word problems multiplying two decimals) ---------- */
+const decCtx = {
+  phone:   { label: "Phone call", unit: "minutes", per: "minute",
+             line: (a, b) => `Jessica made an international phone call for <b>${a} minutes</b>. She was charged <b>$${b}</b> for each minute. How much did she pay?` },
+  ribbon:  { label: "Ribbon", unit: "yards", per: "yard",
+             line: (a, b) => `Mia bought <b>${a} yards</b> of ribbon. Each yard costs <b>$${b}</b>. How much did she pay?` },
+  parking: { label: "Parking", unit: "hours", per: "hour",
+             line: (a, b) => `Ben parked for <b>${a} hours</b>. Parking costs <b>$${b}</b> for each hour. How much did he pay?` }
+};
+const money = cents => "$" + (cents / 100).toFixed(2);
+function placeDot(s, k) { while (s.length <= k) s = "0" + s; return s.slice(0, -k) + "." + s.slice(-k); }
+function noCarrySum(x, y) {
+  const a = String(x).split("").reverse(), b = String(y).split("").reverse(), out = [];
+  const n = Math.max(a.length, b.length);
+  for (let i = 0; i < n; i++) { const s = +(a[i] || 0) + +(b[i] || 0); out.push(i === n - 1 ? s : s % 10); }
+  return +out.reverse().join("");
+}
+function makeDec(key) {
+  for (let t = 0; t < 3000; t++) {
+    const A = rint(15, 99), B = rint(11, 95);
+    if (A % 10 === 0 || B % 10 === 0) continue;
+    const P = A * B;
+    if (P % 10 !== 0) continue;
+    const o = B % 10, tens = B - o, p1 = A * o, p2 = A * tens;
+    return { key, ctx: decCtx[key], A, B, a: (A / 10).toFixed(1), b: (B / 100).toFixed(2), P, o, tens, p1, p2,
+      carry: noCarrySum(p1, p2) !== P, phase: 0, est: null };
+  }
+}
+const decStory = d => `<p class="story">${d.ctx.line(d.a, d.b)}</p>`;
+function vmult(d, upto) {
+  const row = (v, note, show) => `<span class="${show ? "" : "q"}">${show ? v : "?"}</span><small>${note}</small>`;
+  return `<div class="vmult" aria-label="Multiplication work">
+    <span>${d.A}</span><small></small>
+    <span>× ${d.B}</span><small></small>
+    <span class="rule"></span><small></small>
+    ${row(d.p1, `${d.A} × ${d.o}`, upto > 0)}
+    ${row(d.p2, `${d.A} × ${d.tens}`, upto > 1)}
+    <span class="rule"></span><small></small>
+    ${row(d.P, "add them", upto > 2)}
+  </div>`;
+}
+
+function decPick() {
+  const c = el(`<section class="card">
+    <h2>Pick a story</h2>
+    <div class="choices" id="st"></div>
+  </section>`);
+  stage.appendChild(c);
+  Object.entries(decCtx).forEach(([k, v]) => {
+    const b = el(`<button type="button">${v.label}</button>`);
+    b.onclick = () => { state.dc = makeDec(k); state.step = 1; render(); };
+    c.querySelector("#st").appendChild(b);
+  });
+}
+
+function decEst() {
+  const d = state.dc, aR = Math.round(d.A / 10), estC = aR * d.B;
+  d.est = estC;
+  const opts = [Math.round(estC / 10), estC, estC * 10].map(v => ({ v, ok: v === estC })).sort(() => Math.random() - .5);
+  const c = el(`<section class="card">
+    ${decStory(d)}
+    <h2>Before any math: about how much will it be?</h2>
+    <p class="sub">${d.a} is close to ${aR}. So think: ${aR} ${d.ctx.unit} at $${d.b} each.</p>
+    <div class="choices" id="opts"></div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  opts.forEach(o => {
+    const b = el(`<button type="button">About ${money(o.v)}</button>`);
+    b.onclick = () => {
+      const fb = c.querySelector("#fb");
+      if (o.ok) {
+        c.querySelectorAll("#opts button").forEach(x => x.disabled = x !== b); b.classList.add("picked");
+        fb.innerHTML = `<div class="note ok">Yes. ${aR} × $${d.b} is about ${money(estC)}. Keep that number in your pocket. Our real answer should land close to it.</div>`;
+        fb.appendChild(nextBtn(() => { state.step = 2; render(); }));
+      } else if (o.v > estC) {
+        fb.innerHTML = `<div class="note look">${money(o.v)} is a lot! Each ${d.ctx.per} is only $${d.b}, which is less than a dollar. ${aR} of them can't cost that much.</div>`;
+      } else {
+        fb.innerHTML = `<div class="note look">${money(o.v)} is less than what just 1 ${d.ctx.per} costs! With ${aR} ${d.ctx.unit}, it has to be more.</div>`;
+      }
+    };
+    c.querySelector("#opts").appendChild(b);
+  });
+}
+
+function decMult() {
+  const d = state.dc;
+  const asks = [
+    { q: `${d.A} × ${d.o} = ?`, ans: d.p1, hint: `Break it apart: ${Math.floor(d.A / 10) * 10} × ${d.o} = ${Math.floor(d.A / 10) * 10 * d.o}, and ${d.A % 10} × ${d.o} = ${(d.A % 10) * d.o}. Add those.` },
+    { q: `${d.A} × ${d.tens} = ?`, ans: d.p2, hint: `Do ${d.A} × ${d.tens / 10} = ${d.A * d.tens / 10} first. Then put a 0 on the end, because it's tens.` },
+    { q: `${d.p1} + ${d.p2} = ?`, ans: d.P, hint: `Line them up and add one place at a time, starting on the right. If a place adds to 10 or more, carry the 1 to the next place.` }
+  ];
+  const k = d.phase, cur = asks[k];
+  const c = el(`<section class="card">
+    ${decStory(d)}
+    <h2>Step 1: Hide the dots. Multiply ${d.A} × ${d.B} like whole numbers.</h2>
+    <p class="sub">${d.a} becomes ${d.A}, and ${d.b} becomes ${d.B}. We'll put the dot back at the end.</p>
+    ${vmult(d, k)}
+    <div class="row" style="align-items:center">
+      <span class="ask">${cur.q.replace(" = ?", " =")}</span>
+      <input type="number" id="ans" inputmode="numeric" aria-label="${cur.q}">
+      <button class="primary" id="chk" type="button">Check</button>
+    </div>
+    <button class="quiet" id="hintBtn" type="button">Show me a hint</button>
+    <div id="hint"></div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelector("#hintBtn").onclick = e => { c.querySelector("#hint").innerHTML = `<div class="hint">${cur.hint}</div>`; e.target.disabled = true; };
+  const input = c.querySelector("#ans");
+  const check = () => {
+    const fb = c.querySelector("#fb");
+    if (!input.value) { fb.innerHTML = `<div class="note look">Type a number first, then press Check.</div>`; return; }
+    const v = Number(input.value);
+    if (v === cur.ans) {
+      if (k < 2) { d.phase++; render(); return; }
+      fb.innerHTML = `<div class="note ok">${d.A} × ${d.B} = ${d.P}.${d.carry ? " You remembered to carry. That's the trickiest part." : ""}</div>`;
+      fb.appendChild(nextBtn(() => { state.step = 3; render(); }, "Put the dot back"));
+      input.disabled = true; c.querySelector("#chk").disabled = true;
+      return;
+    }
+    if (k === 2 && v === noCarrySum(d.p1, d.p2)) {
+      fb.innerHTML = `<div class="note look">So close! Every place is right except one. Look for a place where the digits add to 10 or more. That extra 1 has to carry over to the next place on the left.</div>`;
+    } else if (k === 1 && v === d.A * d.tens / 10) {
+      fb.innerHTML = `<div class="note look">That's ${d.A} × ${d.tens / 10}. But we're multiplying by ${d.tens}, which is tens. Add a 0 on the end.</div>`;
+    } else {
+      fb.innerHTML = `<div class="note look">Let's look again. ${cur.hint}</div>`;
+    }
+  };
+  c.querySelector("#chk").onclick = check;
+  input.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+  input.focus();
+}
+
+function decDot() {
+  const d = state.dc, s = String(d.P);
+  const opts = [1, 2, 3, 4].map(k => ({ k, t: placeDot(s, k) }));
+  const c = el(`<section class="card">
+    ${decStory(d)}
+    <h2>Step 2: Count the decimal places, then put the dot back.</h2>
+    <div class="places">
+      <span>${d.a} has <b>1</b> place after the dot</span>
+      <span>${d.b} has <b>2</b> places after the dot</span>
+      <span>Total: 1 + 2 = <b>3</b> places</span>
+    </div>
+    <p>${d.P} needs 3 places after the dot. Which one is it?</p>
+    <div class="choices" id="opts"></div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  opts.forEach(o => {
+    const b = el(`<button type="button">${o.t}</button>`);
+    b.onclick = () => {
+      const fb = c.querySelector("#fb");
+      if (o.k === 3) {
+        c.querySelectorAll("#opts button").forEach(x => x.disabled = x !== b); b.classList.add("picked");
+        fb.innerHTML = `<div class="note ok">${o.t} has 3 places after the dot. In money we use 2 places, and the last 0 doesn't change anything, so it's <b>${money(d.P / 10)}</b>.</div>`;
+        fb.appendChild(nextBtn(() => { state.step = 4; render(); }, "Check it"));
+      } else {
+        fb.innerHTML = `<div class="note look">${o.t} has ${o.k} ${o.k === 1 ? "place" : "places"} after the dot. We need 3. Count the digits after the dot on each button.</div>`;
+      }
+    };
+    c.querySelector("#opts").appendChild(b);
+  });
+}
+
+function decCheck() {
+  const d = state.dc, ans = d.P / 10, diff = Math.abs(ans - d.est);
+  const c = el(`<section class="card">
+    ${decStory(d)}
+    <h2>${d.key === "parking" ? "He" : "She"} paid ${money(ans)}.</h2>
+    <div class="note ok">Sense check: our estimate was about ${money(d.est)}. ${money(ans)} is close to that, so it makes sense.</div>
+    <p class="sub">If an answer ever lands far from the estimate, that's the clue to go back and look for a missed carry or a dot in the wrong spot.</p>
+    <div class="row">
+      <button class="primary" id="again" type="button">Another one like this</button>
+      <button id="pick" type="button">Pick a different story</button>
+    </div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelector("#again").onclick = () => { state.solved.dec++; save(); state.dc = makeDec(d.key); state.step = 1; render(); };
+  c.querySelector("#pick").onclick = () => { state.solved.dec++; save(); state.step = 0; render(); };
 }
 
 render();

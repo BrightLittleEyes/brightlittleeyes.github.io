@@ -1,0 +1,1642 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Math">
+<meta name="theme-color" content="#2f7d6d">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.json">
+<title>Trip Planner Math</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Lexend:wght@400;500;600&display=swap">
+<style>
+/* Layout: one calm column; a fixed route map on top so every step is predictable */
+:root {
+  --bg: #eef3f1;
+  --card: #ffffff;
+  --ink: #23312d;
+  --soft: #5c6e68;
+  --line: #d3ded9;
+  --accent: #2f7d6d;
+  --accent-ink: #ffffff;
+  --accent-wash: #dcefe9;
+  --look: #b7791f;      /* "look again" — warm, never red */
+  --look-wash: #fbf0dc;
+  --road: #4a5753;
+  --block: #7fb8a9;
+  --font-display: "Baloo 2", "Trebuchet MS", system-ui, sans-serif;
+  --font-body: "Lexend", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #151c1a; --card: #1f2926; --ink: #e5eeea; --soft: #a2b4ad; --line: #34433e;
+  --accent: #6cc2ad; --accent-ink: #10201c; --accent-wash: #20372f;
+  --look: #e5b35c; --look-wash: #3a3020; --road: #0e1412; --block: #4f9483; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #151c1a; --card: #1f2926; --ink: #e5eeea; --soft: #a2b4ad; --line: #34433e;
+  --accent: #6cc2ad; --accent-ink: #10201c; --accent-wash: #20372f;
+  --look: #e5b35c; --look-wash: #3a3020; --road: #0e1412; --block: #4f9483; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 17px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px 48px;
+}
+.wrap { max-width: 620px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+h1 { font-family: var(--font-display); font-size: 2rem; line-height: 1.1; margin: 0; text-wrap: balance; }
+.sub { color: var(--soft); margin: 4px 0 0; }
+.top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.top .row { flex: 0 0 auto; }
+
+/* route map */
+.route { display: flex; align-items: flex-start; gap: 6px; list-style: none; padding: 0; margin: 0; }
+.route li { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: .8rem; color: var(--soft); text-align: center; }
+.route .dot { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--line); background: var(--card);
+  display: grid; place-items: center; font-weight: 600; font-size: .85rem; color: var(--soft); }
+.route li.now .dot { border-color: var(--accent); color: var(--accent); }
+.route li.done .dot { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.route li.now { color: var(--ink); font-weight: 500; }
+
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.card h2 { font-family: var(--font-display); font-size: 1.35rem; margin: 0; line-height: 1.2; text-wrap: balance; }
+.card p { margin: 0; }
+.story { font-size: 1.1rem; }
+.story b { color: var(--accent); }
+.label { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: var(--soft); font-weight: 600; }
+
+.choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+button {
+  font: inherit; font-weight: 500; padding: 12px 16px; border-radius: 10px; cursor: pointer;
+  border: 2px solid var(--accent); background: var(--card); color: var(--accent); transition: background .15s, color .15s;
+}
+button:hover:not(:disabled) { background: var(--accent-wash); }
+button.primary { background: var(--accent); color: var(--accent-ink); }
+button.primary:hover:not(:disabled) { filter: brightness(1.05); background: var(--accent); }
+button.quiet { border-color: var(--line); color: var(--soft); }
+button.picked { background: var(--accent); color: var(--accent-ink); }
+button:disabled { opacity: .45; cursor: default; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--look); outline-offset: 2px; }
+
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.row > * { flex: 1 1 140px; }
+input[type="number"] { font: inherit; padding: 12px; border-radius: 10px; border: 2px solid var(--line); background: var(--card); color: var(--ink); min-width: 0; }
+
+.note { border-radius: 10px; padding: 12px 14px; font-size: .98rem; }
+.note.ok { background: var(--accent-wash); }
+.note.look { background: var(--look-wash); border-left: 4px solid var(--look); }
+.hint { background: var(--bg); border-radius: 10px; padding: 12px 14px; color: var(--soft); font-size: .95rem; }
+
+/* home */
+.home-pick { text-align: left; display: flex; flex-direction: column; gap: 4px; padding: 18px; }
+.home-pick strong { font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; }
+.home-pick span { font-weight: 400; color: var(--soft); font-size: .95rem; }
+.home-pick:hover span { color: var(--ink); }
+
+/* trip */
+.road { background: var(--road); border-radius: 10px; padding: 8px; display: flex; flex-wrap: wrap; gap: 6px; min-height: 52px; }
+.blk { background: var(--block); color: #10201c; border-radius: 6px; padding: 6px 8px; font-size: .78rem; font-weight: 600; min-width: 52px; text-align: center; animation: pop .25s ease; }
+@keyframes pop { from { transform: scale(.6); opacity: .3; } to { transform: scale(1); opacity: 1; } }
+.meter { height: 12px; background: var(--bg); border-radius: 99px; overflow: hidden; border: 1px solid var(--line); }
+.meter span { display: block; height: 100%; background: var(--accent); width: 0; transition: width .3s; }
+.stats { display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; font-weight: 500; flex-wrap: wrap; gap: 6px; }
+
+/* order of operations */
+.expr { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; padding: 18px 8px;
+  background: var(--bg); border-radius: 12px; font-size: 1.9rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.expr .num, .expr .par { padding: 2px 6px; border-radius: 8px; }
+.expr .par { color: var(--soft); }
+.expr .op { font-size: 1.6rem; padding: 4px 14px; min-width: 52px; line-height: 1.2; }
+.expr .op.exp { align-self: flex-start; font-size: 1.5rem; min-width: 40px; padding: 0 8px; margin-left: -4px; }
+.expr .in { background: var(--accent-wash); outline: 2px solid var(--accent); }
+.expr .op.in { background: var(--accent); color: var(--accent-ink); }
+.rules { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.rules li { display: flex; gap: 10px; align-items: center; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--line); font-size: .95rem; }
+.rules .n { width: 26px; height: 26px; border-radius: 50%; background: var(--bg); display: grid; place-items: center; font-weight: 600; font-size: .85rem; flex: none; }
+.rules .sym { font-weight: 600; min-width: 44px; font-size: 1.05rem; }
+.rules li.lit { border-color: var(--look); background: var(--look-wash); }
+.trail { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; font-variant-numeric: tabular-nums; }
+.trail li { padding: 6px 10px; border-left: 3px solid var(--line); color: var(--soft); }
+.trail li:last-child { border-left-color: var(--accent); color: var(--ink); font-weight: 500; }
+.ask { font-size: 1.15rem; font-weight: 500; }
+
+/* who's fastest */
+.tbl-wrap { overflow-x: auto; }
+table.rt { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+.rt th, .rt td { border: 1px solid var(--line); padding: 10px 12px; text-align: center; }
+.rt th { background: var(--bg); font-weight: 600; }
+.rt th[scope="row"] { text-align: left; font-size: .92rem; }
+.rt td { font-size: 1.15rem; }
+.rt td.now { background: var(--accent-wash); outline: 2px solid var(--accent); outline-offset: -2px; }
+.rt td.done { color: var(--accent); font-weight: 600; }
+.rt tr.per th { color: var(--accent); }
+.bars { display: flex; flex-direction: column; gap: 10px; }
+.bar-row { display: grid; grid-template-columns: 70px 1fr; gap: 10px; align-items: center; }
+.bar-row .who { font-weight: 600; }
+.bar-track { display: flex; gap: 3px; flex-wrap: wrap; }
+.bar-track i { width: 26px; height: 26px; border-radius: 6px; background: var(--block); display: grid; place-items: center;
+  font-style: normal; font-size: .7rem; font-weight: 600; color: #10201c; }
+
+/* help pip */
+.pip { display: flex; gap: 12px; align-items: flex-start; }
+.pip svg { flex: none; width: 56px; height: 56px; }
+.bubble { background: var(--bg); border-radius: 14px; padding: 12px 14px; min-width: 0; }
+.work { display: flex; flex-direction: column; gap: 8px; }
+.work .step { display: flex; flex-direction: column; gap: 2px; text-align: left; padding: 12px 14px; border-radius: 10px;
+  border: 2px solid var(--line); background: var(--card); color: var(--ink); font-variant-numeric: tabular-nums; }
+.work button.step { cursor: pointer; }
+.work button.step:hover { border-color: var(--accent); background: var(--accent-wash); }
+.work .step small { color: var(--soft); font-size: .8rem; font-weight: 500; }
+.work .step b { font-size: 1.2rem; }
+.work .step.fixed { border-color: var(--accent); background: var(--accent-wash); }
+
+/* least common multiple */
+.hgrid { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 3px; font-variant-numeric: tabular-nums; }
+.hgrid span { aspect-ratio: 1; max-width: 100%; display: grid; place-items: center; border-radius: 6px; font-size: .78rem;
+  color: var(--soft); background: var(--bg); border: 2px solid transparent; }
+.hgrid .ga { background: var(--accent-wash); border-color: var(--accent); color: var(--ink); font-weight: 600; }
+.hgrid .gb { border-color: var(--look); border-style: dashed; color: var(--ink); font-weight: 600; }
+.hgrid .ga.gb { background: var(--accent); color: var(--accent-ink); border-style: solid; border-color: var(--look); }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: .85rem; color: var(--soft); }
+.legend i { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 4px; border: 2px solid; }
+.legend .la { background: var(--accent-wash); border-color: var(--accent); }
+.legend .lb { border-color: var(--look); border-style: dashed; }
+.legend .lab { background: var(--accent); border-color: var(--look); }
+.hops { font-variant-numeric: tabular-nums; }
+.hops b { color: var(--ink); }
+.vocab { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.vocab div { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: .92rem; }
+.vocab strong { display: block; font-family: var(--font-display); font-size: 1.05rem; }
+
+/* solve & plot */
+.eqn { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 8px; background: var(--bg); border-radius: 12px;
+  font-size: 1.6rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.eqn .ln { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; width: 100%; max-width: 360px; }
+.eqn .ln > :first-child { text-align: right; }
+.eqn .ln.small { font-size: 1.15rem; color: var(--soft); font-weight: 500; }
+.eqn em { font-style: italic; font-family: Georgia, "Times New Roman", serif; color: var(--accent); }
+.eqn .add { color: var(--look); }
+.nl-wrap { overflow-x: auto; }
+.nl { width: 100%; min-width: 320px; height: auto; display: block; cursor: pointer; touch-action: manipulation; }
+
+/* fill the table */
+.unitchip { align-self: flex-start; background: var(--accent); color: var(--accent-ink); border-radius: 99px; padding: 6px 14px; font-weight: 600; }
+.tix { display: flex; flex-wrap: wrap; gap: 6px; }
+.tix span { border: 2px dashed var(--accent); border-radius: 8px; padding: 8px 10px; font-weight: 600; font-size: .9rem; background: var(--accent-wash); }
+.rt td.blank { color: var(--soft); }
+
+/* what does it mean */
+.solved { font-size: 1.2rem; line-height: 2.1; }
+.solved .sn { font-size: inherit; padding: 2px 12px; margin: 0 2px; line-height: 1.4; }
+
+.break { text-align: center; padding: 40px 20px; }
+.break h2 { font-size: 1.6rem; }
+footer { color: var(--soft); font-size: .85rem; text-align: center; }
+@media (prefers-reduced-motion: reduce) { .blk { animation: none; } button, .meter span { transition: none; } }
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1 id="title">Math Planner</h1>
+      <p class="sub" id="subtitle">You pick what to work on.</p>
+    </div>
+    <div class="row">
+      <button class="quiet" id="homeBtn" type="button" hidden>Home</button>
+      <button class="quiet" id="breakBtn" type="button">Take a break</button>
+    </div>
+  </div>
+
+  <ol class="route" id="route" aria-label="Steps"></ol>
+
+  <main id="stage"></main>
+
+  <footer id="tally"></footer>
+</div>
+
+<script>
+/* ---------- shared ---------- */
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const rint = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const el = (html) => { const d = document.createElement("div"); d.innerHTML = html.trim(); return d.firstElementChild; };
+const stage = document.getElementById("stage");
+
+const sections = {
+  trip: { title: "Trip Planner", sub: "You're the planner. You pick the trip.", steps: ["Pick a trip", "Guess", "One hour", "Build it"] },
+  ops:  { title: "Order of Operations", sub: "Solve it one step at a time, like a recipe.", steps: ["Pick a level", "Solve step by step", "Answer"] },
+  rate: { title: "Who's Fastest?", sub: "Use a table to compare how fast people work.", steps: ["Pick a job", "Guess", "Time for one", "Compare"] },
+  pip:  { title: "Help Pip", sub: "Pip the robot did some math. You're the teacher.", steps: ["Meet Pip", "Does it make sense?", "Find the step", "Fix it"] },
+  lcm:  { title: "Least Common Multiple", sub: "Find the first spot two jumpers both land on.", steps: ["Pick", "Guess", "Jump", "Answer"] },
+  eq:   { title: "Solve & Plot", sub: "Undo the step, keep it balanced, then find the spot on the line.", steps: ["Pick", "Undo it", "Solve", "Plot", "Check"] },
+  tbl:  { title: "Fill the Table", sub: "Find the price for 1, then fill in every blank.", steps: ["Pick", "Price for 1", "Fill in", "Check"] },
+  mean: { title: "What Does It Mean?", sub: "The math is already done. You find what each number means.", steps: ["Pick a story", "Find the numbers", "Match the math"] }
+};
+
+let state = { section: null, step: 0, onBreak: false, solved: { trip: 0, ops: 0, rate: 0, pip: 0, mean: 0, lcm: 0, eq: 0, tbl: 0 }, t: null, lc: null, lcSize: "easy", e: null, eqLevel: "pos",
+  p: null, size: "small", q: null, level: "easy", r: null, pp: null, m: null };
+try { const s = JSON.parse(localStorage.getItem("mathPlanner")); if (s && s.solved) state.solved = Object.assign(state.solved, s.solved); } catch (e) {}
+function save() { try { localStorage.setItem("mathPlanner", JSON.stringify({ solved: state.solved })); } catch (e) {} }
+
+function setChrome() {
+  const sec = sections[state.section];
+  document.getElementById("title").textContent = sec ? sec.title : "Math Planner";
+  document.getElementById("subtitle").textContent = sec ? sec.sub : "You pick what to work on.";
+  document.getElementById("homeBtn").hidden = !sec;
+  const route = document.getElementById("route");
+  route.hidden = !sec;
+  route.innerHTML = sec ? sec.steps.map((s, i) =>
+    `<li class="${i < state.step ? "done" : i === state.step ? "now" : ""}"><span class="dot">${i + 1}</span>${s}</li>`).join("") : "";
+  const n = sec ? state.solved[state.section] : Object.values(state.solved).reduce((a, b) => a + b, 0);
+  document.getElementById("tally").textContent = n ? `Problems finished so far: ${n}` : "No timer. Go at your own speed.";
+}
+
+function render() {
+  setChrome();
+  stage.innerHTML = "";
+  if (state.onBreak) return renderBreak();
+  if (!state.section) return renderHome();
+  if (state.section === "trip") return [tripPick, tripGuess, tripUnit, tripBuild][state.step]();
+  if (state.section === "rate") return [ratePick, rateGuess, rateUnit, rateCompare][state.step]();
+  if (state.section === "pip") return [pipMeet, pipSense, pipFind, pipFix][state.step]();
+  if (state.section === "lcm") return [lcmPick, lcmGuess, lcmJump, lcmDone][state.step]();
+  if (state.section === "eq") return [eqPick, eqUndo, eqSolve, eqPlot, eqCheck][state.step]();
+  if (state.section === "tbl") return [tblPick, tblUnit, tblFill, tblCheck][state.step]();
+  if (state.section === "mean") return [meanPick, meanTap, meanMath][state.step]();
+  return [opsPick, opsSolve, opsDone][state.step]();
+}
+
+function renderHome() {
+  const c = el(`<section class="card">
+    <h2>What do you want to work on?</h2>
+    <div class="choices">
+      <button class="home-pick" type="button" data-s="trip"><strong>Trip Planner</strong><span>Miles, hours, and how fast things go.</span></button>
+      <button class="home-pick" type="button" data-s="ops"><strong>Order of Operations</strong><span>Which part of a math problem goes first.</span></button>
+      <button class="home-pick" type="button" data-s="rate"><strong>Who's Fastest?</strong><span>Compare people's work using a table.</span></button>
+      <button class="home-pick" type="button" data-s="tbl"><strong>Fill the Table</strong><span>Find the missing numbers when the price stays the same.</span></button>
+      <button class="home-pick" type="button" data-s="lcm"><strong>Least Common Multiple</strong><span>Two frogs hop. Where do they meet first?</span></button>
+      <button class="home-pick" type="button" data-s="eq"><strong>Solve &amp; Plot</strong><span>One-step equations and the number line.</span></button>
+      <button class="home-pick" type="button" data-s="pip"><strong>Help Pip</strong><span>A robot's math got tangled. You be the teacher.</span></button>
+      <button class="home-pick" type="button" data-s="mean"><strong>What Does It Mean?</strong><span>No math to do. Just find what the numbers mean.</span></button>
+    </div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelectorAll("[data-s]").forEach(b => b.onclick = () => { state.section = b.dataset.s; state.step = 0; render(); });
+}
+
+function renderBreak() {
+  stage.appendChild(el(`<section class="card break">
+    <h2>Break time</h2>
+    <p>Your work is saved right where you left it.</p>
+    <p class="sub">Stretch, get water, or just breathe for a minute.</p>
+    <div><button class="primary" id="back" type="button">I'm ready to come back</button></div>
+  </section>`));
+  document.getElementById("back").onclick = () => { state.onBreak = false; render(); };
+}
+
+function nextBtn(fn, text = "Next step") {
+  const b = el(`<button class="primary" type="button" style="margin-top:10px">${text}</button>`);
+  b.onclick = fn; return b;
+}
+
+document.getElementById("breakBtn").onclick = () => { state.onBreak = !state.onBreak; render(); };
+document.getElementById("homeBtn").onclick = () => { state.section = null; state.step = 0; state.onBreak = false; render(); };
+
+/* ---------- trip planner ---------- */
+const vehicles = [
+  { name: "Delivery truck", who: "The delivery truck", rates: [45, 50, 55, 60, 65] },
+  { name: "Bike ride",      who: "Jordan on a bike",   rates: [8, 9, 10, 12, 14] },
+  { name: "Freight train",  who: "The freight train",  rates: [35, 40, 45, 70, 75] },
+  { name: "Horse trail",    who: "The trail horse",    rates: [4, 5, 6, 7] }
+];
+const sizes = { small: [2, 6], big: [4, 15] };
+
+function makeTrip(v, size) {
+  const [lo, hi] = sizes[size];
+  const rate = pick(v.rates), t1 = rint(lo, hi);
+  let t2; do { t2 = rint(Math.max(1, lo - 1), hi + 3); } while (t2 === t1);
+  return { v, rate, t1, t2, d1: rate * t1, d2: rate * t2, built: 0 };
+}
+const storyHTML = p => `<p class="story">${p.v.who} went <b>${p.d1} miles</b> in <b>${p.t1} hours</b>. At the same speed, how long will a trip of <b>${p.d2} miles</b> take?</p>`;
+
+function tripPick() {
+  const c = el(`<section class="card">
+    <h2>Which trip do you want to plan?</h2>
+    <div class="choices" id="veh"></div>
+    <span class="label">Number size</span>
+    <div class="choices" id="sz">
+      <button type="button" data-z="small">Smaller numbers</button>
+      <button type="button" data-z="big">Bigger numbers</button>
+    </div>
+    <button class="primary" id="go" type="button" disabled>Start this trip</button>
+  </section>`);
+  stage.appendChild(c);
+  let chosen = null; const go = c.querySelector("#go");
+  vehicles.forEach(v => {
+    const b = el(`<button type="button">${v.name}</button>`);
+    b.onclick = () => { chosen = v; c.querySelectorAll("#veh button").forEach(x => x.classList.remove("picked")); b.classList.add("picked"); go.disabled = false; };
+    c.querySelector("#veh").appendChild(b);
+  });
+  c.querySelectorAll("#sz button").forEach(b => {
+    if (b.dataset.z === state.size) b.classList.add("picked");
+    b.onclick = () => { state.size = b.dataset.z; c.querySelectorAll("#sz button").forEach(x => x.classList.toggle("picked", x === b)); };
+  });
+  go.onclick = () => { state.p = makeTrip(chosen, state.size); state.step = 1; render(); };
+}
+
+function tripGuess() {
+  const p = state.p, longer = p.d2 > p.d1;
+  const c = el(`<section class="card">
+    ${storyHTML(p)}
+    <h2>Before any math: more time or less time than ${p.t1} hours?</h2>
+    <div class="choices">
+      <button type="button" data-g="more">More than ${p.t1} hours</button>
+      <button type="button" data-g="less">Less than ${p.t1} hours</button>
+    </div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelectorAll("[data-g]").forEach(b => b.onclick = () => {
+    const right = (b.dataset.g === "more") === longer, fb = c.querySelector("#fb");
+    if (right) {
+      fb.innerHTML = `<div class="note ok">Yes. ${p.d2} miles is ${longer ? "farther" : "shorter"} than ${p.d1}, so it takes ${longer ? "more" : "less"} time. You'll use that to check your answer later.</div>`;
+      fb.appendChild(nextBtn(() => { state.step = 2; render(); }));
+      c.querySelectorAll("[data-g]").forEach(x => x.disabled = true);
+      b.classList.add("picked"); b.disabled = false;
+    } else {
+      fb.innerHTML = `<div class="note look">Let's look at the miles again. Is ${p.d2} bigger or smaller than ${p.d1}? A ${longer ? "longer" : "shorter"} trip takes ${longer ? "more" : "less"} time. Pick again whenever you're ready.</div>`;
+    }
+  });
+}
+
+function tripUnit() {
+  const p = state.p;
+  const c = el(`<section class="card">
+    ${storyHTML(p)}
+    <h2>How many miles in just 1 hour?</h2>
+    <p>${p.d1} miles took ${p.t1} hours. Split the miles into ${p.t1} equal hour-pieces.</p>
+    <div class="row">
+      <input type="number" id="unit" inputmode="numeric" placeholder="miles in 1 hour" aria-label="Miles in one hour">
+      <button class="primary" id="chk" type="button">Check</button>
+    </div>
+    <button class="quiet" id="hintBtn" type="button">Show me a hint</button>
+    <div id="hint"></div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  let lvl = 0;
+  const hints = [
+    `That's ${p.d1} ÷ ${p.t1}.`,
+    `Try a guess and multiply: does your number × ${p.t1} make ${p.d1}?`,
+    `Count up by ${p.rate}s: ${Array.from({ length: p.t1 }, (_, i) => p.rate * (i + 1)).join(", ")}. That's ${p.t1} jumps.`
+  ];
+  c.querySelector("#hintBtn").onclick = e => {
+    c.querySelector("#hint").innerHTML = `<div class="hint">${hints.slice(0, ++lvl).join("<br>")}</div>`;
+    if (lvl >= hints.length) e.target.disabled = true;
+  };
+  const input = c.querySelector("#unit");
+  const check = () => {
+    const fb = c.querySelector("#fb");
+    if (!input.value) { fb.innerHTML = `<div class="note look">Type a number first, then press Check.</div>`; return; }
+    const v = Number(input.value);
+    if (v === p.rate) {
+      fb.innerHTML = `<div class="note ok">${p.rate} miles each hour. Check: ${p.rate} × ${p.t1} = ${p.d1}. It matches.</div>`;
+      fb.appendChild(nextBtn(() => { state.step = 3; render(); }));
+    } else if (v * p.t1 > 2 * p.d1 && v > 100) {
+      fb.innerHTML = `<div class="note look">${v} miles in just 1 hour? That's ${v > 500 ? "faster than a jet plane" : "faster than a race car"}! ${p.v.who} would be zooming. Let's test it: ${v} × ${p.t1} = ${v * p.t1} miles, but the whole trip was only ${p.d1}. Try a smaller number.</div>`;
+    } else {
+      fb.innerHTML = `<div class="note look">Let's test ${v}: ${v} × ${p.t1} = ${v * p.t1}. We need ${p.d1}. ${v * p.t1 > p.d1 ? "That's too many miles, so try a smaller number." : "That's not enough miles, so try a bigger number."}</div>`;
+    }
+  };
+  c.querySelector("#chk").onclick = check;
+  input.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+  input.focus();
+}
+
+function tripBuild() {
+  const p = state.p;
+  const c = el(`<section class="card">
+    ${storyHTML(p)}
+    <h2>Build the ${p.d2}-mile trip one hour at a time</h2>
+    <p>Each block is 1 hour = ${p.rate} miles. Add blocks until you reach ${p.d2}.</p>
+    <div class="row">
+      <button class="primary" id="add" type="button">Add 1 hour</button>
+      <button class="quiet" id="sub" type="button">Take 1 away</button>
+    </div>
+    <div class="road" id="road" aria-live="polite"></div>
+    <div class="meter"><span id="bar"></span></div>
+    <div class="stats"><span>Hours: <b id="h">0</b></span><span>Miles: <b id="m">0</b> / ${p.d2}</span></div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  const draw = () => {
+    const miles = p.built * p.rate, fb = c.querySelector("#fb");
+    c.querySelector("#road").innerHTML = Array.from({ length: p.built }, (_, i) => `<span class="blk">Hr ${i + 1}</span>`).join("");
+    c.querySelector("#h").textContent = p.built;
+    c.querySelector("#m").textContent = miles;
+    c.querySelector("#bar").style.width = Math.min(100, miles / p.d2 * 100) + "%";
+    c.querySelector("#sub").disabled = p.built === 0;
+    if (miles === p.d2) {
+      c.querySelector("#add").disabled = true;
+      const fit = (p.t2 > p.t1) === (p.d2 > p.d1);
+      fb.innerHTML = `<div class="note ok"><b>${p.t2} hours.</b> ${p.rate} × ${p.t2} = ${p.d2}. Your guess said ${p.d2 > p.d1 ? "more" : "less"} than ${p.t1} hours, and ${p.t2} ${fit ? "fits" : "does not fit"} that.</div>`;
+      fb.appendChild(nextBtn(() => { state.solved.trip++; save(); state.step = 0; state.p = null; render(); }, "Plan another trip"));
+    } else if (miles > p.d2) {
+      c.querySelector("#add").disabled = true;
+      fb.innerHTML = `<div class="note look">That's ${miles} miles, a little past ${p.d2}. Take a block away and look at the miles again.</div>`;
+    } else {
+      c.querySelector("#add").disabled = false;
+      fb.innerHTML = p.built ? `<div class="hint">${p.d2 - miles} miles to go.</div>` : "";
+    }
+  };
+  c.querySelector("#add").onclick = () => { p.built++; draw(); };
+  c.querySelector("#sub").onclick = () => { if (p.built) { p.built--; draw(); } };
+  draw();
+}
+
+/* ---------- order of operations ---------- */
+const HIGH = ["×", "÷"];
+const levels = {
+  easy:   { name: "Warm-up",     desc: "3 numbers with + and ×" },
+  medium: { name: "Mix it up",   desc: "4 numbers with + − × ÷" },
+  parens: { name: "Parentheses", desc: "Problems with ( )" },
+  exp:    { name: "Exponents",   desc: "Small raised numbers like 3²" }
+};
+const SUPD = { 0: "⁰", 1: "¹", 2: "²", 3: "³", 4: "⁴", 5: "⁵", 6: "⁶", 7: "⁷", 8: "⁸", 9: "⁹" };
+const sup = n => String(n).split("").map(d => SUPD[d]).join("");
+const opText = (a, op, b) => op === "^" ? `${a}${sup(b)}` : `${a} ${op} ${b}`;
+const timesItself = (a, b) => Array.from({ length: b }, () => a).join(" × ");
+
+const N = v => ({ t: "n", v }), O = v => ({ t: "op", v });
+const P1 = { t: "(" }, P2 = { t: ")" };
+
+function scopeOf(toks) {
+  const o = toks.findIndex(x => x.t === "(");
+  if (o < 0) return [0, toks.length - 1, false];
+  const c = toks.findIndex(x => x.t === ")");
+  return [o + 1, c - 1, true];
+}
+function nextOp(toks) {
+  const [lo, hi] = scopeOf(toks);
+  for (let i = lo; i <= hi; i++) if (toks[i].t === "op" && toks[i].v === "^") return i;
+  for (let i = lo; i <= hi; i++) if (toks[i].t === "op" && HIGH.includes(toks[i].v)) return i;
+  for (let i = lo; i <= hi; i++) if (toks[i].t === "op") return i;
+  return -1;
+}
+function calc(a, op, b) {
+  if (op === "+") return a + b;
+  if (op === "−") return a - b;
+  if (op === "×") return a * b;
+  if (op === "^") return a ** b;
+  if (b === 0 || a % b !== 0) return NaN;
+  return a / b;
+}
+function applyOp(toks, i) {
+  const r = calc(toks[i - 1].v, toks[i].v, toks[i + 1].v);
+  let out = [...toks.slice(0, i - 1), N(r), ...toks.slice(i + 2)];
+  for (let j = 0; j < out.length - 2; j++)
+    if (out[j].t === "(" && out[j + 1].t === "n" && out[j + 2].t === ")") out = [...out.slice(0, j), out[j + 1], ...out.slice(j + 3)];
+  return out;
+}
+function exprText(toks) {
+  const out = [];
+  for (let i = 0; i < toks.length; i++) {
+    const x = toks[i];
+    if (x.t === "op" && x.v === "^") { out[out.length - 1] += sup(toks[i + 1].v); i++; continue; }
+    out.push(x.t === "n" ? String(x.v) : x.t === "op" ? x.v : x.t);
+  }
+  return out.join(" ").replace(/\( /g, "(").replace(/ \)/g, ")");
+}
+function valid(toks) {
+  let t = toks;
+  const lim = toks.some(x => x.v === "^") ? 100 : 99;
+  while (t.length > 1) {
+    const i = nextOp(t);
+    const a = t[i - 1].v, op = t[i].v, b = t[i + 1].v, r = calc(a, op, b);
+    if (!Number.isInteger(r) || r < 1 || r > lim) return false;
+    if (op === "^" && (a === 1 || b < 2 || b > 3 || (b === 3 && a > 5))) return false;
+    if (HIGH.includes(op) && (a === 1 || b === 1 || a === b && op === "÷")) return false;
+    t = applyOp(t, i);
+  }
+  return true;
+}
+function genExpr(level) {
+  const n = () => rint(1, 9), any = () => pick(["+", "−", "×", "÷"]);
+  for (let tries = 0; tries < 4000; tries++) {
+    let toks;
+    if (level === "easy") {
+      const ops = pick([["+", "×"], ["−", "×"], ["+", "×"], ["×", "+"]]);
+      toks = [N(n()), O(ops[0]), N(n()), O(ops[1]), N(n())];
+      if (nextOp(toks) === 1 && Math.random() < .7) continue; // mostly problems where left-to-right would trick you
+    } else if (level === "medium") {
+      const ops = [any(), any(), any()];
+      if (!ops.some(o => HIGH.includes(o)) || ops.every(o => HIGH.includes(o))) continue;
+      toks = [N(n()), O(ops[0]), N(n()), O(ops[1]), N(n()), O(ops[2]), N(n())];
+    } else if (level === "exp") {
+      const e = () => pick([2, 2, 2, 3]), lowOp = () => pick(["+", "−", "×"]);
+      toks = pick([
+        [N(n()), O("^"), N(e()), O(lowOp()), N(n())],
+        [N(n()), O(lowOp()), N(n()), O("^"), N(e())],
+        [N(n()), O("+"), N(n()), O("×"), N(n()), O("^"), N(2)],
+        [N(n()), O("^"), N(2), O("−"), N(n()), O("×"), N(n())],
+        [P1, N(n()), O(pick(["+", "−"])), N(n()), P2, O("^"), N(2)],
+        [N(n()), O("×"), P1, N(n()), O("−"), N(n()), P2, O("^"), N(2)]
+      ]);
+    } else {
+      const inner = pick(["+", "−"]), outer = pick(["×", "×", "÷"]), extra = pick(["+", "−", "×"]);
+      toks = pick([
+        [P1, N(n()), O(inner), N(n()), P2, O(outer), N(n())],
+        [N(n()), O(outer), P1, N(n()), O(inner), N(n()), P2],
+        [P1, N(n()), O(inner), N(n()), P2, O(outer), N(n()), O(extra), N(n())],
+        [N(n()), O(extra), N(n()), O("×"), P1, N(n()), O(inner), N(n()), P2]
+      ]);
+    }
+    if (valid(toks)) return toks;
+  }
+  return [N(2), O("+"), N(3), O("×"), N(4)];
+}
+
+function opsPick() {
+  const c = el(`<section class="card">
+    <h2>Pick a level</h2>
+    <p class="sub">You can change levels any time.</p>
+    <div class="choices" id="lv"></div>
+  </section>`);
+  stage.appendChild(c);
+  Object.entries(levels).forEach(([k, v]) => {
+    const b = el(`<button class="home-pick" type="button"><strong>${v.name}</strong><span>${v.desc}</span></button>`);
+    b.onclick = () => { state.level = k; startOps(); };
+    c.querySelector("#lv").appendChild(b);
+  });
+}
+function startOps() {
+  const toks = genExpr(state.level);
+  state.q = { start: toks, toks, trail: [exprText(toks)], phase: "tap", sel: -1, note: "", hintLvl: 0 };
+  state.step = 1; render();
+}
+
+function computeHint(a, op, b, lvl) {
+  if (op === "^") {
+    if (!lvl) return `${a}${sup(b)} means ${a} times itself ${b} times: ${timesItself(a, b)}.`;
+    return b === 2 ? `${a} × ${a}: count by ${a}s, ${a} times: ${Array.from({ length: a }, (_, i) => a * (i + 1)).join(", ")}.`
+      : `Do it in two steps. First ${a} × ${a} = ${a * a}. Then ${a * a} × ${a}.`;
+  }
+  if (op === "+") return lvl ? `${a}, then count up: ${Array.from({ length: b }, (_, i) => a + i + 1).join(", ")}.` : `Start at ${a} and count up ${b}.`;
+  if (op === "−") return lvl ? `${a}, then count back: ${Array.from({ length: b }, (_, i) => a - i - 1).join(", ")}.` : `Start at ${a} and count back ${b}.`;
+  if (op === "×") return lvl ? `Count by ${b}s: ${Array.from({ length: a }, (_, i) => b * (i + 1)).join(", ")}.` : `${a} groups of ${b}. Count by ${b}s, ${a} times.`;
+  return lvl ? `Count by ${b}s until you reach ${a}: ${Array.from({ length: a / b }, (_, i) => b * (i + 1)).join(", ")}. How many jumps?` : `How many ${b}s fit into ${a}? Think: ${b} × ? = ${a}.`;
+}
+
+function opsSolve() {
+  const q = state.q, right = nextOp(q.toks), [lo, hi, hasP] = scopeOf(q.toks);
+  const scopeHasHigh = q.toks.slice(lo, hi + 1).some(x => x.t === "op" && HIGH.includes(x.v));
+  const scopeHasExp = q.toks.slice(lo, hi + 1).some(x => x.t === "op" && x.v === "^");
+  const ruleNow = hasP ? 0 : scopeHasExp ? 1 : scopeHasHigh ? 2 : 3;
+
+  const c = el(`<section class="card">
+    <span class="label">${levels[state.level].name}</span>
+    <h2 id="ask">${q.phase === "tap" ? "Which part goes first? Tap that sign." : ""}</h2>
+    <div class="expr" id="expr" aria-label="Math problem"></div>
+    <div id="work"></div>
+    <div id="fb">${q.note}</div>
+    <ol class="rules" id="rules" aria-label="The order">
+      <li><span class="n">1</span><span class="sym">( )</span>Inside parentheses first</li>
+      <li><span class="n">2</span><span class="sym">x²</span>Exponents, the small raised numbers</li>
+      <li><span class="n">3</span><span class="sym">× ÷</span>Times and divide, left to right</li>
+      <li><span class="n">4</span><span class="sym">+ −</span>Plus and minus, left to right</li>
+    </ol>
+    <button class="quiet" id="hintBtn" type="button">Show me a hint</button>
+    <div id="hint"></div>
+    <div><span class="label">Your work</span><ul class="trail" id="trail"></ul></div>
+  </section>`);
+  stage.appendChild(c);
+
+  const ex = c.querySelector("#expr");
+  q.toks.forEach((tk, i) => {
+    if (i > 0 && q.toks[i - 1].t === "op" && q.toks[i - 1].v === "^") return; // exponent number is drawn inside its button
+    const inSel = q.phase === "compute" && i >= q.sel - 1 && i <= q.sel + 1;
+    if (tk.t === "op") {
+      const isExp = tk.v === "^", label = isExp ? `exponent ${q.toks[i + 1].v}` : tk.v;
+      const b = el(`<button class="op${isExp ? " exp" : ""}${inSel ? " in" : ""}" type="button" aria-label="${label}">${isExp ? sup(q.toks[i + 1].v) : tk.v}</button>`);
+      if (q.phase === "tap") b.onclick = () => tapOp(i); else b.disabled = !inSel;
+      ex.appendChild(b);
+    } else {
+      ex.appendChild(el(`<span class="${tk.t === "n" ? "num" : "par"}${inSel ? " in" : ""}">${tk.t === "n" ? tk.v : tk.t}</span>`));
+    }
+  });
+  c.querySelector("#trail").innerHTML = q.trail.map(t => `<li>${t}</li>`).join("");
+
+  function tapOp(i) {
+    const fb = c.querySelector("#fb");
+    if (i === right) { q.phase = "compute"; q.sel = i; q.note = ""; q.hintLvl = 0; render(); return; }
+    const tk = q.toks[i];
+    const outside = hasP && (i < lo || i > hi);
+    let msg;
+    if (outside) msg = `Let's look for the ( ) first. Parentheses go before everything else, so start inside them.`;
+    else if (tk.v !== "^" && scopeHasExp) msg = `There's an exponent here, the small raised number. Exponents go before × ÷ + −. Tap the small number.`;
+    else if (!HIGH.includes(tk.v) && scopeHasHigh) msg = `There's a × or ÷ here too. Those go before + and −. Find it and tap it.`;
+    else msg = `Those signs are on the same step, so we go left to right. Pick the one closer to the left.`;
+    fb.innerHTML = `<div class="note look">${msg}</div>`;
+  }
+
+  if (q.phase === "compute") {
+    const a = q.toks[q.sel - 1].v, op = q.toks[q.sel].v, b = q.toks[q.sel + 1].v, ans = calc(a, op, b);
+    c.querySelector("#ask").textContent = "Good pick. Now solve just that part.";
+    const work = c.querySelector("#work");
+    work.appendChild(el(`<div class="row" style="align-items:center">
+      <span class="ask">${opText(a, op, b)} =</span>
+      <input type="number" id="ans" inputmode="numeric" aria-label="Answer for ${opText(a, op, b)}">
+      <button class="primary" id="chk" type="button">Check</button>
+    </div>`));
+    const input = work.querySelector("#ans");
+    const check = () => {
+      const fb = c.querySelector("#fb");
+      if (!input.value) { fb.innerHTML = `<div class="note look">Type a number first, then press Check.</div>`; return; }
+      if (Number(input.value) === ans) {
+        q.toks = applyOp(q.toks, q.sel);
+        q.trail.push(exprText(q.toks));
+        q.note = `<div class="note ok">${opText(a, op, b)} = ${op === "^" ? timesItself(a, b) + " = " : ""}${ans}. That part is done.</div>`;
+        q.phase = "tap"; q.sel = -1;
+        if (q.toks.length === 1) { state.step = 2; }
+        render();
+      } else if (op === "^" && Number(input.value) === a * b) {
+        fb.innerHTML = `<div class="note look">Careful, this one is sneaky. ${opText(a, op, b)} is not ${a} × ${b}. The small ${b} means multiply ${a} by itself ${b} times: ${timesItself(a, b)}.</div>`;
+      } else {
+        fb.innerHTML = `<div class="note look">Let's check that one together. ${computeHint(a, op, b, 0)}</div>`;
+      }
+    };
+    work.querySelector("#chk").onclick = check;
+    input.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+    input.focus();
+    c.querySelector("#hintBtn").onclick = e => {
+      c.querySelector("#hint").innerHTML = `<div class="hint">${computeHint(a, op, b, q.hintLvl)}</div>`;
+      q.hintLvl++; if (q.hintLvl > 1) e.target.disabled = true;
+    };
+  } else {
+    c.querySelector("#hintBtn").onclick = () => {
+      c.querySelectorAll("#rules li").forEach((li, k) => li.classList.toggle("lit", k === ruleNow));
+      const tips = [
+        "There are ( ) in this problem. Look inside them first.",
+        "Is there a small raised number? That's an exponent. Exponents go before × ÷ + −.",
+        "Is there a × or ÷? Those go before + and −. If there are two, start on the left.",
+        "Only + and − are left. Go from left to right."
+      ];
+      c.querySelector("#hint").innerHTML = `<div class="hint">${tips[ruleNow]}</div>`;
+    };
+  }
+}
+
+function opsDone() {
+  const q = state.q;
+  const c = el(`<section class="card">
+    <span class="label">${levels[state.level].name}</span>
+    <h2>The answer is ${q.toks[0].v}.</h2>
+    <p>You solved it in ${q.trail.length - 1} steps, one piece at a time.</p>
+    <div><span class="label">Your work</span><ul class="trail">${q.trail.map(t => `<li>${t}</li>`).join("")}</ul></div>
+    <div class="row">
+      <button class="primary" id="again" type="button">Another one like this</button>
+      <button id="lvl" type="button">Pick a different level</button>
+    </div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelector("#again").onclick = () => { state.solved.ops++; save(); startOps(); };
+  c.querySelector("#lvl").onclick = () => { state.solved.ops++; save(); state.step = 0; render(); };
+}
+
+/* ---------- who's fastest (comparing ratios in a table) ---------- */
+const jobs = [
+  { id: "flyers",    one: "flyer",    many: "flyers",    verb: "made" },
+  { id: "cookies",   one: "cookie",   many: "cookies",   verb: "decorated" },
+  { id: "bracelets", one: "bracelet", many: "bracelets", verb: "made" },
+  { id: "cards",     one: "card",     many: "cards",     verb: "wrote" }
+];
+const nameSets = [["Ali", "Omar", "Jim"], ["Maya", "Leo", "Ava"], ["Sam", "Zoe", "Eli"], ["Nina", "Ben", "Rosa"]];
+
+function makeRate(job) {
+  const names = pick(nameSets);
+  for (let tries = 0; tries < 2000; tries++) {
+    const per = [rint(2, 8), rint(2, 8), rint(2, 8)];
+    if (new Set(per).size < 3) continue;
+    const cnt = [rint(3, 10), rint(3, 10), rint(3, 10)];
+    if (new Set(cnt).size < 3) continue;
+    const mostMade = cnt.indexOf(Math.max(...cnt));
+    const fastest = per.indexOf(Math.min(...per));
+    if (mostMade === fastest) continue;          // keep the "most isn't fastest" trap
+    const people = names.map((n, i) => ({ name: n, per: per[i], cnt: cnt[i], time: per[i] * cnt[i], found: false }));
+    if (people.some(p => p.time > 72)) continue;
+    return { job, people, fastest, mostMade, guess: null, cur: 0 };
+  }
+}
+
+function rateTable(r, opts = {}) {
+  const { job, people } = r;
+  const perRow = opts.perRow ? `<tr class="per"><th scope="row">Minutes per ${job.one}</th>${people.map((p, i) =>
+    `<td class="${p.found ? "done" : i === r.cur && opts.live ? "now" : ""}">${p.found ? p.per : "?"}</td>`).join("")}</tr>` : "";
+  return `<div class="tbl-wrap"><table class="rt">
+    <tr><th></th>${people.map(p => `<th scope="col">${p.name}</th>`).join("")}</tr>
+    <tr><th scope="row">Time (minutes)</th>${people.map(p => `<td>${p.time}</td>`).join("")}</tr>
+    <tr><th scope="row">Number of ${job.many}</th>${people.map(p => `<td>${p.cnt}</td>`).join("")}</tr>
+    ${perRow}
+  </table></div>`;
+}
+
+function ratePick() {
+  const c = el(`<section class="card">
+    <h2>Which job do you want to compare?</h2>
+    <div class="choices" id="jobs"></div>
+  </section>`);
+  stage.appendChild(c);
+  jobs.forEach(j => {
+    const b = el(`<button type="button">Making ${j.many}</button>`);
+    b.onclick = () => { state.r = makeRate(j); state.step = 1; render(); };
+    c.querySelector("#jobs").appendChild(b);
+  });
+}
+
+function rateGuess() {
+  const r = state.r;
+  const c = el(`<section class="card">
+    <p class="story">Three friends ${r.job.verb} ${r.job.many}. The table shows how long each person worked and how many ${r.job.many} they ${r.job.verb}.</p>
+    ${rateTable(r)}
+    <h2>Just a guess: who do you think worked the fastest?</h2>
+    <p class="sub">There's no wrong guess here. We'll check it together at the end.</p>
+    <div class="choices" id="g"></div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  r.people.forEach((p, i) => {
+    const b = el(`<button type="button">${p.name}</button>`);
+    b.onclick = () => {
+      r.guess = i;
+      c.querySelectorAll("#g button").forEach(x => x.classList.toggle("picked", x === b));
+      const fb = c.querySelector("#fb");
+      fb.innerHTML = `<div class="note ok">You picked ${p.name}. Now let's find out how many minutes each person needs for just 1 ${r.job.one}.</div>`;
+      fb.appendChild(nextBtn(() => { state.step = 2; render(); }));
+    };
+    c.querySelector("#g").appendChild(b);
+  });
+}
+
+function rateUnit() {
+  const r = state.r, p = r.people[r.cur], j = r.job;
+  const c = el(`<section class="card">
+    ${rateTable(r, { perRow: true, live: true })}
+    <h2>${p.name}: ${p.time} minutes for ${p.cnt} ${j.many}. How many minutes for 1 ${j.one}?</h2>
+    <p>Split ${p.time} minutes into ${p.cnt} equal pieces, one piece for each ${j.one}.</p>
+    <div class="row">
+      <input type="number" id="per" inputmode="numeric" placeholder="minutes for 1 ${j.one}" aria-label="Minutes for one ${j.one} for ${p.name}">
+      <button class="primary" id="chk" type="button">Check</button>
+    </div>
+    <button class="quiet" id="hintBtn" type="button">Show me a hint</button>
+    <div id="hint"></div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  let lvl = 0;
+  const hints = [
+    `That's ${p.time} ÷ ${p.cnt}.`,
+    `Think: ${p.cnt} × ? = ${p.time}.`,
+    `Count by ${p.cnt}s: ${Array.from({ length: p.per }, (_, i) => p.cnt * (i + 1)).join(", ")}. Count how many jumps it took.`
+  ];
+  c.querySelector("#hintBtn").onclick = e => {
+    c.querySelector("#hint").innerHTML = `<div class="hint">${hints.slice(0, ++lvl).join("<br>")}</div>`;
+    if (lvl >= hints.length) e.target.disabled = true;
+  };
+  const input = c.querySelector("#per");
+  const check = () => {
+    const fb = c.querySelector("#fb");
+    if (!input.value) { fb.innerHTML = `<div class="note look">Type a number first, then press Check.</div>`; return; }
+    const v = Number(input.value);
+    if (v === p.per) {
+      p.found = true;
+      const last = r.cur === r.people.length - 1;
+      fb.innerHTML = `<div class="note ok">${p.per} minutes for each ${j.one}. Check: ${p.per} × ${p.cnt} = ${p.time}. It matches.</div>`;
+      fb.appendChild(nextBtn(() => { if (last) state.step = 3; else r.cur++; render(); }, last ? "Compare them" : `Next: ${r.people[r.cur + 1].name}`));
+      input.disabled = true; c.querySelector("#chk").disabled = true;
+      c.querySelectorAll(".rt tr.per td")[r.cur].className = "done";
+      c.querySelectorAll(".rt tr.per td")[r.cur].textContent = p.per;
+    } else if (v * p.cnt > 2 * p.time && v >= 30) {
+      fb.innerHTML = `<div class="note look">${v} minutes for just one ${j.one}? ${p.name} would still be working at bedtime! Let's test it: ${v} × ${p.cnt} = ${v * p.cnt} minutes, but ${p.name} only worked ${p.time} minutes. Try a smaller number.</div>`;
+    } else {
+      fb.innerHTML = `<div class="note look">Let's test ${v}: ${v} × ${p.cnt} = ${v * p.cnt} minutes. We need ${p.time}. ${v * p.cnt > p.time ? "That's too many minutes, so try a smaller number." : "That's not enough minutes, so try a bigger number."}</div>`;
+    }
+  };
+  c.querySelector("#chk").onclick = check;
+  input.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+  input.focus();
+}
+
+function rateCompare() {
+  const r = state.r, j = r.job, f = r.people[r.fastest];
+  const c = el(`<section class="card">
+    ${rateTable(r, { perRow: true })}
+    <span class="label">Minutes for 1 ${j.one} (each square is 1 minute)</span>
+    <div class="bars">${r.people.map(p => `<div class="bar-row"><span class="who">${p.name}</span>
+      <span class="bar-track">${Array.from({ length: p.per }, (_, i) => `<i>${i + 1}</i>`).join("")}</span></div>`).join("")}</div>
+    <h2>Who needs the fewest minutes to make 1 ${j.one}?</h2>
+    <div class="choices" id="pick"></div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  r.people.forEach((p, i) => {
+    const b = el(`<button type="button">${p.name}</button>`);
+    b.onclick = () => {
+      const fb = c.querySelector("#fb");
+      if (i !== r.fastest) {
+        fb.innerHTML = `<div class="note look">${p.name} takes ${p.per} minutes for each ${j.one}. Look at the squares. Whose row is the shortest?</div>`;
+        return;
+      }
+      c.querySelectorAll("#pick button").forEach(x => { x.disabled = x !== b; });
+      b.classList.add("picked");
+      const g = r.people[r.guess], most = r.people[r.mostMade];
+      let guessLine = r.guess === r.fastest
+        ? `Your guess at the start was ${g.name}, and that's right.`
+        : `Your guess at the start was ${g.name}. ${g.name} needs ${g.per} minutes for each ${j.one}, so ${f.name} is faster.`;
+      fb.innerHTML = `<div class="note ok"><b>${f.name} worked the fastest.</b> Only ${f.per} minutes for each ${j.one}. Fewer minutes for one ${j.one} means faster.<br><br>${guessLine}
+        ${most !== f ? `<br><br>${most.name} ${j.verb} the most ${j.many} (${most.cnt}), but needs ${most.per} minutes for each one. Making the most doesn't always mean the fastest.` : ""}</div>`;
+      fb.appendChild(nextBtn(() => { state.solved.rate++; save(); state.step = 0; state.r = null; render(); }, "Try another table"));
+    };
+    c.querySelector("#pick").appendChild(b);
+  });
+}
+
+/* ---------- help pip (teacher-student swap) ---------- */
+const pipFace = `<svg viewBox="0 0 56 56" aria-hidden="true">
+  <line x1="28" y1="5" x2="28" y2="12" style="stroke:var(--soft);stroke-width:3"/>
+  <circle cx="28" cy="5" r="3.5" style="fill:var(--look)"/>
+  <rect x="7" y="12" width="42" height="36" rx="11" style="fill:var(--block)"/>
+  <circle cx="20" cy="27" r="6" style="fill:var(--card)"/><circle cx="36" cy="27" r="6" style="fill:var(--card)"/>
+  <circle cx="21.5" cy="28.5" r="2.5" style="fill:var(--ink)"/><circle cx="34.5" cy="25.5" r="2.5" style="fill:var(--ink)"/>
+  <path d="M19 39 q4.5 -4 9 0 t9 0" style="fill:none;stroke:var(--ink);stroke-width:2.5;stroke-linecap:round"/>
+</svg>`;
+const pipSay = t => `<div class="pip">${pipFace}<div class="bubble">${t}</div></div>`;
+
+function makePip() {
+  const who = pick(["Maya", "Leo", "Grandpa Joe", "Aunt Rosa"]);
+  const r = pick([45, 50, 55, 60, 65]), t1 = rint(2, 7), t2 = rint(t1 + 2, t1 + 8);
+  const d1 = r * t1, d2 = r * t2;
+  const kind = pick(["right", "multB", "multB", "multA"]);
+  const good = [`${d1} ÷ ${t1} = ${r}`, `${d2} ÷ ${r} = ${t2}`];
+  const steps = [
+    { label: "Step 1: Miles in 1 hour", math: kind === "multA" ? `${d1} × ${t1} = ${d1 * t1}` : good[0] },
+    { label: `Step 2: Hours for ${d2} miles`, math: kind === "multB" ? `${d2} × ${r} = ${d2 * r}` : kind === "multA" ? `${d2} ÷ ${d1 * t1} = ... ?` : good[1] }
+  ];
+  const answer = kind === "right" ? `I think the trip takes <b>${t2} hours</b>. Did I get it?`
+    : kind === "multB" ? `I think the trip takes <b>${d2 * r} hours</b>. Did I get it?`
+    : `I think the car goes <b>${d1 * t1} miles in 1 hour</b>. Then I got stuck on step 2. Did I mess up?`;
+  return { who, r, t1, t2, d1, d2, kind, good, steps, answer, wrong: kind === "multA" ? 0 : kind === "multB" ? 1 : -1 };
+}
+const pipStory = pp => `<p class="story">${pp.who} drove <b>${pp.d1} miles</b> in <b>${pp.t1} hours</b>. At the same speed, how long will a <b>${pp.d2}-mile</b> trip take?</p>`;
+const pipWork = (pp, fixed = false) => `<div><span class="label">Pip's work</span><div class="work">${pp.steps.map((s, i) =>
+  `<div class="step${fixed ? " fixed" : ""}"><small>${s.label}</small><b>${fixed ? pp.good[i] : s.math}</b></div>`).join("")}</div></div>`;
+
+function pipMeet() {
+  const c = el(`<section class="card">
+    ${pipSay("Hi! I'm Pip. I'm still learning math, and sometimes my circuits get tangled. Will you be my teacher and check my work?")}
+    <button class="primary" id="go" type="button">Show me Pip's work</button>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelector("#go").onclick = () => { state.pp = makePip(); state.step = 1; render(); };
+}
+
+function pipSense() {
+  const pp = state.pp, H = pp.d2 * pp.r, days = Math.round(H / 24), fast = pp.d1 * pp.t1;
+  const c = el(`<section class="card">
+    ${pipStory(pp)}
+    ${pipWork(pp)}
+    ${pipSay(pp.answer)}
+    <h2>Does Pip's answer make sense?</h2>
+    <div class="choices">
+      <button type="button" data-a="yes">Yes, it makes sense</button>
+      <button type="button" data-a="off">Something seems off</button>
+    </div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelectorAll("[data-a]").forEach(b => b.onclick = () => {
+    const fb = c.querySelector("#fb"), saysOk = b.dataset.a === "yes";
+    if (pp.kind === "right") {
+      if (saysOk) {
+        fb.innerHTML = `<div class="note ok">You checked it. The new trip is longer, so it should take more than ${pp.t1} hours, and ${pp.t2} is more. Also ${pp.r} × ${pp.t2} = ${pp.d2}. It fits.</div>${pipSay("Phew! Thanks for checking my work, teacher.")}`;
+        fb.appendChild(nextBtn(() => { state.solved.pip++; save(); state.pp = makePip(); render(); }, "Check another one"));
+        c.querySelectorAll("[data-a]").forEach(x => x.disabled = true);
+      } else {
+        fb.innerHTML = `<div class="note look">Let's check together. The new trip is longer, so it should take more than ${pp.t1} hours. Pip says ${pp.t2}. And ${pp.r} miles × ${pp.t2} hours = ${pp.d2} miles. Does that fit?</div>`;
+      }
+      return;
+    }
+    if (!saysOk) {
+      fb.innerHTML = `<div class="note ok">${pp.kind === "multB"
+        ? `Good eye. ${H} hours is about ${days} days in the car! Their legs would fall asleep. The answer should be a little more than ${pp.t1} hours, not thousands.`
+        : `Good eye. ${fast} miles in 1 hour is faster than a jet plane! A car can't go that fast.`}</div>`;
+      fb.appendChild(nextBtn(() => { state.step = 2; render(); }, "Find Pip's mistake"));
+      c.querySelectorAll("[data-a]").forEach(x => x.disabled = true);
+    } else {
+      fb.innerHTML = `<div class="note look">${pp.kind === "multB"
+        ? `Hmm, let's think about ${H} hours. A day only has 24 hours, so that's about ${days} days of driving! Does that fit a trip that's just a bit longer than the first one?`
+        : `Hmm, Pip says the car goes ${fast} miles in just 1 hour. A jet plane goes about 500. Could a car go that fast?`}</div>`;
+    }
+  });
+}
+
+function pipFind() {
+  const pp = state.pp;
+  const c = el(`<section class="card">
+    ${pipStory(pp)}
+    ${pipSay("Oh no, you're right. My circuits got tangled somewhere. Which step did I mess up? Tap it.")}
+    <div class="work" id="steps"></div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  pp.steps.forEach((s, i) => {
+    const b = el(`<button class="step" type="button"><small>${s.label}</small><b>${s.math}</b></button>`);
+    b.onclick = () => {
+      if (i === pp.wrong) { state.step = 3; render(); return; }
+      c.querySelector("#fb").innerHTML = `<div class="note look">${i === 0
+        ? `Let's check Step 1: ${pp.r} × ${pp.t1} = ${pp.d1}. That matches the story, so Step 1 works. Try the other step.`
+        : `Step 2 got stuck because of the number from Step 1. Look at the step before it.`}</div>`;
+    };
+    c.querySelector("#steps").appendChild(b);
+  });
+}
+
+function pipFix() {
+  const pp = state.pp, s = pp.steps[pp.wrong];
+  const c = el(`<section class="card">
+    ${pipStory(pp)}
+    <div class="work"><div class="step"><small>${s.label}</small><b>${s.math}</b></div></div>
+    ${pipSay(pp.wrong === 0
+      ? `I multiplied in Step 1. What should I do instead to find the miles in just 1 hour?`
+      : `I multiplied in Step 2. What should I do instead to find how many ${pp.r}-mile hours fit in ${pp.d2} miles?`)}
+    <div class="choices" id="opts"></div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  [["div", "Divide ÷"], ["mul", "Multiply ×"], ["add", "Add +"]].forEach(([k, t]) => {
+    const b = el(`<button type="button">${t}</button>`);
+    b.onclick = () => {
+      const fb = c.querySelector("#fb");
+      if (k === "mul") { fb.innerHTML = `<div class="note look">That's what Pip tried, and it made the giant number. We want to split into equal pieces. Which sign splits things up?</div>`; return; }
+      if (k === "add") { fb.innerHTML = `<div class="note look">Adding makes things a little bigger. We want to split into equal pieces. Which sign splits things up?</div>`; return; }
+      c.querySelectorAll("#opts button").forEach(x => x.disabled = x !== b);
+      b.classList.add("picked");
+      fb.innerHTML = `${pipWork(pp, true)}<div class="note ok"><b>${pp.t2} hours.</b> Dividing splits the miles into equal hour-pieces. ${pp.t2} hours is more than ${pp.t1}, so it fits.</div>
+        ${pipSay("Oh! I see it now. Thank you, teacher. My circuits feel much better.")}`;
+      fb.appendChild(nextBtn(() => { state.solved.pip++; save(); state.pp = makePip(); state.step = 1; render(); }, "Help Pip again"));
+    };
+    c.querySelector("#opts").appendChild(b);
+  });
+}
+
+/* ---------- what does it mean? (concept first) ---------- */
+function makeMeaning(kind) {
+  const name = pick(["Maya", "Leo", "Ava", "Sam", "Zoe"]);
+  let a, b; do { a = rint(3, 12); b = rint(2, 9); } while (a === b || a * b === a || a * b === b);
+  if (kind === "drive") a = pick([40, 45, 50, 55, 60, 65]);
+  const tot = a * b;
+  const k = {
+    drive: { parts: [`${name} drove `, "a", ` miles each hour for `, "b", ` hours. That's `, "tot", ` miles in all.`],
+      mean: { a: "how far the car goes in 1 hour", b: "how long the drive was", tot: "the whole trip" }, ua: "miles", ub: "hours" },
+    flyers: { parts: [`${name} spent `, "a", ` minutes on each flyer and made `, "b", ` flyers. That took `, "tot", ` minutes in all.`],
+      mean: { a: "the time for just 1 flyer", b: "how many flyers there are", tot: "all the minutes together" }, ua: "minutes", ub: "flyers" },
+    read: { parts: [`${name} reads `, "a", ` pages every day. After `, "b", ` days, that's `, "tot", ` pages in all.`],
+      mean: { a: "the pages in just 1 day", b: "how many days", tot: "all the pages together" }, ua: "pages", ub: "days" }
+  }[kind];
+  const order = ["a", "b", "tot"].sort(() => Math.random() - .5);
+  return { kind, vals: { a, b, tot }, ...k, order, qi: 0 };
+}
+
+function meanPick() {
+  const c = el(`<section class="card">
+    <h2>Which story do you want?</h2>
+    <p class="sub">The math in these stories is already done. Your job is to find what each number means.</p>
+    <div class="choices" id="st"></div>
+  </section>`);
+  stage.appendChild(c);
+  [["drive", "Road trip"], ["flyers", "Making flyers"], ["read", "Reading books"], ["any", "Surprise me"]].forEach(([k, t]) => {
+    const b = el(`<button type="button">${t}</button>`);
+    b.onclick = () => { state.m = makeMeaning(k === "any" ? pick(["drive", "flyers", "read"]) : k); state.step = 1; render(); };
+    c.querySelector("#st").appendChild(b);
+  });
+}
+
+function meanStory(m, tappable) {
+  return `<p class="solved">${m.parts.map(p => m.vals[p] === undefined ? p
+    : tappable ? `<button class="sn" type="button" data-r="${p}">${m.vals[p]}</button>` : `<b>${m.vals[p]}</b>`).join("")}</p>`;
+}
+
+function meanTap() {
+  const m = state.m, target = m.order[m.qi];
+  const c = el(`<section class="card">
+    <span class="label">Question ${m.qi + 1} of 3</span>
+    ${meanStory(m, true)}
+    <h2>Tap the number that tells ${m.mean[target]}.</h2>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelectorAll(".sn").forEach(b => b.onclick = () => {
+    const fb = c.querySelector("#fb"), r = b.dataset.r;
+    if (r === target) {
+      c.querySelectorAll(".sn").forEach(x => x.disabled = x !== b);
+      b.classList.add("picked");
+      fb.innerHTML = `<div class="note ok">Yes. ${m.vals[r]} is ${m.mean[r]}.</div>`;
+      const last = m.qi === 2;
+      fb.appendChild(nextBtn(() => { if (last) state.step = 2; else m.qi++; render(); }, last ? "Next step" : "Next question"));
+    } else {
+      fb.innerHTML = `<div class="note look">${m.vals[r]} tells ${m.mean[r]}. We're looking for the number that tells ${m.mean[target]}. Look again.</div>`;
+    }
+  });
+}
+
+function meanMath() {
+  const m = state.m, { a, b, tot } = m.vals;
+  const opts = [
+    { t: `${a} × ${b} = ${tot}`, ok: true },
+    { t: `${tot} × ${b} = ${tot * b}`, big: true },
+    { t: `${a} + ${b} = ${a + b}` }
+  ].sort(() => Math.random() - .5);
+  const c = el(`<section class="card">
+    ${meanStory(m, false)}
+    <h2>Which math sentence tells this story?</h2>
+    <div class="choices" id="opts"></div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  opts.forEach(o => {
+    const btn = el(`<button type="button">${o.t}</button>`);
+    btn.onclick = () => {
+      const fb = c.querySelector("#fb");
+      if (o.ok) {
+        c.querySelectorAll("#opts button").forEach(x => x.disabled = x !== btn);
+        btn.classList.add("picked");
+        fb.innerHTML = `<div class="note ok">Yes. ${a} ${m.ua} for each one, ${b} times, makes ${tot} ${m.ua} in all.</div>`;
+        fb.appendChild(nextBtn(() => { state.solved.mean++; save(); state.m = makeMeaning(m.kind); state.step = 1; render(); }, "Another story like this"));
+      } else if (o.big) {
+        fb.innerHTML = `<div class="note look">${tot * b}? That's way bigger than anything in the story! The ${tot} is already the whole thing, so we don't multiply it again.</div>`;
+      } else {
+        fb.innerHTML = `<div class="note look">${a} + ${b} = ${a + b} is true math, but it adds ${m.ua} and ${m.ub} together, like adding apples and shoes. The story has ${b} groups of ${a}.</div>`;
+      }
+    };
+    c.querySelector("#opts").appendChild(btn);
+  });
+}
+
+/* ---------- least common multiple ---------- */
+const gcd = (x, y) => y ? gcd(y, x % y) : x;
+const lcmPairs = {
+  easy: [[2, 3], [3, 4], [2, 5], [4, 6], [3, 5], [4, 5], [6, 8], [2, 7], [3, 6], [4, 10]],
+  hard: [[6, 15], [4, 10], [8, 12], [6, 9], [10, 15], [9, 12], [6, 10], [12, 18], [6, 14], [8, 10]]
+};
+const lcmStories = {
+  frogs: { a: "Green frog", b: "Blue frog", act: "hops", unit: "", ask: "What is the first number both frogs land on?" },
+  buses: { a: "Bus 1", b: "Bus 2", act: "comes every", unit: " minutes", ask: "What is the first minute both buses come at the same time?" }
+};
+
+function makeLcm(storyKey, size) {
+  let [a, b] = pick(lcmPairs[size]);
+  return { a, b, L: a * b / gcd(a, b), story: lcmStories[storyKey], na: 0, nb: 0, max: size === "easy" ? 40 : 60 };
+}
+const lcmLine = lc => `<p class="story">${lc.story.a} ${lc.story.act} <b>${lc.a}</b>${lc.story.unit || " each jump"}. ${lc.story.b} ${lc.story.act} <b>${lc.b}</b>${lc.story.unit || " each jump"}. ${lc.story.ask}</p>`;
+const vocabCard = `<div class="vocab">
+  <div><strong>Multiple</strong>Where you land when you count by a number. Multiples of 6: 6, 12, 18, 24...</div>
+  <div><strong>Factor</strong>A number that fits into it evenly. 3 is a factor of 6. Factors are small, multiples are big.</div>
+</div>`;
+
+function lcmPick() {
+  const c = el(`<section class="card">
+    <h2>Pick your jumpers</h2>
+    <div class="choices" id="st">
+      <button type="button" data-k="frogs">Two frogs</button>
+      <button type="button" data-k="buses">Two buses</button>
+    </div>
+    <span class="label">Number size</span>
+    <div class="choices" id="sz">
+      <button type="button" data-z="easy">Smaller numbers</button>
+      <button type="button" data-z="hard">Bigger numbers</button>
+    </div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelectorAll("#sz button").forEach(b => {
+    b.classList.toggle("picked", b.dataset.z === state.lcSize);
+    b.onclick = () => { state.lcSize = b.dataset.z; c.querySelectorAll("#sz button").forEach(x => x.classList.toggle("picked", x === b)); };
+  });
+  c.querySelectorAll("#st button").forEach(b => b.onclick = () => { state.lc = makeLcm(b.dataset.k, state.lcSize); state.step = 1; render(); });
+}
+
+function lcmGuess() {
+  const lc = state.lc, big = Math.max(lc.a, lc.b), bigName = lc.b >= lc.a ? lc.story.b : lc.story.a;
+  const c = el(`<section class="card">
+    ${lcmLine(lc)}
+    <h2>Before we jump: can the answer be smaller than ${big}?</h2>
+    <div class="choices">
+      <button type="button" data-g="small">Yes, it could be smaller</button>
+      <button type="button" data-g="big">No, it's ${big} or bigger</button>
+    </div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelectorAll("[data-g]").forEach(b => b.onclick = () => {
+    const fb = c.querySelector("#fb");
+    if (b.dataset.g === "big") {
+      c.querySelectorAll("[data-g]").forEach(x => x.disabled = x !== b); b.classList.add("picked");
+      fb.innerHTML = `<div class="note ok">Right. ${bigName}'s very first ${lc.story.unit ? "stop" : "jump"} is already ${big}, so every spot it lands on is ${big} or bigger. If you ever get a tiny answer like ${gcd(lc.a, lc.b) > 1 ? gcd(lc.a, lc.b) : 1}, that's a clue something went goofy.</div>${vocabCard}`;
+      fb.appendChild(nextBtn(() => { state.step = 2; render(); }, "Start jumping"));
+    } else {
+      fb.innerHTML = `<div class="note look">Let's think about ${bigName}. Its very first ${lc.story.unit ? "stop" : "jump"} lands on ${big}. Could it ever land on a number smaller than that? To land on ${gcd(lc.a, lc.b) > 1 ? gcd(lc.a, lc.b) : 2}, it would have to go backwards!</div>`;
+    }
+  });
+}
+
+function lcmJump() {
+  const lc = state.lc, s = lc.story;
+  const c = el(`<section class="card">
+    ${lcmLine(lc)}
+    <div class="row">
+      <button class="primary" id="ja" type="button">${s.a} ${s.unit ? "next stop" : "jumps"} (+${lc.a})</button>
+      <button class="primary" id="jb" type="button">${s.b} ${s.unit ? "next stop" : "jumps"} (+${lc.b})</button>
+    </div>
+    <div class="hops" id="hops"></div>
+    <div class="legend"><span><i class="la"></i>${s.a}</span><span><i class="lb"></i>${s.b}</span><span><i class="lab"></i>Both</span></div>
+    <div class="hgrid" id="grid" aria-label="Number chart"></div>
+    <div class="row">
+      <input type="number" id="ans" inputmode="numeric" placeholder="first spot they share" aria-label="First number both land on">
+      <button id="chk" type="button">Check</button>
+    </div>
+    <button class="quiet" id="hintBtn" type="button">Show me a hint</button>
+    <div id="hint"></div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  const draw = () => {
+    const A = Array.from({ length: lc.na }, (_, i) => lc.a * (i + 1)), B = Array.from({ length: lc.nb }, (_, i) => lc.b * (i + 1));
+    c.querySelector("#hops").innerHTML = `<div>${s.a}: ${A.length ? A.join(", ") : "not moved yet"}</div><div>${s.b}: ${B.length ? B.join(", ") : "not moved yet"}</div>`;
+    c.querySelector("#grid").innerHTML = Array.from({ length: lc.max }, (_, i) => {
+      const n = i + 1;
+      return `<span class="${A.includes(n) ? "ga" : ""} ${B.includes(n) ? "gb" : ""}">${n}</span>`;
+    }).join("");
+    c.querySelector("#ja").disabled = lc.a * (lc.na + 1) > lc.max;
+    c.querySelector("#jb").disabled = lc.b * (lc.nb + 1) > lc.max;
+  };
+  c.querySelector("#ja").onclick = () => { lc.na++; draw(); };
+  c.querySelector("#jb").onclick = () => { lc.nb++; draw(); };
+  draw();
+  const hints = [
+    `Jump whoever is behind. If ${s.a} is on a smaller number, jump ${s.a}. Keep going until they land on the same square.`,
+    `Look for a square that is filled in AND has a dashed border. That's a spot both landed on.`
+  ];
+  let hl = 0;
+  c.querySelector("#hintBtn").onclick = e => {
+    c.querySelector("#hint").innerHTML = `<div class="hint">${hints.slice(0, ++hl).join("<br>")}</div>`;
+    if (hl >= hints.length) e.target.disabled = true;
+  };
+  const input = c.querySelector("#ans");
+  const check = () => {
+    const fb = c.querySelector("#fb");
+    if (!input.value) { fb.innerHTML = `<div class="note look">Type a number first, then press Check.</div>`; return; }
+    const v = Number(input.value);
+    const inA = v > 0 && v % lc.a === 0, inB = v > 0 && v % lc.b === 0;
+    if (v === lc.L) { state.step = 3; render(); return; }
+    let msg;
+    if (v > 0 && lc.a % v === 0 && lc.b % v === 0)
+      msg = `${v} fits into both ${lc.a} and ${lc.b}. That makes it a factor, not a spot the jumpers land on. Factors are small, multiples are big. Keep jumping!`;
+    else if (inA && inB)
+      msg = `Both really do land on ${v}! But is there an earlier spot they both land on? Look at the smaller numbers.`;
+    else if (!inA && !inB)
+      msg = `Neither one lands on ${v}. Look at the chart. Which squares have both colors?`;
+    else
+      msg = `${inA ? s.a : s.b} lands on ${v}, but ${inA ? s.b : s.a} doesn't. We need a spot they both land on. Keep jumping the one that's behind.`;
+    fb.innerHTML = `<div class="note look">${msg}</div>`;
+  };
+  c.querySelector("#chk").onclick = check;
+  input.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+}
+
+function lcmDone() {
+  const lc = state.lc, s = lc.story, big = Math.max(lc.a, lc.b);
+  const listA = Array.from({ length: lc.L / lc.a }, (_, i) => lc.a * (i + 1)), listB = Array.from({ length: lc.L / lc.b }, (_, i) => lc.b * (i + 1));
+  const c = el(`<section class="card">
+    <h2>The least common multiple of ${lc.a} and ${lc.b} is ${lc.L}.</h2>
+    <p>${s.unit ? `Both buses come at minute ${lc.L}.` : `Both frogs land on ${lc.L}.`} It's the first spot they share.</p>
+    <div class="hops">
+      <div>Multiples of ${lc.a}: ${listA.slice(0, -1).join(", ")}${listA.length > 1 ? ", " : ""}<b>${lc.L}</b></div>
+      <div>Multiples of ${lc.b}: ${listB.slice(0, -1).join(", ")}${listB.length > 1 ? ", " : ""}<b>${lc.L}</b></div>
+    </div>
+    <span class="label">Sense check</span>
+    <div class="note ok">${lc.L} is ${lc.L === big ? "the same as" : "bigger than"} ${big}, so it fits our guess.<br>${lc.L} ÷ ${lc.a} = ${lc.L / lc.a} and ${lc.L} ÷ ${lc.b} = ${lc.L / lc.b}. Both come out even.</div>
+    <div class="row">
+      <button class="primary" id="again" type="button">Another one</button>
+      <button id="new" type="button">Change jumpers or size</button>
+    </div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelector("#again").onclick = () => {
+    state.solved.lcm++; save();
+    const key = s === lcmStories.buses ? "buses" : "frogs";
+    state.lc = makeLcm(key, state.lcSize); state.step = 1; render();
+  };
+  c.querySelector("#new").onclick = () => { state.solved.lcm++; save(); state.step = 0; render(); };
+}
+
+/* ---------- solve & plot (one-step equations on a number line) ---------- */
+const fmt = n => n < 0 ? `−${-n}` : `${n}`;
+const par = n => n < 0 ? `(${fmt(n)})` : `${n}`;
+
+function makeEq(level) {
+  const v = pick(["u", "x", "n", "y"]), op = pick(["−", "+"]), a = rint(1, 9);
+  for (let t = 0; t < 500; t++) {
+    const s = level === "pos" ? rint(1, 12) : rint(-10, 12);
+    const c = op === "−" ? s - a : s + a;
+    if (c < -15 || c > 15 || s === 0) continue;
+    if (level === "pos" && c < 0) continue;
+    if (level === "neg" && s > 0 && c > 0) continue;
+    return { v, op, a, s, c, varLeft: Math.random() < .5, phase: 0, dot: null };
+  }
+  return { v: "u", op: "−", a: 5, s: 2, c: -3, varLeft: false, phase: 0, dot: null };
+}
+const undoWord = e => e.op === "−" ? `Add ${e.a}` : `Subtract ${e.a}`;
+const numSide = e => `${fmt(e.c)} ${e.op === "−" ? "+" : "−"} ${e.a}`;
+function eqLine(e, varSide, other, cls = "") {
+  const [L, R] = e.varLeft ? [varSide, other] : [other, varSide];
+  return `<div class="ln ${cls}"><span>${L}</span><span>=</span><span>${R}</span></div>`;
+}
+const eqStart = e => eqLine(e, `<em>${e.v}</em> ${e.op} ${e.a}`, fmt(e.c));
+const eqUndone = e => {
+  const u = e.op === "−" ? "+" : "−";
+  return eqLine(e, `<em>${e.v}</em> ${e.op} ${e.a} <span class="add">${u} ${e.a}</span>`, `${fmt(e.c)} <span class="add">${u} ${e.a}</span>`, "small");
+};
+function hopHint(start, a, dir, lvl) {
+  if (!lvl) return `Start at ${fmt(start)} and move ${a} ${a === 1 ? "step" : "steps"} to the ${dir > 0 ? "right" : "left"}. ${dir > 0 ? "Adding moves right." : "Subtracting moves left."}`;
+  return `Count it: ${Array.from({ length: a + 1 }, (_, i) => fmt(start + dir * i)).join(" → ")}`;
+}
+
+function eqPick() {
+  const c = el(`<section class="card">
+    <h2>Which kind of problems?</h2>
+    <div class="choices" id="lv">
+      <button class="home-pick" type="button" data-l="pos"><strong>Positive answers</strong><span>Numbers bigger than 0</span></button>
+      <button class="home-pick" type="button" data-l="neg"><strong>Negative numbers too</strong><span>Like −3 = u − 5</span></button>
+    </div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelectorAll("[data-l]").forEach(b => b.onclick = () => { state.eqLevel = b.dataset.l; state.e = makeEq(state.eqLevel); state.step = 1; render(); });
+}
+
+function eqUndo() {
+  const e = state.e;
+  const c = el(`<section class="card">
+    <div class="eqn">${eqStart(e)}</div>
+    <h2>${e.phase === 0 ? `What is happening to ${e.v}?` : `To undo it, do the opposite to both sides. What do we do?`}</h2>
+    ${e.phase === 1 ? `<p class="sub">Both sides of = are like a balance. Whatever you do to one side, you do to the other.</p>` : ""}
+    <div class="choices" id="opts"></div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  const opts = e.phase === 0
+    ? [[e.op === "+", `${e.a} is added to ${e.v}`], [e.op === "−", `${e.a} is taken away from ${e.v}`]]
+    : [[e.op === "−", `Add ${e.a} to both sides`], [e.op === "+", `Subtract ${e.a} from both sides`]];
+  opts.forEach(([ok, t]) => {
+    const b = el(`<button type="button">${t}</button>`);
+    b.onclick = () => {
+      const fb = c.querySelector("#fb");
+      if (!ok) {
+        fb.innerHTML = e.phase === 0
+          ? `<div class="note look">Look right next to ${e.v}. The sign is ${e.op === "−" ? "−, which means take away" : "+, which means add"}.</div>`
+          : `<div class="note look">If we ${e.op === "−" ? "took away" : "added"} ${e.a} more, ${e.v} would get even more stuck. The opposite of ${e.op === "−" ? "taking away is adding" : "adding is taking away"}.</div>`;
+        return;
+      }
+      if (e.phase === 0) { e.phase = 1; render(); return; }
+      c.querySelectorAll("#opts button").forEach(x => x.disabled = x !== b); b.classList.add("picked");
+      fb.innerHTML = `<div class="note ok">Yes. ${undoWord(e)} on both sides. On the ${e.v} side, ${e.op === "−" ? `−${e.a} and +${e.a}` : `+${e.a} and −${e.a}`} cancel out, so ${e.v} is left alone.</div>`;
+      fb.appendChild(nextBtn(() => { state.step = 2; render(); }));
+    };
+    c.querySelector("#opts").appendChild(b);
+  });
+}
+
+function eqSolve() {
+  const e = state.e, dir = e.op === "−" ? 1 : -1;
+  const c = el(`<section class="card">
+    <div class="eqn">${eqStart(e)}${eqUndone(e)}${eqLine(e, `<em>${e.v}</em>`, "?")}</div>
+    <h2>The ${e.v} side is just ${e.v} now. What is ${numSide(e)}?</h2>
+    <div class="row">
+      <input type="number" id="ans" inputmode="numeric" aria-label="Answer for ${numSide(e)}">
+      <button class="primary" id="chk" type="button">Check</button>
+    </div>
+    <p class="sub">For a negative number, type the minus sign first.</p>
+    <button class="quiet" id="hintBtn" type="button">Show me a hint</button>
+    <div id="hint"></div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  let hl = 0;
+  c.querySelector("#hintBtn").onclick = ev => {
+    c.querySelector("#hint").innerHTML = `<div class="hint">${hopHint(e.c, e.a, dir, 0)}${hl ? "<br>" + hopHint(e.c, e.a, dir, 1) : ""}</div>`;
+    if (++hl > 1) ev.target.disabled = true;
+  };
+  const input = c.querySelector("#ans");
+  const check = () => {
+    const fb = c.querySelector("#fb");
+    if (input.value === "") { fb.innerHTML = `<div class="note look">Type a number first, then press Check.</div>`; return; }
+    const v = Number(input.value);
+    if (v === e.s) {
+      fb.innerHTML = `<div class="note ok">${numSide(e)} = ${fmt(e.s)}. So <b>${e.v} = ${fmt(e.s)}</b>.</div>`;
+      fb.appendChild(nextBtn(() => { state.step = 3; render(); }, "Put it on the number line"));
+      input.disabled = true; c.querySelector("#chk").disabled = true;
+    } else if (v === -e.s) {
+      fb.innerHTML = `<div class="note look">So close! The ${Math.abs(e.s)} part is right. Now check the sign. ${hopHint(e.c, e.a, dir, 0)} Do you end up on the left or right side of 0?</div>`;
+    } else {
+      fb.innerHTML = `<div class="note look">Let's count it on the number line. ${hopHint(e.c, e.a, dir, 0)}</div>`;
+    }
+  };
+  c.querySelector("#chk").onclick = check;
+  input.addEventListener("keydown", ev => { if (ev.key === "Enter") check(); });
+  input.focus();
+}
+
+function nlSVG(dot) {
+  const X = n => 20 + (n + 15) * 20;
+  let s = `<svg class="nl" viewBox="0 0 640 96" role="img" aria-label="Number line from −15 to 15">
+    <line x1="6" y1="52" x2="634" y2="52" style="stroke:var(--ink);stroke-width:2"/>
+    <path d="M6 52 l10 -6 v12 z M634 52 l-10 -6 v12 z" style="fill:var(--ink)"/>`;
+  for (let n = -15; n <= 15; n++) {
+    const big = n % 5 === 0;
+    s += `<line x1="${X(n)}" y1="${big ? 42 : 46}" x2="${X(n)}" y2="${big ? 62 : 58}" style="stroke:var(--ink);stroke-width:${big ? 2 : 1.2}"/>`;
+    if (big) s += `<text x="${X(n)}" y="84" text-anchor="middle" style="fill:var(--soft);font:500 14px var(--font-body)">${fmt(n)}</text>`;
+  }
+  s += `<rect x="0" y="20" width="640" height="56" style="fill:transparent"/>`;
+  if (dot !== null) s += `<circle cx="${X(dot)}" cy="52" r="9" style="fill:var(--accent)"/>
+    <text x="${X(dot)}" y="26" text-anchor="middle" style="fill:var(--ink);font:600 16px var(--font-body)">${fmt(dot)}</text>`;
+  return s + `</svg>`;
+}
+
+function eqPlot() {
+  const e = state.e;
+  const c = el(`<section class="card">
+    <div class="eqn">${eqLine(e, `<em>${e.v}</em>`, fmt(e.s))}</div>
+    <h2>Put a dot on ${fmt(e.s)}.</h2>
+    <p class="sub">Tap the line to put your dot down. Use the arrows to move it one step.</p>
+    <div class="nl-wrap" id="nl"></div>
+    <div class="row">
+      <button id="lft" type="button">← Left 1</button>
+      <button id="rgt" type="button">Right 1 →</button>
+    </div>
+    <button class="primary" id="chk" type="button">Check my dot</button>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  const draw = () => {
+    c.querySelector("#nl").innerHTML = nlSVG(e.dot);
+    c.querySelector("svg").addEventListener("click", ev => {
+      const r = ev.currentTarget.getBoundingClientRect();
+      const x = (ev.clientX - r.left) / r.width * 640;
+      e.dot = Math.max(-15, Math.min(15, Math.round((x - 20) / 20) - 15));
+      draw();
+    });
+  };
+  draw();
+  c.querySelector("#lft").onclick = () => { e.dot = Math.max(-15, (e.dot ?? 0) - 1); draw(); };
+  c.querySelector("#rgt").onclick = () => { e.dot = Math.min(15, (e.dot ?? 0) + 1); draw(); };
+  c.querySelector("#chk").onclick = () => {
+    const fb = c.querySelector("#fb"), s = e.s, d = e.dot;
+    const side = n => n > 0 ? "right" : "left";
+    if (d === null) { fb.innerHTML = `<div class="note look">Tap the line to put your dot down first.</div>`; return; }
+    if (d === s) {
+      fb.innerHTML = `<div class="note ok">${fmt(s)} is ${s > 0 ? "positive" : "negative"}. It's ${Math.abs(s)} ${Math.abs(s) === 1 ? "step" : "steps"} to the ${side(s)} of 0.</div>`;
+      fb.appendChild(nextBtn(() => { state.step = 4; render(); }, "Check the answer"));
+      ["lft", "rgt", "chk"].forEach(id => c.querySelector("#" + id).disabled = true);
+    } else if (d === 0 || Math.sign(d) !== Math.sign(s)) {
+      fb.innerHTML = `<div class="note look">${fmt(s)} is ${s > 0 ? "positive" : "negative"}, so it lives on the ${side(s)} side of 0. Your dot is ${d === 0 ? "right on 0" : `on the ${side(d)} side`}.</div>`;
+    } else {
+      fb.innerHTML = `<div class="note look">Your dot is on ${fmt(d)}, and we need ${fmt(s)}. You picked the correct side of 0. Count the steps from 0 and use the arrows to move it.</div>`;
+    }
+  };
+}
+
+function eqCheck() {
+  const e = state.e, expr = `${par(e.s)} ${e.op} ${e.a}`;
+  const c = el(`<section class="card">
+    <div class="eqn">${eqStart(e)}</div>
+    <h2>Check it: put ${fmt(e.s)} back in for ${e.v}. What is ${expr}?</h2>
+    <p class="sub">If it comes out to ${fmt(e.c)}, both sides balance and the answer is right.</p>
+    <div class="row">
+      <input type="number" id="ans" inputmode="numeric" aria-label="Answer for ${expr}">
+      <button class="primary" id="chk" type="button">Check</button>
+    </div>
+    <div id="fb"></div>
+    ${nlSVG(e.s).replace('class="nl"', 'class="nl" style="cursor:default"')}
+  </section>`);
+  stage.appendChild(c);
+  const input = c.querySelector("#ans"), dir = e.op === "+" ? 1 : -1;
+  const check = () => {
+    const fb = c.querySelector("#fb");
+    if (input.value === "") { fb.innerHTML = `<div class="note look">Type a number first, then press Check.</div>`; return; }
+    if (Number(input.value) === e.c) {
+      fb.innerHTML = `<div class="note ok">${expr} = ${fmt(e.c)}. That matches the other side, so both sides balance. <b>${e.v} = ${fmt(e.s)}</b> is right, and you checked it yourself.</div>`;
+      fb.appendChild(nextBtn(() => { state.solved.eq++; save(); state.e = makeEq(state.eqLevel); state.step = 1; render(); }, "Another equation"));
+      input.disabled = true; c.querySelector("#chk").disabled = true;
+    } else {
+      fb.innerHTML = `<div class="note look">Let's count it. ${hopHint(e.s, e.a, dir, 0)}</div>`;
+    }
+  };
+  c.querySelector("#chk").onclick = check;
+  input.addEventListener("keydown", ev => { if (ev.key === "Enter") check(); });
+  input.focus();
+}
+
+/* ---------- fill the table (missing values, constant rate) ---------- */
+const tblCtx = {
+  raffle:    { label: "Raffle tickets", who: "Raina", one: "ticket", many: "tickets", row: "Number of tickets", cost: "Charge ($)",
+               line: (g, D) => `Raina sells raffle tickets. For every <b>${g} tickets</b>, she charges <b>$${D}</b>.` },
+  fence:     { label: "Garden fence", who: "Nicole", one: "foot", many: "feet", row: "Length of fencing (feet)", cost: "Cost ($)",
+               line: (g, D) => `Nicole is building a fence around her garden. For every <b>${g} feet</b> of fencing, the cost is <b>$${D}</b>.` },
+  lemonade:  { label: "Lemonade", who: "Marcus", one: "cup", many: "cups", row: "Cups of lemonade", cost: "Charge ($)",
+               line: (g, D) => `Marcus sells lemonade. For every <b>${g} cups</b>, he charges <b>$${D}</b>.` },
+  bracelets: { label: "Bracelets", who: "Ivy", one: "bracelet", many: "bracelets", row: "Number of bracelets", cost: "Charge ($)",
+               line: (g, D) => `Ivy sells bracelets. For every <b>${g} bracelets</b>, she charges <b>$${D}</b>.` }
+};
+function makeTbl(key) {
+  const ctx = tblCtx[key], u = rint(2, 12), g = rint(2, 5);
+  let ns;
+  do { ns = new Set(); while (ns.size < 4) { const n = rint(1, 12); if (n !== g) ns.add(n); } ns = [...ns].sort((a, b) => a - b); }
+  while (false);
+  const cols = ns.map(n => ({ n, d: n * u, blank: Math.random() < .5 ? "n" : "d", filled: false }));
+  if (!cols.some(c => c.blank === "n")) cols[rint(0, 3)].blank = "n";
+  if (!cols.some(c => c.blank === "d")) cols.find(c => c.blank === "n" && (cols.filter(x => x.blank === "n").length > 1)) .blank = "d";
+  return { key, ctx, u, g, cols, cur: 0, phase: "dir", unitFound: false };
+}
+
+function tblTable(t, live) {
+  const cell = (c, i, which) => {
+    const val = which === "n" ? c.n : `${c.d}`;
+    if (c.blank !== which || c.filled) return `<td class="${c.blank === which ? "done" : ""}">${val}</td>`;
+    return `<td class="blank${live && i === t.cur ? " now" : ""}">?</td>`;
+  };
+  return `<div class="tbl-wrap"><table class="rt">
+    <tr><th scope="row">${t.ctx.row}</th><td>${t.g}</td>${t.cols.map((c, i) => cell(c, i, "n")).join("")}</tr>
+    <tr><th scope="row">${t.ctx.cost}</th><td>${t.g * t.u}</td>${t.cols.map((c, i) => cell(c, i, "d")).join("")}</tr>
+  </table></div>`;
+}
+const tblStory = t => `<p class="story">${t.ctx.line(t.g, t.g * t.u)} Fill in the table.</p>`;
+
+function tblPick() {
+  const c = el(`<section class="card">
+    <h2>What is being sold?</h2>
+    <div class="choices" id="ctx"></div>
+  </section>`);
+  stage.appendChild(c);
+  Object.entries(tblCtx).forEach(([k, v]) => {
+    const b = el(`<button type="button">${v.label}</button>`);
+    b.onclick = () => { state.t = makeTbl(k); state.step = 1; render(); };
+    c.querySelector("#ctx").appendChild(b);
+  });
+}
+
+function tblUnit() {
+  const t = state.t, D = t.g * t.u, one = t.ctx.one;
+  const c = el(`<section class="card">
+    ${tblStory(t)}
+    ${tblTable(t, false)}
+    <h2>First, find the magic number: how much does just 1 ${one} cost?</h2>
+    <div class="tix" id="tix">${Array.from({ length: t.g }, () => `<span>1 ${one}: $?</span>`).join("")}</div>
+    <p>$${D} is split into ${t.g} equal pieces, one for each ${one}.</p>
+    <div class="row">
+      <input type="number" id="ans" inputmode="numeric" placeholder="price for 1 ${one}" aria-label="Price for one ${one}">
+      <button class="primary" id="chk" type="button">Check</button>
+    </div>
+    <button class="quiet" id="hintBtn" type="button">Show me a hint</button>
+    <div id="hint"></div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  const hints = [`That's ${D} ÷ ${t.g}.`, `Think: ${t.g} × ? = ${D}.`, `Count by ${t.g}s: ${Array.from({ length: t.u }, (_, i) => t.g * (i + 1)).join(", ")}. How many jumps?`];
+  let hl = 0;
+  c.querySelector("#hintBtn").onclick = e => { c.querySelector("#hint").innerHTML = `<div class="hint">${hints.slice(0, ++hl).join("<br>")}</div>`; if (hl >= hints.length) e.target.disabled = true; };
+  const input = c.querySelector("#ans");
+  const check = () => {
+    const fb = c.querySelector("#fb");
+    if (!input.value) { fb.innerHTML = `<div class="note look">Type a number first, then press Check.</div>`; return; }
+    const v = Number(input.value);
+    if (v === t.u) {
+      c.querySelector("#tix").innerHTML = Array.from({ length: t.g }, () => `<span>1 ${one}: $${t.u}</span>`).join("");
+      fb.innerHTML = `<div class="note ok">$${t.u} for each ${one}. Check: ${t.g} × $${t.u} = $${D}. It matches. This is your magic number for the whole table.</div>`;
+      fb.appendChild(nextBtn(() => { t.unitFound = true; state.step = 2; render(); }, "Fill in the table"));
+      input.disabled = true; c.querySelector("#chk").disabled = true;
+    } else if (v > D) {
+      fb.innerHTML = `<div class="note look">$${v} for just 1 ${one}? That's more than all ${t.g} together cost! One ${one} has to cost less than $${D}. Try splitting $${D} into ${t.g} pieces.</div>`;
+    } else {
+      fb.innerHTML = `<div class="note look">Let's test $${v}: ${t.g} × $${v} = $${t.g * v}. We need $${D}. ${t.g * v > D ? "That's too much, so try a smaller number." : "That's not enough, so try a bigger number."}</div>`;
+    }
+  };
+  c.querySelector("#chk").onclick = check;
+  input.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+  input.focus();
+}
+
+function tblFill() {
+  const t = state.t, col = t.cols[t.cur], one = t.ctx.one, many = t.ctx.many;
+  if (col.blank === undefined || col.filled) { // skip columns with nothing to fill
+    const nxt = t.cols.findIndex(c => !c.filled);
+    if (nxt < 0) { state.step = 3; return render(); }
+    t.cur = nxt;
+  }
+  const C = t.cols[t.cur], toDollars = C.blank === "d";
+  const known = toDollars ? `${C.n} ${C.n === 1 ? one : many}` : `$${C.d}`;
+  const want = toDollars ? `the charge` : `how many ${many}`;
+  const c = el(`<section class="card">
+    ${tblStory(t)}
+    <span class="unitchip">1 ${one} = $${t.u}</span>
+    ${tblTable(t, true)}
+    <h2>You know ${known}. You need ${want}.</h2>
+    <div id="work"></div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  const work = c.querySelector("#work");
+  if (t.phase === "dir") {
+    work.appendChild(el(`<div class="card" style="padding:14px;gap:10px">
+      <p>${toDollars ? `Each ${one} costs $${t.u}. To go from ${many} to dollars, should we multiply or divide by ${t.u}?` : `Each ${one} costs $${t.u}. To find how many $${t.u} ${many} fit into $${C.d}, should we multiply or divide by ${t.u}?`}</p>
+      <div class="choices"><button type="button" data-d="mul">Multiply × ${t.u}</button><button type="button" data-d="div">Divide ÷ ${t.u}</button></div>
+    </div>`));
+    work.querySelectorAll("[data-d]").forEach(b => b.onclick = () => {
+      const ok = (b.dataset.d === "mul") === toDollars, fb = c.querySelector("#fb");
+      if (ok) { t.phase = "num"; render(); return; }
+      fb.innerHTML = toDollars
+        ? `<div class="note look">If we divided, ${C.n} ${many} would cost less than one ${one}! More ${many} should cost more money. Every ${one} adds another $${t.u}.</div>`
+        : `<div class="note look">If we multiplied, $${C.d} would turn into ${C.d * t.u} ${many}! That's a giant pile for only $${C.d}. We want to split $${C.d} into $${t.u} pieces.</div>`;
+    });
+    return;
+  }
+  const ans = toDollars ? C.d : C.n, expr = toDollars ? `${C.n} × $${t.u}` : `$${C.d} ÷ $${t.u}`;
+  work.appendChild(el(`<div class="row" style="align-items:center">
+    <span class="ask">${expr} =</span>
+    <input type="number" id="ans" inputmode="numeric" aria-label="Answer for ${expr}">
+    <button class="primary" id="chk" type="button">Check</button>
+  </div>`));
+  work.appendChild(el(`<button class="quiet" id="hintBtn" type="button" style="margin-top:10px">Show me a hint</button>`));
+  work.appendChild(el(`<div id="hint"></div>`));
+  work.querySelector("#hintBtn").onclick = e => {
+    work.querySelector("#hint").innerHTML = `<div class="hint">${toDollars
+      ? `Count by ${t.u}s, ${C.n} times: ${Array.from({ length: C.n }, (_, i) => t.u * (i + 1)).join(", ")}.`
+      : `Count by ${t.u}s until you reach ${C.d}: ${Array.from({ length: C.n }, (_, i) => t.u * (i + 1)).join(", ")}. How many jumps?`}</div>`;
+    e.target.disabled = true;
+  };
+  const input = work.querySelector("#ans");
+  const check = () => {
+    const fb = c.querySelector("#fb");
+    if (!input.value) { fb.innerHTML = `<div class="note look">Type a number first, then press Check.</div>`; return; }
+    const v = Number(input.value);
+    if (v === ans) {
+      C.filled = true; t.phase = "dir";
+      const nxt = t.cols.findIndex(x => !x.filled && x.blank);
+      t.cols.forEach(x => { if (!x.blank) x.filled = true; });
+      if (nxt < 0 || t.cols.every(x => x.filled)) { state.step = 3; render(); return; }
+      t.cur = nxt; render(); return;
+    }
+    if (v === t.g || v === t.g * t.u) {
+      fb.innerHTML = `<div class="note look">${v} is a number from the first column. That column starts with ${t.g} ${many}, but this column starts with ${known}, so it needs its own answer. Use the magic number: 1 ${one} = $${t.u}. ${expr} = ?</div>`;
+    } else if (!toDollars && v === C.d * t.u) {
+      fb.innerHTML = `<div class="note look">${v} ${many} for only $${C.d}? ${t.ctx.who} would be giving them away! That number came from multiplying. Try ${expr} instead.</div>`;
+    } else if (toDollars) {
+      fb.innerHTML = `<div class="note look">Let's test it: $${v} for ${C.n} ${many} would be $${(v / C.n).toFixed(v % C.n ? 2 : 0)} each. We need $${t.u} each. ${v > ans ? "Try a smaller number." : "Try a bigger number."}</div>`;
+    } else {
+      fb.innerHTML = `<div class="note look">Let's test ${v}: ${v} × $${t.u} = $${v * t.u}. We need $${C.d}. ${v * t.u > C.d ? "Too much, so try fewer." : "Not enough, so try more."}</div>`;
+    }
+  };
+  work.querySelector("#chk").onclick = check;
+  input.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+  input.focus();
+}
+
+function tblCheck() {
+  const t = state.t, one = t.ctx.one;
+  const all = [{ n: t.g, d: t.g * t.u }, ...t.cols];
+  const c = el(`<section class="card">
+    ${tblStory(t)}
+    <div class="tbl-wrap"><table class="rt">
+      <tr><th scope="row">${t.ctx.row}</th>${all.map(x => `<td>${x.n}</td>`).join("")}</tr>
+      <tr><th scope="row">${t.ctx.cost}</th>${all.map(x => `<td>${x.d}</td>`).join("")}</tr>
+      <tr class="per"><th scope="row">$ for 1 ${one}</th>${all.map(x => `<td class="done">${x.d / x.n}</td>`).join("")}</tr>
+    </table></div>
+    <h2>The table is full.</h2>
+    <div class="note ok">Look at the bottom row. Every column comes out to $${t.u} for 1 ${one}. That's what a constant rate means: the price for one never changes.</div>
+    <div class="row">
+      <button class="primary" id="again" type="button">Another table like this</button>
+      <button id="pick" type="button">Pick something else to sell</button>
+    </div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelector("#again").onclick = () => { state.solved.tbl++; save(); state.t = makeTbl(t.key); state.step = 1; render(); };
+  c.querySelector("#pick").onclick = () => { state.solved.tbl++; save(); state.step = 0; render(); };
+}
+
+render();
+</script>
+
+</body>
+</html>

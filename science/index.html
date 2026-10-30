@@ -367,6 +367,9 @@ tr:last-child td{border-bottom:0}
 .tfbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .btn.tf{font-size:18px;padding:14px}
 .btn.tf.yes{background:var(--good);color:#fff}.btn.tf.no{background:var(--bad);color:#fff}
+
+.cbox{background:var(--soft);border-left:4px solid var(--c);border-radius:6px;padding:10px 14px;margin:12px 0;max-width:66ch;font-size:16px}
+.cbox.two{border-left-color:var(--muted)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}.edp{animation:none!important;opacity:1!important}.bigstars span.on,.shake,.tcard.bad{animation:none!important}.fig *{animation:none!important;opacity:1!important}}
 </style>
 
@@ -784,11 +787,7 @@ const WATCH = {
   "by": "Rogue Wonders",
   "more": "rock cycle for kids"
  },
- "earth-1": {
-  "id": "bVn04eJRjV4",
-  "title": "Plate Tectonics Explained",
-  "by": "Learn Bright",
-  "more": "plate tectonics for kids"
+ "earth-1": {"id":"yrKw5Xq5UQ4","title":"How Did Catastrophic Plate Tectonics Cause Noah's Flood?","by":"Dr. Andrew Snelling, Answers in Genesis geologist","more":"catastrophic plate tectonics flood answers in genesis"
  },
  "earth-2": {
   "id": "z5G4NCwWUxY",
@@ -1165,20 +1164,20 @@ FIG["adapt-1"] = { tag:"Play with it", cap:"A population of peppered moths on tr
     });
   }};
 
-FIG["adapt-2"] = { tag:"See it", cap:"Undisturbed rock layers stack like pages in a book: the bottom pages were written first. Fossils in deeper layers are older and usually show simpler life.",
-  html:(()=>{ const L = [["#E9D8A6","Mammal teeth and bones"],["#D9B26F","Dinosaur bones"],["#C29A6B","Ferns and early land plants"],["#A88465","Early fish"],["#8C6E57","Trilobites and simple sea life"]];
-    return `<svg viewBox="0 0 640 300" role="img" aria-label="Rock layers with fossils, oldest at the bottom">${ARROW("fl-a")}
+FIG["adapt-2"] = { tag:"See it", cap:"Creation scientists read the fossil layers as the order things were buried during Noah's Flood. The sea floor was buried first, and creatures living higher up were buried later as the waters rose.",
+  html:(()=>{ const L = [["#E9D8A6","Buried last: land mammals"],["#D9B26F","Dinosaurs and land reptiles"],["#C29A6B","Plants from lowland forests"],["#A88465","Fish"],["#8C6E57","Buried first: sea-floor creatures"]];
+    return `<svg viewBox="0 0 700 300" role="img" aria-label="Rock layers showing the order of burial in the Flood">${ARROW("fl-a")}
     ${L.map((l,i)=>`<rect x="20" y="${20+i*52}" width="440" height="52" fill="${l[0]}"/><text x="480" y="${50+i*52}" class="sm">${l[1]}</text>`).join("")}
     <path d="M120 50 l14 -8 l6 4 l-10 10z M150 42 l20 6" stroke="#5A4632" stroke-width="3" fill="#F5EEDC"/>
     <path d="M300 92 q10 -10 20 0 l40 0 q10 -10 20 0 q-10 10 -20 0 l-40 0 q-10 10 -20 0z" fill="#F5EEDC" stroke="#5A4632" stroke-width="2"/>
     <path d="M90 168 q10 -24 20 0 M100 168 l0 -24 M92 150 l8 4 M108 150 l-8 4 M92 158 l8 4 M108 158 l-8 4" stroke="#3E6B2E" stroke-width="2.5" fill="none"/>
     <path d="M300 206 q30 -16 60 0 q-30 16 -60 0z M360 206 l16 -8 l0 16z" fill="#F5EEDC" stroke="#5A4632" stroke-width="2"/>
     <ellipse cx="160" cy="258" rx="22" ry="13" fill="#F5EEDC" stroke="#5A4632" stroke-width="2"/><path d="M146 258 h28 M160 246 v24" stroke="#5A4632" stroke-width="1.5"/>
-    <line x1="600" y1="40" x2="600" y2="270" stroke="currentColor" stroke-width="2" marker-end="url(#fl-a)"/><text x="590" y="295" text-anchor="end" class="lb">older</text></svg>`; })() };
+    <line x1="680" y1="270" x2="680" y2="40" stroke="#3B82C4" stroke-width="3" marker-end="url(#fl-a)"/><text x="690" y="295" text-anchor="end" class="lb">Flood waters rise</text></svg>`; })() };
 
 /* ---------- Unit 12: Resources ---------- */
-FIG["earthres-0"] = Object.assign({ tag:"Play with it", cap:"Sort each resource. Renewable resources are replaced by nature fairly quickly; nonrenewable ones take millions of years to form." }, sorter([
-  ["Sunlight",0,"The Sun shines every day."],["Coal",1,"Coal took millions of years to form."],["Wind",0,"Wind keeps blowing."],["Oil",1,"Oil is a fossil fuel."],["Natural gas",1,"Natural gas is a fossil fuel."],
+FIG["earthres-0"] = Object.assign({ tag:"Play with it", cap:"Sort each resource. Renewable resources are replaced by nature fairly quickly; nonrenewable ones are not replaced as fast as we use them." }, sorter([
+  ["Sunlight",0,"The Sun shines every day."],["Coal",1,"There is a limited amount, and it is not being replaced as we use it."],["Wind",0,"Wind keeps blowing."],["Oil",1,"Oil is a fossil fuel."],["Natural gas",1,"Natural gas is a fossil fuel."],
   ["Trees (when replanted)",0,"New trees can grow back in years."],["Flowing river water",0,"The water cycle keeps rivers flowing."],["Uranium for nuclear power",1,"Uranium is a mined mineral with limited amounts."],
   ["Heat from inside Earth",0,"Geothermal heat is constantly produced."],["Copper ore",1,"Minerals take a very long time to form."]
 ], ["Renewable","Nonrenewable"]));
@@ -1283,19 +1282,15 @@ FIG["surface-1"] = { tag:"See it", cap:"Top: a topographic map of a hill (contou
     ${[100,200,300,400].map(e=>`<text x="12" y="${py(e)+4}" class="sm">${e} m</text>`).join("")}
     <text x="40" y="215" class="sm">steep side</text><text x="380" y="300" class="sm">gentle side</text></svg>`; })() };
 
-FIG["surface-2"] = { tag:"See it", cap:"All 4.6 billion years of Earth's history squeezed into one 24-hour day. The bottom bar zooms in on the last hour, where dinosaurs disappear and humans show up in the final seconds.",
-  html:(()=>{ const ev = [[4600,"Earth forms"],[3700,"First life"],[2400,"Oxygen builds up"],[539,"Animals boom"],[230,"Dinosaurs"]];
-    const hr = m => 24*(1-m/4600), x = h => 20 + h/24*600, fmt = h => { const H = Math.floor(h), M = Math.round((h-H)*60); const hh = ((H+11)%12)+1; return `${hh}:${String(M).padStart(2,"0")} ${H<12?"a.m.":"p.m."}`; };
-    const xz = m => 20 + (60 - (m/4600*24*60))/60*600;
-    return `<svg viewBox="0 0 640 260" role="img" aria-label="Earth's history as a 24-hour day">
-    <defs><linearGradient id="gtd"><stop offset="0" stop-color="#2D3A7A"/><stop offset=".5" stop-color="#F2B705"/><stop offset="1" stop-color="#2D3A7A"/></linearGradient></defs>
-    <rect x="20" y="60" width="600" height="24" rx="4" fill="url(#gtd)"/>
-    ${[6,12,18].map(h=>`<text x="${x(h)}" y="77" text-anchor="middle" style="font-size:11px;fill:${h===12?"#15252A":"#fff"}">${["6 a.m.","noon","6 p.m."][h/6-1]}</text>`).join("")}
-    ${ev.map(([m,n],i)=>`<line x1="${x(hr(m))}" y1="${i%2?60:84}" x2="${x(hr(m))}" y2="${i%2?40:110}" stroke="currentColor"/><text x="${x(hr(m))}" y="${i%2?34:122}" text-anchor="${i===0?"start":i===4?"end":"middle"}" class="sm"><tspan font-weight="700">${n}</tspan> ${fmt(hr(m))}</text>`).join("")}
-    <path d="M${x(23)} 84 L20 170 M620 84 L620 170" stroke="currentColor" stroke-dasharray="3 4" opacity=".5"/>
-    <rect x="20" y="170" width="600" height="24" rx="4" fill="#2D3A7A"/><text x="20" y="160" class="sm">11:00 p.m.</text><text x="620" y="160" text-anchor="end" class="sm">midnight</text>
-    <line x1="${xz(66)}" y1="170" x2="${xz(66)}" y2="210" stroke="#D64545" stroke-width="2"/><text x="${xz(66)}" y="226" text-anchor="middle" class="sm"><tspan font-weight="700">Dinosaurs die out</tspan> 11:39 p.m.</text>
-    <line x1="619" y1="170" x2="619" y2="244" stroke="#F2B705" stroke-width="3"/><text x="612" y="252" text-anchor="end" class="sm"><tspan font-weight="700">Humans</tspan> last 6 seconds</text></svg>`; })() };
+FIG["surface-2"] = { tag:"See it", cap:"The 7 C's of History, the timeline the Creation Museum uses. Dates are approximate, from adding up the Bible's history.",
+  html:(()=>{ const C = [["Creation","about 6,000 years ago","#4F7A25"],["Corruption","the Fall","#8C4A3A"],["Catastrophe","the Flood, about 4,300 years ago","#2F6FB8"],["Confusion","Tower of Babel","#B7860F"],["Christ","about 2,000 years ago","#6B3FA0"],["Cross","death and resurrection","#B3261E"],["Consummation","new heavens and new earth","#0E7C6B"]];
+    return `<svg viewBox="0 0 660 250" role="img" aria-label="Timeline of the 7 C's of History">
+    <line x1="40" y1="110" x2="630" y2="110" stroke="currentColor" stroke-width="3"/><polygon points="630,104 644,110 630,116" fill="currentColor"/>
+    ${C.map((c,i)=>{ const x = 50 + i*92, up = i%2===0;
+      return `<circle cx="${x}" cy="110" r="22" fill="${c[2]}"/><text x="${x}" y="116" text-anchor="middle" style="fill:#fff;font-size:16px;font-weight:800">${i+1}</text>
+      <text x="${x}" y="${up?68:156}" text-anchor="middle" class="lb">${c[0]}</text><text x="${x}" y="${up?50:174}" text-anchor="middle" class="sm">${c[1].length>18?"":c[1]}</text>
+      ${c[1].length>18?`<text x="${x}" y="${up?50:174}" text-anchor="middle" class="sm">${c[1].split(", ")[0]}</text><text x="${x}" y="${up?34:190}" text-anchor="middle" class="sm">${c[1].split(", ")[1]||""}</text>`:""}`; }).join("")}
+    <text x="330" y="232" text-anchor="middle" class="sm">past ← → future</text></svg>`; })() };
 
 /* ---------- Unit 15: Machines ---------- */
 FIG["machines-0"] = { tag:"Play with it", cap:"Slide the fulcrum. The rock weighs 400 N. The closer the fulcrum is to the load, the less effort force you need, but you have to push your end farther.",
@@ -1353,18 +1348,18 @@ Object.assign(WATCH, {
   "genes-0":{id:"GqEConjFPvg",title:"Inherited Traits",by:"Generation Genius",more:"inherited and acquired traits for kids"},
   "genes-1":{id:"8m6hHRlKwxY",title:"DNA, Chromosomes, Genes, and Traits: An Intro to Heredity",by:"Amoeba Sisters",more:"DNA genes chromosomes for kids"},
   "genes-2":{id:"bipLMW073q0",title:"Punnett Squares: A Student How-To Guide",by:"Cook in the Classroom",more:"Punnett squares for kids"},
-  "adapt-0":{id:"liZ5j1k-XIk",title:"Animal Adaptations: Adaptation and Survival",by:"Learning Junction",more:"animal adaptations for kids"},
-  "adapt-1":{id:"CgLqchJjVW4",title:"Natural Selection and the Peppered Moth",by:"Butterfly Conservation",more:"natural selection for kids"},
-  "adapt-2":{id:"YUb_d3gxIrQ",title:"Fossils: How Fossils Form",by:"Miacademy",more:"how fossils form for kids"},
+  "adapt-0":{id:"ZMHL_3TurXI",title:"The Animal Kinds (Llamas)",by:"Buddy Davis, Answers in Genesis artist",more:"buddy davis animal kinds"},
+  "adapt-1":{id:"eMfwCu-STx0",title:"Where Did All the Species Come From? (Creation Museum Live!)",by:"Answers in Genesis",more:"creation museum created kinds"},
+  "adapt-2":{id:"iCIX3YD_drk",title:"6 Powerful Evidences for the Biblical Flood",by:"Answers in Genesis",more:"answers in genesis flood fossils"},
   "earthres-0":{id:"osBVRfvkmAU",title:"Renewable vs. Non-Renewable Resources",by:"Steve Trash",more:"renewable and nonrenewable resources for kids"},
   "earthres-1":{id:"jUwjdG_7SLU",title:"Learn About Pollution, Conservation, and How to Help the Planet",by:"Pippin Channel",more:"pollution and conservation for kids"},
   "earthres-2":{id:"K9kga9c0u2I",title:"NASA's Earth Minute: Gas Problem",by:"NASA Climate",more:"greenhouse effect for kids"},
   "chem-0":{id:"6WpRELNo7k8",title:"Solutions and Mixtures: What's the Difference?",by:"Miacademy",more:"mixtures and solutions for kids"},
   "chem-1":{id:"QM4fQnxLlxY",title:"What Is the Periodic Table of Elements?",by:"Mocomi Kids",more:"periodic table for kids"},
   "chem-2":{id:"tCFcgHg5WI8",title:"Acids, Bases & the pH Scale",by:"Mad Garden Science",more:"acids and bases pH for kids"},
-  "surface-0":{id:"R-Iak3Wvh9c",title:"Weathering and Erosion",by:"Crash Course Kids",more:"weathering erosion deposition for kids"},
+  "surface-0":{id:"dESkfaURR38",title:"New Grand Canyon Info Confirms Noah's Flood",by:"Answers in Genesis",more:"answers in genesis grand canyon flood"},
   "surface-1":{id:"SKytLNUsU9k",title:"Topography for Kids: Topo Play-Doh & Contour Lines",by:"Colorado Mountain Club",more:"topographic maps for kids"},
-  "surface-2":{id:"z-vY7e5mlGs",title:"The Earth Through Time: Geologic Timescale for Kids",by:"Rabbit Hole Learning",more:"geologic time scale for kids"},
+  "surface-2":{id:"ygq-JPUDzlY",title:"7 C's (Answers Bible Curriculum, Lesson 11)",by:"Answers in Genesis",more:"7 Cs of history answers in genesis"},
   "machines-0":{id:"5HTaJ2mCGTw",title:"Types of Levers",by:"TutWay",more:"levers for kids"},
   "machines-1":{id:"BL2maB1vy68",title:"Simple Machines for Kids: The 6 Simple Machines",by:"Curious Kids Academy",more:"simple machines for kids"},
   "machines-2":{id:"fxJWin195kU",title:"The Engineering Process",by:"Crash Course Kids",more:"engineering design process for kids"}
@@ -1501,13 +1496,13 @@ const UNITS = [
       tryit:"Find a rock outside. Does it have layers (sedimentary), crystals (maybe igneous), or bands (maybe metamorphic)?"},
     { t:"Plate Tectonics",
       body:`<p>Earth has layers: a thin, rocky <b>crust</b>, a thick hot <b>mantle</b>, and a metal <b>core</b>. The crust and upper mantle are broken into giant pieces called <b>tectonic plates</b>. The plates float on softer mantle rock and move a few centimeters each year, about as fast as your fingernails grow.</p>
-<p>About 250 million years ago, the continents were joined in one supercontinent called <b>Pangaea</b>. Evidence includes continents that fit like puzzle pieces (South America and Africa), matching fossils on different continents, and matching rock layers.</p>
+<p>The continents were once joined in one supercontinent, often called <b>Pangaea</b>. Evidence includes continents that fit like puzzle pieces (South America and Africa), matching fossils on different continents, and matching rock layers. Creation scientists say the continents split apart quickly during Noah's Flood, when "the fountains of the great deep burst open" (Genesis 7:11). Today the plates move only a few centimeters a year.</p>
 <p>Plates meet at three kinds of <b>boundaries</b>:</p>
 <ul><li><b>Convergent:</b> plates push together, forming mountains (like the Himalayas) or making one plate sink under another.</li>
 <li><b>Divergent:</b> plates pull apart, and magma rises to make new crust, like the Mid-Atlantic Ridge.</li>
 <li><b>Transform:</b> plates slide past each other, like the San Andreas Fault in California.</li></ul>
 <p>Most <b>earthquakes</b> and <b>volcanoes</b> happen near plate boundaries.</p>`,
-      vocab:[["Crust","Earth's thin, outer rocky layer"],["Mantle","The thick, hot layer below the crust"],["Tectonic plate","A giant moving piece of Earth's surface"],["Pangaea","The supercontinent from about 250 million years ago"],["Fault","A crack in the crust where rocks move"]],
+      vocab:[["Crust","Earth's thin, outer rocky layer"],["Mantle","The thick, hot layer below the crust"],["Tectonic plate","A giant moving piece of Earth's surface"],["Pangaea","The supercontinent formed when all continents were joined"],["Fault","A crack in the crust where rocks move"]],
       tryit:"Look at a world map. Can you see how South America's east coast fits Africa's west coast?"},
     { t:"The Water Cycle and Weather",
       body:`<p>Earth's water moves in a never-ending loop called the <b>water cycle</b>. The <b>Sun</b> provides the energy that drives it.</p>
@@ -1534,7 +1529,7 @@ const UNITS = [
   test:[
     ["Which layer of Earth is thinnest?",["Crust","Mantle","Outer core","Inner core"],0,"The crust is a thin rocky shell compared to the other layers."],
     ["Moving sediment from one place to another by water or wind is…",["weathering","erosion","condensation","melting"],1,"Weathering breaks rock; erosion carries the pieces away."],
-    ["What was Pangaea?",["An ancient volcano","A supercontinent from about 250 million years ago","A type of rock","A layer of the atmosphere"],1,"All the continents were once joined as Pangaea."],
+    ["What was Pangaea?",["An ancient volcano","A supercontinent made of all the continents joined together","A type of rock","A layer of the atmosphere"],1,"All the continents were once joined as Pangaea."],
     ["Which is evidence that continents were once joined?",["Matching fossils found on continents across oceans","Ocean water is salty","The Sun rises in the east","Rain falls from clouds"],0,"The same fossil species on distant continents suggests the land was once connected."],
     ["The Himalayas formed where two plates…",["pulled apart","pushed together","slid past each other","stopped moving"],1,"Convergent boundaries push crust up into mountains."],
     ["New crust forms at a ___ boundary.",["convergent","divergent","transform","none of these"],1,"At divergent boundaries, magma rises between separating plates."],
@@ -2021,80 +2016,85 @@ UNITS.push(
 /* ============ SET 2: UNITS 11-15 ============ */
 UNITS.push(
 {
-  id:"adapt", n:11, sym:"Ev", color:"--u12", name:"Adaptation and Evolution", set:2,
-  blurb:"How living things are built for where they live, how populations change over many generations, and what fossils reveal.",
+  id:"adapt", n:11, sym:"Ck", color:"--u12", name:"Created Kinds, Adaptation, and the Flood", set:2,
+  blurb:"How God designed living things to fit their homes, how animals vary within their created kinds, and what fossils tell us about Noah's Flood.",
   lessons:[
-    { t:"Adaptations",
-      body:`<p>An <b>adaptation</b> is an inherited trait that helps an organism survive and reproduce in its environment. Adaptations are not chosen or learned during an animal's life. They are passed down in genes.</p>
-<p>There are two main types:</p>
-<ul><li><b>Structural (physical) adaptations</b> are body parts or features. A polar bear has thick fur, a layer of fat, and black skin to soak up heat. A cactus has spines instead of leaves to lose less water, and a thick stem to store water. A duck has webbed feet for swimming.</li>
-<li><b>Behavioral adaptations</b> are inherited ways of acting. Bears <b>hibernate</b> through winter when food is scarce. Monarch butterflies <b>migrate</b> up to 4,800 km to Mexico. Wolves hunt in packs.</li></ul>
-<p>Bird beaks are a great example of how structure matches function:</p>
+    { t:"Created Kinds and Adaptations",
+      body:`<p>Genesis 1 says God made plants and animals to reproduce "according to their kinds." A <b>created kind</b> is a group of living things that came from the same original created pair. Creation scientists usually place a kind at about the level of a family. For example, wolves, coyotes, dingoes, and pet dogs all belong to one dog kind.</p>
+<p>God built a lot of variety into each kind's DNA from the start. That variety lets animals have <b>adaptations</b>, inherited traits that help them survive where they live.</p>
+<ul><li><b>Structural adaptations</b> are body features. A polar bear has thick fur, a layer of fat, and black skin to hold heat. A cactus has spines and a thick stem to save water. A duck has webbed feet for swimming.</li>
+<li><b>Behavioral adaptations</b> are inherited ways of acting. Bears <b>hibernate</b> through winter. Monarch butterflies migrate up to 4,800 km to Mexico. Wolves hunt in packs.</li></ul>
+<p>Bird beaks show design that fits function:</p>
 <ul><li>Short, thick, cone-shaped beaks crack seeds (cardinals, finches).</li>
-<li>Long, thin beaks probe flowers for nectar (hummingbirds).</li>
+<li>Long, thin beaks reach nectar inside flowers (hummingbirds).</li>
 <li>Sharp, hooked beaks tear meat (hawks, eagles).</li>
 <li>Long, spear-like beaks catch fish (herons).</li></ul>
-<p>Two adaptations for hiding or warning:</p>
-<ul><li><b>Camouflage</b> helps an organism blend in, like a snowshoe hare turning white in winter.</li>
-<li><b>Mimicry</b> is when one species looks like another. The harmless viceroy butterfly looks like the bad-tasting monarch, so birds avoid it.</li></ul>
-<p>An adaptation that helps in one environment may not help in another. A polar bear's thick coat would make it overheat in a desert.</p>`,
-      vocab:[["Adaptation","An inherited trait that helps an organism survive"],["Structural adaptation","A body feature that helps survival"],["Behavioral adaptation","An inherited action that helps survival"],["Camouflage","Coloring that helps an organism blend in"],["Mimicry","Looking like another species for protection"],["Hibernation","A deep, long sleep to survive winter"]],
+<p><b>Camouflage</b> helps an animal blend in, like a snowshoe hare turning white in winter. In <b>mimicry</b>, one species looks like another. The harmless viceroy butterfly looks like the bad-tasting monarch, so birds leave it alone.</p>
+<p>An adaptation fits a certain place. A polar bear's thick coat would make it overheat in a desert.</p>
+<div class="cbox"><b>7 C's: Creation.</b> Adaptations show a Designer who made living things able to fill the earth (Genesis 1:28).</div>`,
+      vocab:[["Created kind","A group of living things that came from the same original created pair"],["Adaptation","An inherited trait that helps a living thing survive"],["Structural adaptation","A body feature that helps survival"],["Behavioral adaptation","An inherited action that helps survival"],["Camouflage","Coloring that helps something blend in"],["Mimicry","Looking like another species for protection"]],
       tryit:"Watch birds at a feeder or in a park. Draw two different beaks and guess what each bird eats."},
-    { t:"Natural Selection",
-      body:`<p>In the 1830s, Charles Darwin sailed to the Galápagos Islands and noticed that finches on different islands had different beaks, each suited to the food on its island. He later explained how this happens with a process called <b>natural selection</b>.</p>
-<p>Natural selection works through four steps:</p>
-<ul><li><b>Variation:</b> individuals in a population have different traits (some moths are lighter, some darker).</li>
-<li><b>Overproduction:</b> organisms produce more offspring than can survive.</li>
-<li><b>Competition and survival:</b> individuals with traits better suited to the environment are more likely to survive. This is sometimes called "survival of the fittest," where "fit" means best suited, not strongest.</li>
-<li><b>Reproduction:</b> survivors pass their helpful traits to their offspring. Over many generations, the helpful trait becomes more common.</li></ul>
-<p>A famous real example is the <b>peppered moth</b> in England. Most moths were light-colored, which matched the pale tree bark, while dark moths were easy for birds to spot. In the 1800s, factory soot blackened the trees. Now the dark moths were camouflaged and the light ones stood out. Within decades, most moths in industrial areas were dark. When pollution laws cleaned the air, light moths became common again.</p>
-<p>Natural selection acts on <b>populations</b> over generations, not on single individuals. A single moth can't change its color. The population changes because more of one kind survive and reproduce.</p>
-<p>The gradual change in a species over many generations is called <b>evolution</b>. Bacteria becoming resistant to antibiotics is evolution happening fast enough to measure today, which is why doctors say to finish all of your medicine.</p>`,
-      vocab:[["Natural selection","Individuals best suited to their environment survive and reproduce more"],["Variation","Differences in traits within a population"],["Population","All the members of one species in an area"],["Evolution","Gradual change in a species over many generations"],["Generation","One step in a family line, like parents to offspring"]],
-      tryit:"Run the moth simulation above with light bark, then sooty bark. How many generations does it take for the population to change?"},
-    { t:"Fossils and Evidence of Change",
-      body:`<p>A <b>fossil</b> is the preserved remains or trace of an organism that lived long ago. Most fossils form in <b>sedimentary rock</b>:</p>
-<ul><li>An organism dies and is quickly buried by mud, sand, or silt.</li>
-<li>Soft parts decay, but hard parts like bones, shells, and teeth remain.</li>
-<li>Over thousands to millions of years, more layers press down and harden into rock. Minerals in water slowly replace the hard parts, turning them to stone.</li></ul>
+    { t:"Natural Selection Within a Kind",
+      body:`<p>In the 1830s, Charles Darwin visited the Galápagos Islands and saw finches with different beaks on different islands. He described <b>natural selection</b>, which works in four steps:</p>
+<ul><li><b>1. Variation:</b> individuals differ (some moths are lighter, some darker).</li>
+<li><b>2. Overproduction:</b> more young are born than can survive.</li>
+<li><b>3. Survival:</b> the ones best suited to their surroundings are more likely to live.</li>
+<li><b>4. Reproduction:</b> survivors pass their traits on, so those traits become more common.</li></ul>
+<p>The <b>peppered moth</b> in England is a real example. Light moths matched pale tree bark. When factory soot darkened the trees in the 1800s, dark moths were hidden and light ones were eaten, so most moths became dark. When the air was cleaned, light moths became common again. Notice: the moths changed color, but they stayed peppered moths the whole time.</p>
+<p>Creation scientists agree that natural selection is real and can be observed. The Bible-based view adds three key points:</p>
+<ul><li><b>It sorts what is already there.</b> Natural selection chooses among traits God already placed in the kind. It does not add new information.</li>
+<li><b>Mutations usually damage.</b> A <b>mutation</b> is a copying mistake in DNA. Since Adam's sin, the world is under a curse, and mutations usually cause loss or harm, not new designs.</li>
+<li><b>New species, same kind.</b> Groups can split into new species quickly, especially after the Flood. This is called <b>speciation</b>. All dog breeds came from wolves by <b>artificial selection</b>, people choosing which dogs breed, in only a few thousand years. They are still dogs. Darwin's finches are all still finches.</li></ul>
+<p>Bacteria that resist antibiotics are still the same kinds of bacteria. Often the resistance comes from a broken or lost function. That is why doctors say to finish all of your medicine.</p>
+<div class="cbox"><b>7 C's: Corruption.</b> Mutations, disease, and death entered the world after the Fall (Romans 8:22).</div>`,
+      vocab:[["Natural selection","Living things best suited to their surroundings survive and have more offspring"],["Variation","Differences within a population"],["Population","All the members of one species in an area"],["Speciation","One group splitting into new species within the same kind"],["Mutation","A copying mistake in DNA"],["Artificial selection","People choosing which animals breed"]],
+      tryit:"Run the moth simulation with light bark, then sooty bark. Did the moths ever turn into a different kind of animal?"},
+    { t:"Fossils and the Flood",
+      body:`<p>A <b>fossil</b> is the preserved remains or trace of something that lived long ago. A fossil forms only when a plant or animal is buried quickly by mud or sand before it rots or is eaten. Today, most dead animals decay. Yet the earth holds billions of fossils, including fish buried while swallowing other fish and huge graveyards of dinosaurs. This points to <b>rapid burial</b> in water on a massive scale.</p>
+<p>Genesis 6–9 describes that <b>catastrophe</b>: a worldwide <b>Flood</b> about 4,300 years ago. God told Noah to build an Ark 300 cubits long, 50 wide, and 30 high. The Ark Encounter in Kentucky is a life-size model, about 510 feet long, 85 feet wide, and 51 feet high. Answers in Genesis estimates the Ark carried at most about 1,400 kinds of land animals, roughly 6,700 animals, including young dinosaurs.</p>
+<p>Creation scientists read the rock record this way:</p>
+<ul><li><b>Layers were laid down fast.</b> The <b>law of superposition</b> is still true: in undisturbed layers, lower layers came first. But most layers formed during the year-long Flood, not over millions of years.</li>
+<li><b>Mount St. Helens is a small model.</b> After it erupted on May 18, 1980, a 25-foot-thick stack of thin layers formed in less than a day. A later mudflow carved a canyon about 100 feet deep, nicknamed the Little Grand Canyon.</li>
+<li><b>Sea fossils on mountains.</b> Seashells and sea creatures are found high on mountains around the world, even near the top of Mount Everest, showing that water once covered the land.</li>
+<li><b>Fossil order.</b> Sea creatures are mostly in the lowest layers because the Flood buried the sea floor first. Land animals that could flee to higher ground were buried later.</li></ul>
 <p>Types of fossils:</p>
 <ul><li><b>Mold:</b> a hollow space in rock shaped like the organism. <b>Cast:</b> a mold that filled with minerals, making a copy.</li>
 <li><b>Petrified fossils:</b> remains turned to stone by minerals.</li>
 <li><b>Trace fossils:</b> evidence of activity, like footprints, burrows, or nests.</li>
-<li><b>Preserved remains:</b> whole organisms kept in amber (tree sap), ice, or tar.</li></ul>
-<p>Fossils are evidence that life has changed over time. In undisturbed rock layers, the <b>oldest layers are at the bottom</b> and the youngest at the top. This is the <b>law of superposition</b>. Simpler life forms appear in deeper layers, and more complex ones appear higher up. The fossil record also shows <b>extinction</b>, when every member of a species dies out, like the dinosaurs about 66 million years ago.</p>
-<p>Fossils can show <b>transitional forms</b> between groups. <i>Tiktaalik</i>, about 375 million years old, had fins with wrist-like bones and could prop itself up, a step between fish and four-legged land animals. Fossils also reveal past environments: seashell fossils found high on mountains show that the rock once formed under the sea. Fossils of tropical plants have even been found in Antarctica.</p>`,
-      vocab:[["Fossil","Preserved remains or traces of ancient life"],["Trace fossil","Evidence of activity, like a footprint"],["Law of superposition","In undisturbed layers, older rock is on the bottom"],["Extinction","When a species dies out completely"],["Transitional form","A fossil that shows traits of two groups"],["Amber","Hardened tree sap that can preserve insects"]],
-      tryit:"Press a shell or leaf into clay to make a mold. Fill it with glue or plaster to make a cast."}
+<li><b>Preserved remains:</b> whole creatures kept in amber (tree sap), ice, or tar.</li></ul>
+<p>Fossils also show <b>extinction</b>, when every member of a kind dies out.</p>
+<div class="cbox"><b>7 C's: Catastrophe.</b> The Flood was God's judgment on sin, and the Ark was His way of saving Noah's family and the animals.</div>`,
+      vocab:[["Fossil","Preserved remains or traces of something that lived long ago"],["Rapid burial","Being covered quickly before decay"],["Trace fossil","Evidence of activity, like a footprint"],["Law of superposition","In undisturbed layers, lower layers were laid down first"],["Extinction","When a kind dies out completely"],["Catastrophe","A huge, sudden disaster"]],
+      tryit:"Press a shell or leaf into clay to make a mold, then fill it with glue to make a cast. How fast did your fossil form?"}
   ],
   quiz:[
-    ["An adaptation is…",["a trait learned during life","an inherited trait that helps survival","any change in weather","a type of rock"],1,"Adaptations are inherited."],
+    ["Genesis 1 says animals reproduce according to their…",["kinds","ages","colors","habitats"],0,"God made living things to reproduce according to their kinds."],
+    ["Creation scientists usually place a created kind at about the level of a…",["species","family","kingdom","cell"],1,"A kind often includes many species within one family."],
+    ["Wolves, coyotes, and pet dogs belong to the same…",["dog kind","cat kind","bear kind","no kind"],0,"They all came from the original dog kind."],
     ["A bear hibernating is a…",["structural adaptation","behavioral adaptation","acquired trait","fossil"],1,"Hibernation is an inherited behavior."],
     ["A hummingbird's long, thin beak is best for…",["cracking seeds","tearing meat","sipping nectar from flowers","catching fish"],2,"It reaches deep inside flowers."],
-    ["A snowshoe hare turning white in winter is an example of…",["mimicry","camouflage","migration","extinction"],1,"It blends in with the snow."],
-    ["Who explained natural selection after studying Galápagos finches?",["Gregor Mendel","Charles Darwin","Isaac Newton","Marie Curie"],1,"Darwin described natural selection."],
-    ["In natural selection, \"fittest\" means…",["strongest","fastest","best suited to the environment","biggest"],2,"Fitness is about matching the environment and reproducing."],
-    ["Natural selection changes…",["one individual during its life","a population over many generations","rocks into fossils","the weather"],1,"Populations change as helpful traits spread."],
-    ["A dinosaur footprint in rock is a…",["cast","trace fossil","petrified fossil","preserved remain"],1,"It shows activity, not the body itself."],
-    ["Most fossils are found in…",["igneous rock","sedimentary rock","metamorphic rock","lava"],1,"Sediment buries remains gently."],
-    ["In undisturbed rock layers, the oldest layers are…",["on top","in the middle","on the bottom","scattered randomly"],2,"This is the law of superposition."]
+    ["In natural selection, the animals that survive best are the ones…",["strongest","biggest","best suited to their surroundings","oldest"],2,"Best suited means fitting the environment."],
+    ["Creation scientists say natural selection…",["adds new kinds","sorts information already in the kind","never happens","turns fish into frogs"],1,"It chooses among traits God already placed in the kind."],
+    ["Peppered moths changed color, but they stayed…",["peppered moths","butterflies","birds","bats"],0,"The change happened within the same kind."],
+    ["A fossil forms when a living thing is…",["left in the sun","buried quickly","frozen slowly","eaten"],1,"Quick burial protects it from decay."],
+    ["In which of the 7 C's did the worldwide Flood happen?",["Creation","Corruption","Catastrophe","Confusion"],2,"The Flood is the Catastrophe."]
   ],
   test:[
+    ["Why did God put lots of variety in each kind's DNA?",["So kinds could change into other kinds","So animals could fill the earth and adapt to different places","So they would all look the same","There is no variety"],1,"Built-in variety lets animals adapt to many places."],
     ["A cactus has spines instead of leaves. This helps it…",["catch insects","lose less water","grow faster","attract birds"],1,"Spines reduce water loss in the desert."],
-    ["The viceroy butterfly looks like the bad-tasting monarch. This is…",["camouflage","mimicry","hibernation","natural selection's opposite"],1,"Looking like a dangerous species protects it."],
-    ["Why might a polar bear's adaptations be harmful in a desert?",["Its thick fur and fat would make it overheat","It would be too fast","Its paws are too small","It couldn't see"],0,"Adaptations fit a specific environment."],
-    ["A bird with a short, thick, cone-shaped beak most likely eats…",["nectar","seeds","fish","meat"],1,"Strong beaks crack seeds."],
-    ["Which is the correct order of natural selection?",["Survival, variation, reproduction, overproduction","Variation, overproduction, competition/survival, reproduction","Reproduction, extinction, variation, survival","Overproduction, extinction, mutation, learning"],1,"Variation exists, too many are born, the best-suited survive, and they reproduce."],
-    ["Why did dark peppered moths become common during the 1800s in England?",["They learned to change color","Soot darkened trees, so dark moths were hidden from birds","Birds preferred dark moths","Light moths migrated away"],1,"Dark moths survived and reproduced more on sooty bark."],
-    ["After pollution laws cleaned the air, what happened to peppered moths?",["All moths died","Light moths became common again","Dark moths became more common","Nothing changed"],1,"Light moths were camouflaged again on clean bark."],
-    ["Why must there be variation for natural selection to happen?",["If all individuals were identical, none would have an advantage","Variation causes extinction","Variation makes animals learn","It doesn't matter"],0,"Selection needs differences to act on."],
-    ["Bacteria becoming resistant to antibiotics is an example of…",["acquired traits","evolution by natural selection","a fossil","hibernation"],1,"Resistant bacteria survive and multiply."],
-    ["Why are soft body parts rarely fossilized?",["They decay before they can be preserved","They're too heavy","They turn into lava","They are always eaten"],0,"Hard parts like bones and shells last long enough."],
-    ["A hollow space in rock shaped like a shell is a…",["cast","mold","trace fossil","amber fossil"],1,"A cast forms if the mold fills with minerals."],
-    ["An insect trapped in hardened tree sap is an example of…",["a petrified fossil","a preserved remain in amber","a trace fossil","a cast"],1,"Amber preserves whole organisms."],
-    ["Seashell fossils are found near the top of a mountain. What does this show?",["Fish climbed the mountain","The rock formed under the sea long ago","Shells grow on mountains","Someone left them there"],1,"The land was once underwater and later lifted up."],
-    ["Tiktaalik had fins with wrist-like bones. Scientists call it a…",["mimic","transitional form","trace fossil","modern fish"],1,"It shows traits between fish and four-legged animals."],
-    ["Layer A is above layer B in undisturbed rock. Which is older?",["Layer A","Layer B","Same age","Can't tell"],1,"By the law of superposition, lower layers are older."]
+    ["The viceroy butterfly looks like the bad-tasting monarch. This is…",["camouflage","mimicry","hibernation","extinction"],1,"Looking like a bad-tasting species protects it."],
+    ["What is the correct order of natural selection?",["Variation, overproduction, survival, reproduction","Survival, variation, reproduction, overproduction","Reproduction, extinction, variation, survival","Overproduction, extinction, mutation, learning"],0,"Differences exist, too many are born, the best-suited survive, and they reproduce."],
+    ["Why did dark peppered moths become common in the 1800s?",["They learned to change color","Soot darkened the trees, so dark moths were hidden from birds","Birds liked dark moths","Light moths flew away"],1,"Dark moths survived and reproduced more on sooty bark."],
+    ["All dog breeds came from wolves through…",["evolution into a new kind","artificial selection within the dog kind","mutation into cats","hibernation"],1,"People chose which dogs to breed, and they are all still dogs."],
+    ["Creation scientists say most mutations…",["create new kinds","cause loss or damage","never happen","make animals stronger"],1,"Since the Fall, copying mistakes usually harm or remove information."],
+    ["According to the 7 C's, when did death and disease enter the world?",["Creation","Corruption, after Adam's sin","Catastrophe","Christ"],1,"Corruption came with the Fall (Romans 8:22)."],
+    ["Darwin's finches on the Galápagos show…",["finches turning into eagles","variation and new species within the finch kind","no change at all","dinosaurs becoming birds"],1,"They are all still finches."],
+    ["Why are fossils evidence of rapid burial?",["Living things decay or get eaten unless they are covered quickly","Fossils grow inside rocks","Animals bury themselves on purpose","Fossils form in the sun"],0,"Without quick burial, remains rot away."],
+    ["About how long ago do creation scientists date Noah's Flood?",["66 million years","About 4,300 years","1 billion years","400 years"],1,"Using the Bible's timeline, about 4,300 years ago."],
+    ["The Ark was 300 cubits long. The life-size Ark Encounter model is about…",["51 feet long","85 feet long","510 feet long","5,100 feet long"],2,"It is about 510 feet long, 85 feet wide, and 51 feet high."],
+    ["After Mount St. Helens erupted in 1980, a 25-foot stack of thin layers formed in…",["millions of years","1,000 years","less than a day","100 years"],2,"It showed that many layers can form very quickly."],
+    ["Seashell fossils high on mountains show that…",["fish climbed mountains","water once covered the land","shells grow on rocks","someone left them there"],1,"Creation scientists see this as evidence of the Flood."],
+    ["What did God use to save Noah's family and the animals from the Flood?",["A tower","The Ark","A mountain cave","A raft of logs"],1,"God told Noah to build the Ark (Genesis 6)."]
   ]
 },
 {
@@ -2104,8 +2104,8 @@ UNITS.push(
     { t:"Renewable and Nonrenewable Resources",
       body:`<p>A <b>natural resource</b> is anything from nature that people use: water, air, soil, trees, minerals, and energy sources. Resources fall into two groups:</p>
 <ul><li><b>Renewable resources</b> can be replaced by nature in a human lifetime or less: sunlight, wind, water, trees (if replanted), crops, and animals.</li>
-<li><b>Nonrenewable resources</b> exist in limited amounts and take millions of years to form, so once used up, they're gone: coal, oil, natural gas, and minerals like copper and iron.</li></ul>
-<p>Coal, oil, and natural gas are called <b>fossil fuels</b> because they formed from the remains of ancient plants and tiny sea organisms buried and squeezed for millions of years. Burning them releases stored energy, but also releases <b>carbon dioxide</b> and other pollutants.</p>
+<li><b>Nonrenewable resources</b> exist in limited amounts and are not being replaced as fast as we use them, so once used up, they're gone: coal, oil, natural gas, and minerals like copper and iron.</li></ul>
+<p>Coal, oil, and natural gas are called <b>fossil fuels</b> because they formed from the remains of plants and tiny sea creatures that were buried deep and squeezed under heat and pressure. Creation scientists say most of these were buried during Noah's Flood. They are not being replaced as fast as we use them. Burning them releases stored energy, but also releases <b>carbon dioxide</b> and other pollutants.</p>
 <p>Energy sources each have trade-offs:</p>
 <ul><li><b>Solar:</b> clean and renewable, but only works when the Sun shines.</li>
 <li><b>Wind:</b> clean and renewable, but only works when the wind blows, and turbines take up space.</li>
@@ -2114,7 +2114,7 @@ UNITS.push(
 <li><b>Nuclear:</b> produces lots of power without carbon dioxide, but uranium is nonrenewable and the waste stays dangerous for thousands of years.</li>
 <li><b>Fossil fuels:</b> reliable and energy-rich, but nonrenewable and polluting.</li></ul>
 <p>Because no source is perfect, many places use a mix. Engineers also work on batteries that store solar and wind energy for when the Sun isn't shining or the wind isn't blowing.</p>`,
-      vocab:[["Natural resource","Something from nature that people use"],["Renewable resource","A resource nature replaces fairly quickly"],["Nonrenewable resource","A resource that takes millions of years to form"],["Fossil fuel","Coal, oil, or gas formed from ancient remains"],["Hydroelectric","Electricity made from moving water"],["Geothermal","Energy from heat inside Earth"]],
+      vocab:[["Natural resource","Something from nature that people use"],["Renewable resource","A resource nature replaces fairly quickly"],["Nonrenewable resource","A resource that is not replaced as fast as we use it"],["Fossil fuel","Coal, oil, or gas formed from ancient remains"],["Hydroelectric","Electricity made from moving water"],["Geothermal","Energy from heat inside Earth"]],
       tryit:"Play the sorting game above. Then list three things in your house that use energy from a nonrenewable source."},
     { t:"Pollution and Conservation",
       body:`<p><b>Pollution</b> is anything harmful added to the environment.</p>
@@ -2145,7 +2145,7 @@ UNITS.push(
   ],
   quiz:[
     ["Which is a renewable resource?",["Coal","Wind","Oil","Natural gas"],1,"Wind is constantly replaced by nature."],
-    ["Fossil fuels formed from…",["volcanoes","ancient plants and sea organisms","moon rocks","recycled plastic"],1,"Buried remains squeezed over millions of years."],
+    ["Fossil fuels formed from…",["volcanoes","ancient plants and sea organisms","moon rocks","recycled plastic"],1,"Plants and sea creatures were buried and squeezed under heat and pressure."],
     ["Which energy source needs sunshine to work?",["Geothermal","Solar","Coal","Nuclear"],1,"Solar panels turn sunlight into electricity."],
     ["Acid rain is caused by…",["ocean salt","air pollution mixing with rain","too many trees","volcanoes only"],1,"Pollution gases form acids in rainwater."],
     ["Clearing large areas of forest is called…",["recycling","deforestation","conservation","hibernation"],1,"Deforestation destroys habitats."],
@@ -2156,7 +2156,7 @@ UNITS.push(
     ["Burning fossil fuels adds which gas to the air?",["Oxygen","Carbon dioxide","Helium","Nitrogen only"],1,"Burning carbon-based fuels releases CO₂."]
   ],
   test:[
-    ["Why are fossil fuels called nonrenewable?",["They're too expensive","They take millions of years to form","They come from the Sun","They can't be burned"],1,"We use them far faster than nature makes them."],
+    ["Why are fossil fuels called nonrenewable?",["They're too expensive","They are not being replaced as fast as we use them","They come from the Sun","They can't be burned"],1,"We use them far faster than nature makes them."],
     ["Trees are renewable only if…",["they're cut faster","new ones are planted to replace them","they're burned","they're painted"],1,"Replanting keeps the resource renewable."],
     ["What is one drawback of hydroelectric dams?",["They release lots of CO₂","They change rivers and fish habitats","They only work at night","They use coal"],1,"Dams block rivers and change ecosystems."],
     ["Nuclear power makes little CO₂, but a downside is…",["it needs wind","its waste stays dangerous for a very long time","it only works on sunny days","it's renewable"],1,"Radioactive waste must be stored safely for thousands of years."],
@@ -2251,7 +2251,7 @@ UNITS.push(
 },
 {
   id:"surface", n:14, sym:"Sf", color:"--u15", name:"Earth's Surface and History", set:2,
-  blurb:"How water, wind, and ice reshape the land, how to read a topographic map, and how scientists read 4.6 billion years of history in the rocks.",
+  blurb:"How water, wind, and ice reshape the land, how to read a topographic map, and what the rocks tell us about Earth's history from Creation to the Flood.",
   lessons:[
     { t:"Weathering, Erosion, and Deposition",
       body:`<p>Earth's surface is always changing, mostly too slowly to notice. Three processes work together:</p>
@@ -2259,9 +2259,9 @@ UNITS.push(
 <ul><li><b>Mechanical (physical) weathering</b> breaks rock without changing what it's made of. In <b>ice wedging</b>, water seeps into a crack, freezes, and expands by about 9%, pushing the crack wider. Repeating this every winter splits boulders and causes potholes. Plant roots growing into cracks and rocks grinding against each other also cause mechanical weathering.</li>
 <li><b>Chemical weathering</b> changes the minerals in rock. Rainwater is slightly acidic and slowly dissolves limestone, which can form caves like Indiana's Marengo Cave. Oxygen reacts with iron in rock, making it rust and crumble.</li></ul>
 <p><b>Erosion</b> carries weathered material away. The four agents of erosion are:</p>
-<ul><li><b>Water:</b> the most powerful. Rivers carved the Grand Canyon over millions of years.</li>
+<ul><li><b>Water:</b> the most powerful. Moving water carves canyons. Creation scientists say the Grand Canyon was carved quickly as Flood waters drained off the land.</li>
 <li><b>Wind:</b> moves sand and dust, shaping dunes in dry places.</li>
-<li><b>Ice:</b> <b>glaciers</b> scrape and carry huge amounts of rock. Glaciers flattened most of northern Indiana during the last ice age.</li>
+<li><b>Ice:</b> <b>glaciers</b> scrape and carry huge amounts of rock. Glaciers flattened most of northern Indiana during the Ice Age that followed the Flood.</li>
 <li><b>Gravity:</b> pulls material downhill in landslides and mudflows.</li></ul>
 <p><b>Deposition</b> is when the moving material is dropped in a new place, usually where the water, wind, or ice slows down. Rivers drop sediment where they enter the ocean, building fan-shaped <b>deltas</b>, like the Mississippi River Delta. Sand dunes, beaches, and the gravel hills glaciers leave behind are also deposition.</p>
 <p>People slow erosion by planting vegetation (roots hold soil), building walls, and farming on terraces.</p>`,
@@ -2280,17 +2280,19 @@ UNITS.push(
 <p>Hikers, engineers, and city planners use topographic maps to plan trails, roads, and where water will flow during storms.</p>`,
       vocab:[["Landform","A natural feature of Earth's surface"],["Topographic map","A map showing land shape with contour lines"],["Contour line","A line connecting points of equal elevation"],["Contour interval","Elevation change between neighboring contour lines"],["Index contour","A darker, labeled contour line"],["Plateau","A high, mostly flat area of land"]],
       tryit:"Make a clay mountain. Push toothpicks in at heights of 1, 2, and 3 cm and connect them with string. Look down from above: you've made contour lines!"},
-    { t:"Rock Layers and Geologic Time",
-      body:`<p>Earth is about <b>4.6 billion years old</b>. To make sense of such a long time, scientists use the <b>geologic time scale</b>, which divides Earth's history into eons, eras, periods, and epochs, often marked by big changes in life shown by fossils.</p>
-<p>Scientists find the age of rocks two ways:</p>
-<ul><li><b>Relative dating</b> puts events in order (older or younger) without exact years. It uses the <b>law of superposition</b> (in undisturbed layers, the oldest is at the bottom) and the rule that a crack or a lava intrusion that cuts through layers is <b>younger</b> than the layers it cuts. <b>Index fossils</b>, from species that lived for a short time over a wide area, help match layers of the same age in different places.</li>
-<li><b>Absolute dating</b> gives an age in years. It uses <b>radioactive elements</b> in rocks that break down at a steady rate, like a natural clock. This is called radiometric dating.</li></ul>
-<p>Major eras of the last 540 million years:</p>
-<ul><li><b>Paleozoic</b> (about 539–252 million years ago): life exploded in the oceans; fish, then land plants, insects, amphibians, and reptiles appeared. Indiana was covered by warm, shallow seas, which is why its limestone is full of shell and coral fossils. It ended with the largest mass extinction ever.</li>
-<li><b>Mesozoic</b> (252–66 million years ago): the "Age of Reptiles," when dinosaurs lived. Birds and the first mammals appeared. It ended when an asteroid hit near Mexico.</li>
-<li><b>Cenozoic</b> (66 million years ago to now): the "Age of Mammals." Modern humans appeared only about 300,000 years ago.</li></ul>
-<p>If Earth's whole history were squeezed into one 24-hour day, dinosaurs would show up around 10:48 p.m., and humans would appear in the last 6 seconds before midnight.</p>`,
-      vocab:[["Geologic time scale","A calendar of Earth's 4.6-billion-year history"],["Relative dating","Putting rock layers in order from oldest to youngest"],["Absolute dating","Finding a rock's age in years"],["Index fossil","A fossil used to match the age of rock layers"],["Era","A large division of geologic time"],["Mass extinction","When many species die out at about the same time"]],
+    { t:"Earth's History and the 7 C's",
+      body:`<p>The Creation Museum tells Earth's history in seven big events, called the <b>7 C's of History</b>. Adding up the ages and events recorded in the Bible gives a young earth, about <b>6,000 years old</b>.</p>
+<ul><li><b>Creation</b> (about 6,000 years ago): God made everything in six days, and it was very good. Dinosaurs were made on Day 6 with the other land animals.</li>
+<li><b>Corruption:</b> Adam and Eve sinned, bringing death, disease, and the curse into the world.</li>
+<li><b>Catastrophe</b> (about 4,300 years ago): the worldwide Flood laid down most rock layers and fossils. The Ice Age followed.</li>
+<li><b>Confusion:</b> at the Tower of Babel, God confused people's languages and they spread across the earth.</li>
+<li><b>Christ</b> (about 2,000 years ago): Jesus, the Creator, was born as a man.</li>
+<li><b>Cross:</b> Jesus died and rose again to pay for sin.</li>
+<li><b>Consummation:</b> one day God will make a new heavens and a new earth with no more curse.</li></ul>
+<p>Geologists put rock layers in order with <b>relative dating</b>. It uses the <b>law of superposition</b> (in undisturbed layers, the lower layer was laid down first) and the rule that a crack or a lava intrusion that cuts through layers is <b>younger</b> than the layers it cuts. These rules work for both views.</p>
+<p><b>Radiometric dating</b> measures radioactive elements in rocks that slowly change into other elements. To turn those measurements into ages, scientists must assume three things: how much of each element the rock started with, that nothing leaked in or out, and that the rate of change never varied. Creation scientists point out that rocks formed in recent volcanic eruptions have sometimes been dated as hundreds of thousands of years old. They say the assumptions, not the measurements, produce the millions of years.</p>
+<p>Indiana's limestone is full of sea fossils like crinoids and shells. Creation scientists say these sea creatures were buried in the Flood as ocean water covered the continent.</p>`,
+      vocab:[["7 C's of History","Creation, Corruption, Catastrophe, Confusion, Christ, Cross, Consummation"],["Relative dating","Putting rock layers in order from first to last"],["Radiometric dating","Using radioactive elements in rocks to estimate age"],["Assumption","Something accepted as true without being proven"],["Catastrophe","A huge, sudden disaster, like the Flood"],["Ice Age","A time after the Flood when glaciers covered much of the land"]],
       tryit:"Indiana limestone is full of fossils. Look at limestone buildings, steps, or garden rocks near you for tiny shells and crinoid stems."}
   ],
   quiz:[
@@ -2301,26 +2303,26 @@ UNITS.push(
     ["A delta forms where…",["a river enters a larger body of water","a glacier melts","wind blows sand","a volcano erupts"],0,"The river slows and drops sediment."],
     ["On a topographic map, lines close together show…",["flat land","a steep slope","a lake","a road"],1,"Elevation changes quickly over a short distance."],
     ["Each contour line connects points that have the same…",["temperature","elevation","rock type","age"],1,"Equal height above sea level."],
-    ["About how old is Earth?",["4,600 years","4.6 million years","4.6 billion years","46 billion years"],2,"About 4.6 billion years."],
-    ["Dinosaurs lived during the…",["Paleozoic Era","Mesozoic Era","Cenozoic Era","last century"],1,"The Mesozoic was the Age of Reptiles."],
-    ["Putting rock layers in order without exact ages is…",["absolute dating","relative dating","radiometric dating","contour mapping"],1,"Relative dating only says older or younger."]
+    ["Using the Bible's history, about how old is Earth?",["About 6,000 years","4.6 million years","4.6 billion years","46 billion years"],0,"Adding up the Bible's history gives about 6,000 years."],
+    ["On which day of Creation were land animals, including dinosaurs, made?",["Day 1","Day 3","Day 5","Day 6"],3,"Land animals and people were made on Day 6."],
+    ["Putting rock layers in order without exact ages is…",["radiometric dating","relative dating","guessing","contour mapping"],1,"Relative dating only says which came first."]
   ],
   test:[
     ["Why does ice wedging happen most where temperatures go above and below freezing often?",["Repeated freezing and thawing keeps widening the crack","Ice is heavier in summer","Rocks melt in heat","Snow pushes rocks"],0,"Each freeze expands the water and pushes the crack wider."],
     ["A tree root grows into a crack and splits a rock. This is…",["chemical weathering","mechanical weathering","deposition","absolute dating"],1,"The rock breaks physically without changing its minerals."],
     ["An old iron-rich rock turns reddish and crumbles. What happened?",["Ice wedging","Oxidation (rusting), a chemical weathering","Deposition","Wind erosion"],1,"Oxygen reacts with iron."],
-    ["Northern Indiana is very flat mostly because of…",["wind erosion","glaciers during the last ice age","volcanoes","ocean waves"],1,"Glaciers scraped and leveled the land."],
+    ["Northern Indiana is very flat mostly because of…",["wind erosion","glaciers during the Ice Age","volcanoes","ocean waves"],1,"Glaciers scraped and leveled the land."],
     ["Where is a river most likely to deposit sediment?",["Where it flows fastest","Where it slows down","At the top of a waterfall","Underground only"],1,"Slower water can't carry as much sediment."],
     ["Which helps prevent soil erosion on a hillside?",["Removing all plants","Planting grass and trees","Paving with smooth plastic","Digging deep holes"],1,"Roots hold soil in place."],
     ["A topographic map has a contour interval of 20 m. You cross 4 lines going uphill. How much did you climb?",["20 m","40 m","80 m","100 m"],2,"4 × 20 m = 80 m."],
     ["Contour lines form a V pointing upstream. This shows a…",["hilltop","valley with a stream","flat plain","cliff"],1,"V-shapes point uphill in valleys."],
     ["Why do contour lines never cross?",["One spot can't have two elevations","They're different colors","Maps don't allow it","Rivers block them"],0,"Each line marks one exact height."],
     ["A crack cuts through rock layers A, B, and C. The crack is…",["older than all the layers","younger than the layers it cuts","the same age as layer A","impossible to date"],1,"Something must exist before it can be cut."],
-    ["Why are index fossils useful?",["They lived a short time over a wide area, so they match layers of the same age","They are the biggest fossils","They're always dinosaurs","They give exact ages in years"],0,"Finding the same index fossil shows layers are about the same age."],
-    ["Absolute dating uses…",["the order of layers","radioactive elements that break down at a steady rate","the color of rocks","contour lines"],1,"Radiometric dating acts like a natural clock."],
-    ["Indiana's limestone is full of ocean fossils because…",["fish lived in Indiana caves","Indiana was covered by shallow seas long ago","people put them there","rivers carried them from Florida"],1,"During the Paleozoic, warm seas covered the area."],
-    ["What ended the Mesozoic Era about 66 million years ago?",["An ice age only","An asteroid impact","The first humans","A flood"],1,"An asteroid struck near Mexico's Yucatán Peninsula."],
-    ["If Earth's history were one 24-hour day, when would humans appear?",["At noon","Around 6 p.m.","In the last few seconds before midnight","At 1 a.m."],2,"About 300,000 years out of 4.6 billion is only seconds."]
+    ["Which is the correct order of the first four C's?",["Creation, Corruption, Catastrophe, Confusion","Creation, Catastrophe, Corruption, Confusion","Corruption, Creation, Confusion, Catastrophe","Confusion, Creation, Corruption, Catastrophe"],0,"Creation, then the Fall, then the Flood, then Babel."],
+    ["Radiometric dating depends on assumptions. Which is one of them?",["How much of each element the rock started with","The color of the rock","How heavy the rock is","Who found the rock"],0,"Scientists must assume the starting amounts, no leaking, and a steady rate."],
+    ["Creation scientists say Indiana's limestone is full of sea fossils because…",["fish lived in Indiana caves","sea creatures were buried as Flood waters covered the land","people put them there","rivers carried them from Florida"],1,"Ocean water covered the continent during the Flood."],
+    ["According to creation scientists, when did the Ice Age happen?",["Before Creation","After the Flood","During Creation week","It never happened"],1,"The Ice Age followed the Flood."],
+    ["Which C is about Jesus dying and rising again to pay for sin?",["Creation","Confusion","Cross","Consummation"],2,"The Cross."]
   ]
 },
 {

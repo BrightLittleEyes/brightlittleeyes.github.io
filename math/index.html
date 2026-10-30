@@ -722,62 +722,138 @@ function opsDone() {
   c.querySelector("#lvl").onclick = () => { state.solved.ops++; save(); state.step = 0; render(); };
 }
 
-/* ---------- who's fastest (comparing ratios in a table) ---------- */
-const jobs = [
-  { id: "flyers",    one: "flyer",    many: "flyers",    verb: "made" },
-  { id: "cookies",   one: "cookie",   many: "cookies",   verb: "decorated" },
-  { id: "bracelets", one: "bracelet", many: "bracelets", verb: "made" },
-  { id: "cards",     one: "card",     many: "cards",     verb: "wrote" }
-];
-const nameSets = [["Ali", "Omar", "Jim"], ["Maya", "Leo", "Ava"], ["Sam", "Zoe", "Eli"], ["Nina", "Ben", "Rosa"]];
+/* ---------- who's fastest (comparing rates in a table) ---------- */
+const kidNames = ["Ali", "Omar", "Jim", "Maya", "Leo", "Ava", "Sam", "Zoe", "Eli", "Nina", "Ben", "Rosa", "Chau", "Kai", "Lena", "Ivy", "Marcus", "Jessica"];
+const storeSets = [["Corner Shop", "Big Mart", "Value Store"], ["Store A", "Store B", "Store C"], ["Main St. Market", "Shop & Go", "Penny Place"], ["Sunny Mart", "Quick Stop", "Bargain Barn"]];
+const cap = s => s[0].toUpperCase() + s.slice(1);
+const threeOf = arr => [...arr].sort(() => Math.random() - .5).slice(0, 3);
 
-function makeRate(job) {
-  const names = pick(nameSets);
-  for (let tries = 0; tries < 2000; tries++) {
-    const per = [rint(2, 8), rint(2, 8), rint(2, 8)];
+const rateModes = {
+  perItem: {
+    label: "Who worked fastest?", desc: "Minutes for each thing made. Fewer minutes is faster.", better: "low", perRange: [2, 8],
+    jobs: [{ one: "flyer", many: "flyers", verb: "made" }, { one: "cookie", many: "cookies", verb: "decorated" },
+           { one: "bracelet", many: "bracelets", verb: "made" }, { one: "card", many: "cards", verb: "wrote" },
+           { one: "box", many: "boxes", verb: "packed" }, { one: "poster", many: "posters", verb: "colored" },
+           { one: "birdhouse", many: "birdhouses", verb: "painted" }],
+    names: () => threeOf(kidNames),
+    intro: j => pick([`Three friends ${j.verb} ${j.many}. The table shows how long each person worked and how many ${j.many} they ${j.verb}.`,
+                      `The table shows how many ${j.many} each person ${j.verb} and how many minutes it took.`,
+                      `Some friends ${j.verb} ${j.many} for a school event. Look at the time each one spent and how many each one ${j.verb}.`]),
+    rows: j => [["Time (minutes)", "W"], [`Number of ${j.many}`, "K"]],
+    perLabel: j => `Minutes per ${j.one}`,
+    guessQ: () => "Just a guess: who do you think worked the fastest?",
+    guessNext: j => `Now let's find out how many minutes each person needs for just 1 ${j.one}.`,
+    ask: (p, j) => `${p.name}: ${p.W} minutes for ${p.K} ${j.many}. How many minutes for 1 ${j.one}?`,
+    split: (p, j) => `Split ${p.W} minutes into ${p.K} equal pieces, one piece for each ${j.one}.`,
+    ph: j => `minutes for 1 ${j.one}`, fW: n => `${n} minutes`,
+    each: (p, j) => `${p.per} minutes for each ${j.one}`,
+    silly: (v, p, j) => `${v} minutes for just one ${j.one}? ${p.name} would still be working at bedtime!`,
+    bars: j => `Minutes for 1 ${j.one} (each square is 1 minute)`,
+    compareQ: j => `Who needs the fewest minutes to make 1 ${j.one}?`,
+    notWin: (p, j) => `${p.name} takes ${p.per} minutes for each ${j.one}. Look at the squares. Whose row is the shortest?`,
+    win: (f, j) => `<b>${f.name} worked the fastest.</b> Only ${f.per} minutes for each ${j.one}. Fewer minutes for one ${j.one} means faster.`,
+    guessWrong: (g, f, j) => `${g.name} needs ${g.per} minutes for each ${j.one}, so ${f.name} is faster.`,
+    trapKey: "K",
+    trap: (m, j) => `${m.name} ${j.verb} the most ${j.many} (${m.K}), but needs ${m.per} minutes for each one. Making the most doesn't always mean the fastest.`
+  },
+  perTime: {
+    label: "Who got the most done each hour?", desc: "How many in 1 hour. More is faster.", better: "high", perRange: [3, 9],
+    jobs: [{ many: "baskets of strawberries", short: "baskets", verb: "picked" }, { many: "pages", short: "pages", verb: "read" },
+           { many: "flowers", short: "flowers", verb: "planted" }, { many: "boxes of cookies", short: "boxes", verb: "sold" },
+           { many: "cars", short: "cars", verb: "washed" }, { many: "pies", short: "pies", verb: "baked" }],
+    names: () => threeOf(kidNames),
+    intro: j => pick([`Three friends ${j.verb} ${j.many}. The table shows how many hours each person worked and how many ${j.many} they ${j.verb}.`,
+                      `The table shows how many ${j.many} each person ${j.verb} and how long they worked.`]),
+    rows: j => [["Time (hours)", "K"], [cap(j.many), "W"]],
+    perLabel: j => `${cap(j.short)} per hour`,
+    guessQ: () => "Just a guess: who do you think worked the fastest?",
+    guessNext: j => `Now let's find out how many ${j.short} each person ${j.verb} in just 1 hour.`,
+    ask: (p, j) => `${p.name}: ${p.W} ${j.short} in ${p.K} hours. How many ${j.short} in 1 hour?`,
+    split: (p, j) => `Split ${p.W} ${j.short} into ${p.K} equal pieces, one piece for each hour.`,
+    ph: j => `${j.short} in 1 hour`, fW: (n, j) => `${n} ${j.short}`,
+    each: (p, j) => `${p.per} ${j.short} each hour`,
+    silly: (v, p, j) => `${v} ${j.short} in just 1 hour? That's superhero speed!`,
+    bars: j => `${cap(j.short)} in 1 hour (each square is 1)`,
+    compareQ: j => `Who ${j.verb} the most ${j.short} in 1 hour?`,
+    notWin: (p, j) => `${p.name} ${j.verb} ${p.per} ${j.short} each hour. Look at the squares. Whose row is the longest?`,
+    win: (f, j) => `<b>${f.name} worked the fastest.</b> ${f.per} ${j.short} every hour. More in one hour means faster.`,
+    guessWrong: (g, f, j) => `${g.name} ${j.verb} ${g.per} each hour, so ${f.name} is faster.`,
+    trapKey: "W",
+    trap: (m, j) => `${m.name} ${j.verb} the most ${j.short} in all (${m.W}), but worked ${m.K} hours to do it. That's only ${m.per} each hour. The biggest total doesn't always mean the fastest.`
+  },
+  buy: {
+    label: "Which store is the best deal?", desc: "Price for 1 item. Lower is better.", better: "low", perRange: [2, 8],
+    jobs: [{ one: "notebook", many: "notebooks" }, { one: "toy car", many: "toy cars" }, { one: "book", many: "used books" },
+           { one: "flower pot", many: "flower pots" }, { one: "puzzle", many: "puzzles" }, { one: "pair of socks", many: "pairs of socks" }],
+    names: () => pick(storeSets),
+    intro: j => pick([`Three stores sell ${j.many} in packs. The table shows the price of each pack and how many ${j.many} are in it.`,
+                      `You want to buy ${j.many}. Each store sells a different size pack for a different price.`]),
+    rows: j => [["Price ($)", "W"], [`Number of ${j.many}`, "K"]],
+    perLabel: j => `$ per ${j.one}`,
+    guessQ: () => "Just a guess: which store is the best deal?",
+    guessNext: j => `Now let's find the price of just 1 ${j.one} at each store.`,
+    ask: (p, j) => `${p.name}: $${p.W} for ${p.K} ${j.many}. How much for 1 ${j.one}?`,
+    split: (p, j) => `Split $${p.W} into ${p.K} equal pieces, one for each ${j.one}.`,
+    ph: j => `$ for 1 ${j.one}`, fW: n => `$${n}`,
+    each: (p, j) => `$${p.per} for each ${j.one}`,
+    silly: (v, p, j) => `$${v} for just one ${j.one}? That's more than the whole pack costs!`,
+    bars: j => `Price for 1 ${j.one} (each square is $1)`,
+    compareQ: j => `Which store has the lowest price for 1 ${j.one}?`,
+    notWin: (p, j) => `${p.name} charges $${p.per} for each ${j.one}. Look at the squares. Whose row is the shortest?`,
+    win: (f, j) => `<b>${f.name} is the best deal.</b> Only $${f.per} for each ${j.one}. A lower price for one means a better deal.`,
+    guessWrong: (g, f, j) => `${g.name} charges $${g.per} for each ${j.one}, so ${f.name} is the better deal.`,
+    trapKey: "K",
+    trap: (m, j) => `${m.name} has the biggest pack (${m.K} ${j.many}), but each one costs $${m.per}. The biggest pack isn't always the best deal.`
+  }
+};
+
+function makeRate(modeKey) {
+  const mode = rateModes[modeKey], job = pick(mode.jobs), names = mode.names(), [lo, hi] = mode.perRange;
+  for (let tries = 0; tries < 3000; tries++) {
+    const per = [rint(lo, hi), rint(lo, hi), rint(lo, hi)];
     if (new Set(per).size < 3) continue;
-    const cnt = [rint(3, 10), rint(3, 10), rint(3, 10)];
-    if (new Set(cnt).size < 3) continue;
-    const mostMade = cnt.indexOf(Math.max(...cnt));
-    const fastest = per.indexOf(Math.min(...per));
-    if (mostMade === fastest) continue;          // keep the "most isn't fastest" trap
-    const people = names.map((n, i) => ({ name: n, per: per[i], cnt: cnt[i], time: per[i] * cnt[i], found: false }));
-    if (people.some(p => p.time > 72)) continue;
-    return { job, people, fastest, mostMade, guess: null, cur: 0 };
+    const K = mode.trapKey === "K" ? [rint(3, 10), rint(3, 10), rint(3, 10)] : [rint(2, 8), rint(2, 8), rint(2, 8)];
+    if (new Set(K).size < 3) continue;
+    const W = per.map((x, i) => x * K[i]);
+    if (W.some(w => w > 72) || new Set(W).size < 3) continue;
+    const win = mode.better === "low" ? per.indexOf(Math.min(...per)) : per.indexOf(Math.max(...per));
+    const trapVals = mode.trapKey === "K" ? K : W, trapIdx = trapVals.indexOf(Math.max(...trapVals));
+    if (trapIdx === win) continue;          // keep the "biggest isn't best" trap
+    const people = names.map((n, i) => ({ name: n, per: per[i], K: K[i], W: W[i], found: false }));
+    return { modeKey, mode, job, people, fastest: win, mostMade: trapIdx, guess: null, cur: 0, intro: mode.intro(job) };
   }
 }
 
 function rateTable(r, opts = {}) {
-  const { job, people } = r;
-  const perRow = opts.perRow ? `<tr class="per"><th scope="row">Minutes per ${job.one}</th>${people.map((p, i) =>
+  const { mode, job, people } = r;
+  const perRow = opts.perRow ? `<tr class="per"><th scope="row">${mode.perLabel(job)}</th>${people.map((p, i) =>
     `<td class="${p.found ? "done" : i === r.cur && opts.live ? "now" : ""}">${p.found ? p.per : "?"}</td>`).join("")}</tr>` : "";
   return `<div class="tbl-wrap"><table class="rt">
     <tr><th></th>${people.map(p => `<th scope="col">${p.name}</th>`).join("")}</tr>
-    <tr><th scope="row">Time (minutes)</th>${people.map(p => `<td>${p.time}</td>`).join("")}</tr>
-    <tr><th scope="row">Number of ${job.many}</th>${people.map(p => `<td>${p.cnt}</td>`).join("")}</tr>
+    ${mode.rows(job).map(([label, key]) => `<tr><th scope="row">${label}</th>${people.map(p => `<td>${p[key]}</td>`).join("")}</tr>`).join("")}
     ${perRow}
   </table></div>`;
 }
 
 function ratePick() {
   const c = el(`<section class="card">
-    <h2>Which job do you want to compare?</h2>
-    <div class="choices" id="jobs"></div>
+    <h2>What do you want to compare?</h2>
+    <div class="choices" id="modes"></div>
   </section>`);
   stage.appendChild(c);
-  jobs.forEach(j => {
-    const b = el(`<button type="button">Making ${j.many}</button>`);
-    b.onclick = () => { state.r = makeRate(j); state.step = 1; render(); };
-    c.querySelector("#jobs").appendChild(b);
+  Object.entries(rateModes).forEach(([k, m]) => {
+    const b = el(`<button class="home-pick" type="button"><strong>${m.label}</strong><span>${m.desc}</span></button>`);
+    b.onclick = () => { state.r = makeRate(k); state.step = 1; render(); };
+    c.querySelector("#modes").appendChild(b);
   });
 }
 
 function rateGuess() {
-  const r = state.r;
+  const r = state.r, m = r.mode;
   const c = el(`<section class="card">
-    <p class="story">Three friends ${r.job.verb} ${r.job.many}. The table shows how long each person worked and how many ${r.job.many} they ${r.job.verb}.</p>
+    <p class="story">${r.intro}</p>
     ${rateTable(r)}
-    <h2>Just a guess: who do you think worked the fastest?</h2>
+    <h2>${m.guessQ()}</h2>
     <p class="sub">There's no wrong guess here. We'll check it together at the end.</p>
     <div class="choices" id="g"></div>
     <div id="fb"></div>
@@ -789,7 +865,7 @@ function rateGuess() {
       r.guess = i;
       c.querySelectorAll("#g button").forEach(x => x.classList.toggle("picked", x === b));
       const fb = c.querySelector("#fb");
-      fb.innerHTML = `<div class="note ok">You picked ${p.name}. Now let's find out how many minutes each person needs for just 1 ${r.job.one}.</div>`;
+      fb.innerHTML = `<div class="note ok">You picked ${p.name}. ${m.guessNext(r.job)}</div>`;
       fb.appendChild(nextBtn(() => { state.step = 2; render(); }));
     };
     c.querySelector("#g").appendChild(b);
@@ -797,13 +873,13 @@ function rateGuess() {
 }
 
 function rateUnit() {
-  const r = state.r, p = r.people[r.cur], j = r.job;
+  const r = state.r, m = r.mode, p = r.people[r.cur], j = r.job, fW = n => m.fW(n, j);
   const c = el(`<section class="card">
     ${rateTable(r, { perRow: true, live: true })}
-    <h2>${p.name}: ${p.time} minutes for ${p.cnt} ${j.many}. How many minutes for 1 ${j.one}?</h2>
-    <p>Split ${p.time} minutes into ${p.cnt} equal pieces, one piece for each ${j.one}.</p>
+    <h2>${m.ask(p, j)}</h2>
+    <p>${m.split(p, j)}</p>
     <div class="row">
-      <input type="number" id="per" inputmode="numeric" placeholder="minutes for 1 ${j.one}" aria-label="Minutes for one ${j.one} for ${p.name}">
+      <input type="number" id="per" inputmode="numeric" placeholder="${m.ph(j)}" aria-label="${m.ph(j)} for ${p.name}">
       <button class="primary" id="chk" type="button">Check</button>
     </div>
     <button class="quiet" id="hintBtn" type="button">Show me a hint</button>
@@ -813,9 +889,9 @@ function rateUnit() {
   stage.appendChild(c);
   let lvl = 0;
   const hints = [
-    `That's ${p.time} ÷ ${p.cnt}.`,
-    `Think: ${p.cnt} × ? = ${p.time}.`,
-    `Count by ${p.cnt}s: ${Array.from({ length: p.per }, (_, i) => p.cnt * (i + 1)).join(", ")}. Count how many jumps it took.`
+    `That's ${p.W} ÷ ${p.K}.`,
+    `Think: ${p.K} × ? = ${p.W}.`,
+    `Count by ${p.K}s: ${Array.from({ length: p.per }, (_, i) => p.K * (i + 1)).join(", ")}. How many numbers did you count?`
   ];
   c.querySelector("#hintBtn").onclick = e => {
     c.querySelector("#hint").innerHTML = `<div class="hint">${hints.slice(0, ++lvl).join("<br>")}</div>`;
@@ -829,15 +905,15 @@ function rateUnit() {
     if (v === p.per) {
       p.found = true;
       const last = r.cur === r.people.length - 1;
-      fb.innerHTML = `<div class="note ok">${p.per} minutes for each ${j.one}. Check: ${p.per} × ${p.cnt} = ${p.time}. It matches.</div>`;
+      fb.innerHTML = `<div class="note ok">${cap(m.each(p, j))}. Check: ${p.per} × ${p.K} = ${p.W}. It matches.</div>`;
       fb.appendChild(nextBtn(() => { if (last) state.step = 3; else r.cur++; render(); }, last ? "Compare them" : `Next: ${r.people[r.cur + 1].name}`));
       input.disabled = true; c.querySelector("#chk").disabled = true;
       c.querySelectorAll(".rt tr.per td")[r.cur].className = "done";
       c.querySelectorAll(".rt tr.per td")[r.cur].textContent = p.per;
-    } else if (v * p.cnt > 2 * p.time && v >= 30) {
-      fb.innerHTML = `<div class="note look">${v} minutes for just one ${j.one}? ${p.name} would still be working at bedtime! Let's test it: ${v} × ${p.cnt} = ${v * p.cnt} minutes, but ${p.name} only worked ${p.time} minutes. Try a smaller number.</div>`;
+    } else if (v > p.W) {
+      fb.innerHTML = `<div class="note look">${m.silly(v, p, j)} Let's test it: ${v} × ${p.K} = ${v * p.K}, but the whole thing was only ${fW(p.W)}. Try a smaller number.</div>`;
     } else {
-      fb.innerHTML = `<div class="note look">Let's test ${v}: ${v} × ${p.cnt} = ${v * p.cnt} minutes. We need ${p.time}. ${v * p.cnt > p.time ? "That's too many minutes, so try a smaller number." : "That's not enough minutes, so try a bigger number."}</div>`;
+      fb.innerHTML = `<div class="note look">Let's test ${v}: ${v} × ${p.K} = ${v * p.K}. We need ${p.W}. ${v * p.K > p.W ? "That's too many, so try a smaller number." : "That's not enough, so try a bigger number."}</div>`;
     }
   };
   c.querySelector("#chk").onclick = check;
@@ -846,13 +922,13 @@ function rateUnit() {
 }
 
 function rateCompare() {
-  const r = state.r, j = r.job, f = r.people[r.fastest];
+  const r = state.r, m = r.mode, j = r.job, f = r.people[r.fastest];
   const c = el(`<section class="card">
     ${rateTable(r, { perRow: true })}
-    <span class="label">Minutes for 1 ${j.one} (each square is 1 minute)</span>
+    <span class="label">${m.bars(j)}</span>
     <div class="bars">${r.people.map(p => `<div class="bar-row"><span class="who">${p.name}</span>
       <span class="bar-track">${Array.from({ length: p.per }, (_, i) => `<i>${i + 1}</i>`).join("")}</span></div>`).join("")}</div>
-    <h2>Who needs the fewest minutes to make 1 ${j.one}?</h2>
+    <h2>${m.compareQ(j)}</h2>
     <div class="choices" id="pick"></div>
     <div id="fb"></div>
   </section>`);
@@ -861,19 +937,20 @@ function rateCompare() {
     const b = el(`<button type="button">${p.name}</button>`);
     b.onclick = () => {
       const fb = c.querySelector("#fb");
-      if (i !== r.fastest) {
-        fb.innerHTML = `<div class="note look">${p.name} takes ${p.per} minutes for each ${j.one}. Look at the squares. Whose row is the shortest?</div>`;
-        return;
-      }
+      if (i !== r.fastest) { fb.innerHTML = `<div class="note look">${m.notWin(p, j)}</div>`; return; }
       c.querySelectorAll("#pick button").forEach(x => { x.disabled = x !== b; });
       b.classList.add("picked");
       const g = r.people[r.guess], most = r.people[r.mostMade];
-      let guessLine = r.guess === r.fastest
+      const guessLine = r.guess === r.fastest
         ? `Your guess at the start was ${g.name}, and that's right.`
-        : `Your guess at the start was ${g.name}. ${g.name} needs ${g.per} minutes for each ${j.one}, so ${f.name} is faster.`;
-      fb.innerHTML = `<div class="note ok"><b>${f.name} worked the fastest.</b> Only ${f.per} minutes for each ${j.one}. Fewer minutes for one ${j.one} means faster.<br><br>${guessLine}
-        ${most !== f ? `<br><br>${most.name} ${j.verb} the most ${j.many} (${most.cnt}), but needs ${most.per} minutes for each one. Making the most doesn't always mean the fastest.` : ""}</div>`;
-      fb.appendChild(nextBtn(() => { state.solved.rate++; save(); state.step = 0; state.r = null; render(); }, "Try another table"));
+        : `Your guess at the start was ${g.name}. ${m.guessWrong(g, f, j)}`;
+      fb.innerHTML = `<div class="note ok">${m.win(f, j)}<br><br>${guessLine}${most !== f ? `<br><br>${m.trap(most, j)}` : ""}</div>`;
+      const row = el(`<div class="row" style="margin-top:10px"></div>`);
+      const again = el(`<button class="primary" type="button">Another one like this</button>`);
+      const other = el(`<button type="button">Compare something else</button>`);
+      again.onclick = () => { state.solved.rate++; save(); state.r = makeRate(r.modeKey); state.step = 1; render(); };
+      other.onclick = () => { state.solved.rate++; save(); state.step = 0; state.r = null; render(); };
+      row.append(again, other); fb.appendChild(row);
     };
     c.querySelector("#pick").appendChild(b);
   });
@@ -1103,9 +1180,13 @@ function meanMath() {
 /* ---------- least common multiple ---------- */
 const gcd = (x, y) => y ? gcd(y, x % y) : x;
 const lcmPairs = {
-  easy: [[2, 3], [3, 4], [2, 5], [4, 6], [3, 5], [4, 5], [6, 8], [2, 7], [3, 6], [4, 10]],
-  hard: [[6, 15], [4, 10], [8, 12], [6, 9], [10, 15], [9, 12], [6, 10], [12, 18], [6, 14], [8, 10]]
+  easy: [[2, 3], [2, 5], [2, 7], [2, 9], [2, 11], [3, 4], [3, 5], [3, 7], [3, 8], [3, 10], [3, 11], [4, 5], [4, 6], [4, 7],
+         [4, 9], [4, 10], [5, 6], [5, 7], [5, 8], [6, 8], [6, 9], [6, 10], [8, 10], [8, 12], [9, 12]],
+  hard: [[4, 6], [4, 10], [4, 14], [4, 18], [6, 8], [6, 9], [6, 10], [6, 14], [6, 15], [6, 16], [6, 20], [8, 10], [8, 12],
+         [8, 14], [8, 20], [9, 12], [9, 15], [10, 12], [10, 15], [12, 15], [12, 16], [12, 18], [12, 20], [15, 20],
+         [7, 8], [5, 12], [4, 15], [5, 9], [6, 7], [5, 11]]
 };
+let lcmRecent = [];
 const lcmStories = {
   frogs: { key: "frogs", a: "Green frog", b: "Blue frog", ask: "What is the first number both frogs land on?",
            each: (n, x) => `${n} hops <b>${x}</b> each jump.`, first: "jump", lands: "lands on", land: "land on",
@@ -1120,7 +1201,10 @@ const lcmStories = {
 };
 
 function makeLcm(storyKey, size) {
-  let [a, b] = pick(lcmPairs[size]);
+  const pool = lcmPairs[size].filter(p => !lcmRecent.includes(p.join("-")));
+  let [a, b] = pick(pool.length ? pool : lcmPairs[size]);
+  lcmRecent = [...lcmRecent, `${a}-${b}`].slice(-8);
+  if (Math.random() < .5) [a, b] = [b, a];
   return { a, b, L: a * b / gcd(a, b), story: lcmStories[storyKey], na: 0, nb: 0, max: size === "easy" ? 40 : 60 };
 }
 const lcmLine = lc => `<p class="story">${lc.story.each(lc.story.a, lc.a)} ${lc.story.each(lc.story.b, lc.b)} ${lc.story.ask}</p>`;
@@ -1471,25 +1555,48 @@ function eqCheck() {
 }
 
 /* ---------- fill the table (missing values, constant rate) ---------- */
+const tblPeople = [["Raina", "she", "her"], ["Nicole", "she", "her"], ["Marcus", "he", "his"], ["Ivy", "she", "her"], ["Chau", "he", "his"],
+                ["Omar", "he", "his"], ["Lena", "she", "her"], ["Kai", "he", "his"], ["Rosa", "she", "her"], ["Ben", "he", "his"]];
+const usd = v => `$${v}`;
 const tblCtx = {
-  raffle:    { label: "Raffle tickets", who: "Raina", one: "ticket", many: "tickets", row: "Number of tickets", cost: "Charge ($)",
-               line: (g, D) => `Raina sells raffle tickets. For every <b>${g} tickets</b>, she charges <b>$${D}</b>.` },
-  fence:     { label: "Garden fence", who: "Nicole", one: "foot", many: "feet", row: "Length of fencing (feet)", cost: "Cost ($)",
-               line: (g, D) => `Nicole is building a fence around her garden. For every <b>${g} feet</b> of fencing, the cost is <b>$${D}</b>.` },
-  lemonade:  { label: "Lemonade", who: "Marcus", one: "cup", many: "cups", row: "Cups of lemonade", cost: "Charge ($)",
-               line: (g, D) => `Marcus sells lemonade. For every <b>${g} cups</b>, he charges <b>$${D}</b>.` },
-  bracelets: { label: "Bracelets", who: "Ivy", one: "bracelet", many: "bracelets", row: "Number of bracelets", cost: "Charge ($)",
-               line: (g, D) => `Ivy sells bracelets. For every <b>${g} bracelets</b>, she charges <b>$${D}</b>.` }
+  raffle:   { label: "Raffle tickets", one: "ticket", many: "tickets", row: "Number of tickets", cost: "Charge ($)", fmt: usd, money: true,
+              verb: "costs", q: "how much does just 1 ticket cost?", bottom: "the charge", toWord: "dollars", rate: "price",
+              lines: [(g, D, n, pr) => `${n} is selling raffle tickets. For every <b>${g} tickets</b>, ${pr} charges <b>$${D}</b>.`,
+                      (g, D) => `Raffle tickets cost <b>$${D}</b> for every <b>${g} tickets</b>.`] },
+  fence:    { label: "Garden fence", one: "foot", many: "feet", row: "Length of fencing (feet)", cost: "Cost ($)", fmt: usd, money: true,
+              verb: "costs", q: "how much does just 1 foot of fencing cost?", bottom: "the cost", toWord: "dollars", rate: "price",
+              lines: [(g, D, n, pr, pos) => `${n} is building a fence around ${pos} garden. For every <b>${g} feet</b> of fencing, the cost is <b>$${D}</b>.`,
+                      (g, D) => `Fencing costs <b>$${D}</b> for every <b>${g} feet</b>.`] },
+  lemonade: { label: "Lemonade stand", one: "cup", many: "cups", row: "Cups of lemonade", cost: "Charge ($)", fmt: usd, money: true,
+              verb: "costs", q: "how much does just 1 cup cost?", bottom: "the charge", toWord: "dollars", rate: "price",
+              lines: [(g, D, n, pr) => `${n} sells lemonade. For every <b>${g} cups</b>, ${pr} charges <b>$${D}</b>.`,
+                      (g, D, n) => `At ${n}'s lemonade stand, <b>${g} cups</b> cost <b>$${D}</b>.`] },
+  pay:      { label: "Babysitting pay", one: "hour", many: "hours", row: "Hours worked", cost: "Pay ($)", fmt: usd, money: true, u: [6, 12],
+              verb: "pays", q: "how much is 1 hour of babysitting?", bottom: "the pay", toWord: "dollars", rate: "pay",
+              lines: [(g, D, n) => `${n} earns <b>$${D}</b> for every <b>${g} hours</b> of babysitting.`,
+                      (g, D, n) => `For <b>${g} hours</b> of babysitting, ${n} is paid <b>$${D}</b>.`] },
+  recipe:   { label: "Baking cookies", one: "batch", many: "batches", row: "Batches of cookies", cost: "Cups of flour", fmt: v => `${v} cups`, u: [2, 5],
+              verb: "uses", q: "how many cups of flour for just 1 batch?", bottom: "the cups of flour", toWord: "cups of flour", rate: "amount",
+              lines: [(g, D, n, pr) => `${n} is baking cookies. For every <b>${g} batches</b>, ${pr} uses <b>${D} cups</b> of flour.`,
+                      (g, D, n) => `It takes <b>${D} cups</b> of flour to make <b>${g} batches</b> of ${n}'s cookies.`] },
+  reading:  { label: "Reading pages", one: "day", many: "days", row: "Days", cost: "Pages read", fmt: v => `${v} pages`, u: [4, 12],
+              verb: "is", q: "how many pages in just 1 day?", bottom: "the pages", toWord: "pages", rate: "amount",
+              lines: [(g, D, n, pr) => `${n} reads the same number of pages every day. In <b>${g} days</b>, ${pr} reads <b>${D} pages</b>.`,
+                      (g, D, n) => `${n} read <b>${D} pages</b> in <b>${g} days</b>, the same amount each day.`] },
+  bike:     { label: "Bike ride", one: "hour", many: "hours", row: "Time (hours)", cost: "Distance (miles)", fmt: v => `${v} miles`, u: [6, 12],
+              verb: "is", q: "how many miles in just 1 hour?", bottom: "the miles", toWord: "miles", rate: "speed",
+              lines: [(g, D, n, pr) => `${n} rides a bike at a steady speed. In <b>${g} hours</b>, ${pr} goes <b>${D} miles</b>.`,
+                      (g, D, n) => `On a long ride, ${n} went <b>${D} miles</b> in <b>${g} hours</b> at the same speed the whole time.`] }
 };
 function makeTbl(key) {
-  const ctx = tblCtx[key], u = rint(2, 12), g = rint(2, 5);
-  let ns;
-  do { ns = new Set(); while (ns.size < 4) { const n = rint(1, 12); if (n !== g) ns.add(n); } ns = [...ns].sort((a, b) => a - b); }
-  while (false);
-  const cols = ns.map(n => ({ n, d: n * u, blank: Math.random() < .5 ? "n" : "d", filled: false }));
+  const realKey = key === "any" ? pick(Object.keys(tblCtx)) : key;
+  const ctx = tblCtx[realKey], [ulo, uhi] = ctx.u || [2, 12], u = rint(ulo, uhi), g = rint(2, 5);
+  const [n, pr, pos] = pick(tblPeople);
+  let ns = new Set(); while (ns.size < 4) { const x = rint(1, 12); if (x !== g) ns.add(x); } ns = [...ns].sort((a, b) => a - b);
+  const cols = ns.map(x => ({ n: x, d: x * u, blank: Math.random() < .5 ? "n" : "d", filled: false }));
   if (!cols.some(c => c.blank === "n")) cols[rint(0, 3)].blank = "n";
-  if (!cols.some(c => c.blank === "d")) cols.find(c => c.blank === "n" && (cols.filter(x => x.blank === "n").length > 1)) .blank = "d";
-  return { key, ctx, u, g, cols, cur: 0, phase: "dir", unitFound: false };
+  if (!cols.some(c => c.blank === "d")) cols.find(c => c.blank === "n").blank = "d";
+  return { key, ctx, u, g, cols, cur: 0, phase: "dir", unitFound: false, text: pick(ctx.lines)(g, g * u, n, pr, pos) };
 }
 
 function tblTable(t, live) {
@@ -1503,31 +1610,31 @@ function tblTable(t, live) {
     <tr><th scope="row">${t.ctx.cost}</th><td>${t.g * t.u}</td>${t.cols.map((c, i) => cell(c, i, "d")).join("")}</tr>
   </table></div>`;
 }
-const tblStory = t => `<p class="story">${t.ctx.line(t.g, t.g * t.u)} Fill in the table.</p>`;
+const tblStory = t => `<p class="story">${t.text} Fill in the table.</p>`;
 
 function tblPick() {
   const c = el(`<section class="card">
-    <h2>What is being sold?</h2>
+    <h2>What is the table about?</h2>
     <div class="choices" id="ctx"></div>
   </section>`);
   stage.appendChild(c);
-  Object.entries(tblCtx).forEach(([k, v]) => {
-    const b = el(`<button type="button">${v.label}</button>`);
+  [...Object.entries(tblCtx).map(([k, v]) => [k, v.label]), ["any", "Surprise me"]].forEach(([k, label]) => {
+    const b = el(`<button type="button">${label}</button>`);
     b.onclick = () => { state.t = makeTbl(k); state.step = 1; render(); };
     c.querySelector("#ctx").appendChild(b);
   });
 }
 
 function tblUnit() {
-  const t = state.t, D = t.g * t.u, one = t.ctx.one;
+  const t = state.t, x = t.ctx, f = x.fmt, D = t.g * t.u, one = x.one;
   const c = el(`<section class="card">
     ${tblStory(t)}
     ${tblTable(t, false)}
-    <h2>First, find the magic number: how much does just 1 ${one} cost?</h2>
-    <div class="tix" id="tix">${Array.from({ length: t.g }, () => `<span>1 ${one}: $?</span>`).join("")}</div>
-    <p>$${D} is split into ${t.g} equal pieces, one for each ${one}.</p>
+    <h2>First, find the magic number: ${x.q}</h2>
+    <div class="tix" id="tix">${Array.from({ length: t.g }, () => `<span>1 ${one}: ?</span>`).join("")}</div>
+    <p>${f(D)} is split into ${t.g} equal pieces, one for each ${one}.</p>
     <div class="row">
-      <input type="number" id="ans" inputmode="numeric" placeholder="price for 1 ${one}" aria-label="Price for one ${one}">
+      <input type="number" id="ans" inputmode="numeric" placeholder="for 1 ${one}" aria-label="Amount for one ${one}">
       <button class="primary" id="chk" type="button">Check</button>
     </div>
     <button class="quiet" id="hintBtn" type="button">Show me a hint</button>
@@ -1535,7 +1642,7 @@ function tblUnit() {
     <div id="fb"></div>
   </section>`);
   stage.appendChild(c);
-  const hints = [`That's ${D} ÷ ${t.g}.`, `Think: ${t.g} × ? = ${D}.`, `Count by ${t.g}s: ${Array.from({ length: t.u }, (_, i) => t.g * (i + 1)).join(", ")}. How many jumps?`];
+  const hints = [`That's ${D} ÷ ${t.g}.`, `Think: ${t.g} × ? = ${D}.`, `Count by ${t.g}s: ${Array.from({ length: t.u }, (_, i) => t.g * (i + 1)).join(", ")}. How many numbers did you count?`];
   let hl = 0;
   c.querySelector("#hintBtn").onclick = e => { c.querySelector("#hint").innerHTML = `<div class="hint">${hints.slice(0, ++hl).join("<br>")}</div>`; if (hl >= hints.length) e.target.disabled = true; };
   const input = c.querySelector("#ans");
@@ -1544,14 +1651,14 @@ function tblUnit() {
     if (!input.value) { fb.innerHTML = `<div class="note look">Type a number first, then press Check.</div>`; return; }
     const v = Number(input.value);
     if (v === t.u) {
-      c.querySelector("#tix").innerHTML = Array.from({ length: t.g }, () => `<span>1 ${one}: $${t.u}</span>`).join("");
-      fb.innerHTML = `<div class="note ok">$${t.u} for each ${one}. Check: ${t.g} × $${t.u} = $${D}. It matches. This is your magic number for the whole table.</div>`;
+      c.querySelector("#tix").innerHTML = Array.from({ length: t.g }, () => `<span>1 ${one}: ${f(t.u)}</span>`).join("");
+      fb.innerHTML = `<div class="note ok">${f(t.u)} for each ${one}. Check: ${t.g} × ${t.u} = ${D}. It matches. This is your magic number for the whole table.</div>`;
       fb.appendChild(nextBtn(() => { t.unitFound = true; state.step = 2; render(); }, "Fill in the table"));
       input.disabled = true; c.querySelector("#chk").disabled = true;
     } else if (v > D) {
-      fb.innerHTML = `<div class="note look">$${v} for just 1 ${one}? That's more than all ${t.g} together cost! One ${one} has to cost less than $${D}. Try splitting $${D} into ${t.g} pieces.</div>`;
+      fb.innerHTML = `<div class="note look">${f(v)} for just 1 ${one}? That's more than all ${t.g} ${t.ctx.many} put together! Try splitting ${f(D)} into ${t.g} pieces.</div>`;
     } else {
-      fb.innerHTML = `<div class="note look">Let's test $${v}: ${t.g} × $${v} = $${t.g * v}. We need $${D}. ${t.g * v > D ? "That's too much, so try a smaller number." : "That's not enough, so try a bigger number."}</div>`;
+      fb.innerHTML = `<div class="note look">Let's test ${v}: ${t.g} × ${v} = ${t.g * v}. We need ${D}. ${t.g * v > D ? "That's too much, so try a smaller number." : "That's not enough, so try a bigger number."}</div>`;
     }
   };
   c.querySelector("#chk").onclick = check;
@@ -1560,18 +1667,20 @@ function tblUnit() {
 }
 
 function tblFill() {
-  const t = state.t, col = t.cols[t.cur], one = t.ctx.one, many = t.ctx.many;
-  if (col.blank === undefined || col.filled) { // skip columns with nothing to fill
+  const t = state.t, x = t.ctx, f = x.fmt, one = x.one, many = x.many;
+  const col = t.cols[t.cur];
+  if (col.filled) {
     const nxt = t.cols.findIndex(c => !c.filled);
     if (nxt < 0) { state.step = 3; return render(); }
     t.cur = nxt;
   }
-  const C = t.cols[t.cur], toDollars = C.blank === "d";
-  const known = toDollars ? `${C.n} ${C.n === 1 ? one : many}` : `$${C.d}`;
-  const want = toDollars ? `the charge` : `how many ${many}`;
+  const C = t.cols[t.cur], toBottom = C.blank === "d";
+  const known = toBottom ? `${C.n} ${C.n === 1 ? one : many}` : f(C.d);
+  const want = toBottom ? x.bottom : `how many ${many}`;
+  const $ = x.money ? "$" : "";
   const c = el(`<section class="card">
     ${tblStory(t)}
-    <span class="unitchip">1 ${one} = $${t.u}</span>
+    <span class="unitchip">1 ${one} = ${f(t.u)}</span>
     ${tblTable(t, true)}
     <h2>You know ${known}. You need ${want}.</h2>
     <div id="work"></div>
@@ -1581,19 +1690,20 @@ function tblFill() {
   const work = c.querySelector("#work");
   if (t.phase === "dir") {
     work.appendChild(el(`<div class="card" style="padding:14px;gap:10px">
-      <p>${toDollars ? `Each ${one} costs $${t.u}. To go from ${many} to dollars, should we multiply or divide by ${t.u}?` : `Each ${one} costs $${t.u}. To find how many $${t.u} ${many} fit into $${C.d}, should we multiply or divide by ${t.u}?`}</p>
+      <p>${toBottom ? `Each ${one} ${x.verb} ${f(t.u)}. To go from ${many} to ${x.toWord}, should we multiply or divide by ${t.u}?`
+                    : `Each ${one} ${x.verb} ${f(t.u)}. To find how many ${many} make ${f(C.d)}, should we multiply or divide by ${t.u}?`}</p>
       <div class="choices"><button type="button" data-d="mul">Multiply × ${t.u}</button><button type="button" data-d="div">Divide ÷ ${t.u}</button></div>
     </div>`));
     work.querySelectorAll("[data-d]").forEach(b => b.onclick = () => {
-      const ok = (b.dataset.d === "mul") === toDollars, fb = c.querySelector("#fb");
+      const ok = (b.dataset.d === "mul") === toBottom, fb = c.querySelector("#fb");
       if (ok) { t.phase = "num"; render(); return; }
-      fb.innerHTML = toDollars
-        ? `<div class="note look">If we divided, ${C.n} ${many} would cost less than one ${one}! More ${many} should cost more money. Every ${one} adds another $${t.u}.</div>`
-        : `<div class="note look">If we multiplied, $${C.d} would turn into ${C.d * t.u} ${many}! That's a giant pile for only $${C.d}. We want to split $${C.d} into $${t.u} pieces.</div>`;
+      fb.innerHTML = toBottom
+        ? `<div class="note look">If we divided, ${C.n} ${many} would come out to less than just 1 ${one}! More ${many} should mean more. Every ${one} adds another ${f(t.u)}.</div>`
+        : `<div class="note look">If we multiplied, ${f(C.d)} would turn into ${C.d * t.u} ${many}! That's a giant pile. We want to split ${f(C.d)} into pieces of ${t.u}.</div>`;
     });
     return;
   }
-  const ans = toDollars ? C.d : C.n, expr = toDollars ? `${C.n} × $${t.u}` : `$${C.d} ÷ $${t.u}`;
+  const ans = toBottom ? C.d : C.n, expr = toBottom ? `${C.n} × ${$}${t.u}` : `${$}${C.d} ÷ ${$}${t.u}`;
   work.appendChild(el(`<div class="row" style="align-items:center">
     <span class="ask">${expr} =</span>
     <input type="number" id="ans" inputmode="numeric" aria-label="Answer for ${expr}">
@@ -1602,9 +1712,9 @@ function tblFill() {
   work.appendChild(el(`<button class="quiet" id="hintBtn" type="button" style="margin-top:10px">Show me a hint</button>`));
   work.appendChild(el(`<div id="hint"></div>`));
   work.querySelector("#hintBtn").onclick = e => {
-    work.querySelector("#hint").innerHTML = `<div class="hint">${toDollars
+    work.querySelector("#hint").innerHTML = `<div class="hint">${toBottom
       ? `Count by ${t.u}s, ${C.n} times: ${Array.from({ length: C.n }, (_, i) => t.u * (i + 1)).join(", ")}.`
-      : `Count by ${t.u}s until you reach ${C.d}: ${Array.from({ length: C.n }, (_, i) => t.u * (i + 1)).join(", ")}. How many jumps?`}</div>`;
+      : `Count by ${t.u}s until you reach ${C.d}: ${Array.from({ length: C.n }, (_, i) => t.u * (i + 1)).join(", ")}. How many numbers did you count?`}</div>`;
     e.target.disabled = true;
   };
   const input = work.querySelector("#ans");
@@ -1614,19 +1724,18 @@ function tblFill() {
     const v = Number(input.value);
     if (v === ans) {
       C.filled = true; t.phase = "dir";
-      const nxt = t.cols.findIndex(x => !x.filled && x.blank);
-      t.cols.forEach(x => { if (!x.blank) x.filled = true; });
-      if (nxt < 0 || t.cols.every(x => x.filled)) { state.step = 3; render(); return; }
+      const nxt = t.cols.findIndex(y => !y.filled);
+      if (nxt < 0) { state.step = 3; render(); return; }
       t.cur = nxt; render(); return;
     }
     if (v === t.g || v === t.g * t.u) {
-      fb.innerHTML = `<div class="note look">${v} is a number from the first column. That column starts with ${t.g} ${many}, but this column starts with ${known}, so it needs its own answer. Use the magic number: 1 ${one} = $${t.u}. ${expr} = ?</div>`;
-    } else if (!toDollars && v === C.d * t.u) {
-      fb.innerHTML = `<div class="note look">${v} ${many} for only $${C.d}? ${t.ctx.who} would be giving them away! That number came from multiplying. Try ${expr} instead.</div>`;
-    } else if (toDollars) {
-      fb.innerHTML = `<div class="note look">Let's test it: $${v} for ${C.n} ${many} would be $${(v / C.n).toFixed(v % C.n ? 2 : 0)} each. We need $${t.u} each. ${v > ans ? "Try a smaller number." : "Try a bigger number."}</div>`;
+      fb.innerHTML = `<div class="note look">${v} is a number from the first column. That column starts with ${t.g} ${many}, but this column starts with ${known}, so it needs its own answer. Use the magic number: 1 ${one} = ${f(t.u)}. ${expr} = ?</div>`;
+    } else if (!toBottom && v === C.d * t.u) {
+      fb.innerHTML = `<div class="note look">${v} ${many} for only ${f(C.d)}? That's way too many! That number came from multiplying. Try ${expr} instead.</div>`;
+    } else if (toBottom) {
+      fb.innerHTML = `<div class="note look">Let's test it: ${v} split over ${C.n} ${many} would be ${(v / C.n).toFixed(v % C.n ? 2 : 0)} for each ${one}. We need ${t.u} for each. ${v > ans ? "Try a smaller number." : "Try a bigger number."}</div>`;
     } else {
-      fb.innerHTML = `<div class="note look">Let's test ${v}: ${v} × $${t.u} = $${v * t.u}. We need $${C.d}. ${v * t.u > C.d ? "Too much, so try fewer." : "Not enough, so try more."}</div>`;
+      fb.innerHTML = `<div class="note look">Let's test ${v}: ${v} × ${t.u} = ${v * t.u}. We need ${C.d}. ${v * t.u > C.d ? "Too much, so try fewer." : "Not enough, so try more."}</div>`;
     }
   };
   work.querySelector("#chk").onclick = check;
@@ -1635,20 +1744,20 @@ function tblFill() {
 }
 
 function tblCheck() {
-  const t = state.t, one = t.ctx.one;
+  const t = state.t, x = t.ctx, one = x.one;
   const all = [{ n: t.g, d: t.g * t.u }, ...t.cols];
   const c = el(`<section class="card">
     ${tblStory(t)}
     <div class="tbl-wrap"><table class="rt">
-      <tr><th scope="row">${t.ctx.row}</th>${all.map(x => `<td>${x.n}</td>`).join("")}</tr>
-      <tr><th scope="row">${t.ctx.cost}</th>${all.map(x => `<td>${x.d}</td>`).join("")}</tr>
-      <tr class="per"><th scope="row">$ for 1 ${one}</th>${all.map(x => `<td class="done">${x.d / x.n}</td>`).join("")}</tr>
+      <tr><th scope="row">${x.row}</th>${all.map(y => `<td>${y.n}</td>`).join("")}</tr>
+      <tr><th scope="row">${x.cost}</th>${all.map(y => `<td>${y.d}</td>`).join("")}</tr>
+      <tr class="per"><th scope="row">For 1 ${one}</th>${all.map(y => `<td class="done">${y.d / y.n}</td>`).join("")}</tr>
     </table></div>
     <h2>The table is full.</h2>
-    <div class="note ok">Look at the bottom row. Every column comes out to $${t.u} for 1 ${one}. That's what a constant rate means: the price for one never changes.</div>
+    <div class="note ok">Look at the bottom row. Every column comes out to ${x.fmt(t.u)} for 1 ${one}. That's what a constant rate means: the ${x.rate} for one never changes.</div>
     <div class="row">
       <button class="primary" id="again" type="button">Another table like this</button>
-      <button id="pick" type="button">Pick something else to sell</button>
+      <button id="pick" type="button">Pick a different story</button>
     </div>
   </section>`);
   stage.appendChild(c);
@@ -1657,14 +1766,44 @@ function tblCheck() {
 }
 
 /* ---------- decimal times (word problems multiplying two decimals) ---------- */
-const decCtx = {
-  phone:   { label: "Phone call", unit: "minutes", per: "minute",
-             line: (a, b) => `Jessica made an international phone call for <b>${a} minutes</b>. She was charged <b>$${b}</b> for each minute. How much did she pay?` },
-  ribbon:  { label: "Ribbon", unit: "yards", per: "yard",
-             line: (a, b) => `Mia bought <b>${a} yards</b> of ribbon. Each yard costs <b>$${b}</b>. How much did she pay?` },
-  parking: { label: "Parking", unit: "hours", per: "hour",
-             line: (a, b) => `Ben parked for <b>${a} hours</b>. Parking costs <b>$${b}</b> for each hour. How much did he pay?` }
+const decPeople = [["Jessica", "she"], ["Chau", "he"], ["Mia", "she"], ["Ben", "he"], ["Ava", "she"], ["Leo", "he"],
+                   ["Rosa", "she"], ["Omar", "he"], ["Lena", "she"], ["Kai", "he"]];
+const decCats = {
+  food: { label: "Food by the pound", stories: [
+    { unit: "pounds", per: "pound", lines: [
+      (n, pr, a, b) => `The cost of bananas was <b>$${b}</b> a pound. ${n} bought <b>${a} pounds</b>.`,
+      (n, pr, a, b) => `${n} bought <b>${a} pounds</b> of bananas. Bananas cost <b>$${b}</b> per pound.`] },
+    { unit: "pounds", per: "pound", lines: [
+      (n, pr, a, b) => `Apples are on sale for <b>$${b}</b> per pound. ${n} buys <b>${a} pounds</b>.`,
+      (n, pr, a, b) => `${n} picked out <b>${a} pounds</b> of apples. The apples cost <b>$${b}</b> for each pound.`] },
+    { unit: "pounds", per: "pound", lines: [
+      (n, pr, a, b) => `Potatoes cost <b>$${b}</b> a pound at the farm stand. ${n} filled a bag with <b>${a} pounds</b>.`,
+      (n, pr, a, b) => `${n} needs <b>${a} pounds</b> of potatoes. They sell for <b>$${b}</b> per pound.`] },
+    { unit: "pounds", per: "pound", lines: [
+      (n, pr, a, b) => `Onions cost <b>$${b}</b> per pound. ${n} bought <b>${a} pounds</b> of onions for soup.`,
+      (n, pr, a, b) => `For a big pot of soup, ${n} bought <b>${a} pounds</b> of onions at <b>$${b}</b> a pound.`] }] },
+  length: { label: "Things by length", stories: [
+    { unit: "yards", per: "yard", lines: [
+      (n, pr, a, b) => `${n} bought <b>${a} yards</b> of ribbon. Each yard costs <b>$${b}</b>.`,
+      (n, pr, a, b) => `Ribbon sells for <b>$${b}</b> a yard. ${n} needs <b>${a} yards</b> for a craft.`] },
+    { unit: "feet", per: "foot", lines: [
+      (n, pr, a, b) => `Rope costs <b>$${b}</b> per foot. ${n} cut off <b>${a} feet</b> of rope.`,
+      (n, pr, a, b) => `${n} needs <b>${a} feet</b> of rope for a tire swing. The store charges <b>$${b}</b> for each foot.`] },
+    { unit: "meters", per: "meter", lines: [
+      (n, pr, a, b) => `Craft wire costs <b>$${b}</b> a meter. ${n} bought <b>${a} meters</b>.`,
+      (n, pr, a, b) => `${n} used <b>${a} meters</b> of craft wire. Each meter of wire costs <b>$${b}</b>.`] }] },
+  time: { label: "Paying for time", stories: [
+    { unit: "minutes", per: "minute", lines: [
+      (n, pr, a, b) => `${n} made an international phone call for <b>${a} minutes</b>. ${cap(pr)} was charged <b>$${b}</b> for each minute.`,
+      (n, pr, a, b) => `A phone call to another country costs <b>$${b}</b> a minute. ${n} talked for <b>${a} minutes</b>.`] },
+    { unit: "hours", per: "hour", lines: [
+      (n, pr, a, b) => `${n} parked for <b>${a} hours</b>. Parking costs <b>$${b}</b> for each hour.`,
+      (n, pr, a, b) => `The parking lot charges <b>$${b}</b> an hour. ${n} left the car there for <b>${a} hours</b>.`] },
+    { unit: "minutes", per: "minute", lines: [
+      (n, pr, a, b) => `An electric scooter costs <b>$${b}</b> per minute to ride. ${n} rode for <b>${a} minutes</b>.`,
+      (n, pr, a, b) => `${n} rode a rental scooter for <b>${a} minutes</b>. The scooter costs <b>$${b}</b> each minute.`] }] }
 };
+const decAsk = [(n, pr) => `How much did ${pr} pay?`, (n, pr) => `Find the amount ${pr} paid.`, (n, pr) => `How much did ${n} spend?`, (n, pr) => `What was the total cost?`];
 const money = cents => "$" + (cents / 100).toFixed(2);
 function placeDot(s, k) { while (s.length <= k) s = "0" + s; return s.slice(0, -k) + "." + s.slice(-k); }
 function noCarrySum(x, y) {
@@ -1674,17 +1813,19 @@ function noCarrySum(x, y) {
   return +out.reverse().join("");
 }
 function makeDec(key) {
+  const cat = key === "any" ? pick(Object.keys(decCats)) : key, story = pick(decCats[cat].stories), [n, pr] = pick(decPeople);
   for (let t = 0; t < 3000; t++) {
     const A = rint(15, 99), B = rint(11, 95);
     if (A % 10 === 0 || B % 10 === 0) continue;
     const P = A * B;
     if (P % 10 !== 0) continue;
     const o = B % 10, tens = B - o, p1 = A * o, p2 = A * tens;
-    return { key, ctx: decCtx[key], A, B, a: (A / 10).toFixed(1), b: (B / 100).toFixed(2), P, o, tens, p1, p2,
+    const a = (A / 10).toFixed(1), b = (B / 100).toFixed(2);
+    return { key, ctx: story, n, pr, text: `${pick(story.lines)(n, pr, a, b)} ${pick(decAsk)(n, pr)}`, A, B, a: (A / 10).toFixed(1), b: (B / 100).toFixed(2), P, o, tens, p1, p2,
       carry: noCarrySum(p1, p2) !== P, phase: 0, est: null };
   }
 }
-const decStory = d => `<p class="story">${d.ctx.line(d.a, d.b)}</p>`;
+const decStory = d => `<p class="story">${d.text}</p>`;
 function vmult(d, upto) {
   const row = (v, note, show) => `<span class="${show ? "" : "q"}">${show ? v : "?"}</span><small>${note}</small>`;
   return `<div class="vmult" aria-label="Multiplication work">
@@ -1704,8 +1845,8 @@ function decPick() {
     <div class="choices" id="st"></div>
   </section>`);
   stage.appendChild(c);
-  Object.entries(decCtx).forEach(([k, v]) => {
-    const b = el(`<button type="button">${v.label}</button>`);
+  [...Object.entries(decCats).map(([k, v]) => [k, v.label]), ["any", "Surprise me"]].forEach(([k, label]) => {
+    const b = el(`<button type="button">${label}</button>`);
     b.onclick = () => { state.dc = makeDec(k); state.step = 1; render(); };
     c.querySelector("#st").appendChild(b);
   });
@@ -1826,7 +1967,7 @@ function decCheck() {
   const d = state.dc, ans = d.P / 10, diff = Math.abs(ans - d.est);
   const c = el(`<section class="card">
     ${decStory(d)}
-    <h2>${d.key === "parking" ? "He" : "She"} paid ${money(ans)}.</h2>
+    <h2>${d.n} paid ${money(ans)}.</h2>
     <div class="note ok">Sense check: our estimate was about ${money(d.est)}. ${money(ans)} is close to that, so it makes sense.</div>
     <p class="sub">If an answer ever lands far from the estimate, that's the clue to go back and look for a missed carry or a dot in the wrong spot.</p>
     <div class="row">

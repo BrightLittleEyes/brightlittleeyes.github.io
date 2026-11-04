@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Rhythm">
+<meta name="theme-color" content="#2C3E50">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.json">
+<title>Daily Rhythm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap">
+<style>
+:root{
+  --bg:#F4F6F8; --surface:#FFFFFF; --ink:#22303C; --muted:#5F6E7A; --line:#DCE2E7; --soft:#EEF2F5;
+  --morning:#2A7FBA; --midday:#27A55A; --afternoon:#8E44AD; --evening:#D35400;
+  --mech:#2A7FBA; --mech-bg:#EAF4FC; --fun:#8E44AD; --fun-bg:#F5ECF9;
+  --flag:#C0392B; --flag-bg:#FDEFD8; --done:#1E8449;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:17px/1.4 "Atkinson Hyperlegible",system-ui,sans-serif;-webkit-tap-highlight-color:transparent;padding-bottom:env(safe-area-inset-bottom)}
+button{font:inherit;color:inherit}
+.wrap{max-width:760px;margin:0 auto;padding:16px}
+header{text-align:center;padding:8px 0 4px}
+h1{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:clamp(26px,6vw,36px);letter-spacing:.02em;margin:0;color:#2C3E50}
+.tag-line{color:var(--muted);font-style:italic;font-size:14px;margin:2px 0 12px}
+.datebar{display:flex;align-items:center;justify-content:center;gap:8px;margin:6px 0 4px}
+.datebar button{border:1px solid var(--line);background:var(--surface);border-radius:12px;height:44px;min-width:44px;padding:0 12px;cursor:pointer}
+.datebar .day{font-weight:700;font-size:18px;min-width:0;flex:1;max-width:320px;text-align:center}
+.datebar .day small{display:block;font-weight:400;color:var(--muted);font-size:13px}
+.status{font-size:12px;color:var(--muted);text-align:center;min-height:18px}
+.status i{display:inline-block;width:8px;height:8px;border-radius:50%;background:#9AA5AE;margin-right:5px;vertical-align:1px}
+.status.ok i{background:var(--done)} .status.warn i{background:#E67E22}
+.progress{height:10px;background:var(--soft);border-radius:6px;overflow:hidden;margin:10px 0 4px}
+.progress b{display:block;height:100%;background:var(--done);width:0;transition:width .3s}
+.progress-txt{font-size:13px;color:var(--muted);text-align:right;margin-bottom:12px}
+
+/* change of routine */
+.flags{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:16px}
+.flags h3{margin:0 0 8px;font-size:15px;display:flex;align-items:center;gap:6px;color:var(--flag)}
+.flags .chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:2px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px;font-size:15px;font-weight:700;cursor:pointer;color:var(--muted);min-height:44px}
+.chip.on{border-color:var(--flag);background:var(--flag-bg);color:var(--flag)}
+.flagnote{margin-top:10px;width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;font-size:15px;resize:vertical;min-height:44px;display:none}
+.flags.active .flagnote{display:block}
+.flags.active{border:2px solid var(--flag);background:#FFF8EE}
+
+/* blocks */
+.block{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.block-h{color:#fff;font-weight:700;font-size:18px;padding:12px 16px;display:flex;align-items:center;gap:10px}
+.block-h small{font-weight:400;opacity:.9;font-size:14px}
+.block-h svg{flex:none}
+.row{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border-top:1px dashed var(--line)}
+.row:first-of-type{border-top:0}
+.check{flex:none;width:30px;height:30px;border:2px solid #8C99A3;border-radius:8px;background:#fff;cursor:pointer;display:grid;place-items:center;margin-top:1px;padding:0}
+.check svg{opacity:0}
+.row.done .check{background:var(--done);border-color:var(--done)}
+.row.done .check svg{opacity:1}
+.row.done .txt b{text-decoration:line-through;text-decoration-color:rgba(0,0,0,.35)}
+.txt{flex:1;min-width:0}
+.txt b{font-weight:700}
+.txt .d{color:var(--muted);font-size:15px}
+.slot{margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.slotbtn{border:2px dashed #AEB9C2;background:var(--soft);color:var(--muted);border-radius:10px;padding:10px 14px;font-weight:700;font-size:14px;cursor:pointer;min-height:44px;text-align:left;letter-spacing:.02em}
+.slotbtn.filled{border-style:solid;text-transform:uppercase}
+.slotbtn.mech.filled{border-color:var(--mech);background:var(--mech-bg);color:var(--mech)}
+.slotbtn.fun.filled{border-color:var(--fun);background:var(--fun-bg);color:var(--fun)}
+.slotbtn small{display:block;text-transform:none;font-weight:400;font-size:12px;letter-spacing:0}
+.snack{display:grid;grid-template-columns:repeat(4,44px);gap:6px;margin-top:8px}
+.snack button{height:40px;border:2px solid #C9D2D9;border-radius:8px;background:#fff;cursor:pointer;font-size:13px;color:var(--muted);font-weight:700}
+.snack button.on{background:#F7DC6F;border-color:#D4AC0D;color:#7D6608}
+.timer{margin-top:8px;display:flex;gap:8px;align-items:center}
+.timer button{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 14px;cursor:pointer;min-height:44px;font-weight:700}
+.timer .clock{font-variant-numeric:tabular-nums;font-size:22px;font-weight:700;min-width:64px}
+.timer.running .clock{color:var(--morning)}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 16px}
+.tools button{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;cursor:pointer;font-size:15px;min-height:44px}
+.notes{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin-bottom:24px}
+.notes label{font-weight:700;display:block;margin-bottom:6px}
+.notes textarea{width:100%;min-height:80px;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;font-size:16px;resize:vertical}
+
+/* picker sheet */
+.scrim{position:fixed;inset:0;background:rgba(20,30,40,.45);display:flex;align-items:flex-end;justify-content:center;z-index:20}
+.scrim[hidden]{display:none}
+.sheet{background:var(--surface);width:100%;max-width:560px;border-radius:18px 18px 0 0;padding:16px 16px calc(20px + env(safe-area-inset-bottom));max-height:85vh;overflow:auto}
+.sheet h2{margin:0 0 12px;font-size:19px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opt{border:2px solid;border-radius:12px;padding:14px 10px;text-align:center;font-weight:700;cursor:pointer;text-transform:uppercase;font-size:15px;min-height:64px}
+.opt small{display:block;text-transform:none;font-weight:400;font-size:12px;margin-top:2px}
+.opt.mech{border-color:var(--mech);background:var(--mech-bg);color:var(--mech)}
+.opt.fun{border-color:var(--fun);background:var(--fun-bg);color:var(--fun)}
+.opt[disabled]{opacity:.38;cursor:default}
+.opt.cur{outline:3px solid var(--ink);outline-offset:2px}
+.sheet-foot{display:flex;gap:10px;margin-top:14px}
+.sheet-foot button{flex:1;border:1px solid var(--line);background:var(--soft);border-radius:12px;min-height:48px;cursor:pointer;font-weight:700}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#2C3E50;color:#fff;padding:12px 18px;border-radius:12px;font-size:15px;z-index:30;max-width:90vw;text-align:center}
+@media (max-width:420px){ .wrap{padding:12px} .row{padding:12px} .opts{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>DAILY RHYTHM</h1>
+    <p class="tag-line">Predictable Structure • Scaffolded Control • Safe Environment</p>
+    <div class="datebar">
+      <button id="prev" aria-label="Previous day">‹</button>
+      <div class="day" id="dayLabel"></div>
+      <button id="next" aria-label="Next day">›</button>
+    </div>
+    <div class="datebar" id="todayRow"><button id="today">Today</button></div>
+    <div class="status" id="status"><i></i>Connecting…</div>
+  </header>
+
+  <div class="progress"><b id="bar"></b></div>
+  <div class="progress-txt" id="ptxt"></div>
+
+  <section class="flags" id="flags">
+    <h3><svg width="18" height="18" viewBox="0 0 24 24"><path d="M12 3 2 21h20L12 3z" fill="#F4D03F" stroke="#C0392B" stroke-width="2" stroke-linejoin="round"/><path d="M12 10v5M12 17.5v.5" stroke="#C0392B" stroke-width="2.4" stroke-linecap="round"/></svg>Anything different today?</h3>
+    <div class="chips" id="chips"></div>
+    <textarea class="flagnote" id="flagnote" placeholder="What's changing, and when? (e.g. Dentist at 2:00, back by 3:30)"></textarea>
+  </section>
+
+  <main id="board"></main>
+
+  <div class="tools">
+    <button id="copyTags">Use yesterday's tags</button>
+    <button id="clearTags">Clear today's tags</button>
+  </div>
+
+  <section class="notes">
+    <label for="note">Notes for today</label>
+    <textarea id="note" placeholder="Wins, hard moments, what helped…"></textarea>
+  </section>
+</div>
+
+<div class="scrim" id="scrim" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <h2 id="sheetTitle"></h2>
+    <div class="opts" id="opts"></div>
+    <div class="sheet-foot">
+      <button id="clearSlot">Empty this slot</button>
+      <button id="closeSheet">Cancel</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<!-- Same Firebase database as the Survivor league; this page keeps its own separate area (rhythm_days). -->
+<script>
+window.FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBKEm0STLQ0uEByWjFLWSXEtzaAag2_P7c",
+  authDomain: "survivor51-league.firebaseapp.com",
+  projectId: "survivor51-league",
+  storageBucket: "survivor51-league.firebasestorage.app",
+  messagingSenderId: "593752459500",
+  appId: "1:593752459500:web:4636b6e0c1baa3f5b0bdc9"
+};
+</script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+const COL = 'rhythm_days';
+const TAGS = {
+  fun: [
+    {id:'reading',  name:'Free Reading'},
+    {id:'drawing',  name:'Free Drawing'},
+    {id:'crafting', name:'Free Crafting'},
+    {id:'build',    name:'Build Something'}
+  ],
+  mech: [
+    {id:'laundry',  name:'Laundry',          sub:'Sort, load, or fold together'},
+    {id:'dishes',   name:'Dishes',           sub:'Clear, rinse, or load kitchen'},
+    {id:'tidy',     name:'Quick Tidy',       sub:'Reset room & craft space'},
+    {id:'snackbox', name:'Fill Snack Box',   sub:'Restock 8 compartments'},
+    {id:'plants',   name:'Plant & Pet Care', sub:'Watering or nurturing tasks'},
+    {id:'sensory',  name:'Sensory Reset',    sub:'Heavy work or therapy ball'}
+  ],
+  flag: [
+    {id:'change',   name:'Change of Plan'},
+    {id:'appt',     name:'Appointment / Errand'},
+    {id:'travel',   name:'Out of Routine / Travel'},
+    {id:'visitors', name:'Visitors / Company'}
+  ]
+};
+const ICON = {
+  sun:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FCE38A" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5" fill="#F9D84A"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>',
+  basket:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"><path d="M3 10h18l-2 10H5L3 10z" fill="rgba(255,255,255,.25)"/><path d="M7 10l4-6M17 10l-4-6M9 14v3M12 14v3M15 14v3" stroke-linecap="round"/></svg>',
+  palette:'<svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18c1.4 0 2-1 1.6-2-.5-1.2.3-2.3 1.6-2.3H17a4 4 0 0 0 4-4C21 7 17 3 12 3z" fill="#F6D7A7"/><circle cx="7.5" cy="11" r="1.6" fill="#E74C3C"/><circle cx="10" cy="7" r="1.6" fill="#3498DB"/><circle cx="14.5" cy="7" r="1.6" fill="#27AE60"/><circle cx="17" cy="11" r="1.4" fill="#8E44AD"/></svg>',
+  moon:'<svg width="24" height="24" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" fill="#F9D84A"/></svg>'
+};
+const BLOCKS = [
+  {id:'morning', name:'Morning Block', sub:'Fixed Academic & Prep Rhythm', color:'var(--morning)', icon:'sun', items:[
+    {id:'breakfast', t:'Breakfast & Morning Prep', d:'Start the day fueled and grounded together.'},
+    {id:'bible',     t:'Bible Block', d:'Reading, family discussion, or morning devotional.'},
+    {id:'math',      t:'Math Block', d:'High-focus core academic work.'},
+    {id:'snackprep', t:'Snack Prep Block', d:'Fill all 8 compartments of the daily snack box.', snack:true},
+    {id:'snacktime', t:'5-Minute Snack Time', d:'Intentional, timed brain break.', timer:300},
+    {id:'language',  t:'Language & Writing Block', d:'Grammar, journaling, or writing assignments.'},
+    {id:'m1', slot:'mech', t:'Mechanical Task Slot 1'}
+  ]},
+  {id:'midday', name:'Mid-Day Block', sub:'Structured Transitions', color:'var(--midday)', icon:'basket', items:[
+    {id:'history', t:'History Block', d:'Historical readings, timelines, or stories.'},
+    {id:'m2', slot:'mech', t:'Lunch & Mechanical Task Slot 2'},
+    {id:'science', t:'Science Block', d:'Core science lesson, reading, or experiments.'}
+  ]},
+  {id:'afternoon', name:'Afternoon Rhythm', sub:'Choice & Agency Slots', color:'var(--afternoon)', icon:'palette', items:[
+    {id:'f1', slot:'fun', t:'Fun Choice Slot 1'},
+    {id:'f2', slot:'fun', t:'Fun Choice Slot 2'},
+    {id:'f3', slot:'fun', t:'Fun Choice Slot 3'},
+    {id:'m3', slot:'mech', t:'Mechanical Task Slot 3'}
+  ]},
+  {id:'evening', name:'Evening Block', sub:'Family Anchors', color:'var(--evening)', icon:'moon', items:[
+    {id:'dinner', t:'Dinner Block', d:'Shared family mealtime and gradual evening wind-down.'}
+  ]}
+];
+const ALL_ITEMS = BLOCKS.flatMap(b=>b.items);
+const SLOT_IDS = ALL_ITEMS.filter(i=>i.slot).map(i=>i.id);
+
+const $ = s => document.querySelector(s);
+const pad = n => String(n).padStart(2,'0');
+const keyOf = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const fromKey = k => { const [y,m,d]=k.split('-').map(Number); return new Date(y,m-1,d); };
+const shift = (k,n) => { const d=fromKey(k); d.setDate(d.getDate()+n); return keyOf(d); };
+const blank = () => ({checks:{}, slots:{}, snack:[false,false,false,false,false,false,false,false], flags:[], flagNote:'', note:''});
+const findTag = (kind,id) => TAGS[kind].find(t=>t.id===id);
+const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+const S = { date:keyOf(new Date()), data:blank(), db:null, unsub:null, online:false, picking:null, timer:null, saveT:null };
+
+function toast(msg, ms=2600){ const t=$('#toast'); t.textContent=msg; t.hidden=false; clearTimeout(t._h); t._h=setTimeout(()=>t.hidden=true, ms); }
+function setStatus(cls, txt){ const s=$('#status'); s.className='status '+cls; s.innerHTML='<i></i>'+txt; }
+
+/* ---------- saving ---------- */
+function cacheLocal(key, data){ try{ localStorage.setItem('rhythm:'+key, JSON.stringify(data)); }catch(e){} }
+function readLocal(key){ try{ const v=localStorage.getItem('rhythm:'+key); return v?JSON.parse(v):null; }catch(e){ return null; } }
+function save(){
+  cacheLocal(S.date, S.data);
+  if(!S.db) return;
+  clearTimeout(S.saveT);
+  const key=S.date, data=JSON.parse(JSON.stringify(S.data));
+  setStatus('', 'Saving…');
+  S.saveT=setTimeout(async()=>{
+    try{ await S.db.doc(COL+'/'+key).set({...data, date:key, savedAt:new Date().toISOString()}); setStatus('ok','Saved'); }
+    catch(err){ console.error(err); setStatus('warn','Not saved online — kept on this device'); }
+  }, 400);
+}
+
+function watchDay(){
+  if(S.unsub){ S.unsub(); S.unsub=null; }
+  S.data = Object.assign(blank(), readLocal(S.date)||{});
+  render();
+  if(!S.db) return;
+  const key=S.date;
+  S.unsub = S.db.doc(COL+'/'+key).onSnapshot(snap=>{
+    if(key!==S.date) return;
+    if(snap.metadata.hasPendingWrites) return;
+    if(snap.exists){ const v=snap.data(); delete v.date; delete v.savedAt; S.data=Object.assign(blank(), v); cacheLocal(key,S.data); }
+    setStatus('ok','Synced');
+    render();
+  }, err=>{ console.error(err); setStatus('warn','Can\'t reach the database — saving on this device only'); });
+}
+
+/* ---------- render ---------- */
+function render(){
+  const d=fromKey(S.date), todayKey=keyOf(new Date());
+  const rel = S.date===todayKey?'Today':S.date===shift(todayKey,-1)?'Yesterday':S.date===shift(todayKey,1)?'Tomorrow':'';
+  $('#dayLabel').innerHTML = esc(d.toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric'})) + (rel?`<small>${rel}</small>`:'<small>&nbsp;</small>');
+  $('#todayRow').style.display = S.date===todayKey?'none':'flex';
+
+  // flags
+  const D=S.data;
+  $('#chips').innerHTML = TAGS.flag.map(f=>`<button class="chip ${D.flags.includes(f.id)?'on':''}" data-flag="${f.id}" aria-pressed="${D.flags.includes(f.id)}">${esc(f.name)}</button>`).join('');
+  $('#flags').classList.toggle('active', D.flags.length>0);
+  if(document.activeElement!==$('#flagnote')) $('#flagnote').value = D.flagNote||'';
+  if(document.activeElement!==$('#note')) $('#note').value = D.note||'';
+
+  // board
+  $('#board').innerHTML = BLOCKS.map(b=>`
+    <section class="block">
+      <div class="block-h" style="background:${b.color}">${ICON[b.icon]}<span>${esc(b.name)} <small>(${esc(b.sub)})</small></span></div>
+      ${b.items.map(rowHTML).join('')}
+    </section>`).join('');
+
+  const done = ALL_ITEMS.filter(i=>D.checks[i.id]).length;
+  $('#bar').style.width = (done/ALL_ITEMS.length*100)+'%';
+  $('#ptxt').textContent = done===ALL_ITEMS.length ? 'Every block done — well done!' : `${done} of ${ALL_ITEMS.length} done`;
+  paintTimer();
+}
+function rowHTML(i){
+  const D=S.data, on=!!D.checks[i.id];
+  let extra='';
+  if(i.slot){
+    const tag = D.slots[i.id] && findTag(i.slot, D.slots[i.id]);
+    extra = `<div class="slot"><button class="slotbtn ${i.slot} ${tag?'filled':''}" data-slot="${i.id}">${
+      tag ? esc(tag.name)+(tag.sub?`<small>${esc(tag.sub)}</small>`:'') : (i.slot==='fun'?'+ Pick a fun tag':'+ Pick a task tag')
+    }</button></div>`;
+  }
+  if(i.snack){
+    const n=D.snack.filter(Boolean).length;
+    extra = `<div class="snack" aria-label="Snack box compartments, ${n} of 8 filled">${D.snack.map((v,k)=>`<button class="${v?'on':''}" data-snack="${k}" aria-pressed="${v}">${k+1}</button>`).join('')}</div>`;
+  }
+  if(i.timer){
+    extra = `<div class="timer" id="timer"><span class="clock" id="clock">5:00</span><button id="timerBtn">Start</button></div>`;
+  }
+  const label = i.slot ? `<b>${esc(i.t)}</b>` : `<b>${esc(i.t)}:</b> <span class="d">${esc(i.d)}</span>`;
+  return `<div class="row ${on?'done':''}">
+    <button class="check" data-check="${i.id}" role="checkbox" aria-checked="${on}" aria-label="${esc(i.t)}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+    <div class="txt">${label}${extra}</div>
+  </div>`;
+}
+
+/* ---------- timer (this device only) ---------- */
+function paintTimer(){
+  const c=$('#clock'), b=$('#timerBtn'), w=$('#timer'); if(!c) return;
+  const left = S.timer ? Math.max(0, Math.round((S.timer-Date.now())/1000)) : 300;
+  c.textContent = `${Math.floor(left/60)}:${pad(left%60)}`;
+  b.textContent = S.timer ? 'Stop' : 'Start';
+  w.classList.toggle('running', !!S.timer);
+}
+function chime(){
+  try{
+    const ctx=new (window.AudioContext||window.webkitAudioContext)();
+    [523.25,659.25,783.99].forEach((f,k)=>{ const o=ctx.createOscillator(), g=ctx.createGain(); o.frequency.value=f; o.type='sine';
+      const t=ctx.currentTime+k*0.35; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.18,t+.05); g.gain.exponentialRampToValueAtTime(.001,t+1.2);
+      o.connect(g).connect(ctx.destination); o.start(t); o.stop(t+1.3); });
+  }catch(e){}
+}
+setInterval(()=>{
+  if(!S.timer) return;
+  if(Date.now()>=S.timer){ S.timer=null; chime(); toast('Snack time is finished. Time for Language & Writing.', 5000); }
+  paintTimer();
+}, 500);
+
+/* ---------- picker ---------- */
+function openPicker(slotId){
+  const item=ALL_ITEMS.find(i=>i.id===slotId), kind=item.slot, D=S.data;
+  S.picking=slotId;
+  $('#sheetTitle').textContent = item.t;
+  $('#opts').innerHTML = TAGS[kind].map(t=>{
+    const usedIn = SLOT_IDS.find(s=>s!==slotId && D.slots[s]===t.id);
+    const cur = D.slots[slotId]===t.id;
+    const where = usedIn ? `<small>On ${esc(ALL_ITEMS.find(i=>i.id===usedIn).t.replace(/^Lunch & /,''))}</small>` : (t.sub?`<small>${esc(t.sub)}</small>`:'');
+    return `<button class="opt ${kind} ${cur?'cur':''}" data-pick="${t.id}" ${usedIn?'disabled':''}>${esc(t.name)}${where}</button>`;
+  }).join('');
+  $('#clearSlot').hidden = !D.slots[slotId];
+  $('#scrim').hidden=false;
+}
+function closePicker(){ $('#scrim').hidden=true; S.picking=null; }
+
+/* ---------- events ---------- */
+document.addEventListener('click', e=>{
+  const t=e.target.closest('button'); if(!t) return;
+  const D=S.data;
+  if(t.dataset.check){ D.checks[t.dataset.check]=!D.checks[t.dataset.check]; if(!D.checks[t.dataset.check]) delete D.checks[t.dataset.check]; save(); render(); return; }
+  if(t.dataset.slot){ openPicker(t.dataset.slot); return; }
+  if(t.dataset.snack){ const k=+t.dataset.snack; D.snack[k]=!D.snack[k];
+    if(D.snack.every(Boolean) && !D.checks.snackprep){ D.checks.snackprep=true; toast('All 8 compartments filled!'); }
+    save(); render(); return; }
+  if(t.dataset.flag){ const f=t.dataset.flag; D.flags = D.flags.includes(f) ? D.flags.filter(x=>x!==f) : [...D.flags,f]; save(); render(); return; }
+  if(t.dataset.pick){ D.slots[S.picking]=t.dataset.pick; closePicker(); save(); render(); return; }
+  switch(t.id){
+    case 'prev': S.date=shift(S.date,-1); watchDay(); break;
+    case 'next': S.date=shift(S.date,1); watchDay(); break;
+    case 'today': S.date=keyOf(new Date()); watchDay(); break;
+    case 'timerBtn': S.timer = S.timer ? null : Date.now()+300000; paintTimer(); break;
+    case 'clearSlot': delete D.slots[S.picking]; closePicker(); save(); render(); break;
+    case 'closeSheet': closePicker(); break;
+    case 'copyTags': copyYesterday(); break;
+    case 'clearTags':
+      if(!Object.keys(D.slots).length){ toast('No tags placed yet today.'); break; }
+      if(confirm('Take all tags off today\'s board?')){ D.slots={}; save(); render(); }
+      break;
+  }
+});
+$('#scrim').addEventListener('click', e=>{ if(e.target.id==='scrim') closePicker(); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && !$('#scrim').hidden) closePicker(); });
+$('#note').addEventListener('input', e=>{ S.data.note=e.target.value; save(); });
+$('#flagnote').addEventListener('input', e=>{ S.data.flagNote=e.target.value; save(); });
+
+async function copyYesterday(){
+  const y=shift(S.date,-1);
+  let prev=null;
+  if(S.db){ try{ const s=await S.db.doc(COL+'/'+y).get(); if(s.exists) prev=s.data(); }catch(e){} }
+  if(!prev) prev=readLocal(y);
+  if(!prev || !prev.slots || !Object.keys(prev.slots).length){ toast('No tags were placed yesterday.'); return; }
+  S.data.slots={...prev.slots}; save(); render(); toast('Yesterday\'s tags are on the board.');
+}
+
+/* ---------- start ---------- */
+(function boot(){
+  const cfg=window.FIREBASE_CONFIG;
+  if(window.firebase && cfg && cfg.projectId){
+    try{ firebase.initializeApp(cfg); S.db=firebase.firestore(); }catch(e){ console.error(e); }
+  }
+  if(!S.db) setStatus('warn','Saving on this device only');
+  watchDay();
+  // roll over to the new day if the page is left open overnight
+  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ const k=keyOf(new Date()); if(S._last && S._last!==k && S.date===S._last){ S.date=k; watchDay(); } S._last=k; } });
+  S._last=keyOf(new Date());
+})();
+</script>
+</body>
+</html>

@@ -78,11 +78,8 @@ h1{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:clamp(
 .timer button{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 14px;cursor:pointer;min-height:44px;font-weight:700}
 .timer .clock{font-variant-numeric:tabular-nums;font-size:22px;font-weight:700;min-width:64px}
 .timer.running .clock{color:var(--morning)}
-.tools{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 16px}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 32px}
 .tools button{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;cursor:pointer;font-size:15px;min-height:44px}
-.notes{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin-bottom:24px}
-.notes label{font-weight:700;display:block;margin-bottom:6px}
-.notes textarea{width:100%;min-height:80px;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;font-size:16px;resize:vertical}
 
 /* picker sheet */
 .scrim{position:fixed;inset:0;background:rgba(20,30,40,.45);display:flex;align-items:flex-end;justify-content:center;z-index:20}
@@ -132,10 +129,6 @@ h1{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:clamp(
     <button id="clearTags">Clear today's tags</button>
   </div>
 
-  <section class="notes">
-    <label for="note">Notes for today</label>
-    <textarea id="note" placeholder="Wins, hard moments, what helped…"></textarea>
-  </section>
 </div>
 
 <div class="scrim" id="scrim" hidden>
@@ -226,7 +219,7 @@ const pad = n => String(n).padStart(2,'0');
 const keyOf = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const fromKey = k => { const [y,m,d]=k.split('-').map(Number); return new Date(y,m-1,d); };
 const shift = (k,n) => { const d=fromKey(k); d.setDate(d.getDate()+n); return keyOf(d); };
-const blank = () => ({checks:{}, slots:{}, snack:[false,false,false,false,false,false,false,false], flags:[], flagNote:'', note:''});
+const blank = () => ({checks:{}, slots:{}, snack:[false,false,false,false,false,false,false,false], flags:[], flagNote:''});
 const findTag = (kind,id) => TAGS[kind].find(t=>t.id===id);
 const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
@@ -277,7 +270,6 @@ function render(){
   $('#chips').innerHTML = TAGS.flag.map(f=>`<button class="chip ${D.flags.includes(f.id)?'on':''}" data-flag="${f.id}" aria-pressed="${D.flags.includes(f.id)}">${esc(f.name)}</button>`).join('');
   $('#flags').classList.toggle('active', D.flags.length>0);
   if(document.activeElement!==$('#flagnote')) $('#flagnote').value = D.flagNote||'';
-  if(document.activeElement!==$('#note')) $('#note').value = D.note||'';
 
   // board
   $('#board').innerHTML = BLOCKS.map(b=>`
@@ -379,7 +371,6 @@ document.addEventListener('click', e=>{
 });
 $('#scrim').addEventListener('click', e=>{ if(e.target.id==='scrim') closePicker(); });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape' && !$('#scrim').hidden) closePicker(); });
-$('#note').addEventListener('input', e=>{ S.data.note=e.target.value; save(); });
 $('#flagnote').addEventListener('input', e=>{ S.data.flagNote=e.target.value; save(); });
 
 async function copyYesterday(){

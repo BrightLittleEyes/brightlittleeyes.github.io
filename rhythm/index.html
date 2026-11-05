@@ -190,9 +190,9 @@ const BLOCKS = [
     {id:'breakfast', t:'Breakfast & Morning Prep', d:'Start the day fueled and grounded together.'},
     {id:'carpool_am', t:'Carpool', d:'Morning drive. A calm ride and a look at what comes next.'},
     {id:'bible',     t:'Bible Block', d:'Individual Bible reading and quiet devotional time.'},
-    {id:'math',      t:'Math Block', d:'High-focus core academic work.'},
+    {id:'math',      t:'Math Block', d:'High-focus core academic work.', timer:2700, endMsg:'Math time is finished. Nice focus! Next is Snack Prep.'},
     {id:'snackprep', t:'Snack Prep Block', d:'Fill all 8 compartments of the daily snack box.', snack:true},
-    {id:'snacktime', t:'5-Minute Snack Time', d:'Intentional, timed brain break.', timer:300},
+    {id:'snacktime', t:'5-Minute Snack Time', d:'Intentional, timed brain break.', timer:300, endMsg:'Snack time is finished. Time for Language & Writing.'},
     {id:'language',  t:'Language & Writing Block', d:'Grammar, journaling, or writing assignments.'},
     {id:'m1', slot:'mech', t:'Helping Hands Slot 1'},
     {id:'f1', slot:'fun', t:'Fun Choice Slot 1'}
@@ -226,7 +226,7 @@ const blank = () => ({checks:{}, slots:{}, snack:[false,false,false,false,false,
 const findTag = (kind,id) => TAGS[kind].find(t=>t.id===id);
 const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
-const S = { date:keyOf(new Date()), data:blank(), db:null, unsub:null, online:false, picking:null, timer:null, saveT:null };
+const S = { date:keyOf(new Date()), data:blank(), db:null, unsub:null, online:false, picking:null, timers:{}, saveT:null };
 
 function toast(msg, ms=2600){ const t=$('#toast'); t.textContent=msg; t.hidden=false; clearTimeout(t._h); t._h=setTimeout(()=>t.hidden=true, ms); }
 function setStatus(cls, txt){ const s=$('#status'); s.className='status '+cls; s.innerHTML='<i></i>'+txt; }
@@ -300,7 +300,7 @@ function rowHTML(i){
     extra = `<div class="snack" aria-label="Snack box compartments, ${n} of 8 filled">${D.snack.map((v,k)=>`<button class="${v?'on':''}" data-snack="${k}" aria-pressed="${v}">${k+1}</button>`).join('')}</div>`;
   }
   if(i.timer){
-    extra = `<div class="timer" id="timer"><span class="clock" id="clock">5:00</span><button id="timerBtn">Start</button></div>`;
+    extra = `<div class="timer" data-timerbox="${i.id}"><span class="clock"></span><button data-timer="${i.id}">Start</button></div>`;
   }
   const label = i.slot ? `<b>${esc(i.t)}</b>` : `<b>${esc(i.t)}:</b> <span class="d">${esc(i.d)}</span>`;
   return `<div class="row ${on?'done':''}">
@@ -311,11 +311,13 @@ function rowHTML(i){
 
 /* ---------- timer (this device only) ---------- */
 function paintTimer(){
-  const c=$('#clock'), b=$('#timerBtn'), w=$('#timer'); if(!c) return;
-  const left = S.timer ? Math.max(0, Math.round((S.timer-Date.now())/1000)) : 300;
-  c.textContent = `${Math.floor(left/60)}:${pad(left%60)}`;
-  b.textContent = S.timer ? 'Stop' : 'Start';
-  w.classList.toggle('running', !!S.timer);
+  document.querySelectorAll('[data-timerbox]').forEach(w=>{
+    const id=w.dataset.timerbox, item=ALL_ITEMS.find(i=>i.id===id), end=S.timers[id];
+    const left = end ? Math.max(0, Math.round((end-Date.now())/1000)) : item.timer;
+    w.querySelector('.clock').textContent = `${Math.floor(left/60)}:${pad(left%60)}`;
+    w.querySelector('button').textContent = end ? 'Stop' : 'Start';
+    w.classList.toggle('running', !!end);
+  });
 }
 function chime(){
   try{
@@ -326,8 +328,8 @@ function chime(){
   }catch(e){}
 }
 setInterval(()=>{
-  if(!S.timer) return;
-  if(Date.now()>=S.timer){ S.timer=null; chime(); toast('Snack time is finished. Time for Language & Writing.', 5000); }
+  const ids=Object.keys(S.timers); if(!ids.length) return;
+  ids.forEach(id=>{ if(Date.now()>=S.timers[id]){ delete S.timers[id]; chime(); toast(ALL_ITEMS.find(i=>i.id===id).endMsg, 6000); } });
   paintTimer();
 }, 500);
 
@@ -353,6 +355,7 @@ document.addEventListener('click', e=>{
   const D=S.data;
   if(t.dataset.check){ D.checks[t.dataset.check]=!D.checks[t.dataset.check]; if(!D.checks[t.dataset.check]) delete D.checks[t.dataset.check]; save(); render(); return; }
   if(t.dataset.slot){ openPicker(t.dataset.slot); return; }
+  if(t.dataset.timer){ const id=t.dataset.timer; if(S.timers[id]) delete S.timers[id]; else S.timers[id]=Date.now()+ALL_ITEMS.find(i=>i.id===id).timer*1000; paintTimer(); return; }
   if(t.dataset.snack){ const k=+t.dataset.snack; D.snack[k]=!D.snack[k];
     if(D.snack.every(Boolean) && !D.checks.snackprep){ D.checks.snackprep=true; toast('All 8 compartments filled!'); }
     save(); render(); return; }
@@ -361,7 +364,6 @@ document.addEventListener('click', e=>{
     case 'prev': S.date=shift(S.date,-1); watchDay(); break;
     case 'next': S.date=shift(S.date,1); watchDay(); break;
     case 'today': S.date=keyOf(new Date()); watchDay(); break;
-    case 'timerBtn': S.timer = S.timer ? null : Date.now()+300000; paintTimer(); break;
     case 'clearSlot': delete D.slots[S.picking]; closePicker(); save(); render(); break;
     case 'closeSheet': closePicker(); break;
     case 'copyTags': copyYesterday(); break;

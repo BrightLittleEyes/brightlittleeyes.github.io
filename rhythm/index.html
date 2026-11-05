@@ -28,7 +28,8 @@ button{font:inherit;color:inherit}
 .wrap{max-width:760px;margin:0 auto;padding:16px}
 header{text-align:center;padding:8px 0 4px}
 h1{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:clamp(26px,6vw,36px);letter-spacing:.02em;margin:0;color:#2C3E50}
-.tag-line{color:var(--muted);font-style:italic;font-size:14px;margin:2px 0 12px}
+.tag-line{color:var(--muted);font-style:italic;font-size:15px;line-height:1.45;margin:6px auto 12px;max-width:560px}
+.tag-line .ref{display:block;font-style:normal;font-weight:700;font-size:13px;margin-top:3px;letter-spacing:.03em}
 .datebar{display:flex;align-items:center;justify-content:center;gap:8px;margin:6px 0 4px}
 .datebar button{border:1px solid var(--line);background:var(--surface);border-radius:12px;height:44px;min-width:44px;padding:0 12px;cursor:pointer}
 .datebar .day{font-weight:700;font-size:18px;min-width:0;flex:1;max-width:320px;text-align:center}
@@ -105,7 +106,7 @@ h1{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:clamp(
 <div class="wrap">
   <header>
     <h1>DAILY RHYTHM</h1>
-    <p class="tag-line">Predictable Structure • Scaffolded Control • Safe Environment</p>
+    <p class="tag-line">&ldquo;So do not fear, for I am with you; do not be dismayed, for I am your God. I will strengthen you and help you; I will uphold you with my righteous right hand.&rdquo;<span class="ref">Isaiah 41:10</span></p>
     <div class="datebar">
       <button id="prev" aria-label="Previous day">‹</button>
       <div class="day" id="dayLabel"></div>

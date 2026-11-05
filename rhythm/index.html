@@ -189,26 +189,28 @@ const ICON = {
 const BLOCKS = [
   {id:'morning', name:'Morning Block', sub:'Fixed Academic & Prep Rhythm', color:'var(--morning)', icon:'sun', items:[
     {id:'breakfast', t:'Breakfast & Morning Prep', d:'Start the day fueled and grounded together.'},
+    {id:'carpool_am', t:'Carpool', d:'Morning drive. A calm ride and a look at what comes next.'},
     {id:'bible',     t:'Bible Block', d:'Reading, family discussion, or morning devotional.'},
     {id:'math',      t:'Math Block', d:'High-focus core academic work.'},
     {id:'snackprep', t:'Snack Prep Block', d:'Fill all 8 compartments of the daily snack box.', snack:true},
     {id:'snacktime', t:'5-Minute Snack Time', d:'Intentional, timed brain break.', timer:300},
     {id:'language',  t:'Language & Writing Block', d:'Grammar, journaling, or writing assignments.'},
-    {id:'m1', slot:'mech', t:'Mechanical Task Slot 1'}
+    {id:'m1', slot:'mech', t:'Helping Hands Slot 1'},
+    {id:'f1', slot:'fun', t:'Fun Choice Slot 1'}
   ]},
   {id:'midday', name:'Mid-Day Block', sub:'Structured Transitions', color:'var(--midday)', icon:'basket', items:[
     {id:'history', t:'History Block', d:'Historical readings, timelines, or stories.'},
-    {id:'m2', slot:'mech', t:'Lunch & Mechanical Task Slot 2'},
+    {id:'m2', slot:'mech', t:'Lunch & Helping Hands Slot 2'},
     {id:'science', t:'Science Block', d:'Core science lesson, reading, or experiments.'}
   ]},
   {id:'afternoon', name:'Afternoon Rhythm', sub:'Choice & Agency Slots', color:'var(--afternoon)', icon:'palette', items:[
-    {id:'f1', slot:'fun', t:'Fun Choice Slot 1'},
     {id:'f2', slot:'fun', t:'Fun Choice Slot 2'},
-    {id:'f3', slot:'fun', t:'Fun Choice Slot 3'},
-    {id:'m3', slot:'mech', t:'Mechanical Task Slot 3'}
+    {id:'m3', slot:'mech', t:'Helping Hands Slot 3'}
   ]},
   {id:'evening', name:'Evening Block', sub:'Family Anchors', color:'var(--evening)', icon:'moon', items:[
-    {id:'dinner', t:'Dinner Block', d:'Shared family mealtime and gradual evening wind-down.'}
+    {id:'carpool_pm', t:'Carpool', d:'Afternoon drive. Settle in and get ready for the evening.'},
+    {id:'dinner', t:'Dinner Block', d:'Shared family mealtime and gradual evening wind-down.'},
+    {id:'f3', slot:'fun', t:'Fun Choice Slot 3'}
   ]}
 ];
 const ALL_ITEMS = BLOCKS.flatMap(b=>b.items);
@@ -289,7 +291,7 @@ function rowHTML(i){
   if(i.slot){
     const tag = D.slots[i.id] && findTag(i.slot, D.slots[i.id]);
     extra = `<div class="slot"><button class="slotbtn ${i.slot} ${tag?'filled':''}" data-slot="${i.id}">${
-      tag ? esc(tag.name)+(tag.sub?`<small>${esc(tag.sub)}</small>`:'') : (i.slot==='fun'?'+ Pick a fun tag':'+ Pick a task tag')
+      tag ? esc(tag.name)+(tag.sub?`<small>${esc(tag.sub)}</small>`:'') : (i.slot==='fun'?'+ Pick a fun tag':'+ Pick a Helping Hands tag')
     }</button></div>`;
   }
   if(i.snack){

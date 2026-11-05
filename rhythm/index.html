@@ -100,6 +100,16 @@ h1{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:clamp(
 .opt.cur{outline:3px solid var(--ink);outline-offset:2px}
 .sheet-foot{display:flex;gap:10px;margin-top:14px}
 .sheet-foot button{flex:1;border:1px solid var(--line);background:var(--soft);border-radius:12px;min-height:48px;cursor:pointer;font-weight:700}
+.alarm{position:fixed;inset:0;background:rgba(20,30,40,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.alarm-box{background:#fff;border-radius:20px;padding:28px 24px;max-width:420px;width:100%;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.25);animation:pop .25s ease-out}
+.alarm-box .bell{font-size:56px;line-height:1;display:block;animation:ring 1s ease-in-out infinite}
+.alarm-box h2{font-family:"Bricolage Grotesque",sans-serif;font-size:30px;margin:8px 0 6px;color:var(--navy)}
+.alarm-box p{margin:0 0 20px;color:var(--muted);font-size:18px}
+.alarm-box button{background:var(--done);color:#fff;border:0;border-radius:14px;min-height:60px;width:100%;font-size:22px;font-weight:700;cursor:pointer}
+@keyframes pop{from{transform:scale(.85);opacity:0}to{transform:none;opacity:1}}
+@keyframes ring{0%,100%{transform:rotate(0)}15%{transform:rotate(14deg)}30%{transform:rotate(-12deg)}45%{transform:rotate(8deg)}60%{transform:rotate(-4deg)}}
+@media (prefers-reduced-motion:reduce){.alarm-box,.alarm-box .bell{animation:none}}
+.ed-test{border:1px solid var(--line);background:#fff;border-radius:10px;min-height:40px;padding:0 14px;cursor:pointer;font-weight:700}
 .toast{pointer-events:none;position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:12px 18px;border-radius:12px;font-size:15px;z-index:40;max-width:90vw;text-align:center}
 
 /* login & setup */
@@ -214,6 +224,9 @@ h1{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:clamp(
     </div>
   </div>
 </div>
+<div class="alarm" id="alarm" hidden role="alertdialog" aria-modal="true" aria-labelledby="alarmTitle">
+  <div class="alarm-box"><span class="bell" aria-hidden="true">⏰</span><h2 id="alarmTitle">Time's up!</h2><p id="alarmMsg"></p><button id="alarmOk">OK</button></div>
+</div>
 <div class="toast" id="toast" hidden></div>
 
 <!-- Same Firebase database as the Survivor league; this page keeps its own separate area (rhythm_days, rhythm_config). -->
@@ -238,6 +251,8 @@ const DEFAULT_CONFIG = {
   verse: 'So do not fear, for I am with you; do not be dismayed, for I am your God. I will strengthen you and help you; I will uphold you with my righteous right hand.',
   verseRef: 'Isaiah 41:10',
   kidName: '',
+  sound: 'beep',
+  repeat: true,
   blocks: [
     {id:'morning', name:'Morning Block', sub:'Mom’s Launchpad', color:'#2A7FBA', icon:'sun', items:[
       {id:'breakfast', t:'Breakfast & Morning Prep', d:'Start the day fueled and grounded together.'},
@@ -335,7 +350,8 @@ function normalize(d){
   if(!d) return c;
   if(Array.isArray(d.blocks)) c.blocks = d.blocks;
   if(d.tags) ['fun','mech','flag'].forEach(k=>{ if(Array.isArray(d.tags[k])) c.tags[k]=d.tags[k]; });
-  ['verse','verseRef','kidName','pwKid','pwParent'].forEach(k=>{ if(typeof d[k]==='string') c[k]=d[k]; });
+  ['verse','verseRef','kidName','pwKid','pwParent','sound'].forEach(k=>{ if(typeof d[k]==='string') c[k]=d[k]; });
+  if(typeof d.repeat==='boolean') c.repeat=d.repeat;
   c.blocks.forEach(b=>{ b.items = Array.isArray(b.items)?b.items:[]; });
   c.v = d.v || 1;
   if(c.v < 2){                       // split the long morning at the snack break
@@ -548,18 +564,71 @@ function paintTimer(){
     w.classList.toggle('paused', state==='paused');
   });
 }
-function chime(){
+/* Sounds. iPads only allow sound that was switched on by a tap, so the first
+   tap on the page (Start, a checkbox, anything) switches it on for later. */
+let AC=null;
+function unlockAudio(){
   try{
-    const ctx=new (window.AudioContext||window.webkitAudioContext)();
-    [523.25,659.25,783.99].forEach((f,k)=>{ const o=ctx.createOscillator(), g=ctx.createGain(); o.frequency.value=f; o.type='sine';
-      const t=ctx.currentTime+k*0.35; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.18,t+.05); g.gain.exponentialRampToValueAtTime(.001,t+1.2);
-      o.connect(g).connect(ctx.destination); o.start(t); o.stop(t+1.3); });
+    if(!AC) AC=new (window.AudioContext||window.webkitAudioContext)();
+    if(AC.state==='suspended') AC.resume();
+    const b=AC.createBuffer(1,1,22050), src=AC.createBufferSource(); src.buffer=b; src.connect(AC.destination); src.start(0);
   }catch(e){}
 }
+document.addEventListener('pointerdown', unlockAudio, {capture:true});
+document.addEventListener('keydown', unlockAudio, {capture:true});
+function tone(freq, start, dur, vol, type){
+  const o=AC.createOscillator(), g=AC.createGain(); o.type=type; o.frequency.value=freq;
+  g.gain.setValueAtTime(0,start); g.gain.linearRampToValueAtTime(vol,start+.02);
+  g.gain.setValueAtTime(vol,start+dur-.04); g.gain.linearRampToValueAtTime(0,start+dur);
+  o.connect(g).connect(AC.destination); o.start(start); o.stop(start+dur+.02);
+}
+function playSound(kind){
+  kind = kind || CFG.sound || 'beep';
+  if(kind==='off') return;
+  try{
+    if(!AC) unlockAudio();
+    if(AC.state==='suspended') AC.resume();
+    const t=AC.currentTime+.05;
+    if(kind==='chime') [523.25,659.25,783.99].forEach((f,k)=>tone(f, t+k*.35, 1.1, .22, 'sine'));
+    else [0,.25,.5].forEach(d=>tone(1046.5, t+d, .16, .28, 'square'));
+  }catch(e){}
+}
+
+/* Time's-up card: sounds now, then every 3 seconds until OK (up to 1 minute) */
+const ALARM = { queue:[], loop:null, until:0 };
+function showAlarm(msg){
+  ALARM.queue.push(msg);
+  if(!$('#alarm').hidden) return;
+  nextAlarm();
+}
+function nextAlarm(){
+  const msg=ALARM.queue.shift();
+  if(msg==null){ $('#alarm').hidden=true; return; }
+  $('#alarmMsg').textContent=msg; $('#alarm').hidden=false; setTimeout(()=>$('#alarmOk').focus(),0);
+  playSound();
+  clearInterval(ALARM.loop);
+  if(CFG.repeat!==false && CFG.sound!=='off'){
+    ALARM.until=Date.now()+60000;
+    ALARM.loop=setInterval(()=>{ if($('#alarm').hidden || Date.now()>ALARM.until){ clearInterval(ALARM.loop); return; } playSound(); }, 3000);
+  }
+}
+$('#alarmOk').addEventListener('click', ()=>{ clearInterval(ALARM.loop); $('#alarm').hidden=true; nextAlarm(); });
+
+/* Keep the screen awake while a timer is running */
+let WAKE=null;
+async function syncWake(){
+  const want = Object.keys(S.timers).length>0 && !document.hidden;
+  try{
+    if(want && !WAKE && navigator.wakeLock){ WAKE=await navigator.wakeLock.request('screen'); WAKE.addEventListener('release',()=>{ WAKE=null; }); }
+    if(!want && WAKE){ const w=WAKE; WAKE=null; await w.release(); }
+  }catch(e){ WAKE=null; }
+}
+document.addEventListener('visibilitychange', syncWake);
+
 setInterval(()=>{
   const ids=Object.keys(S.timers); if(!ids.length) return;
-  ids.forEach(id=>{ if(Date.now()>=S.timers[id]){ const info=timerInfo(id); delete S.timers[id]; chime(); if(info) toast(info.msg, 6000); } });
-  paintTimer();
+  ids.forEach(id=>{ if(Date.now()>=S.timers[id]){ const info=timerInfo(id); delete S.timers[id]; showAlarm(info ? info.msg : 'Time is finished.'); } });
+  paintTimer(); syncWake();
 }, 500);
 
 /* ---------- tag picker ---------- */
@@ -590,7 +659,7 @@ $('#app').addEventListener('click', e=>{
     if(a==='pause'){ S.paused[id]=Math.max(0,S.timers[id]-Date.now()); delete S.timers[id]; }
     if(a==='resume'){ S.timers[id]=Date.now()+S.paused[id]; delete S.paused[id]; }
     if(a==='reset'){ delete S.timers[id]; delete S.paused[id]; }
-    paintTimer(); return; }
+    paintTimer(); syncWake(); return; }
   if(t.dataset.snack){ const k=+t.dataset.snack, sid=t.dataset.sid; D.snack[k]=!D.snack[k];
     if(D.snack.every(Boolean) && !D.checks[sid]){ D.checks[sid]=true; toast('All 8 compartments filled!'); }
     save(); render(); return; }
@@ -708,6 +777,16 @@ function renderEditor(){
     ${tagsEd('fun','Fun Choice tags','She picks these for the Fun Choice slots. A timer shows under the tag when it\'s placed.',false,true)}
     ${tagsEd('mech','Helping Hands tags','She picks these for the Helping Hands slots.',true,true)}
     ${tagsEd('flag','Change of Routine tags','The red tags for "Anything different today?"',false,false)}
+    <div class="ed-sec"><h3>Timer sound</h3><p class="help">What plays when a timer runs out. A "Time's up!" card also pops up until she taps OK.</p>
+      <div class="ed-grid" style="align-items:center">
+        <label class="ed-f" style="flex:0 1 220px">Sound<select data-path="sound">
+          <option value="beep" ${E.sound==='beep'?'selected':''}>Beep</option>
+          <option value="chime" ${E.sound==='chime'?'selected':''}>Soft chime</option>
+          <option value="off" ${E.sound==='off'?'selected':''}>No sound</option></select></label>
+        <button class="ed-test" data-act="testsound">▶ Test sound</button>
+      </div>
+      <label class="ed-chk"><input type="checkbox" data-path="repeat" data-type="flag" ${E.repeat!==false?'checked':''}> Keep sounding every few seconds until she taps OK (up to 1 minute)</label>
+    </div>
     <div class="ed-sec"><h3>Passwords</h3><p class="help">Leave blank to keep the current password.</p>
       <div class="ed-grid">
         <label class="ed-f">New password for her<input type="password" id="newKid" autocomplete="new-password"></label>
@@ -719,6 +798,7 @@ function renderEditor(){
 }
 function readField(el){
   if(el.dataset.type==='bool') return el.checked || undefined;
+  if(el.dataset.type==='flag') return el.checked;
   if(el.dataset.type==='min'){ const n=parseFloat(el.value); return n>0 ? Math.round(n*60) : undefined; }
   return el.value;
 }
@@ -757,6 +837,7 @@ $('#editor').addEventListener('click', async e=>{
     }
     renderEditor(); return;
   }
+  if(a==='testsound'){ playSound(S.edit.sound); return; }
   if(a==='additem'){ E.blocks[+t.dataset.b].items.push({id:newId('i'), t:''}); renderEditor(); focusLast(`[data-path^="blocks.${t.dataset.b}.items."][data-path$=".t"]`); return; }
   if(a==='addblock'){ const c=COLORS[E.blocks.length % COLORS.length][0]; E.blocks.push({id:newId('b'), name:'', sub:'', color:c, icon:'star', items:[]}); renderEditor(); focusLast('[data-path^="blocks."][data-path$=".name"]'); return; }
   if(a==='addtag'){ E.tags[t.dataset.k].push({id:newId('t'), name:''}); renderEditor(); focusLast(`[data-path^="tags.${t.dataset.k}."][data-path$=".name"]`); return; }
@@ -781,6 +862,7 @@ async function saveEditor(){
     t.name=(t.name||'').trim(); if(!t.name) return toast('Every tag needs a name.', 3500);
     trim(t,'sub');
   }
+  if(!['beep','chime','off'].includes(E.sound)) E.sound='beep'; E.repeat = E.repeat!==false;
   E.verse=(E.verse||'').trim(); E.verseRef=(E.verseRef||'').trim(); E.kidName=(E.kidName||'').trim();
   const nk=$('#newKid').value.trim(), np=$('#newParent').value.trim();
   if(nk && nk.length<3) return toast('Her password needs at least 3 letters or numbers.', 3500);

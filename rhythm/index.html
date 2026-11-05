@@ -17,17 +17,18 @@
 <style>
 :root{
   --bg:#F4F6F8; --surface:#FFFFFF; --ink:#22303C; --muted:#5F6E7A; --line:#DCE2E7; --soft:#EEF2F5;
-  --morning:#2A7FBA; --midday:#27A55A; --afternoon:#8E44AD; --evening:#D35400;
   --mech:#2A7FBA; --mech-bg:#EAF4FC; --fun:#8E44AD; --fun-bg:#F5ECF9;
-  --flag:#C0392B; --flag-bg:#FDEFD8; --done:#1E8449;
+  --flag:#C0392B; --flag-bg:#FDEFD8; --done:#1E8449; --navy:#2C3E50;
 }
 *{box-sizing:border-box}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font:17px/1.4 "Atkinson Hyperlegible",system-ui,sans-serif;-webkit-tap-highlight-color:transparent;padding-bottom:env(safe-area-inset-bottom)}
-button{font:inherit;color:inherit}
+button,input,select,textarea{font:inherit;color:inherit}
+[hidden]{display:none!important}
 .wrap{max-width:760px;margin:0 auto;padding:16px}
 header{text-align:center;padding:8px 0 4px}
-h1{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:clamp(26px,6vw,36px);letter-spacing:.02em;margin:0;color:#2C3E50}
+h1{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:clamp(26px,6vw,36px);letter-spacing:.02em;margin:0;color:var(--navy)}
+.hello{font-weight:700;color:var(--navy);font-size:18px;margin:2px 0 0}
 .tag-line{color:var(--muted);font-style:italic;font-size:15px;line-height:1.45;margin:6px auto 12px;max-width:560px}
 .tag-line .ref{display:block;font-style:normal;font-weight:700;font-size:13px;margin-top:3px;letter-spacing:.03em}
 .datebar{display:flex;align-items:center;justify-content:center;gap:8px;margin:6px 0 4px}
@@ -78,15 +79,16 @@ h1{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:clamp(
 .timer button{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 0;width:96px;cursor:pointer;min-height:44px;font-weight:700;text-align:center}
 .timer button.ghost{visibility:hidden}
 .timer .clock{font-variant-numeric:tabular-nums;font-size:22px;font-weight:700;width:78px;flex:none}
-.timer.running .clock{color:var(--morning)}
+.timer.running .clock{color:#2A7FBA}
 .timer.paused .clock{color:#B9770E}
 .timer .tbtns{display:flex;gap:8px}
-.tools{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 32px}
-.tools button{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;cursor:pointer;font-size:15px;min-height:44px}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 12px}
+.tools button,.foot button{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;cursor:pointer;font-size:15px;min-height:44px}
+.foot{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:12px 0 32px;padding-top:16px;border-top:1px solid var(--line)}
+.foot #editBtn{background:var(--navy);color:#fff;border-color:var(--navy);font-weight:700}
 
 /* picker sheet */
 .scrim{position:fixed;inset:0;background:rgba(20,30,40,.45);display:flex;align-items:flex-end;justify-content:center;z-index:20}
-.scrim[hidden]{display:none}
 .sheet{background:var(--surface);width:100%;max-width:560px;border-radius:18px 18px 0 0;padding:16px 16px calc(20px + env(safe-area-inset-bottom));max-height:85vh;overflow:auto}
 .sheet h2{margin:0 0 12px;font-size:19px}
 .opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -98,15 +100,70 @@ h1{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:clamp(
 .opt.cur{outline:3px solid var(--ink);outline-offset:2px}
 .sheet-foot{display:flex;gap:10px;margin-top:14px}
 .sheet-foot button{flex:1;border:1px solid var(--line);background:var(--soft);border-radius:12px;min-height:48px;cursor:pointer;font-weight:700}
-.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#2C3E50;color:#fff;padding:12px 18px;border-radius:12px;font-size:15px;z-index:30;max-width:90vw;text-align:center}
-@media (max-width:420px){ .wrap{padding:12px} .row{padding:12px} .opts{grid-template-columns:1fr} }
+.toast{pointer-events:none;position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:12px 18px;border-radius:12px;font-size:15px;z-index:40;max-width:90vw;text-align:center}
+
+/* login & setup */
+.gate{min-height:100vh;display:grid;place-items:center;padding:24px 16px;background:linear-gradient(160deg,#EAF4FC,#F5ECF9 55%,#FDEFD8)}
+.gatebox{width:100%;max-width:420px;background:var(--surface);border-radius:18px;padding:24px;box-shadow:0 8px 30px rgba(44,62,80,.12);display:flex;flex-direction:column;gap:12px}
+.gatebox h1{text-align:center}
+.gatebox p{margin:0;color:var(--muted);font-size:15px;text-align:center}
+.gatebox label{font-weight:700;font-size:15px;display:flex;flex-direction:column;gap:6px}
+.gatebox label small{font-weight:400;color:var(--muted)}
+.gatebox input{padding:12px;border:1px solid #C9D2D9;border-radius:10px;font-size:18px;width:100%}
+.gatebox .show{flex-direction:row;align-items:center;gap:8px;font-weight:400;color:var(--muted)}
+.gatebox .show input{width:auto}
+.gatebox button[type=submit]{background:var(--navy);color:#fff;border:0;border-radius:12px;min-height:52px;font-weight:700;font-size:17px;cursor:pointer;margin-top:4px}
+.gerr{color:var(--flag)!important;font-weight:700}
+
+/* editor */
+.ed-top{position:sticky;top:0;z-index:10;background:var(--bg);padding:12px 0;display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--line);margin-bottom:12px}
+.ed-top h2{margin:0;flex:1;font-size:20px;font-family:"Bricolage Grotesque",sans-serif}
+.ed-top button{border-radius:10px;min-height:44px;padding:0 16px;cursor:pointer;font-weight:700;border:1px solid var(--line);background:var(--surface)}
+.ed-top #edSave{background:var(--done);border-color:var(--done);color:#fff}
+.ed-sec{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
+.ed-sec>h3{margin:0 0 10px;font-size:17px}
+.ed-sec>p.help{margin:-4px 0 10px;color:var(--muted);font-size:14px}
+.ed-f{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:8px;flex:1;min-width:0}
+.ed input,.ed select,.ed textarea{padding:9px 10px;border:1px solid #C9D2D9;border-radius:8px;background:#fff;font-size:15px;width:100%;color:var(--ink);font-weight:400}
+.ed textarea{resize:vertical}
+.ed-grid{display:flex;gap:8px;flex-wrap:wrap}
+.ed-block{border:2px solid;border-radius:12px;margin-bottom:14px;overflow:hidden}
+.ed-bh{display:flex;gap:8px;align-items:center;padding:8px 10px}
+.ed-bh input{font-weight:700;font-size:16px}
+.ed-bbody{padding:10px}
+.ed-item{border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:8px;background:#FBFCFD}
+.ed-row{display:flex;gap:6px;align-items:center}
+.ed-row select{width:auto;flex:none}
+.ed-row>input{flex:1;min-width:0;font-weight:700}
+.ed-row2{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px}
+.ed-row2>input{flex:1 1 220px}
+.ed-min{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--muted);flex:none}
+.ed-min input{width:70px!important}
+.ed-chk{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--muted);flex:none}
+.ed-chk input{width:auto!important}
+.ed-note{font-size:13px;color:var(--muted);margin-top:6px}
+.ed-mv{display:flex;gap:4px;flex:none}
+.ed-mv button{width:36px;height:36px;border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;padding:0;font-size:15px;line-height:1}
+.ed-mv button:disabled{opacity:.3;cursor:default}
+.ed-mv button.del{color:var(--flag)}
+.ed-add{border:2px dashed #AEB9C2;background:transparent;border-radius:10px;min-height:42px;width:100%;cursor:pointer;font-weight:700;color:var(--muted)}
+.ed-tag{display:flex;gap:6px;align-items:center;margin-bottom:6px;flex-wrap:wrap}
+.ed-tag>input{flex:1 1 150px;min-width:0}
+.ed-reset{border:1px solid var(--flag);color:var(--flag);background:#fff;border-radius:10px;min-height:44px;padding:0 14px;cursor:pointer;font-weight:700}
+@media (max-width:420px){ .wrap{padding:12px} .row{padding:12px} .opts{grid-template-columns:1fr} .ed-top h2{font-size:17px} }
 </style>
 </head>
 <body>
-<div class="wrap">
+
+<!-- login / first-time setup -->
+<div class="gate" id="gate" hidden><form class="gatebox" id="gateform" autocomplete="off"></form></div>
+
+<!-- the board -->
+<div class="wrap" id="app" hidden>
   <header>
     <h1>DAILY RHYTHM</h1>
-    <p class="tag-line">&ldquo;So do not fear, for I am with you; do not be dismayed, for I am your God. I will strengthen you and help you; I will uphold you with my righteous right hand.&rdquo;<span class="ref">Isaiah 41:10</span></p>
+    <p class="hello" id="hello" hidden></p>
+    <p class="tag-line" id="verse"></p>
     <div class="datebar">
       <button id="prev" aria-label="Previous day">‹</button>
       <div class="day" id="dayLabel"></div>
@@ -131,7 +188,20 @@ h1{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:clamp(
     <button id="copyTags">Use yesterday's tags</button>
     <button id="clearTags">Clear today's tags</button>
   </div>
+  <div class="foot">
+    <button id="editBtn" hidden>Edit board</button>
+    <button id="logout">Log out</button>
+  </div>
+</div>
 
+<!-- parent editor -->
+<div class="wrap ed" id="editor" hidden>
+  <div class="ed-top">
+    <h2>Edit board</h2>
+    <button id="edCancel">Cancel</button>
+    <button id="edSave">Save</button>
+  </div>
+  <div id="edBody"></div>
 </div>
 
 <div class="scrim" id="scrim" hidden>
@@ -146,7 +216,7 @@ h1{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:clamp(
 </div>
 <div class="toast" id="toast" hidden></div>
 
-<!-- Same Firebase database as the Survivor league; this page keeps its own separate area (rhythm_days). -->
+<!-- Same Firebase database as the Survivor league; this page keeps its own separate area (rhythm_days, rhythm_config). -->
 <script>
 window.FIREBASE_CONFIG = {
   apiKey: "AIzaSyBKEm0STLQ0uEByWjFLWSXEtzaAag2_P7c",
@@ -160,72 +230,79 @@ window.FIREBASE_CONFIG = {
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
-const COL = 'rhythm_days';
-const TAGS = {
-  fun: [
-    {id:'reading',  name:'Free Reading', timer:3600},
-    {id:'drawing',  name:'Free Drawing', timer:3600},
-    {id:'crafting', name:'Free Crafting'},
-    {id:'build',    name:'Build Something'}
+const COL = 'rhythm_days', CFG_DOC = 'rhythm_config/main';
+
+/* ---------- the starting board (used until you save your own) ---------- */
+const DEFAULT_CONFIG = {
+  verse: 'So do not fear, for I am with you; do not be dismayed, for I am your God. I will strengthen you and help you; I will uphold you with my righteous right hand.',
+  verseRef: 'Isaiah 41:10',
+  kidName: '',
+  blocks: [
+    {id:'morning', name:'Morning Block', sub:'Fixed Academic & Prep Rhythm', color:'#2A7FBA', icon:'sun', items:[
+      {id:'breakfast', t:'Breakfast & Morning Prep', d:'Start the day fueled and grounded together.'},
+      {id:'carpool_am', t:'Carpool', d:'Morning drive. A calm ride and a look at what comes next.'},
+      {id:'bible',     t:'Bible Block', d:'Individual Bible reading and quiet devotional time.'},
+      {id:'math',      t:'Math Block', d:'High-focus core academic work.', timer:2700, endMsg:'Math time is finished. Nice focus! Next is Snack Prep.'},
+      {id:'snackprep', t:'Snack Prep Block', d:'Fill all 8 compartments of the daily snack box.', snack:true},
+      {id:'snacktime', t:'5-Minute Snack Time', d:'Intentional, timed brain break.', timer:300, endMsg:'Snack time is finished. Time for Language & Writing.'},
+      {id:'language',  t:'Language & Writing Block', d:'Grammar, journaling, or writing assignments.'},
+      {id:'m1', slot:'mech', t:'Helping Hands Slot 1'},
+      {id:'f1', slot:'fun', t:'Fun Choice Slot 1'}
+    ]},
+    {id:'midday', name:'Mid-Day Block', sub:'Structured Transitions', color:'#27A55A', icon:'basket', items:[
+      {id:'history', t:'History Block', d:'Historical readings, timelines, or stories.'},
+      {id:'m2', slot:'mech', t:'Lunch & Helping Hands Slot 2'},
+      {id:'science', t:'Science Block', d:'Core science lesson, reading, or experiments.'}
+    ]},
+    {id:'afternoon', name:'Afternoon Rhythm', sub:'Choice & Agency Slots', color:'#8E44AD', icon:'palette', items:[
+      {id:'f2', slot:'fun', t:'Fun Choice Slot 2'},
+      {id:'m3', slot:'mech', t:'Helping Hands Slot 3'}
+    ]},
+    {id:'evening', name:'Evening Block', sub:'Family Anchors', color:'#D35400', icon:'moon', items:[
+      {id:'carpool_pm', t:'Carpool', d:'Afternoon drive. Settle in and get ready for the evening.'},
+      {id:'dinner', t:'Dinner Block', d:'Shared family mealtime and gradual evening wind-down.'},
+      {id:'f3', slot:'fun', t:'Fun Choice Slot 3'}
+    ]}
   ],
-  mech: [
-    {id:'laundry',  name:'Laundry',          sub:'Sort, load, or fold together'},
-    {id:'dishes',   name:'Dishes',           sub:'Clear, rinse, or load kitchen'},
-    {id:'tidy',     name:'Quick Tidy',       sub:'Reset room & craft space'},
-    {id:'snackbox', name:'Fill Snack Box',   sub:'Restock 8 compartments'},
-    {id:'plants',   name:'Plant Care',       sub:'Watering or nurturing plants'},
-    {id:'sensory',  name:'Sensory Reset',    sub:'Heavy work or therapy ball'}
-  ],
-  flag: [
-    {id:'change',   name:'Change of Plan'},
-    {id:'appt',     name:'Appointment / Errand'},
-    {id:'travel',   name:'Out of Routine / Travel'},
-    {id:'visitors', name:'Visitors / Company'}
-  ]
+  tags: {
+    fun: [
+      {id:'reading',  name:'Free Reading', timer:3600},
+      {id:'drawing',  name:'Free Drawing', timer:3600},
+      {id:'crafting', name:'Free Crafting'},
+      {id:'build',    name:'Build Something'}
+    ],
+    mech: [
+      {id:'laundry',  name:'Laundry',        sub:'Sort, load, or fold together'},
+      {id:'dishes',   name:'Dishes',         sub:'Clear, rinse, or load kitchen'},
+      {id:'tidy',     name:'Quick Tidy',     sub:'Reset room & craft space'},
+      {id:'snackbox', name:'Fill Snack Box', sub:'Restock 8 compartments'},
+      {id:'plants',   name:'Plant Care',     sub:'Watering or nurturing plants'},
+      {id:'sensory',  name:'Sensory Reset',  sub:'Heavy work or therapy ball'}
+    ],
+    flag: [
+      {id:'change',   name:'Change of Plan'},
+      {id:'appt',     name:'Appointment / Errand'},
+      {id:'travel',   name:'Out of Routine / Travel'},
+      {id:'visitors', name:'Visitors / Company'}
+    ]
+  }
 };
 const ICON = {
   sun:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FCE38A" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5" fill="#F9D84A"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>',
   basket:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"><path d="M3 10h18l-2 10H5L3 10z" fill="rgba(255,255,255,.25)"/><path d="M7 10l4-6M17 10l-4-6M9 14v3M12 14v3M15 14v3" stroke-linecap="round"/></svg>',
   palette:'<svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18c1.4 0 2-1 1.6-2-.5-1.2.3-2.3 1.6-2.3H17a4 4 0 0 0 4-4C21 7 17 3 12 3z" fill="#F6D7A7"/><circle cx="7.5" cy="11" r="1.6" fill="#E74C3C"/><circle cx="10" cy="7" r="1.6" fill="#3498DB"/><circle cx="14.5" cy="7" r="1.6" fill="#27AE60"/><circle cx="17" cy="11" r="1.4" fill="#8E44AD"/></svg>',
-  moon:'<svg width="24" height="24" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" fill="#F9D84A"/></svg>'
+  moon:'<svg width="24" height="24" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" fill="#F9D84A"/></svg>',
+  book:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"><path d="M3 5c3-1.5 6-1.5 9 1 3-2.5 6-2.5 9-1v14c-3-1.5-6-1.5-9 1-3-2.5-6-2.5-9-1V5z" fill="rgba(255,255,255,.25)"/><path d="M12 6v14"/></svg>',
+  heart:'<svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z" fill="#FADBD8"/></svg>',
+  star:'<svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4L2.8 9.5l6.4-.8L12 2.8z" fill="#F9D84A"/></svg>',
+  none:''
 };
-const BLOCKS = [
-  {id:'morning', name:'Morning Block', sub:'Fixed Academic & Prep Rhythm', color:'var(--morning)', icon:'sun', items:[
-    {id:'breakfast', t:'Breakfast & Morning Prep', d:'Start the day fueled and grounded together.'},
-    {id:'carpool_am', t:'Carpool', d:'Morning drive. A calm ride and a look at what comes next.'},
-    {id:'bible',     t:'Bible Block', d:'Individual Bible reading and quiet devotional time.'},
-    {id:'math',      t:'Math Block', d:'High-focus core academic work.', timer:2700, endMsg:'Math time is finished. Nice focus! Next is Snack Prep.'},
-    {id:'snackprep', t:'Snack Prep Block', d:'Fill all 8 compartments of the daily snack box.', snack:true},
-    {id:'snacktime', t:'5-Minute Snack Time', d:'Intentional, timed brain break.', timer:300, endMsg:'Snack time is finished. Time for Language & Writing.'},
-    {id:'language',  t:'Language & Writing Block', d:'Grammar, journaling, or writing assignments.'},
-    {id:'m1', slot:'mech', t:'Helping Hands Slot 1'},
-    {id:'f1', slot:'fun', t:'Fun Choice Slot 1'}
-  ]},
-  {id:'midday', name:'Mid-Day Block', sub:'Structured Transitions', color:'var(--midday)', icon:'basket', items:[
-    {id:'history', t:'History Block', d:'Historical readings, timelines, or stories.'},
-    {id:'m2', slot:'mech', t:'Lunch & Helping Hands Slot 2'},
-    {id:'science', t:'Science Block', d:'Core science lesson, reading, or experiments.'}
-  ]},
-  {id:'afternoon', name:'Afternoon Rhythm', sub:'Choice & Agency Slots', color:'var(--afternoon)', icon:'palette', items:[
-    {id:'f2', slot:'fun', t:'Fun Choice Slot 2'},
-    {id:'m3', slot:'mech', t:'Helping Hands Slot 3'}
-  ]},
-  {id:'evening', name:'Evening Block', sub:'Family Anchors', color:'var(--evening)', icon:'moon', items:[
-    {id:'carpool_pm', t:'Carpool', d:'Afternoon drive. Settle in and get ready for the evening.'},
-    {id:'dinner', t:'Dinner Block', d:'Shared family mealtime and gradual evening wind-down.'},
-    {id:'f3', slot:'fun', t:'Fun Choice Slot 3'}
-  ]}
-];
-const ALL_ITEMS = BLOCKS.flatMap(b=>b.items);
+const ICON_NAMES = {sun:'Sun', basket:'Basket', palette:'Paint palette', moon:'Moon', book:'Book', heart:'Heart', star:'Star', none:'No icon'};
+const COLORS = [['#2A7FBA','Blue'],['#27A55A','Green'],['#8E44AD','Purple'],['#D35400','Orange'],['#C0392B','Red'],['#16A085','Teal'],['#2C3E50','Navy'],['#B7950B','Gold'],['#D63384','Pink']];
+
+let CFG = clone(DEFAULT_CONFIG), BLOCKS = [], TAGS = {fun:[],mech:[],flag:[]}, ALL_ITEMS = [], SLOT_IDS = [];
 const CHG = {id:'chg', slot:'flag', t:'Anything different today?'};
 const itemById = id => id==='chg' ? CHG : ALL_ITEMS.find(i=>i.id===id);
-function timerInfo(id){
-  const item=ALL_ITEMS.find(i=>i.id===id); if(!item) return null;
-  if(item.timer) return {secs:item.timer, msg:item.endMsg};
-  const tag=item.slot && S.data.slots[id] && findTag(item.slot, S.data.slots[id]);
-  return tag && tag.timer ? {secs:tag.timer, msg:`${tag.name} time is finished. Great job!`} : null;
-}
-const SLOT_IDS = ALL_ITEMS.filter(i=>i.slot).map(i=>i.id);
 
 const $ = s => document.querySelector(s);
 const pad = n => String(n).padStart(2,'0');
@@ -233,34 +310,133 @@ const keyOf = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())
 const fromKey = k => { const [y,m,d]=k.split('-').map(Number); return new Date(y,m-1,d); };
 const shift = (k,n) => { const d=fromKey(k); d.setDate(d.getDate()+n); return keyOf(d); };
 const blank = () => ({checks:{}, slots:{}, snack:[false,false,false,false,false,false,false,false]});
-const findTag = (kind,id) => TAGS[kind].find(t=>t.id===id);
-const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const findTag = (kind,id) => (TAGS[kind]||[]).find(t=>t.id===id);
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+const newId = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+async function sha256(t){ const b=await crypto.subtle.digest('SHA-256', new TextEncoder().encode('rhythm|'+t)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''); }
 
-const S = { date:keyOf(new Date()), data:blank(), db:null, unsub:null, online:false, picking:null, timers:{}, paused:{}, saveT:null };
+const S = { date:keyOf(new Date()), data:blank(), db:null, unsub:null, picking:null, timers:{}, paused:{}, saveT:null,
+            role:null, view:null, started:false, edit:null, gateMode:null };
 
 function toast(msg, ms=2600){ const t=$('#toast'); t.textContent=msg; t.hidden=false; clearTimeout(t._h); t._h=setTimeout(()=>t.hidden=true, ms); }
 function setStatus(cls, txt){ const s=$('#status'); s.className='status '+cls; s.innerHTML='<i></i>'+txt; }
-
-/* ---------- saving ---------- */
 function cacheLocal(key, data){ try{ localStorage.setItem('rhythm:'+key, JSON.stringify(data)); }catch(e){} }
 function readLocal(key){ try{ const v=localStorage.getItem('rhythm:'+key); return v?JSON.parse(v):null; }catch(e){ return null; } }
+function getRole(){ try{ return localStorage.getItem('rhythm:role'); }catch(e){ return null; } }
+function setRole(h){ try{ h ? localStorage.setItem('rhythm:role', h) : localStorage.removeItem('rhythm:role'); }catch(e){} }
+
+/* ---------- config ---------- */
+function normalize(d){
+  const c = clone(DEFAULT_CONFIG);
+  if(!d) return c;
+  if(Array.isArray(d.blocks)) c.blocks = d.blocks;
+  if(d.tags) ['fun','mech','flag'].forEach(k=>{ if(Array.isArray(d.tags[k])) c.tags[k]=d.tags[k]; });
+  ['verse','verseRef','kidName','pwKid','pwParent'].forEach(k=>{ if(typeof d[k]==='string') c[k]=d[k]; });
+  c.blocks.forEach(b=>{ b.items = Array.isArray(b.items)?b.items:[]; });
+  return c;
+}
+function applyConfig(c){
+  CFG = c; BLOCKS = c.blocks; TAGS = c.tags;
+  ALL_ITEMS = BLOCKS.flatMap(b=>b.items);
+  SLOT_IDS = ALL_ITEMS.filter(i=>i.slot).map(i=>i.id);
+  $('#verse').innerHTML = c.verse ? `&ldquo;${esc(c.verse)}&rdquo;${c.verseRef?`<span class="ref">${esc(c.verseRef)}</span>`:''}` : '';
+  $('#verse').hidden = !c.verse;
+  $('#hello').textContent = c.kidName ? `Hi, ${c.kidName}!` : '';
+  $('#hello').hidden = !c.kidName;
+}
+async function writeConfig(c){
+  cacheLocal('config', c);
+  if(!S.db){ toast('Saved on this device only — can\'t reach the database.'); return false; }
+  try{ await S.db.doc(CFG_DOC).set({...c, savedAt:new Date().toISOString()}); return true; }
+  catch(err){ console.error(err); toast('Couldn\'t save online. Check your connection and try again.', 4000); return false; }
+}
+
+/* ---------- views ---------- */
+function show(view){
+  S.view=view;
+  $('#gate').hidden = view!=='gate';
+  $('#app').hidden = view!=='app';
+  $('#editor').hidden = view!=='editor';
+  window.scrollTo(0,0);
+}
+function route(){
+  if(S.view==='editor') return;
+  if(!CFG.pwParent || !CFG.pwKid){ if(S.gateMode!=='setup') showSetup(); return; }
+  const r=getRole();
+  S.role = r && r===CFG.pwParent ? 'parent' : r && r===CFG.pwKid ? 'kid' : null;
+  if(!S.role){ setRole(null); if(S.gateMode!=='login') showLogin(); return; }
+  S.gateMode=null;
+  $('#editBtn').hidden = S.role!=='parent';
+  if(S.view!=='app') show('app');
+  if(!S.started){ S.started=true; watchDay(); } else render();
+}
+
+const pwToggle = `<label class="show"><input type="checkbox" id="showPw"> Show passwords</label>`;
+function showSetup(){
+  S.gateMode='setup';
+  $('#gateform').innerHTML = `
+    <h1>DAILY RHYTHM</h1>
+    <p>Let's set up two passwords. Hers opens her board. Yours opens the board <b>and</b> lets you edit it.</p>
+    <label>Her name <small>Shows as "Hi, ___!" at the top. Optional.</small><input id="sName" maxlength="30"></label>
+    <label>Her password <small>Something easy for her to type.</small><input type="password" id="sKid" required minlength="3"></label>
+    <label>Your password <small>Keep this one to yourself.</small><input type="password" id="sParent" required minlength="4"></label>
+    ${pwToggle}
+    <p class="gerr" id="gerr" hidden></p>
+    <button type="submit">Save and open the board</button>`;
+  show('gate'); setTimeout(()=>$('#sName').focus(),0);
+}
+function showLogin(){
+  S.gateMode='login';
+  $('#gateform').innerHTML = `
+    <h1>DAILY RHYTHM</h1>
+    <p>${CFG.kidName?`Hi, ${esc(CFG.kidName)}! `:''}Type your password to open the board.</p>
+    <label>Password<input type="password" id="lPw" required autocomplete="current-password"></label>
+    <label class="show"><input type="checkbox" id="showPw"> Show password</label>
+    <p class="gerr" id="gerr" hidden></p>
+    <button type="submit">Open the board</button>`;
+  show('gate'); setTimeout(()=>$('#lPw').focus(),0);
+}
+function gateErr(m){ const e=$('#gerr'); e.textContent=m; e.hidden=false; }
+$('#gateform').addEventListener('change', e=>{
+  if(e.target.id==='showPw') $('#gateform').querySelectorAll('input[type=password],input.pw').forEach(i=>{ i.classList.add('pw'); i.type=e.target.checked?'text':'password'; });
+});
+$('#gateform').addEventListener('submit', async e=>{
+  e.preventDefault();
+  if(S.gateMode==='setup'){
+    const kid=$('#sKid').value.trim(), par=$('#sParent').value.trim();
+    if(kid.length<3) return gateErr('Her password needs at least 3 letters or numbers.');
+    if(par.length<4) return gateErr('Your password needs at least 4 letters or numbers.');
+    if(kid===par) return gateErr('Her password and yours need to be different.');
+    const c = clone(CFG); c.kidName=$('#sName').value.trim(); c.pwKid=await sha256(kid); c.pwParent=await sha256(par);
+    const ok = await writeConfig(c);
+    if(!ok && S.db) return;
+    setRole(c.pwParent); applyConfig(c); S.gateMode=null; route();
+    toast('All set! Tap "Edit board" at the bottom any time to make changes.', 4500);
+  } else {
+    const h=await sha256($('#lPw').value.trim());
+    if(h!==CFG.pwKid && h!==CFG.pwParent){ $('#lPw').value=''; return gateErr('That password isn\'t right. Try again.'); }
+    setRole(h); S.gateMode=null; route();
+  }
+});
+
+/* ---------- day data ---------- */
 function save(){
   cacheLocal(S.date, S.data);
   if(!S.db) return;
   clearTimeout(S.saveT);
-  const key=S.date, data=JSON.parse(JSON.stringify(S.data));
+  const key=S.date, data=clone(S.data);
   setStatus('', 'Saving…');
   S.saveT=setTimeout(async()=>{
     try{ await S.db.doc(COL+'/'+key).set({...data, date:key, savedAt:new Date().toISOString()}); setStatus('ok','Saved'); }
     catch(err){ console.error(err); setStatus('warn','Not saved online — kept on this device'); }
   }, 400);
 }
-
 function watchDay(){
   if(S.unsub){ S.unsub(); S.unsub=null; }
   S.data = Object.assign(blank(), readLocal(S.date)||{});
   render();
-  if(!S.db) return;
+  if(!S.db){ setStatus('warn','Saving on this device only'); return; }
   const key=S.date;
   S.unsub = S.db.doc(COL+'/'+key).onSnapshot(snap=>{
     if(key!==S.date) return;
@@ -271,29 +447,34 @@ function watchDay(){
   }, err=>{ console.error(err); setStatus('warn','Can\'t reach the database — saving on this device only'); });
 }
 
-/* ---------- render ---------- */
+/* ---------- board ---------- */
+function timerInfo(id){
+  const item=ALL_ITEMS.find(i=>i.id===id); if(!item) return null;
+  if(item.timer) return {secs:item.timer, msg:item.endMsg || `${item.t} time is finished.`};
+  const tag=item.slot && S.data.slots[id] && findTag(item.slot, S.data.slots[id]);
+  return tag && tag.timer ? {secs:tag.timer, msg:`${tag.name} time is finished. Great job!`} : null;
+}
 function render(){
+  if(S.view!=='app') return;
   const d=fromKey(S.date), todayKey=keyOf(new Date());
   const rel = S.date===todayKey?'Today':S.date===shift(todayKey,-1)?'Yesterday':S.date===shift(todayKey,1)?'Tomorrow':'';
   $('#dayLabel').innerHTML = esc(d.toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric'})) + (rel?`<small>${rel}</small>`:'<small>&nbsp;</small>');
   $('#todayRow').style.display = S.date===todayKey?'none':'flex';
 
-  // flags
   const D=S.data;
   const chg = D.slots.chg && findTag('flag', D.slots.chg);
   $('#chgSlot').innerHTML = `<button class="slotbtn flag ${chg?'filled':''}" data-slot="chg">${chg?esc(chg.name):'+ Put a red tag here'}</button>`;
   $('#flags').classList.toggle('active', !!chg);
 
-  // board
   $('#board').innerHTML = BLOCKS.map(b=>`
     <section class="block">
-      <div class="block-h" style="background:${b.color}">${ICON[b.icon]}<span>${esc(b.name)} <small>(${esc(b.sub)})</small></span></div>
+      <div class="block-h" style="background:${esc(b.color||'#2C3E50')}">${ICON[b.icon]||''}<span>${esc(b.name)}${b.sub?` <small>(${esc(b.sub)})</small>`:''}</span></div>
       ${b.items.map(rowHTML).join('')}
     </section>`).join('');
 
-  const done = ALL_ITEMS.filter(i=>D.checks[i.id]).length;
-  $('#bar').style.width = (done/ALL_ITEMS.length*100)+'%';
-  $('#ptxt').textContent = done===ALL_ITEMS.length ? 'Every block done — well done!' : `${done} of ${ALL_ITEMS.length} done`;
+  const done = ALL_ITEMS.filter(i=>D.checks[i.id]).length, total=ALL_ITEMS.length||1;
+  $('#bar').style.width = (done/total*100)+'%';
+  $('#ptxt').textContent = done===ALL_ITEMS.length && done>0 ? 'Every block done — well done!' : `${done} of ${ALL_ITEMS.length} done`;
   paintTimer();
 }
 function rowHTML(i){
@@ -301,26 +482,26 @@ function rowHTML(i){
   let extra='';
   if(i.slot){
     const tag = D.slots[i.id] && findTag(i.slot, D.slots[i.id]);
-    extra = `<div class="slot"><button class="slotbtn ${i.slot} ${tag?'filled':''}" data-slot="${i.id}">${
+    extra = `<div class="slot"><button class="slotbtn ${i.slot} ${tag?'filled':''}" data-slot="${esc(i.id)}">${
       tag ? esc(tag.name)+(tag.sub?`<small>${esc(tag.sub)}</small>`:'') : (i.slot==='fun'?'+ Pick a fun tag':'+ Pick a Helping Hands tag')
     }</button></div>`;
-    if(tag && tag.timer) extra += `<div class="timer" data-timerbox="${i.id}"><span class="clock"></span><span class="tbtns"></span></div>`;
+    if(tag && tag.timer) extra += timerBox(i.id);
+  } else {
+    if(i.snack){
+      const n=D.snack.filter(Boolean).length;
+      extra += `<div class="snack" aria-label="Snack box compartments, ${n} of 8 filled">${D.snack.map((v,k)=>`<button class="${v?'on':''}" data-snack="${k}" data-sid="${esc(i.id)}" aria-pressed="${v}">${k+1}</button>`).join('')}</div>`;
+    }
+    if(i.timer) extra += timerBox(i.id);
   }
-  if(i.snack){
-    const n=D.snack.filter(Boolean).length;
-    extra = `<div class="snack" aria-label="Snack box compartments, ${n} of 8 filled">${D.snack.map((v,k)=>`<button class="${v?'on':''}" data-snack="${k}" aria-pressed="${v}">${k+1}</button>`).join('')}</div>`;
-  }
-  if(i.timer){
-    extra = `<div class="timer" data-timerbox="${i.id}"><span class="clock"></span><span class="tbtns"></span></div>`;
-  }
-  const label = i.slot ? `<b>${esc(i.t)}</b>` : `<b>${esc(i.t)}:</b> <span class="d">${esc(i.d)}</span>`;
+  const label = i.slot || !i.d ? `<b>${esc(i.t)}</b>` : `<b>${esc(i.t)}:</b> <span class="d">${esc(i.d)}</span>`;
   return `<div class="row ${on?'done':''}">
-    <button class="check" data-check="${i.id}" role="checkbox" aria-checked="${on}" aria-label="${esc(i.t)}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+    <button class="check" data-check="${esc(i.id)}" role="checkbox" aria-checked="${on}" aria-label="${esc(i.t)}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
     <div class="txt">${label}${extra}</div>
   </div>`;
 }
+const timerBox = id => `<div class="timer" data-timerbox="${esc(id)}"><span class="clock"></span><span class="tbtns"></span></div>`;
 
-/* ---------- timer (this device only) ---------- */
+/* ---------- timers (this device only) ---------- */
 function paintTimer(){
   document.querySelectorAll('[data-timerbox]').forEach(w=>{
     const id=w.dataset.timerbox, info=timerInfo(id), end=S.timers[id], held=S.paused[id]; if(!info) return;
@@ -329,7 +510,7 @@ function paintTimer(){
     w.querySelector('.clock').textContent = `${Math.floor(left/60)}:${pad(left%60)}`;
     if(w.dataset.state!==state){
       w.dataset.state=state;
-      const B=(act,label)=>`<button data-tact="${act}" data-tid="${id}">${label}</button>`;
+      const B=(act,label)=>`<button data-tact="${act}" data-tid="${esc(id)}">${label}</button>`;
       w.querySelector('.tbtns').innerHTML = state==='idle' ? B('start','Start') + '<button class="ghost" tabindex="-1" aria-hidden="true">Reset</button>' : (state==='running' ? B('pause','Pause') : B('resume','Resume')) + B('reset','Reset');
     }
     w.classList.toggle('running', state==='running');
@@ -346,31 +527,32 @@ function chime(){
 }
 setInterval(()=>{
   const ids=Object.keys(S.timers); if(!ids.length) return;
-  ids.forEach(id=>{ if(Date.now()>=S.timers[id]){ delete S.timers[id]; chime(); const info=timerInfo(id); if(info) toast(info.msg, 6000); } });
+  ids.forEach(id=>{ if(Date.now()>=S.timers[id]){ const info=timerInfo(id); delete S.timers[id]; chime(); if(info) toast(info.msg, 6000); } });
   paintTimer();
 }, 500);
 
-/* ---------- picker ---------- */
+/* ---------- tag picker ---------- */
 function openPicker(slotId){
-  const item=itemById(slotId), kind=item.slot, D=S.data;
+  const item=itemById(slotId); if(!item) return;
+  const kind=item.slot, D=S.data;
   S.picking=slotId;
   $('#sheetTitle').textContent = item.t;
-  $('#opts').innerHTML = TAGS[kind].map(t=>{
+  $('#opts').innerHTML = (TAGS[kind]||[]).map(t=>{
     const usedIn = SLOT_IDS.find(s=>s!==slotId && D.slots[s]===t.id);
     const cur = D.slots[slotId]===t.id;
     const where = usedIn ? `<small>On ${esc(ALL_ITEMS.find(i=>i.id===usedIn).t.replace(/^Lunch & /,''))}</small>` : (t.sub?`<small>${esc(t.sub)}</small>`:'');
-    return `<button class="opt ${kind} ${cur?'cur':''}" data-pick="${t.id}" ${usedIn?'disabled':''}>${esc(t.name)}${where}</button>`;
-  }).join('');
+    return `<button class="opt ${kind} ${cur?'cur':''}" data-pick="${esc(t.id)}" ${usedIn?'disabled':''}>${esc(t.name)}${where}</button>`;
+  }).join('') || '<p>No tags yet. Add some in Edit board.</p>';
   $('#clearSlot').hidden = !D.slots[slotId];
   $('#scrim').hidden=false;
 }
 function closePicker(){ $('#scrim').hidden=true; S.picking=null; }
 
-/* ---------- events ---------- */
-document.addEventListener('click', e=>{
+/* ---------- board events ---------- */
+$('#app').addEventListener('click', e=>{
   const t=e.target.closest('button'); if(!t) return;
   const D=S.data;
-  if(t.dataset.check){ D.checks[t.dataset.check]=!D.checks[t.dataset.check]; if(!D.checks[t.dataset.check]) delete D.checks[t.dataset.check]; save(); render(); return; }
+  if(t.dataset.check){ const k=t.dataset.check; if(D.checks[k]) delete D.checks[k]; else D.checks[k]=true; save(); render(); return; }
   if(t.dataset.slot){ openPicker(t.dataset.slot); return; }
   if(t.dataset.tact){ const id=t.dataset.tid, a=t.dataset.tact, info=timerInfo(id); if(!info) return;
     if(a==='start'){ S.timers[id]=Date.now()+info.secs*1000; delete S.paused[id]; }
@@ -378,24 +560,30 @@ document.addEventListener('click', e=>{
     if(a==='resume'){ S.timers[id]=Date.now()+S.paused[id]; delete S.paused[id]; }
     if(a==='reset'){ delete S.timers[id]; delete S.paused[id]; }
     paintTimer(); return; }
-  if(t.dataset.snack){ const k=+t.dataset.snack; D.snack[k]=!D.snack[k];
-    if(D.snack.every(Boolean) && !D.checks.snackprep){ D.checks.snackprep=true; toast('All 8 compartments filled!'); }
+  if(t.dataset.snack){ const k=+t.dataset.snack, sid=t.dataset.sid; D.snack[k]=!D.snack[k];
+    if(D.snack.every(Boolean) && !D.checks[sid]){ D.checks[sid]=true; toast('All 8 compartments filled!'); }
     save(); render(); return; }
-  if(t.dataset.pick){ if(D.slots[S.picking]!==t.dataset.pick){ delete S.timers[S.picking]; delete S.paused[S.picking]; } D.slots[S.picking]=t.dataset.pick; closePicker(); save(); render(); return; }
   switch(t.id){
     case 'prev': S.date=shift(S.date,-1); watchDay(); break;
     case 'next': S.date=shift(S.date,1); watchDay(); break;
     case 'today': S.date=keyOf(new Date()); watchDay(); break;
-    case 'clearSlot': delete S.timers[S.picking]; delete S.paused[S.picking]; delete D.slots[S.picking]; closePicker(); save(); render(); break;
-    case 'closeSheet': closePicker(); break;
     case 'copyTags': copyYesterday(); break;
     case 'clearTags':
       if(!Object.keys(D.slots).length){ toast('No tags placed yet today.'); break; }
-      if(confirm('Take all tags off today\'s board?')){ D.slots={}; save(); render(); }
+      if(confirm('Take all tags off today\'s board?')){ D.slots={}; S.timers={}; S.paused={}; save(); render(); }
       break;
+    case 'editBtn': if(S.role==='parent') openEditor(); break;
+    case 'logout': if(confirm('Log out on this device?')){ setRole(null); S.role=null; S.timers={}; S.paused={}; route(); } break;
   }
 });
-$('#scrim').addEventListener('click', e=>{ if(e.target.id==='scrim') closePicker(); });
+$('#scrim').addEventListener('click', e=>{
+  if(e.target.id==='scrim') return closePicker();
+  const t=e.target.closest('button'); if(!t) return;
+  const D=S.data;
+  if(t.dataset.pick){ if(D.slots[S.picking]!==t.dataset.pick){ delete S.timers[S.picking]; delete S.paused[S.picking]; } D.slots[S.picking]=t.dataset.pick; closePicker(); save(); render(); return; }
+  if(t.id==='clearSlot'){ delete S.timers[S.picking]; delete S.paused[S.picking]; delete D.slots[S.picking]; closePicker(); save(); render(); }
+  if(t.id==='closeSheet') closePicker();
+});
 document.addEventListener('keydown', e=>{ if(e.key==='Escape' && !$('#scrim').hidden) closePicker(); });
 
 async function copyYesterday(){
@@ -407,17 +595,180 @@ async function copyYesterday(){
   const keep=S.data.slots.chg; S.data.slots={...prev.slots}; delete S.data.slots.chg; if(keep) S.data.slots.chg=keep; save(); render(); toast('Yesterday\'s tags are on the board.');
 }
 
+/* ---------- editor (parent only) ---------- */
+function openEditor(){
+  const c=clone(CFG); delete c.pwKid; delete c.pwParent;
+  S.edit=c; renderEditor(); show('editor');
+}
+const getAt = path => path.split('.').reduce((o,k)=>o[k], S.edit);
+function setAt(path, val){
+  const ks=path.split('.'), k=ks.pop(), o=ks.reduce((o,k)=>o[k], S.edit);
+  if(val===undefined) delete o[k]; else o[k]=val;
+}
+function mv(list, i, len){
+  return `<span class="ed-mv">
+    <button data-act="up" data-list="${list}" data-i="${i}" ${i===0?'disabled':''} aria-label="Move up">▲</button>
+    <button data-act="down" data-list="${list}" data-i="${i}" ${i===len-1?'disabled':''} aria-label="Move down">▼</button>
+    <button class="del" data-act="del" data-list="${list}" data-i="${i}" aria-label="Remove">✕</button></span>`;
+}
+function itemEd(it, bi, ii, len){
+  const p=`blocks.${bi}.items.${ii}`, kind=it.slot||'task';
+  const sel = `<select data-kind="${p}" aria-label="Type">
+      <option value="task" ${kind==='task'?'selected':''}>Checklist item</option>
+      <option value="mech" ${kind==='mech'?'selected':''}>Helping Hands slot</option>
+      <option value="fun" ${kind==='fun'?'selected':''}>Fun Choice slot</option></select>`;
+  let more;
+  if(kind==='task'){
+    more = `<div class="ed-row2">
+      <input data-path="${p}.d" value="${esc(it.d)}" placeholder="Short description (optional)">
+      <label class="ed-min">Timer <input type="number" min="1" max="300" inputmode="numeric" data-path="${p}.timer" data-type="min" value="${it.timer?Math.round(it.timer/60):''}" placeholder="none"> min</label>
+      <label class="ed-chk"><input type="checkbox" data-path="${p}.snack" data-type="bool" ${it.snack?'checked':''}> 8 snack boxes</label>
+    </div>${it.timer?`<div class="ed-row2"><input data-path="${p}.endMsg" value="${esc(it.endMsg)}" placeholder="Message when the timer ends, e.g. &quot;${esc(it.t||'Math')} time is finished!&quot;"></div>`:''}`;
+  } else {
+    more = `<div class="ed-note">She picks a ${kind==='fun'?'Fun Choice':'Helping Hands'} tag here.</div>`;
+  }
+  return `<div class="ed-item"><div class="ed-row">${sel}<input data-path="${p}.t" value="${esc(it.t)}" placeholder="Title">${mv(`blocks.${bi}.items`,ii,len)}</div>${more}</div>`;
+}
+function blockEd(b, bi, len){
+  const p=`blocks.${bi}`;
+  return `<div class="ed-block" style="border-color:${esc(b.color)}">
+    <div class="ed-bh" style="background:${esc(b.color)}"><input data-path="${p}.name" value="${esc(b.name)}" placeholder="Block name">${mv('blocks',bi,len)}</div>
+    <div class="ed-bbody">
+      <div class="ed-grid">
+        <label class="ed-f" style="flex:2 1 200px">Subtitle<input data-path="${p}.sub" value="${esc(b.sub)}" placeholder="optional"></label>
+        <label class="ed-f">Color<select data-path="${p}.color" data-re>${COLORS.map(([v,n])=>`<option value="${v}" ${v===b.color?'selected':''}>${n}</option>`).join('')}</select></label>
+        <label class="ed-f">Icon<select data-path="${p}.icon" data-re>${Object.keys(ICON_NAMES).map(k=>`<option value="${k}" ${k===(b.icon||'none')?'selected':''}>${ICON_NAMES[k]}</option>`).join('')}</select></label>
+      </div>
+      ${b.items.map((it,ii)=>itemEd(it,bi,ii,b.items.length)).join('')}
+      <button class="ed-add" data-act="additem" data-b="${bi}">+ Add to ${esc(b.name||'this block')}</button>
+    </div></div>`;
+}
+function tagsEd(k, title, help, hasSub, hasTimer){
+  const list=S.edit.tags[k];
+  return `<div class="ed-sec"><h3>${title}</h3><p class="help">${help}</p>
+    ${list.map((t,ti)=>`<div class="ed-tag">
+      <input data-path="tags.${k}.${ti}.name" value="${esc(t.name)}" placeholder="Tag name">
+      ${hasSub?`<input data-path="tags.${k}.${ti}.sub" value="${esc(t.sub)}" placeholder="Small line under it (optional)">`:''}
+      ${hasTimer?`<label class="ed-min">Timer <input type="number" min="1" max="300" inputmode="numeric" data-path="tags.${k}.${ti}.timer" data-type="min" value="${t.timer?Math.round(t.timer/60):''}" placeholder="none"> min</label>`:''}
+      ${mv('tags.'+k, ti, list.length)}</div>`).join('')}
+    <button class="ed-add" data-act="addtag" data-k="${k}">+ Add a tag</button></div>`;
+}
+function renderEditor(){
+  const E=S.edit, y=window.scrollY;
+  $('#edBody').innerHTML = `
+    <div class="ed-sec"><h3>Top of the board</h3>
+      <label class="ed-f">Verse<textarea data-path="verse" rows="3">${esc(E.verse)}</textarea></label>
+      <div class="ed-grid">
+        <label class="ed-f">Verse reference<input data-path="verseRef" value="${esc(E.verseRef)}"></label>
+        <label class="ed-f">Her name<input data-path="kidName" value="${esc(E.kidName)}" placeholder="optional"></label>
+      </div></div>
+    <div class="ed-sec"><h3>Blocks</h3><p class="help">Use ▲ ▼ to reorder and ✕ to remove. Renaming an item keeps today's checkmarks.</p>
+      ${E.blocks.map((b,bi)=>blockEd(b,bi,E.blocks.length)).join('')}
+      <button class="ed-add" data-act="addblock">+ Add a block</button></div>
+    ${tagsEd('fun','Fun Choice tags','She picks these for the Fun Choice slots. A timer shows under the tag when it\'s placed.',false,true)}
+    ${tagsEd('mech','Helping Hands tags','She picks these for the Helping Hands slots.',true,true)}
+    ${tagsEd('flag','Change of Routine tags','The red tags for "Anything different today?"',false,false)}
+    <div class="ed-sec"><h3>Passwords</h3><p class="help">Leave blank to keep the current password.</p>
+      <div class="ed-grid">
+        <label class="ed-f">New password for her<input type="password" id="newKid" autocomplete="new-password"></label>
+        <label class="ed-f">New password for you<input type="password" id="newParent" autocomplete="new-password"></label>
+      </div></div>
+    <div class="ed-sec"><h3>Start over</h3><p class="help">Puts the blocks, tags and verse back to the original board. Your passwords stay the same.</p>
+      <button class="ed-reset" data-act="reset">Reset to the original board</button></div>`;
+  window.scrollTo(0,y);
+}
+function readField(el){
+  if(el.dataset.type==='bool') return el.checked || undefined;
+  if(el.dataset.type==='min'){ const n=parseFloat(el.value); return n>0 ? Math.round(n*60) : undefined; }
+  return el.value;
+}
+$('#editor').addEventListener('input', e=>{ const el=e.target; if(el.dataset.path) setAt(el.dataset.path, readField(el)); });
+$('#editor').addEventListener('change', e=>{
+  const el=e.target;
+  if(el.dataset.kind){
+    const it=getAt(el.dataset.kind), v=el.value;
+    if(v==='task'){ delete it.slot; } else { it.slot=v; delete it.d; delete it.timer; delete it.endMsg; delete it.snack; }
+    if(v!=='task' && (!it.t || /^(Fun Choice|Helping Hands)/.test(it.t))) it.t = v==='fun' ? 'Fun Choice Slot' : 'Helping Hands Slot';
+    renderEditor(); return;
+  }
+  if(el.dataset.path){ setAt(el.dataset.path, readField(el)); if(el.hasAttribute('data-re') || el.dataset.type) renderEditor(); }
+});
+$('#editor').addEventListener('click', async e=>{
+  const t=e.target.closest('button'); if(!t) return;
+  const a=t.dataset.act, E=S.edit;
+  if(a==='up'||a==='down'||a==='del'){
+    const list=getAt(t.dataset.list), i=+t.dataset.i;
+    if(a==='del'){
+      const what=list[i], label=what.name||what.t||'this';
+      const n = what.items ? what.items.length : 0;
+      if(!confirm(n ? `Remove "${label}" and the ${n} item${n>1?'s':''} in it?` : `Remove "${label}"?`)) return;
+      list.splice(i,1);
+    } else { const j=a==='up'?i-1:i+1; [list[i],list[j]]=[list[j],list[i]]; }
+    renderEditor(); return;
+  }
+  if(a==='additem'){ E.blocks[+t.dataset.b].items.push({id:newId('i'), t:''}); renderEditor(); focusLast(`[data-path^="blocks.${t.dataset.b}.items."][data-path$=".t"]`); return; }
+  if(a==='addblock'){ const c=COLORS[E.blocks.length % COLORS.length][0]; E.blocks.push({id:newId('b'), name:'', sub:'', color:c, icon:'star', items:[]}); renderEditor(); focusLast('[data-path^="blocks."][data-path$=".name"]'); return; }
+  if(a==='addtag'){ E.tags[t.dataset.k].push({id:newId('t'), name:''}); renderEditor(); focusLast(`[data-path^="tags.${t.dataset.k}."][data-path$=".name"]`); return; }
+  if(a==='reset'){ if(confirm('Put the board back to the original blocks, tags and verse? Press Save after to keep it.')){ const keep=E.kidName; S.edit=clone(DEFAULT_CONFIG); S.edit.kidName=keep; renderEditor(); toast('Original board restored. Press Save to keep it.'); } return; }
+  if(t.id==='edCancel'){ if(confirm('Leave without saving your changes?')){ S.edit=null; show('app'); render(); } return; }
+  if(t.id==='edSave') saveEditor();
+});
+function focusLast(sel){ const els=document.querySelectorAll('#editor '+sel); const el=els[els.length-1]; if(el){ el.focus(); el.scrollIntoView({block:'center'}); } }
+
+async function saveEditor(){
+  const E=clone(S.edit);
+  const trim = (o,k)=>{ if(typeof o[k]==='string'){ o[k]=o[k].trim(); if(!o[k]) delete o[k]; } };
+  for(const b of E.blocks){
+    b.name=(b.name||'').trim(); if(!b.name) return toast('Every block needs a name.', 3500);
+    trim(b,'sub'); if(!b.sub) b.sub='';
+    for(const it of b.items){
+      it.t=(it.t||'').trim(); if(!it.t) return toast(`Something in ${b.name} needs a title.`, 3500);
+      trim(it,'d'); trim(it,'endMsg');
+    }
+  }
+  for(const k of ['fun','mech','flag']) for(const t of E.tags[k]){
+    t.name=(t.name||'').trim(); if(!t.name) return toast('Every tag needs a name.', 3500);
+    trim(t,'sub');
+  }
+  E.verse=(E.verse||'').trim(); E.verseRef=(E.verseRef||'').trim(); E.kidName=(E.kidName||'').trim();
+  const nk=$('#newKid').value.trim(), np=$('#newParent').value.trim();
+  if(nk && nk.length<3) return toast('Her password needs at least 3 letters or numbers.', 3500);
+  if(np && np.length<4) return toast('Your password needs at least 4 letters or numbers.', 3500);
+  E.pwKid = nk ? await sha256(nk) : CFG.pwKid;
+  E.pwParent = np ? await sha256(np) : CFG.pwParent;
+  if(E.pwKid===E.pwParent) return toast('Her password and yours need to be different.', 3500);
+  $('#edSave').disabled=true; $('#edSave').textContent='Saving…';
+  const ok = await writeConfig(E);
+  $('#edSave').disabled=false; $('#edSave').textContent='Save';
+  if(!ok && S.db) return;
+  setRole(E.pwParent); applyConfig(normalize(E)); S.edit=null; show('app'); render();
+  toast(ok ? 'Board saved. Her tablet updates on its own.' : 'Saved on this device.', 3500);
+}
+
 /* ---------- start ---------- */
 (function boot(){
-  const cfg=window.FIREBASE_CONFIG;
-  if(window.firebase && cfg && cfg.projectId){
-    try{ firebase.initializeApp(cfg); S.db=firebase.firestore(); }catch(e){ console.error(e); }
+  const fc=window.FIREBASE_CONFIG;
+  if(window.firebase && fc && fc.projectId){
+    try{ firebase.initializeApp(fc); S.db=firebase.firestore(); }catch(e){ console.error(e); }
   }
-  if(!S.db) setStatus('warn','Saving on this device only');
-  watchDay();
+  const cached = readLocal('config');
+  applyConfig(normalize(cached));
+  let first=true;
+  const go = ()=>{ if(first){ first=false; route(); } };
+  if(S.db){
+    S.db.doc(CFG_DOC).onSnapshot(snap=>{
+      if(snap.metadata.hasPendingWrites) return;
+      const c = normalize(snap.exists ? snap.data() : (cached||null));
+      cacheLocal('config', c);
+      applyConfig(c);
+      if(first) go(); else route();
+    }, err=>{ console.error(err); go(); });
+    setTimeout(go, 6000);   // if the database is slow, open with what this device already has
+  } else go();
+
   // roll over to the new day if the page is left open overnight
-  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ const k=keyOf(new Date()); if(S._last && S._last!==k && S.date===S._last){ S.date=k; watchDay(); } S._last=k; } });
   S._last=keyOf(new Date());
+  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ const k=keyOf(new Date()); if(S._last!==k && S.date===S._last){ S.date=k; if(S.started) watchDay(); } S._last=k; } });
 })();
 </script>
 </body>

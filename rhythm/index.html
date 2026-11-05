@@ -234,15 +234,18 @@ const COL = 'rhythm_days', CFG_DOC = 'rhythm_config/main';
 
 /* ---------- the starting board (used until you save your own) ---------- */
 const DEFAULT_CONFIG = {
+  v: 2,
   verse: 'So do not fear, for I am with you; do not be dismayed, for I am your God. I will strengthen you and help you; I will uphold you with my righteous right hand.',
   verseRef: 'Isaiah 41:10',
   kidName: '',
   blocks: [
-    {id:'morning', name:'Morning Block', sub:'Fixed Academic & Prep Rhythm', color:'#2A7FBA', icon:'sun', items:[
+    {id:'morning', name:'Morning Block', sub:'Prep & Fresh-Mind Work', color:'#2A7FBA', icon:'sun', items:[
       {id:'breakfast', t:'Breakfast & Morning Prep', d:'Start the day fueled and grounded together.'},
       {id:'carpool_am', t:'Carpool', d:'Morning drive. A calm ride and a look at what comes next.'},
       {id:'bible',     t:'Bible Block', d:'Individual Bible reading and quiet devotional time.'},
-      {id:'math',      t:'Math Block', d:'High-focus core academic work.', timer:2700, endMsg:'Math time is finished. Nice focus! Next is Snack Prep.'},
+      {id:'math',      t:'Math Block', d:'High-focus core academic work.', timer:2700, endMsg:'Math time is finished. Nice focus! Next is Snack Prep.'}
+    ]},
+    {id:'midmorning', name:'Mid-Morning Block', sub:'Reset & Lighter Work', color:'#16A085', icon:'apple', items:[
       {id:'snackprep', t:'Snack Prep Block', d:'Fill all 8 compartments of the daily snack box.', snack:true},
       {id:'snacktime', t:'5-Minute Snack Time', d:'Intentional, timed brain break.', timer:300, endMsg:'Snack time is finished. Time for Language & Writing.'},
       {id:'language',  t:'Language & Writing Block', d:'Grammar, journaling, or writing assignments.'},
@@ -295,9 +298,10 @@ const ICON = {
   book:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"><path d="M3 5c3-1.5 6-1.5 9 1 3-2.5 6-2.5 9-1v14c-3-1.5-6-1.5-9 1-3-2.5-6-2.5-9-1V5z" fill="rgba(255,255,255,.25)"/><path d="M12 6v14"/></svg>',
   heart:'<svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z" fill="#FADBD8"/></svg>',
   star:'<svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4L2.8 9.5l6.4-.8L12 2.8z" fill="#F9D84A"/></svg>',
+  apple:'<svg width="24" height="24" viewBox="4 2.5 16 18.5"><path d="M12 7.5c-1.6-1.3-5.5-1.6-6.6 2.1-1 3.4.9 8.4 3.6 10 1.1.7 2 .4 3 0 1 .4 1.9.7 3 0 2.7-1.6 4.6-6.6 3.6-10C17.5 5.9 13.6 6.2 12 7.5z" fill="#FADBD8"/><path d="M12 7.5c0-2 .6-3.4 2-4.5" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M12.6 5.6c1.6-1.5 3.6-1.4 4.6-.8-.9 1.4-2.8 1.9-4.6.8z" fill="#ABEBC6"/></svg>',
   none:''
 };
-const ICON_NAMES = {sun:'Sun', basket:'Basket', palette:'Paint palette', moon:'Moon', book:'Book', heart:'Heart', star:'Star', none:'No icon'};
+const ICON_NAMES = {sun:'Sun', basket:'Basket', palette:'Paint palette', moon:'Moon', book:'Book', heart:'Heart', star:'Star', apple:'Apple', none:'No icon'};
 const COLORS = [['#2A7FBA','Blue'],['#27A55A','Green'],['#8E44AD','Purple'],['#D35400','Orange'],['#C0392B','Red'],['#16A085','Teal'],['#2C3E50','Navy'],['#B7950B','Gold'],['#D63384','Pink']];
 
 let CFG = clone(DEFAULT_CONFIG), BLOCKS = [], TAGS = {fun:[],mech:[],flag:[]}, ALL_ITEMS = [], SLOT_IDS = [];
@@ -334,6 +338,17 @@ function normalize(d){
   if(d.tags) ['fun','mech','flag'].forEach(k=>{ if(Array.isArray(d.tags[k])) c.tags[k]=d.tags[k]; });
   ['verse','verseRef','kidName','pwKid','pwParent'].forEach(k=>{ if(typeof d[k]==='string') c[k]=d[k]; });
   c.blocks.forEach(b=>{ b.items = Array.isArray(b.items)?b.items:[]; });
+  c.v = d.v || 1;
+  if(c.v < 2){                       // split the long morning at the snack break
+    const bi=c.blocks.findIndex(b=>b.id==='morning'), m=c.blocks[bi];
+    const at = m ? m.items.findIndex(i=>i.id==='snackprep') : -1;
+    if(m && at>0 && !c.blocks.some(b=>b.id==='midmorning')){
+      const rest=m.items.splice(at);
+      if(m.sub==='Fixed Academic & Prep Rhythm') m.sub='Prep & Fresh-Mind Work';
+      c.blocks.splice(bi+1,0,{id:'midmorning', name:'Mid-Morning Block', sub:'Reset & Lighter Work', color:'#16A085', icon:'apple', items:rest});
+    }
+    c.v = 2;
+  }
   return c;
 }
 function applyConfig(c){
@@ -611,6 +626,15 @@ function mv(list, i, len){
     <button data-act="down" data-list="${list}" data-i="${i}" ${i===len-1?'disabled':''} aria-label="Move down">▼</button>
     <button class="del" data-act="del" data-list="${list}" data-i="${i}" aria-label="Remove">✕</button></span>`;
 }
+function itemMv(bi, ii, len){
+  const nb=S.edit.blocks.length;
+  const upOff = bi===0 && ii===0, dnOff = bi===nb-1 && ii===len-1;
+  const upT = ii===0 ? 'Move to the block above' : 'Move up', dnT = ii===len-1 ? 'Move to the block below' : 'Move down';
+  return `<span class="ed-mv">
+    <button data-act="iup" data-b="${bi}" data-i="${ii}" ${upOff?'disabled':''} aria-label="${upT}" title="${upT}">▲</button>
+    <button data-act="idown" data-b="${bi}" data-i="${ii}" ${dnOff?'disabled':''} aria-label="${dnT}" title="${dnT}">▼</button>
+    <button class="del" data-act="del" data-list="blocks.${bi}.items" data-i="${ii}" aria-label="Remove">✕</button></span>`;
+}
 function itemEd(it, bi, ii, len){
   const p=`blocks.${bi}.items.${ii}`, kind=it.slot||'task';
   const sel = `<select data-kind="${p}" aria-label="Type">
@@ -627,7 +651,7 @@ function itemEd(it, bi, ii, len){
   } else {
     more = `<div class="ed-note">She picks a ${kind==='fun'?'Fun Choice':'Helping Hands'} tag here.</div>`;
   }
-  return `<div class="ed-item"><div class="ed-row">${sel}<input data-path="${p}.t" value="${esc(it.t)}" placeholder="Title">${mv(`blocks.${bi}.items`,ii,len)}</div>${more}</div>`;
+  return `<div class="ed-item"><div class="ed-row">${sel}<input data-path="${p}.t" value="${esc(it.t)}" placeholder="Title">${itemMv(bi,ii,len)}</div>${more}</div>`;
 }
 function blockEd(b, bi, len){
   const p=`blocks.${bi}`;
@@ -662,7 +686,7 @@ function renderEditor(){
         <label class="ed-f">Verse reference<input data-path="verseRef" value="${esc(E.verseRef)}"></label>
         <label class="ed-f">Her name<input data-path="kidName" value="${esc(E.kidName)}" placeholder="optional"></label>
       </div></div>
-    <div class="ed-sec"><h3>Blocks</h3><p class="help">Use ▲ ▼ to reorder and ✕ to remove. Renaming an item keeps today's checkmarks.</p>
+    <div class="ed-sec"><h3>Blocks</h3><p class="help">Use ▲ ▼ to move things up and down. At the top or bottom of a block, they move it into the block above or below. ✕ removes it. Renaming an item keeps today's checkmarks.</p>
       ${E.blocks.map((b,bi)=>blockEd(b,bi,E.blocks.length)).join('')}
       <button class="ed-add" data-act="addblock">+ Add a block</button></div>
     ${tagsEd('fun','Fun Choice tags','She picks these for the Fun Choice slots. A timer shows under the tag when it\'s placed.',false,true)}
@@ -704,6 +728,17 @@ $('#editor').addEventListener('click', async e=>{
       if(!confirm(n ? `Remove "${label}" and the ${n} item${n>1?'s':''} in it?` : `Remove "${label}"?`)) return;
       list.splice(i,1);
     } else { const j=a==='up'?i-1:i+1; [list[i],list[j]]=[list[j],list[i]]; }
+    renderEditor(); return;
+  }
+  if(a==='iup'||a==='idown'){
+    const bi=+t.dataset.b, i=+t.dataset.i, items=E.blocks[bi].items;
+    if(a==='iup' && i>0){ [items[i-1],items[i]]=[items[i],items[i-1]]; }
+    else if(a==='idown' && i<items.length-1){ [items[i+1],items[i]]=[items[i],items[i+1]]; }
+    else {
+      const to = a==='iup' ? bi-1 : bi+1, it=items.splice(i,1)[0];
+      if(a==='iup') E.blocks[to].items.push(it); else E.blocks[to].items.unshift(it);
+      toast(`Moved to ${E.blocks[to].name||'the next block'}`);
+    }
     renderEditor(); return;
   }
   if(a==='additem'){ E.blocks[+t.dataset.b].items.push({id:newId('i'), t:''}); renderEditor(); focusLast(`[data-path^="blocks.${t.dataset.b}.items."][data-path$=".t"]`); return; }

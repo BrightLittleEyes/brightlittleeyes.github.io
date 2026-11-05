@@ -159,8 +159,8 @@ window.FIREBASE_CONFIG = {
 const COL = 'rhythm_days';
 const TAGS = {
   fun: [
-    {id:'reading',  name:'Free Reading'},
-    {id:'drawing',  name:'Free Drawing'},
+    {id:'reading',  name:'Free Reading', timer:3600},
+    {id:'drawing',  name:'Free Drawing', timer:3600},
     {id:'crafting', name:'Free Crafting'},
     {id:'build',    name:'Build Something'}
   ],
@@ -215,6 +215,12 @@ const BLOCKS = [
 const ALL_ITEMS = BLOCKS.flatMap(b=>b.items);
 const CHG = {id:'chg', slot:'flag', t:'Anything different today?'};
 const itemById = id => id==='chg' ? CHG : ALL_ITEMS.find(i=>i.id===id);
+function timerInfo(id){
+  const item=ALL_ITEMS.find(i=>i.id===id); if(!item) return null;
+  if(item.timer) return {secs:item.timer, msg:item.endMsg};
+  const tag=item.slot && S.data.slots[id] && findTag(item.slot, S.data.slots[id]);
+  return tag && tag.timer ? {secs:tag.timer, msg:`${tag.name} time is finished. Great job!`} : null;
+}
 const SLOT_IDS = ALL_ITEMS.filter(i=>i.slot).map(i=>i.id);
 
 const $ = s => document.querySelector(s);
@@ -294,6 +300,7 @@ function rowHTML(i){
     extra = `<div class="slot"><button class="slotbtn ${i.slot} ${tag?'filled':''}" data-slot="${i.id}">${
       tag ? esc(tag.name)+(tag.sub?`<small>${esc(tag.sub)}</small>`:'') : (i.slot==='fun'?'+ Pick a fun tag':'+ Pick a Helping Hands tag')
     }</button></div>`;
+    if(tag && tag.timer) extra += `<div class="timer" data-timerbox="${i.id}"><span class="clock"></span><button data-timer="${i.id}">Start</button></div>`;
   }
   if(i.snack){
     const n=D.snack.filter(Boolean).length;
@@ -312,8 +319,8 @@ function rowHTML(i){
 /* ---------- timer (this device only) ---------- */
 function paintTimer(){
   document.querySelectorAll('[data-timerbox]').forEach(w=>{
-    const id=w.dataset.timerbox, item=ALL_ITEMS.find(i=>i.id===id), end=S.timers[id];
-    const left = end ? Math.max(0, Math.round((end-Date.now())/1000)) : item.timer;
+    const id=w.dataset.timerbox, info=timerInfo(id), end=S.timers[id]; if(!info) return;
+    const left = end ? Math.max(0, Math.round((end-Date.now())/1000)) : info.secs;
     w.querySelector('.clock').textContent = `${Math.floor(left/60)}:${pad(left%60)}`;
     w.querySelector('button').textContent = end ? 'Stop' : 'Start';
     w.classList.toggle('running', !!end);
@@ -329,7 +336,7 @@ function chime(){
 }
 setInterval(()=>{
   const ids=Object.keys(S.timers); if(!ids.length) return;
-  ids.forEach(id=>{ if(Date.now()>=S.timers[id]){ delete S.timers[id]; chime(); toast(ALL_ITEMS.find(i=>i.id===id).endMsg, 6000); } });
+  ids.forEach(id=>{ if(Date.now()>=S.timers[id]){ delete S.timers[id]; chime(); const info=timerInfo(id); if(info) toast(info.msg, 6000); } });
   paintTimer();
 }, 500);
 
@@ -355,16 +362,16 @@ document.addEventListener('click', e=>{
   const D=S.data;
   if(t.dataset.check){ D.checks[t.dataset.check]=!D.checks[t.dataset.check]; if(!D.checks[t.dataset.check]) delete D.checks[t.dataset.check]; save(); render(); return; }
   if(t.dataset.slot){ openPicker(t.dataset.slot); return; }
-  if(t.dataset.timer){ const id=t.dataset.timer; if(S.timers[id]) delete S.timers[id]; else S.timers[id]=Date.now()+ALL_ITEMS.find(i=>i.id===id).timer*1000; paintTimer(); return; }
+  if(t.dataset.timer){ const id=t.dataset.timer; if(S.timers[id]) delete S.timers[id]; else { const info=timerInfo(id); if(info) S.timers[id]=Date.now()+info.secs*1000; } paintTimer(); return; }
   if(t.dataset.snack){ const k=+t.dataset.snack; D.snack[k]=!D.snack[k];
     if(D.snack.every(Boolean) && !D.checks.snackprep){ D.checks.snackprep=true; toast('All 8 compartments filled!'); }
     save(); render(); return; }
-  if(t.dataset.pick){ D.slots[S.picking]=t.dataset.pick; closePicker(); save(); render(); return; }
+  if(t.dataset.pick){ if(D.slots[S.picking]!==t.dataset.pick) delete S.timers[S.picking]; D.slots[S.picking]=t.dataset.pick; closePicker(); save(); render(); return; }
   switch(t.id){
     case 'prev': S.date=shift(S.date,-1); watchDay(); break;
     case 'next': S.date=shift(S.date,1); watchDay(); break;
     case 'today': S.date=keyOf(new Date()); watchDay(); break;
-    case 'clearSlot': delete D.slots[S.picking]; closePicker(); save(); render(); break;
+    case 'clearSlot': delete S.timers[S.picking]; delete D.slots[S.picking]; closePicker(); save(); render(); break;
     case 'closeSheet': closePicker(); break;
     case 'copyTags': copyYesterday(); break;
     case 'clearTags':

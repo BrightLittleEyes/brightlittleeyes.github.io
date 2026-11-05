@@ -234,7 +234,7 @@ const COL = 'rhythm_days', CFG_DOC = 'rhythm_config/main';
 
 /* ---------- the starting board (used until you save your own) ---------- */
 const DEFAULT_CONFIG = {
-  v: 3,
+  v: 4,
   verse: 'So do not fear, for I am with you; do not be dismayed, for I am your God. I will strengthen you and help you; I will uphold you with my righteous right hand.',
   verseRef: 'Isaiah 41:10',
   kidName: '',
@@ -242,11 +242,10 @@ const DEFAULT_CONFIG = {
     {id:'morning', name:'Morning Block', sub:'Mom’s Launchpad', color:'#2A7FBA', icon:'sun', items:[
       {id:'breakfast', t:'Breakfast & Morning Prep', d:'Start the day fueled and grounded together.'},
       {id:'carpool_am', t:'Carpool', d:'Morning drive. A calm ride and a look at what comes next.'},
-      {id:'bible',     t:'Bible Block', d:'Individual Bible reading and quiet devotional time.'},
-      {id:'math',      t:'Math Block', d:'High-focus core academic work.', timer:2700, endMsg:'Math time is finished. Nice focus! Next is Snack Prep.'}
+      {id:'bible',     t:'Bible Block', d:'Individual Bible reading and quiet devotional time.'}
     ]},
     {id:'midmorning', name:'Mid-Morning Block', sub:'Guided by Mom’s Plan', color:'#16A085', icon:'apple', items:[
-      {id:'snackprep', t:'Snack Prep Block', d:'Fill all 8 compartments of the daily snack box.', snack:true},
+      {id:'math',      t:'Math Block', d:'High-focus core academic work.', timer:2700, endMsg:'Math time is finished. Nice focus! Time for a snack break.'},
       {id:'snacktime', t:'5-Minute Snack Time', d:'Intentional, timed brain break.', timer:300, endMsg:'Snack time is finished. Time for Language & Writing.'},
       {id:'language',  t:'Language & Writing Block', d:'Grammar, journaling, or writing assignments.'},
       {id:'m1', slot:'mech', t:'Helping Hands Slot 1'},
@@ -357,6 +356,14 @@ function normalize(d){
                  evening:['Family Basecamp',['Family Anchors']]};
     c.blocks.forEach(b=>{ const n=NEW[b.id]; if(n && (!b.sub || n[1].includes(b.sub))) b.sub=n[0]; });
     c.v = 3;
+  }
+  if(c.v < 4){                       // Snack Prep is a Helping Hands tag now; Math starts Mid-Morning
+    c.blocks.forEach(b=>{ b.items = b.items.filter(i=>i.id!=='snackprep'); });
+    const mb=c.blocks.find(b=>b.id==='morning'), mm=c.blocks.find(b=>b.id==='midmorning');
+    const at = mb ? mb.items.findIndex(i=>i.id==='math') : -1;
+    if(at>=0 && mm){ const m=mb.items.splice(at,1)[0]; mm.items.unshift(m); }
+    c.blocks.forEach(b=>b.items.forEach(i=>{ if(i.id==='math' && /Next is Snack Prep/.test(i.endMsg||'')) i.endMsg='Math time is finished. Nice focus! Time for a snack break.'; }));
+    c.v = 4;
   }
   return c;
 }

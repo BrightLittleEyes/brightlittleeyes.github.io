@@ -247,35 +247,35 @@ const COL = 'rhythm_days', CFG_DOC = 'rhythm_config/main';
 
 /* ---------- the starting board (used until you save your own) ---------- */
 const DEFAULT_CONFIG = {
-  v: 4,
+  v: 5,
   verse: 'So do not fear, for I am with you; do not be dismayed, for I am your God. I will strengthen you and help you; I will uphold you with my righteous right hand.',
   verseRef: 'Isaiah 41:10',
   kidName: '',
   sound: 'beep',
   repeat: true,
   blocks: [
-    {id:'morning', name:'Morning Block', sub:'Mom’s Launchpad', color:'#2A7FBA', icon:'sun', items:[
+    {id:'morning', name:'Morning Block', sub:'New Every Morning · Lamentations 3:22–23', color:'#2A7FBA', icon:'sun', items:[
       {id:'breakfast', t:'Breakfast & Morning Prep', d:'Start the day fueled and grounded together.'},
       {id:'carpool_am', t:'Carpool', d:'Morning drive. A calm ride and a look at what comes next.'},
       {id:'bible',     t:'Bible Block', d:'Individual Bible reading and quiet devotional time.'}
     ]},
-    {id:'midmorning', name:'Mid-Morning Block', sub:'Guided by Mom’s Plan', color:'#16A085', icon:'apple', items:[
+    {id:'midmorning', name:'Mid-Morning Block', sub:'Growing in Wisdom · Luke 2:52', color:'#16A085', icon:'apple', items:[
       {id:'math',      t:'Math Block', d:'High-focus core academic work.', timer:2700, endMsg:'Math time is finished. Nice focus! Time for a snack break.'},
       {id:'snacktime', t:'5-Minute Snack Time', d:'Intentional, timed brain break.', timer:300, endMsg:'Snack time is finished. Time for Language & Writing.'},
       {id:'language',  t:'Language & Writing Block', d:'Grammar, journaling, or writing assignments.'},
       {id:'m1', slot:'mech', t:'Helping Hands Slot 1'},
       {id:'f1', slot:'fun', t:'Fun Choice Slot 1'}
     ]},
-    {id:'midday', name:'Mid-Day Block', sub:'Off-Site Responsibilities', color:'#27A55A', icon:'basket', items:[
+    {id:'midday', name:'Mid-Day Block', sub:'My Help Comes from the Lord · Psalm 121:2', color:'#27A55A', icon:'basket', items:[
       {id:'history', t:'History Block', d:'Historical readings, timelines, or stories.'},
       {id:'m2', slot:'mech', t:'Lunch & Helping Hands Slot 2'},
       {id:'science', t:'Science Block', d:'Core science lesson, reading, or experiments.'}
     ]},
-    {id:'afternoon', name:'Afternoon Rhythm', sub:'Check-In & Reset', color:'#8E44AD', icon:'palette', items:[
+    {id:'afternoon', name:'Afternoon Rhythm', sub:'He Refreshes My Soul · Psalm 23:3', color:'#8E44AD', icon:'palette', items:[
       {id:'f2', slot:'fun', t:'Fun Choice Slot 2'},
       {id:'m3', slot:'mech', t:'Helping Hands Slot 3'}
     ]},
-    {id:'evening', name:'Evening Block', sub:'Family Basecamp', color:'#D35400', icon:'moon', items:[
+    {id:'evening', name:'Evening Block', sub:'Safe to Rest · Psalm 4:8', color:'#D35400', icon:'moon', items:[
       {id:'carpool_pm', t:'Carpool', d:'Afternoon drive. Settle in and get ready for the evening.'},
       {id:'dinner', t:'Dinner Block', d:'Shared family mealtime and gradual evening wind-down.'},
       {id:'f3', slot:'fun', t:'Fun Choice Slot 3'}
@@ -380,6 +380,13 @@ function normalize(d){
     if(at>=0 && mm){ const m=mb.items.splice(at,1)[0]; mm.items.unshift(m); }
     c.blocks.forEach(b=>b.items.forEach(i=>{ if(i.id==='math' && /Next is Snack Prep/.test(i.endMsg||'')) i.endMsg='Math time is finished. Nice focus! Time for a snack break.'; }));
     c.v = 4;
+  }
+  if(c.v < 5){                       // Bible-based subtitles (only replaces earlier built-in wording)
+    const OLD = ['Mom’s Launchpad','Guided by Mom’s Plan','Off-Site Responsibilities','Check-In & Reset','Family Basecamp',
+                 'Prep & Fresh-Mind Work','Fixed Academic & Prep Rhythm','Reset & Lighter Work','Structured Transitions','Choice & Agency Slots','Family Anchors'];
+    const NEW = {"morning": "New Every Morning · Lamentations 3:22–23", "midmorning": "Growing in Wisdom · Luke 2:52", "midday": "My Help Comes from the Lord · Psalm 121:2", "afternoon": "He Refreshes My Soul · Psalm 23:3", "evening": "Safe to Rest · Psalm 4:8"};
+    c.blocks.forEach(b=>{ if(NEW[b.id] && (!b.sub || OLD.includes(b.sub))) b.sub=NEW[b.id]; });
+    c.v = 5;
   }
   return c;
 }

@@ -47,7 +47,8 @@ h1{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:clamp(
 .flags h3{margin:0 0 8px;font-size:15px;display:flex;align-items:center;gap:6px;color:var(--flag)}
 .flags.active{border:2px solid var(--flag);background:#FFF8EE}
 .flags .hint{color:var(--muted);font-size:13px;margin:0 0 8px}
-.slotbtn.flag{border-color:#E3A99F;background:#FFF9F2;color:#C0786A;min-width:240px}
+.slotbtn.flag{border-color:#E3A99F;background:#FFF9F2;color:#C0786A;min-width:200px}
+#chgSlot{display:flex;flex-wrap:wrap;gap:8px}
 .slotbtn.flag.filled{border-color:var(--flag);background:var(--flag-bg);color:var(--flag)}
 .opt.flag{border-color:var(--flag);background:var(--flag-bg);color:var(--flag)}
 
@@ -188,7 +189,7 @@ h1{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:clamp(
 
   <section class="flags" id="flags">
     <h3><svg width="18" height="18" viewBox="0 0 24 24"><path d="M12 3 2 21h20L12 3z" fill="#F4D03F" stroke="#C0392B" stroke-width="2" stroke-linejoin="round"/><path d="M12 10v5M12 17.5v.5" stroke="#C0392B" stroke-width="2.4" stroke-linecap="round"/></svg>Anything different today?</h3>
-    <p class="hint">If today won't follow the usual rhythm, put a red tag here and talk it through at breakfast.</p>
+    <p class="hint">If today won't follow the usual rhythm, put a red tag here (up to 3) and talk it through at breakfast.</p>
     <div id="chgSlot"></div>
   </section>
 
@@ -495,8 +496,10 @@ const ICON_NAMES = {sun:'Sun', basket:'Basket', palette:'Paint palette', moon:'M
 const COLORS = [['#2A7FBA','Blue'],['#27A55A','Green'],['#8E44AD','Purple'],['#D35400','Orange'],['#C0392B','Red'],['#16A085','Teal'],['#2C3E50','Navy'],['#B7950B','Gold'],['#D63384','Pink']];
 
 let CFG = clone(DEFAULT_CONFIG), BLOCKS = [], TAGS = {fun:[],mech:[],flag:[]}, ALL_ITEMS = [], SLOT_IDS = [];
+const CHG_IDS = ['chg','chg2','chg3'];      // up to 3 red tags a day
 const CHG = {id:'chg', slot:'flag', t:'Anything different today?'};
-const itemById = id => id==='chg' ? CHG : ALL_ITEMS.find(i=>i.id===id);
+const isChg = id => CHG_IDS.includes(id);
+const itemById = id => isChg(id) ? CHG : ALL_ITEMS.find(i=>i.id===id);
 
 const $ = s => document.querySelector(s);
 const pad = n => String(n).padStart(2,'0');
@@ -712,9 +715,11 @@ function render(){
   $('#todayRow').style.display = S.date===todayKey?'none':'flex';
 
   const D=S.data;
-  const chg = D.slots.chg && findTag('flag', D.slots.chg);
-  $('#chgSlot').innerHTML = `<button class="slotbtn flag ${chg?'filled':''}" data-slot="chg">${chg?esc(chg.name):'+ Put a red tag here'}</button>`;
-  $('#flags').classList.toggle('active', !!chg);
+  const placed = CHG_IDS.filter(id=>D.slots[id] && findTag('flag', D.slots[id]));
+  const open = CHG_IDS.find(id=>!placed.includes(id));
+  $('#chgSlot').innerHTML = placed.map(id=>`<button class="slotbtn flag filled" data-slot="${id}">${esc(findTag('flag',D.slots[id]).name)}</button>`).join('')
+    + (open ? `<button class="slotbtn flag" data-slot="${open}">${placed.length?'+ Add another':'+ Put a red tag here'}</button>` : '');
+  $('#flags').classList.toggle('active', placed.length>0);
 
   $('#board').innerHTML = BLOCKS.map(b=>`
     <section class="block">
@@ -843,9 +848,9 @@ function openPicker(slotId){
   S.picking=slotId;
   $('#sheetTitle').textContent = item.t;
   $('#opts').innerHTML = (TAGS[kind]||[]).map(t=>{
-    const usedIn = SLOT_IDS.find(s=>s!==slotId && D.slots[s]===t.id);
+    const usedIn = (kind==='flag'?CHG_IDS:SLOT_IDS).find(s=>s!==slotId && D.slots[s]===t.id);
     const cur = D.slots[slotId]===t.id;
-    const where = usedIn ? `<small>On ${esc(ALL_ITEMS.find(i=>i.id===usedIn).t.replace(/^Lunch & /,''))}</small>` : (t.sub?`<small>${esc(t.sub)}</small>`:'');
+    const where = usedIn ? `<small>${kind==='flag'?'Already on the board':'On '+esc(ALL_ITEMS.find(i=>i.id===usedIn).t.replace(/^Lunch & /,''))}</small>` : (t.sub?`<small>${esc(t.sub)}</small>`:'');
     return `<button class="opt ${kind} ${cur?'cur':''}" data-pick="${esc(t.id)}" ${usedIn?'disabled':''}>${esc(t.name)}${where}</button>`;
   }).join('') || '<p>No tags yet. Add some in Edit board.</p>';
   $('#clearSlot').hidden = !D.slots[slotId];
@@ -896,8 +901,9 @@ async function copyYesterday(){
   let prev=null;
   if(S.db){ try{ const s=await S.db.doc(COL+'/'+y).get(); if(s.exists) prev=s.data(); }catch(e){} }
   if(!prev) prev=readLocal(y);
-  if(!prev || !prev.slots || !Object.keys(prev.slots).filter(k=>k!=='chg').length){ toast('No tags were placed yesterday.'); return; }
-  const keep=S.data.slots.chg; S.data.slots={...prev.slots}; delete S.data.slots.chg; if(keep) S.data.slots.chg=keep; save(); render(); toast('Yesterday\'s tags are on the board.');
+  if(!prev || !prev.slots || !Object.keys(prev.slots).filter(k=>!isChg(k)).length){ toast('No tags were placed yesterday.'); return; }
+  const keep={}; CHG_IDS.forEach(k=>{ if(S.data.slots[k]) keep[k]=S.data.slots[k]; });
+  S.data.slots={...prev.slots}; CHG_IDS.forEach(k=>delete S.data.slots[k]); Object.assign(S.data.slots, keep); save(); render(); toast('Yesterday\'s tags are on the board.');
 }
 
 /* ---------- editor (parent only) ---------- */

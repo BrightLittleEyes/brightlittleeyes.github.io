@@ -248,7 +248,7 @@ const COL = 'rhythm_days', CFG_DOC = 'rhythm_config/main';
 /* ---------- the starting board (used until you save your own) ---------- */
 /* Your board as of Nov 5, 2026 (saved from the live board). */
 const DEFAULT_CONFIG = {
-  "v": 6,
+  "v": 7,
   "verse": "So do not fear, for I am with you; do not be dismayed, for I am your God. I will strengthen you and help you; I will uphold you with my righteous right hand.",
   "verseRef": "Isaiah 41:10",
   "kidName": "",
@@ -280,7 +280,7 @@ const DEFAULT_CONFIG = {
       "sub": "New Every Morning · Lamentations 3:22–23"
     },
     {
-      "color": "#16A085",
+      "color": "#2A7FBA",
       "icon": "sun",
       "id": "midmorning",
       "items": [
@@ -318,7 +318,7 @@ const DEFAULT_CONFIG = {
       "sub": "Growing in Wisdom · Luke 2:52"
     },
     {
-      "color": "#27A55A",
+      "color": "#D63384",
       "icon": "basket",
       "id": "midday",
       "items": [
@@ -577,6 +577,12 @@ function normalize(d){
       }
     }
     c.v = 6;
+  }
+  if(c.v < 7){                       // make the top three blocks easy to tell apart
+    const mb=c.blocks.find(b=>b.id==='morning'), mm=c.blocks.find(b=>b.id==='midmorning'), md=c.blocks.find(b=>b.id==='midday');
+    if(mm && mm.color==='#16A085') mm.color='#2A7FBA';
+    if(md && md.color==='#27A55A' && mb && mb.color==='#27A55A') md.color='#D63384';
+    c.v = 7;
   }
   return c;
 }

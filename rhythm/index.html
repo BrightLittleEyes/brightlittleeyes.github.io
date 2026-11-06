@@ -150,6 +150,9 @@ h1{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:clamp(
 .ed-row2>input{flex:1 1 220px}
 .ed-min{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--muted);flex:none}
 .ed-min input{width:70px!important}
+.ed-tabs{display:flex;gap:6px;margin:4px 0 12px;flex-wrap:wrap}
+.ed-tabs button{flex:1 1 140px;padding:10px 12px;border-radius:10px;border:2px solid #C9D2D9;background:#fff;font-weight:700;cursor:pointer;color:#5B6B78}
+.ed-tabs button[aria-pressed="true"]{background:#2C3E50;border-color:#2C3E50;color:#fff}
 .ed-chk{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--muted);flex:none}
 .ed-chk input{width:auto!important}
 .ed-note{font-size:13px;color:var(--muted);margin-top:6px}
@@ -249,12 +252,42 @@ const COL = 'rhythm_days', CFG_DOC = 'rhythm_config/main';
 /* ---------- the starting board (used until you save your own) ---------- */
 /* Your board as of Nov 5, 2026 (saved from the live board). */
 const DEFAULT_CONFIG = {
-  "v": 9,
+  "v": 11,
   "verse": "So do not fear, for I am with you; do not be dismayed, for I am your God. I will strengthen you and help you; I will uphold you with my righteous right hand.",
   "verseRef": "Isaiah 41:10",
   "kidName": "",
   "sound": "beep",
   "repeat": true,
+  "sunBlocks": [
+    {"id": "sun_morning", "name": "Morning Block", "sub": "I Was Glad · Psalm 122:1", "color": "#27A55A", "icon": "sun", "items": [
+      {"id": "sun_breakfast", "t": "Breakfast", "d": "Start the day fueled and grounded together."},
+      {"id": "sun_church", "t": "Church", "d": "Worship together with our church family."},
+      {"id": "sun_m1", "t": "Helping Hands Slot 1", "slot": "mech"},
+      {"id": "sun_m2", "t": "Helping Hands Slot 2", "slot": "mech"}]},
+    {"id": "sun_midday", "name": "Mid-Day Block", "sub": "Come and Rest · Matthew 11:28", "color": "#D63384", "icon": "heart", "items": [
+      {"id": "sun_lunch", "t": "Lunch", "d": "Midday meal and a calm break."},
+      {"id": "sun_f1", "t": "Fun Choice Slot 1", "slot": "fun"}]},
+    {"id": "sun_afternoon", "name": "Afternoon Rhythm", "sub": "He Refreshes My Soul · Psalm 23:3", "color": "#8E44AD", "icon": "palette", "items": [
+      {"id": "sun_f2", "t": "Fun Choice Slot 2", "slot": "fun"},
+      {"id": "sun_f3", "t": "Fun Choice Slot 3", "slot": "fun"}]},
+    {"id": "sun_evening", "name": "Evening Block", "sub": "Safe to Rest · Psalm 4:8", "color": "#D35400", "icon": "moon", "items": [
+      {"id": "sun_dinner", "t": "Dinner", "d": "Shared family mealtime and gradual evening wind-down."},
+      {"id": "sun_youth", "t": "Youth Group", "d": "Time with friends and leaders at church."}]}
+  ],
+  "satBlocks": [
+    {"id": "sat_morning", "name": "Morning Block", "sub": "This Is the Day · Psalm 118:24", "color": "#27A55A", "icon": "sun", "items": [
+      {"id": "sat_breakfast", "t": "Breakfast", "d": "Start the day fueled and grounded together."},
+      {"id": "sat_m1", "t": "Helping Hands Slot 1", "slot": "mech"},
+      {"id": "sat_m2", "t": "Helping Hands Slot 2", "slot": "mech"}]},
+    {"id": "sat_midday", "name": "Mid-Day Block", "sub": "Come and Rest · Matthew 11:28", "color": "#D63384", "icon": "heart", "items": [
+      {"id": "sat_lunch", "t": "Lunch", "d": "Midday meal and a calm break."},
+      {"id": "sat_f1", "t": "Fun Choice Slot 1", "slot": "fun"}]},
+    {"id": "sat_afternoon", "name": "Afternoon Rhythm", "sub": "He Refreshes My Soul · Psalm 23:3", "color": "#8E44AD", "icon": "palette", "items": [
+      {"id": "sat_f2", "t": "Fun Choice Slot 2", "slot": "fun"},
+      {"id": "sat_f3", "t": "Fun Choice Slot 3", "slot": "fun"}]},
+    {"id": "sat_evening", "name": "Evening Block", "sub": "Safe to Rest · Psalm 4:8", "color": "#D35400", "icon": "moon", "items": [
+      {"id": "sat_dinner", "t": "Dinner", "d": "Shared family mealtime and gradual evening wind-down."}]}
+  ],
   "blocks": [
     {
       "icon": "sun",
@@ -532,11 +565,15 @@ function normalize(d){
   const c = clone(DEFAULT_CONFIG);
   if(!d) return c;
   if(Array.isArray(d.blocks)) c.blocks = d.blocks;
+  if(Array.isArray(d.satBlocks)) c.satBlocks = d.satBlocks;
+  if(Array.isArray(d.sunBlocks)) c.sunBlocks = d.sunBlocks;
   if(d.tags) ['fun','mech','flag'].forEach(k=>{ if(Array.isArray(d.tags[k])) c.tags[k]=d.tags[k]; });
   ['verse','verseRef','kidName','pwKid','pwParent','sound'].forEach(k=>{ if(typeof d[k]==='string') c[k]=d[k]; });
   if(typeof d.repeat==='boolean') c.repeat=d.repeat;
   if(d.original && typeof d.original==='object') c.original=d.original;
   c.blocks.forEach(b=>{ b.items = Array.isArray(b.items)?b.items:[]; });
+  c.satBlocks.forEach(b=>{ b.items = Array.isArray(b.items)?b.items:[]; });
+  c.sunBlocks.forEach(b=>{ b.items = Array.isArray(b.items)?b.items:[]; });
   c.v = d.v || 1;
   if(c.v < 2){                       // split the long morning at the snack break
     const bi=c.blocks.findIndex(b=>b.id==='morning'), m=c.blocks[bi];
@@ -606,12 +643,23 @@ function normalize(d){
     c.blocks.forEach(b=>b.items.forEach(i=>{ delete i.snack; }));
     c.v = 9;
   }
+  if(c.v < 10) c.v = 10;             // Saturday board added (its blocks come from the starting board above)
+  if(c.v < 11) c.v = 11;             // Sunday board added: Church in the morning, Youth Group at night
   return c;
 }
-function applyConfig(c){
-  CFG = c; BLOCKS = c.blocks; TAGS = c.tags;
+const BOARD_OF_DAY = {6:'satBlocks', 0:'sunBlocks'};   // Saturday, Sunday; every other day uses "blocks"
+function dayRoot(key){
+  const r = BOARD_OF_DAY[fromKey(key).getDay()];
+  return r && Array.isArray(CFG[r]) && CFG[r].length>0 ? r : 'blocks';
+}
+function useDay(){
+  BLOCKS = CFG[dayRoot(S.date)];
   ALL_ITEMS = BLOCKS.flatMap(b=>b.items);
   SLOT_IDS = ALL_ITEMS.filter(i=>i.slot).map(i=>i.id);
+}
+function applyConfig(c){
+  CFG = c; TAGS = c.tags;
+  useDay();
   $('#verse').innerHTML = c.verse ? `&ldquo;${esc(c.verse)}&rdquo;${c.verseRef?`<span class="ref">${esc(c.verseRef)}</span>`:''}` : '';
   $('#verse').hidden = !c.verse;
   $('#hello').textContent = c.kidName ? `Hi, ${c.kidName}!` : '';
@@ -728,6 +776,7 @@ function timerInfo(id){
 }
 function render(){
   if(S.view!=='app') return;
+  useDay();
   const d=fromKey(S.date), todayKey=keyOf(new Date());
   const rel = S.date===todayKey?'Today':S.date===shift(todayKey,-1)?'Yesterday':S.date===shift(todayKey,1)?'Tomorrow':'';
   $('#dayLabel').innerHTML = esc(d.toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric'})) + (rel?`<small>${rel}</small>`:'<small>&nbsp;</small>');
@@ -921,14 +970,16 @@ async function copyYesterday(){
   if(S.db){ try{ const s=await S.db.doc(COL+'/'+y).get(); if(s.exists) prev=s.data(); }catch(e){} }
   if(!prev) prev=readLocal(y);
   if(!prev || !prev.slots || !Object.keys(prev.slots).filter(k=>!isChg(k)).length){ toast('No tags were placed yesterday.'); return; }
+  const fits = Object.keys(prev.slots).filter(k=>!isChg(k) && SLOT_IDS.includes(k));
+  if(!fits.length){ toast('Yesterday used a different board, so there are no tags to copy.', 3500); return; }
   const keep={}; CHG_IDS.forEach(k=>{ if(S.data.slots[k]) keep[k]=S.data.slots[k]; });
-  S.data.slots={...prev.slots}; CHG_IDS.forEach(k=>delete S.data.slots[k]); Object.assign(S.data.slots, keep); save(); render(); toast('Yesterday\'s tags are on the board.');
+  S.data.slots={}; fits.forEach(k=>S.data.slots[k]=prev.slots[k]); Object.assign(S.data.slots, keep); save(); render(); toast('Yesterday\'s tags are on the board.');
 }
 
 /* ---------- editor (parent only) ---------- */
 function openEditor(){
   const c=clone(CFG); delete c.pwKid; delete c.pwParent;
-  S.edit=c; renderEditor(); show('editor');
+  S.edit=c; S.edRoot = dayRoot(S.date); renderEditor(); show('editor');
 }
 const getAt = path => path.split('.').reduce((o,k)=>o[k], S.edit);
 function setAt(path, val){
@@ -941,17 +992,17 @@ function mv(list, i, len){
     <button data-act="down" data-list="${list}" data-i="${i}" ${i===len-1?'disabled':''} aria-label="Move down">▼</button>
     <button class="del" data-act="del" data-list="${list}" data-i="${i}" aria-label="Remove">✕</button></span>`;
 }
-function itemMv(bi, ii, len){
-  const nb=S.edit.blocks.length;
+function itemMv(bi, ii, len, R='blocks'){
+  const nb=S.edit[R].length;
   const upOff = bi===0 && ii===0, dnOff = bi===nb-1 && ii===len-1;
   const upT = ii===0 ? 'Move to the block above' : 'Move up', dnT = ii===len-1 ? 'Move to the block below' : 'Move down';
   return `<span class="ed-mv">
-    <button data-act="iup" data-b="${bi}" data-i="${ii}" ${upOff?'disabled':''} aria-label="${upT}" title="${upT}">▲</button>
-    <button data-act="idown" data-b="${bi}" data-i="${ii}" ${dnOff?'disabled':''} aria-label="${dnT}" title="${dnT}">▼</button>
-    <button class="del" data-act="del" data-list="blocks.${bi}.items" data-i="${ii}" aria-label="Remove">✕</button></span>`;
+    <button data-act="iup" data-root="${R}" data-b="${bi}" data-i="${ii}" ${upOff?'disabled':''} aria-label="${upT}" title="${upT}">▲</button>
+    <button data-act="idown" data-root="${R}" data-b="${bi}" data-i="${ii}" ${dnOff?'disabled':''} aria-label="${dnT}" title="${dnT}">▼</button>
+    <button class="del" data-act="del" data-list="${R}.${bi}.items" data-i="${ii}" aria-label="Remove">✕</button></span>`;
 }
-function itemEd(it, bi, ii, len){
-  const p=`blocks.${bi}.items.${ii}`, kind=it.slot||'task';
+function itemEd(it, bi, ii, len, R='blocks'){
+  const p=`${R}.${bi}.items.${ii}`, kind=it.slot||'task';
   const sel = `<select data-kind="${p}" aria-label="Type">
       <option value="task" ${kind==='task'?'selected':''}>Checklist item</option>
       <option value="mech" ${kind==='mech'?'selected':''}>Helping Hands slot</option>
@@ -965,20 +1016,20 @@ function itemEd(it, bi, ii, len){
   } else {
     more = `<div class="ed-note">She picks a ${kind==='fun'?'Fun Choice':'Helping Hands'} tag here.</div>`;
   }
-  return `<div class="ed-item"><div class="ed-row">${sel}<input data-path="${p}.t" value="${esc(it.t)}" placeholder="Title">${itemMv(bi,ii,len)}</div>${more}</div>`;
+  return `<div class="ed-item"><div class="ed-row">${sel}<input data-path="${p}.t" value="${esc(it.t)}" placeholder="Title">${itemMv(bi,ii,len,R)}</div>${more}</div>`;
 }
-function blockEd(b, bi, len){
-  const p=`blocks.${bi}`;
+function blockEd(b, bi, len, R='blocks'){
+  const p=`${R}.${bi}`;
   return `<div class="ed-block" style="border-color:${esc(b.color)}">
-    <div class="ed-bh" style="background:${esc(b.color)}"><input data-path="${p}.name" value="${esc(b.name)}" placeholder="Block name">${mv('blocks',bi,len)}</div>
+    <div class="ed-bh" style="background:${esc(b.color)}"><input data-path="${p}.name" value="${esc(b.name)}" placeholder="Block name">${mv(R,bi,len)}</div>
     <div class="ed-bbody">
       <div class="ed-grid">
         <label class="ed-f" style="flex:2 1 200px">Subtitle<input data-path="${p}.sub" value="${esc(b.sub)}" placeholder="optional"></label>
         <label class="ed-f">Color<select data-path="${p}.color" data-re>${COLORS.map(([v,n])=>`<option value="${v}" ${v===b.color?'selected':''}>${n}</option>`).join('')}</select></label>
         <label class="ed-f">Icon<select data-path="${p}.icon" data-re>${Object.keys(ICON_NAMES).map(k=>`<option value="${k}" ${k===(b.icon||'none')?'selected':''}>${ICON_NAMES[k]}</option>`).join('')}</select></label>
       </div>
-      ${b.items.map((it,ii)=>itemEd(it,bi,ii,b.items.length)).join('')}
-      <button class="ed-add" data-act="additem" data-b="${bi}">+ Add to ${esc(b.name||'this block')}</button>
+      ${b.items.map((it,ii)=>itemEd(it,bi,ii,b.items.length,R)).join('')}
+      <button class="ed-add" data-act="additem" data-root="${R}" data-b="${bi}">+ Add to ${esc(b.name||'this block')}</button>
     </div></div>`;
 }
 function tagsEd(k, title, help, hasSub, hasTimer, hasSnack){
@@ -992,7 +1043,9 @@ function tagsEd(k, title, help, hasSub, hasTimer, hasSnack){
     <button class="ed-add" data-act="addtag" data-k="${k}">+ Add a tag</button></div>`;
 }
 function renderEditor(){
-  const E=S.edit, y=window.scrollY;
+  const E=S.edit, y=window.scrollY, R=['satBlocks','sunBlocks'].includes(S.edRoot)?S.edRoot:'blocks';
+  if(!Array.isArray(E.satBlocks)) E.satBlocks=[];
+  if(!Array.isArray(E.sunBlocks)) E.sunBlocks=[];
   $('#edBody').innerHTML = `
     <div class="ed-sec"><h3>Top of the board</h3>
       <label class="ed-f">Verse<textarea data-path="verse" rows="3">${esc(E.verse)}</textarea></label>
@@ -1000,9 +1053,16 @@ function renderEditor(){
         <label class="ed-f">Verse reference<input data-path="verseRef" value="${esc(E.verseRef)}"></label>
         <label class="ed-f">Her name<input data-path="kidName" value="${esc(E.kidName)}" placeholder="optional"></label>
       </div></div>
-    <div class="ed-sec"><h3>Blocks</h3><p class="help">Use ▲ ▼ to move things up and down. At the top or bottom of a block, they move it into the block above or below. ✕ removes it. Renaming an item keeps today's checkmarks.</p>
-      ${E.blocks.map((b,bi)=>blockEd(b,bi,E.blocks.length)).join('')}
-      <button class="ed-add" data-act="addblock">+ Add a block</button></div>
+    <div class="ed-sec"><h3>Blocks</h3>
+      <div class="ed-tabs" role="group" aria-label="Which board">
+        <button data-act="edroot" data-root="blocks" aria-pressed="${R==='blocks'}">Weekday board</button>
+        <button data-act="edroot" data-root="satBlocks" aria-pressed="${R==='satBlocks'}">Saturday board</button>
+        <button data-act="edroot" data-root="sunBlocks" aria-pressed="${R==='sunBlocks'}">Sunday board</button>
+      </div>
+      <p class="help">${R==='blocks'?'Monday through Friday.':R==='satBlocks'?'Shows every Saturday.':'Shows every Sunday.'} All three boards share the same tags. Changing one board doesn't change the others.</p>
+      <p class="help">Use ▲ ▼ to move things up and down. At the top or bottom of a block, they move it into the block above or below. ✕ removes it. Renaming an item keeps today's checkmarks.</p>
+      ${E[R].map((b,bi)=>blockEd(b,bi,E[R].length,R)).join('')}
+      <button class="ed-add" data-act="addblock" data-root="${R}">+ Add a block</button></div>
     ${tagsEd('fun','Fun Choice tags','She picks these for the Fun Choice slots. A timer shows under the tag when it\'s placed.',false,true)}
     ${tagsEd('mech','Helping Hands tags','She picks these for the Helping Hands slots.',true,true,true)}
     ${tagsEd('flag','Change of Routine tags','The red tags for "Anything different today?"',false,false)}
@@ -1058,20 +1118,21 @@ $('#editor').addEventListener('click', async e=>{
     } else { const j=a==='up'?i-1:i+1; [list[i],list[j]]=[list[j],list[i]]; }
     renderEditor(); return;
   }
+  if(a==='edroot'){ S.edRoot=t.dataset.root; renderEditor(); return; }
   if(a==='iup'||a==='idown'){
-    const bi=+t.dataset.b, i=+t.dataset.i, items=E.blocks[bi].items;
+    const BL=E[t.dataset.root||'blocks'], bi=+t.dataset.b, i=+t.dataset.i, items=BL[bi].items;
     if(a==='iup' && i>0){ [items[i-1],items[i]]=[items[i],items[i-1]]; }
     else if(a==='idown' && i<items.length-1){ [items[i+1],items[i]]=[items[i],items[i+1]]; }
     else {
       const to = a==='iup' ? bi-1 : bi+1, it=items.splice(i,1)[0];
-      if(a==='iup') E.blocks[to].items.push(it); else E.blocks[to].items.unshift(it);
-      toast(`Moved to ${E.blocks[to].name||'the next block'}`);
+      if(a==='iup') BL[to].items.push(it); else BL[to].items.unshift(it);
+      toast(`Moved to ${BL[to].name||'the next block'}`);
     }
     renderEditor(); return;
   }
   if(a==='testsound'){ playSound(S.edit.sound); return; }
-  if(a==='additem'){ E.blocks[+t.dataset.b].items.push({id:newId('i'), t:''}); renderEditor(); focusLast(`[data-path^="blocks.${t.dataset.b}.items."][data-path$=".t"]`); return; }
-  if(a==='addblock'){ const c=COLORS[E.blocks.length % COLORS.length][0]; E.blocks.push({id:newId('b'), name:'', sub:'', color:c, icon:'star', items:[]}); renderEditor(); focusLast('[data-path^="blocks."][data-path$=".name"]'); return; }
+  if(a==='additem'){ const R=t.dataset.root||'blocks'; E[R][+t.dataset.b].items.push({id:newId('i'), t:''}); renderEditor(); focusLast(`[data-path^="${R}.${t.dataset.b}.items."][data-path$=".t"]`); return; }
+  if(a==='addblock'){ const R=t.dataset.root||'blocks', c=COLORS[E[R].length % COLORS.length][0]; E[R].push({id:newId('b'), name:'', sub:'', color:c, icon:'star', items:[]}); renderEditor(); focusLast(`[data-path^="${R}."][data-path$=".name"]`); return; }
   if(a==='addtag'){ E.tags[t.dataset.k].push({id:newId('t'), name:''}); renderEditor(); focusLast(`[data-path^="tags.${t.dataset.k}."][data-path$=".name"]`); return; }
   if(a==='setorig'){
     if(!confirm('Make the board as it is on this screen your new original? "Reset" will go back to this from now on.')) return;
@@ -1092,7 +1153,7 @@ function focusLast(sel){ const els=document.querySelectorAll('#editor '+sel); co
 async function saveEditor(){
   const E=clone(S.edit);
   const trim = (o,k)=>{ if(typeof o[k]==='string'){ o[k]=o[k].trim(); if(!o[k]) delete o[k]; } };
-  for(const b of E.blocks){
+  for(const b of [...E.blocks, ...(E.satBlocks||[]), ...(E.sunBlocks||[])]){
     b.name=(b.name||'').trim(); if(!b.name) return toast('Every block needs a name.', 3500);
     trim(b,'sub'); if(!b.sub) b.sub='';
     for(const it of b.items){

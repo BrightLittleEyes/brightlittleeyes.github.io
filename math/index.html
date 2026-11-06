@@ -1174,6 +1174,7 @@ const PIP_TOPICS = {
   } },
 
   pct: { label: "Percents", sym: "%", make() {
+    if (Math.random() < .5) return PIP_TOPICS.pct.compare();
     const p = rint(21, 95), right = Math.random() < .25, d = (p / 100).toFixed(2).replace(/0$/, ""), bad = String(p / 10);
     const good = [{ label: "Step 1: What percent means", math: `${p}% = ${p}/100` }, { label: "Step 2: Divide by 100", math: `Move the point 2 places: ${p} → ${d}` }];
     const steps = right ? good.map(s => ({ ...s })) : [{ label: "Step 1: What percent means", math: `${p}% = ${p}/100` }, { label: "Step 2: Divide by 100", math: `Move the point 1 place: ${p} → ${bad}` }];
@@ -1187,6 +1188,23 @@ const PIP_TOPICS = {
       fixQ: `In Step 2 I moved the decimal point 1 place. Dividing by 100 moves it how many places?`,
       fixes: [["2 places, because 100 has two zeros", true], ["1 place", false, "That's what Pip did. 1 place is dividing by 10."], ["3 places", false, "3 places would be dividing by 1,000."]],
       fixed: `<b>${d}.</b> ${p}% = ${p}/100 = ${d}. It's less than 1, so it fits.` };
+  }, compare() {
+    let a, b, pc;
+    for (let t = 0; t < 500; t++) { b = pick([4, 5, 5, 10]); a = rint(1, b - 1); pc = rint(3, 18) * 5; if (gcd(a, b) === 1 && a * 100 / b !== pc && Math.abs(a * 100 / b - pc) <= 40) break; }
+    const fd = a / b, right = Math.random() < .25, rel = fd * 100 < pc ? "<" : ">", bad = +(b / a).toFixed(2);
+    const good = [{ label: `Step 1: ${a}/${b} as a decimal`, math: `${a} ÷ ${b} = ${+fd.toFixed(2)}` }, { label: `Step 2: ${pc}% as a decimal`, math: `${pc}/100 = ${pc / 100}` }, { label: "Step 3: Compare", math: `${+fd.toFixed(2)} ${rel} ${pc / 100}, so ${a}/${b} ${rel} ${pc}%` }];
+    const steps = good.map(s => ({ ...s }));
+    if (!right) { steps[0].math = `${b} ÷ ${a} = ${bad}`; steps[2].math = `${bad} > ${pc / 100}, so ${a}/${b} > ${pc}%`; }
+    return { q: `Compare using &lt;, &gt;, or =: <b>${a}/${b}</b> ☐ <b>${pc}%</b>`, good, steps, wrong: right ? -1 : 0,
+      claim: `I think <b>${a}/${b} ${right ? rel : ">"} ${pc}%</b>.`,
+      offRight: `Good eye. Pip turned ${a}/${b} into ${bad}. But ${a}/${b} is less than one whole, since the top is smaller than the bottom!`,
+      yesWrong: `Let's check Step 1. ${a}/${b} is less than 1 whole. Is ${bad} less than 1?`,
+      yesRight: `You checked it. ${a}/${b} = ${+fd.toFixed(2)} and ${pc}% = ${pc / 100}. On a number line, ${rel === "<" ? `${a}/${b} is farther left` : `${a}/${b} is farther right`}.`,
+      offWrong: `Let's check together. ${a} ÷ ${b} = ${+fd.toFixed(2)}, and ${pc}% = ${pc / 100}. Which is bigger?`,
+      stepOk: i => i === 1 ? `Step 2 is right: ${pc}% = ${pc}/100 = ${pc / 100}.` : `Step 3 compares the numbers it was given. Look at where the first number came from.`,
+      fixQ: `In Step 1 I did ${b} ÷ ${a}. Which way does a fraction divide?`,
+      fixes: [[`Top ÷ bottom: ${a} ÷ ${b}`, true], [`Bottom ÷ top: ${b} ÷ ${a}`, false, "That's what Pip did. It made a number bigger than 1."], [`Put the digits together: ${a}${b}`, false, "Let's test it: that's way bigger than one whole."]],
+      fixed: `<b>${a}/${b} ${rel} ${pc}%.</b> ${a} ÷ ${b} = ${+fd.toFixed(2)}, and ${+fd.toFixed(2)} ${rel} ${pc / 100}.` };
   } },
 
   round: { label: "Estimating", sym: "≈", make() {
@@ -1205,6 +1223,110 @@ const PIP_TOPICS = {
       fixQ: `In Step 2 I rounded ${y} to ${ryBad}. To the nearest <b>ten</b>, what should it be?`,
       fixes: [[`${ry}`, true], [`${ryBad}`, false, `That's the nearest hundred. We want the nearest ten.`], [`${ry === Math.floor(y / 10) * 10 ? ry + 10 : ry - 10}`, false, `Look at the ones digit of ${y}. 0 to 4 rounds down, 5 to 9 rounds up.`]],
       fixed: `<b>${est}.</b> ${x} → ${rx} and ${y} → ${ry}, then ${rx} + ${ry} = ${est}. That's close to ${exact}.` };
+  } }  ,
+  rate: { label: "Who's fastest", sym: "÷1", make() {
+    const job = pick([["flyer", "flyers", "made"], ["cookie", "cookies", "decorated"], ["card", "cards", "wrote"], ["bracelet", "bracelets", "made"]]);
+    const names = pick([["Ali", "Omar", "Jim"], ["Maya", "Leo", "Ava"], ["Sam", "Zoe", "Eli"]]);
+    let ppl;
+    for (let t = 0; t < 500; t++) {
+      const per = [rint(2, 8), rint(2, 8), rint(2, 8)], K = [rint(3, 10), rint(3, 10), rint(3, 10)];
+      if (new Set(per).size < 3 || new Set(K).size < 3 || per.some((x, i) => x * K[i] > 72)) continue;
+      const fast = per.indexOf(Math.min(...per)), most = K.indexOf(Math.max(...K));
+      if (fast === most) continue;
+      ppl = names.map((n, i) => ({ n, per: per[i], K: K[i], W: per[i] * K[i] })); break;
+    }
+    const f = ppl.reduce((a, b) => a.per < b.per ? a : b), slow = ppl.reduce((a, b) => a.per > b.per ? a : b), right = Math.random() < .25;
+    const good = ppl.map((p, i) => ({ label: `Step ${i + 1}: ${p.n}`, math: `${p.W} min ÷ ${p.K} = ${p.per} min each` }));
+    good.push({ label: "Step 4: Who's fastest?", math: `Fewest minutes each: ${f.n} (${f.per})` });
+    const steps = good.map(s => ({ ...s }));
+    if (!right) steps[3] = { label: "Step 4: Who's fastest?", math: `Biggest number: ${slow.n} (${slow.per})` };
+    return { q: `${ppl.map(p => `${p.n} ${job[2]} <b>${p.K} ${job[1]}</b> in <b>${p.W} minutes</b>.`).join(" ")} Who worked the fastest?`,
+      good, steps, wrong: right ? -1 : 3,
+      claim: `I think <b>${right ? f.n : slow.n}</b> worked the fastest.`,
+      offRight: `Good eye. ${slow.n} needs ${slow.per} minutes for each ${job[0]}. ${f.n} only needs ${f.per}. Who would finish a ${job[0]} first?`,
+      yesWrong: `Let's picture it. ${slow.n} takes ${slow.per} minutes to make one ${job[0]}. ${f.n} takes ${f.per} minutes. If they start together, who finishes first?`,
+      yesRight: `You checked it. ${f.n} needs only ${f.per} minutes for each ${job[0]}, the fewest of anyone. Fewer minutes means faster.`,
+      offWrong: `Let's check together. Minutes for each ${job[0]}: ${ppl.map(p => `${p.n} ${p.per}`).join(", ")}. Who needs the fewest?`,
+      stepOk: i => `Let's test Step ${i + 1}: ${ppl[i].per} × ${ppl[i].K} = ${ppl[i].W}. It matches, so that step works.`,
+      fixQ: `In Step 4 I picked the biggest number. But these are minutes for each ${job[0]}. Which one is fastest?`,
+      fixes: [["The fewest minutes each", true], ["The biggest number", false, `That's what Pip did. More minutes for each ${job[0]} means slower, not faster.`], [`Whoever made the most ${job[1]}`, false, `Let's test that idea: they also worked longer. We need the time for just one ${job[0]}.`]],
+      fixed: `<b>${f.n} worked the fastest.</b> Only ${f.per} minutes for each ${job[0]}. Fewer minutes for one means faster.` };
+  } },
+
+  tbl: { label: "Price tables", sym: "▦", make() {
+    const ctx = pick([["Raina", "raffle tickets", "ticket", "tickets"], ["Marcus", "cups of lemonade", "cup", "cups"], ["Nicole", "feet of fencing", "foot", "feet"]]);
+    const u = rint(3, 12), g = rint(2, 4), D = g * u, nTop = rint(5, 9), nBot = rint(3, 10), dBot = nBot * u, right = Math.random() < .25;
+    const kind = pick(["mult", "copy"]);
+    const good = [{ label: "Step 1: Price for 1", math: `$${D} ÷ ${g} = $${u}` }, { label: `Step 2: $${nTop * u} is how many ${ctx[3]}?`, math: `$${nTop * u} ÷ $${u} = ${nTop}` }, { label: `Step 3: ${nBot} ${ctx[3]} cost?`, math: `${nBot} × $${u} = $${dBot}` }];
+    const steps = good.map(s => ({ ...s }));
+    if (!right) steps[1] = kind === "mult" ? { label: good[1].label, math: `$${nTop * u} × $${u} = ${nTop * u * u}` } : { label: good[1].label, math: `Same as the first column: ${g}` };
+    const pipN = right ? nTop : kind === "mult" ? nTop * u * u : g;
+    return { q: `${ctx[0]} sells ${ctx[1]}. <b>${g} ${ctx[3]}</b> cost <b>$${D}</b>. Fill in the table: how many ${ctx[3]} for <b>$${nTop * u}</b>, and the cost of <b>${nBot} ${ctx[3]}</b>?`,
+      good, steps, wrong: right ? -1 : 1,
+      claim: `I think $${nTop * u} buys <b>${pipN} ${pipN === 1 ? ctx[2] : ctx[3]}</b>.`,
+      offRight: kind === "mult" ? `Good eye. ${pipN} ${ctx[3]} for only $${nTop * u}? ${ctx[0]} would be giving them away!` : `Good eye. $${D} buys ${g} ${ctx[3]}. $${nTop * u} is more money, so it has to buy more than ${g}.`,
+      yesWrong: `Let's test it: ${pipN} ${ctx[3]} × $${u} each = $${pipN * u}. Is that $${nTop * u}?`,
+      yesRight: `You checked it. ${nTop} × $${u} = $${nTop * u}. It matches.`,
+      offWrong: `Let's test it together: ${nTop} × $${u} = ? Is it $${nTop * u}?`,
+      stepOk: i => i === 0 ? `Step 1 is right: ${g} × $${u} = $${D}. That's the magic number.` : `Let's test Step 3: ${nBot} × $${u} = $${dBot}. More ${ctx[3]} cost more, so multiplying fits.`,
+      fixQ: kind === "mult" ? `In Step 2 I multiplied. To find how many $${u} ${ctx[3]} fit in $${nTop * u}, what should I do?` : `In Step 2 I copied the first column. What should I do instead?`,
+      fixes: [[`Divide: $${nTop * u} ÷ $${u}`, true], [`Multiply: $${nTop * u} × $${u}`, false, `Let's test it: that makes ${nTop * u * u}, way too many ${ctx[3]}!`], [`Copy the first column: ${g}`, false, `The first column is for $${D}. This column has a different amount, so it needs its own answer.`]],
+      fixed: `<b>${nTop} ${ctx[3]}.</b> $${nTop * u} ÷ $${u} = ${nTop}. Check: ${nTop} × $${u} = $${nTop * u}.` };
+  } },
+
+  dec: { label: "Decimal prices", sym: "0.1", make() {
+    let A, B, P, p1, p2, carry;
+    for (let t = 0; t < 3000; t++) {
+      A = rint(15, 99); B = rint(11, 49);
+      if (A % 10 === 0 || B % 10 === 0) continue;
+      P = A * B; if (P % 10) continue;
+      p1 = A * (B % 10); p2 = A * (B - B % 10); carry = noCarrySum(p1, p2) !== P; if (carry) break;
+    }
+    const a = (A / 10).toFixed(1), b = (B / 100).toFixed(2), right = Math.random() < .25, kind = pick(["carry", "dot"]);
+    const est = Math.round(A / 10) * B, nc = noCarrySum(p1, p2);
+    const good = [{ label: "Step 1: Hide the dots", math: `${A} × ${B}` }, { label: `Step 2: ${A} × ${B % 10}`, math: `${p1}` }, { label: `Step 3: ${A} × ${B - B % 10}`, math: `${p2}` },
+      { label: "Step 4: Add", math: `${p1} + ${p2} = ${P}` }, { label: "Step 5: Put the dot back (1 + 2 = 3 places)", math: `${placeDot(String(P), 3)} = ${money(P / 10)}` }];
+    const steps = good.map(s => ({ ...s }));
+    let pip = money(P / 10), w = -1;
+    if (!right && kind === "carry") { steps[3].math = `${p1} + ${p2} = ${nc}`; steps[4].math = `${placeDot(String(nc), 3)} = ${money(nc / 10)}`; pip = money(nc / 10); w = 3; }
+    if (!right && kind === "dot") { steps[4] = { label: "Step 5: Put the dot back", math: `${placeDot(String(P), 2)} = $${placeDot(String(P), 2)}` }; pip = `$${placeDot(String(P), 2)}`; w = 4; }
+    return { q: `A phone call costs <b>$${b}</b> a minute. Jessica talked for <b>${a} minutes</b>. How much did she pay?`,
+      good, steps, wrong: w,
+      claim: `I think she paid <b>${pip}</b>.`,
+      offRight: kind === "dot" ? `Good eye. ${a} minutes is about ${Math.round(A / 10)} minutes, and each one is less than $1. So it should be about ${money(est)}, not ${pip}!` : `Good eye. ${a} is close to ${Math.round(A / 10)}, so it should be about ${money(est)}. ${pip} is a bit off. Worth checking the adding.`,
+      yesWrong: `Let's estimate. ${a} minutes is about ${Math.round(A / 10)} minutes, at $${b} each. That's about ${money(est)}. Is ${pip} close?`,
+      yesRight: `You checked it. About ${Math.round(A / 10)} minutes × $${b} is about ${money(est)}, and ${pip} is close.`,
+      offWrong: `Let's estimate together. ${a} is about ${Math.round(A / 10)}, so about ${Math.round(A / 10)} × $${b} = ${money(est)}. Is ${pip} close to that?`,
+      stepOk: i => `Let's check Step ${i + 1}. ${i === 0 ? "Hiding the dots is the right plan." : i < 3 ? "That multiplication works." : "The adding is fine. Look at another step."}`,
+      fixQ: w === 3 ? `In Step 4, the tens added to more than 10. What did I forget?` : `In Step 5 I put the dot with 2 places. How many places should it have?`,
+      fixes: w === 3 ? [["To carry the 1 to the next place", true], ["To add a zero", false, "Let's test it: a zero wouldn't fix the middle digit. Look where a column adds to 10 or more."], ["Nothing, it's right", false, `Let's check the estimate again: about ${money(est)}. ${pip} is lower than it should be.`]]
+                     : [["3 places: 1 from " + a + " and 2 from " + b, true], ["2 places", false, "That's what Pip did. Count the places after the dot in both numbers."], ["1 place", false, `Let's test it: that makes the price even bigger. We need about ${money(est)}.`]],
+      fixed: `<b>${money(P / 10)}.</b> ${p1} + ${p2} = ${P}, then 3 places: ${placeDot(String(P), 3)}. That's close to the estimate of ${money(est)}.` };
+  } },
+
+  fracx: { label: "Fraction times", sym: "½×", make() {
+    let a, b, c, d, N, D;
+    for (let t = 0; t < 3000; t++) {
+      a = rint(2, 9); b = rint(2, 9); c = rint(2, 9); d = rint(2, 9);
+      if (gcd(a, b) !== 1 || gcd(c, d) !== 1 || a === b || c === d) continue;
+      N = a * c; D = b * d;
+      if (gcd(N, D) !== 1 || N < 6 || N >= D || N / D < 0.25) continue;
+      break;
+    }
+    const right = Math.random() < .25;
+    const good = [{ label: "Step 1: Tops", math: `${a} × ${c} = ${N}` }, { label: "Step 2: Bottoms", math: `${b} × ${d} = ${D}` }, { label: "Step 3: Simplify", math: `${N} and ${D} share no factor, so it stays ${N}/${D}` }];
+    const steps = good.map(s => ({ ...s }));
+    if (!right) steps[2] = { label: "Step 3: Simplify", math: `${N}/${D} → 1/${N}` };
+    return { q: `Multiply. Write your answer in simplest form: <b>${a}/${b} × ${c}/${d}</b>`, good, steps, wrong: right ? -1 : 2,
+      claim: `I think the answer is <b>${right ? `${N}/${D}` : `1/${N}`}</b>.`,
+      offRight: `Good eye. ${a}/${b} is ${sizeWord(a / b)} and ${c}/${d} is ${sizeWord(c / d)}, so the answer should be ${sizeWord(N / D)}. 1/${N} is tiny!`,
+      yesWrong: `Let's estimate. ${a}/${b} is ${sizeWord(a / b)} and ${c}/${d} is ${sizeWord(c / d)}. The answer should be ${sizeWord(N / D)}. Is 1/${N} that big?`,
+      yesRight: `You checked it. ${a} × ${c} = ${N}, ${b} × ${d} = ${D}, and no number except 1 divides both. ${N}/${D} is ${sizeWord(N / D)}, which fits.`,
+      offWrong: `Let's check together. ${a} × ${c} = ${N} and ${b} × ${d} = ${D}. Is there a number that divides both ${N} and ${D}?`,
+      stepOk: i => `Let's test Step ${i + 1}: ${i === 0 ? `${a} × ${c} = ${N}` : `${b} × ${d} = ${D}`}. That works.`,
+      fixQ: `In Step 3 I turned ${N}/${D} into 1/${N}. What does simplest form really mean?`,
+      fixes: [["Divide top and bottom by the same number. If none works, leave it.", true], ["Make the top 1", false, `Let's test it: 1/${N} is much smaller than ${N}/${D}. Simplifying never changes the size.`], [`Divide both by ${N}`, false, `Let's test it: ${D} ÷ ${N} doesn't come out even, so ${N} doesn't divide both.`]],
+      fixed: `<b>${N}/${D}.</b> No number except 1 divides both ${N} and ${D}, so it's already in simplest form.` };
   } }
 };
 

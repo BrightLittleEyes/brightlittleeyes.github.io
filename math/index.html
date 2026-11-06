@@ -266,10 +266,11 @@ const sections = {
   frac: { title: "Fraction Times", sub: "Estimate, multiply straight across, then simplify.", steps: ["Pick", "Estimate", "Multiply", "Simplify", "Check"] },
   est:  { title: "Round & Estimate", sub: "Round each number first, then add or subtract.", steps: ["Pick", "Round", "Estimate", "Check"] },
   mix:  { title: "Mixed Numbers", sub: "Switch between mixed numbers and improper fractions.", steps: ["Pick", "Wholes", "Pieces", "Check"] },
+  fdp:  { title: "Fractions, Decimals & Percents", sub: "Change each one to a decimal, plot it, then compare.", steps: ["Pick", "Fraction", "Percent", "Plot", "Compare"] },
   mean: { title: "What Does It Mean?", sub: "The math is already done. You find what each number means.", steps: ["Pick a story", "Find the numbers", "Match the math"] }
 };
 
-let state = { section: null, step: 0, onBreak: false, solved: { trip: 0, ops: 0, rate: 0, pip: 0, mean: 0, lcm: 0, eq: 0, tbl: 0, dec: 0, frac: 0, est: 0, mix: 0 }, mx: null, mixMode: "toImp", es: null, esLevel: "ten", t: null, dc: null, fr: null, frLevel: "easy", lc: null, lcSize: "easy", e: null, eqLevel: "pos",
+let state = { section: null, step: 0, onBreak: false, solved: { trip: 0, ops: 0, rate: 0, pip: 0, mean: 0, lcm: 0, eq: 0, tbl: 0, dec: 0, frac: 0, est: 0, mix: 0, fdp: 0 }, fd: null, fdKind: "mix", mx: null, mixMode: "toImp", es: null, esLevel: "ten", t: null, dc: null, fr: null, frLevel: "easy", lc: null, lcSize: "easy", e: null, eqLevel: "pos",
   p: null, size: "small", q: null, level: "easy", r: null, pp: null, m: null };
 try { const s = JSON.parse(localStorage.getItem("mathPlanner")); if (s && s.solved) state.solved = Object.assign(state.solved, s.solved); } catch (e) {}
 function save() { try { localStorage.setItem("mathPlanner", JSON.stringify({ solved: state.solved })); } catch (e) {} }
@@ -302,6 +303,7 @@ function render() {
   if (state.section === "frac") return [frPick, frEst, frMult, frSimp, frCheck][state.step]();
   if (state.section === "est") return [estPick, estRound, estAdd, estDone][state.step]();
   if (state.section === "mix") return [mixPick, mixStep1, mixStep2, mixDone][state.step]();
+  if (state.section === "fdp") { if (state.step > 0 && !state.fd) state.fd = makeFdp(state.fdKind); return [fdpPick, fdpFrac, fdpPct, fdpPlot, fdpCompare][state.step](); }
   if (state.section === "mean") return [meanPick, meanTap, meanMath][state.step]();
   return [opsPick, opsSolve, opsDone][state.step]();
 }
@@ -319,6 +321,7 @@ function renderHome() {
       <button class="home-pick" type="button" data-s="dec"><strong>Decimal Times</strong><span>Word problems that multiply two decimals.</span></button>
       <button class="home-pick" type="button" data-s="frac"><strong>Fraction Times</strong><span>Multiply fractions and write them in simplest form.</span></button>
       <button class="home-pick" type="button" data-s="mix"><strong>Mixed Numbers</strong><span>Like 4 5/7 as an improper fraction, and back.</span></button>
+      <button class="home-pick" type="button" data-s="fdp"><strong>Fractions, Decimals &amp; Percents</strong><span>Change to decimals, plot on a number line, compare.</span></button>
       <button class="home-pick" type="button" data-s="est"><strong>Round &amp; Estimate</strong><span>Round to the nearest ten or hundred, then add or subtract.</span></button>
       <button class="home-pick" type="button" data-s="pip"><strong>Help Pip</strong><span>A robot's math got tangled. You be the teacher.</span></button>
       <button class="home-pick" type="button" data-s="mean"><strong>What Does It Mean?</strong><span>No math to do. Just find what the numbers mean.</span></button>
@@ -1263,14 +1266,39 @@ const lcmStories = {
            done: L => `Both buses come at minute ${L}.`, spot: "minute" }
 };
 
+const lcmNames = ["Christine", "Frank", "Maya", "Leo", "Ava", "Omar", "Rosa", "Ben", "Lena", "Kai", "Zoe", "Eli"];
+const saleItems = [["boxes of cookies", "boxes"], ["candles", "candles"], ["bags of popcorn", "bags"], ["jars of jam", "jars"], ["bracelets", "bracelets"]];
+const packPairs = [["Hot dogs", "Buns"], ["Paper plates", "Cups"], ["Pencils", "Erasers"], ["Juice boxes", "Granola bars"]];
+function wordStory(key) {
+  if (key === "sales") {
+    const [A, B] = threeOf(lcmNames), [many, count] = pick(saleItems);
+    return { key, word: true, money: true, a: A, b: B, count,
+      text: lc => `${A} sells ${many} for <b>$${lc.a}</b> each. ${B} sells ${many} for <b>$${lc.b}</b> each. Each of them sold the same dollar amount. It was the smallest dollar amount for which this was possible.`,
+      ask: "What was the dollar amount each of them sold?",
+      first: "sale", lands: "reaches", land: "reach", go: "Start selling", btn: (n, x) => `${n} sells one (+$${x})`,
+      none: "nothing sold yet", them: "they both", keep: "Keep selling for whoever has less money.",
+      behind: n => `Sell one for whoever has less money so far. If ${n} has less, tap ${n}.`,
+      done: L => `They both reach $${L}.`, spot: "dollar amount", countQ: n => `How many ${count} did ${n} sell?`,
+      unitOf: n => `each of ${n}'s sales is $`, fmt: v => `$${v}` };
+  }
+  const [A, B] = pick(packPairs), a = A.toLowerCase(), b = B.toLowerCase();
+  return { key, word: true, a: A, b: B, count: "packs",
+    text: lc => `${A} come in packs of <b>${lc.a}</b>. ${B} come in packs of <b>${lc.b}</b>. You want the same number of ${a} and ${b}, with none left over.`,
+    ask: `What is the smallest number of each you can buy?`,
+    first: "pack", lands: "reach", land: "reach", go: "Start adding packs", btn: (n, x) => `Add a pack of ${n.toLowerCase()} (+${x})`,
+    none: "no packs yet", them: "both", keep: "Keep adding a pack to whichever has fewer.",
+    behind: n => `Add a pack to whichever has fewer so far. If ${n.toLowerCase()} have fewer, tap ${n.toLowerCase()}.`,
+    done: L => `${L} ${a} and ${L} ${b}.`, spot: "number", countQ: n => `How many packs of ${n.toLowerCase()} do you buy?`,
+    unitOf: n => `each pack of ${n.toLowerCase()} has `, fmt: v => `${v}` };
+}
 function makeLcm(storyKey, size) {
   const pool = lcmPairs[size].filter(p => !lcmRecent.includes(p.join("-")));
   let [a, b] = pick(pool.length ? pool : lcmPairs[size]);
   lcmRecent = [...lcmRecent, `${a}-${b}`].slice(-8);
   if (Math.random() < .5) [a, b] = [b, a];
-  return { a, b, L: a * b / gcd(a, b), story: lcmStories[storyKey], na: 0, nb: 0, max: size === "easy" ? 40 : 60 };
+  return { a, b, L: a * b / gcd(a, b), story: lcmStories[storyKey] || wordStory(storyKey), na: 0, nb: 0, bx: 0, max: size === "easy" ? 40 : 60 };
 }
-const lcmLine = lc => `<p class="story">${lc.story.each(lc.story.a, lc.a)} ${lc.story.each(lc.story.b, lc.b)} ${lc.story.ask}</p>`;
+const lcmLine = lc => `<p class="story">${lc.story.word ? lc.story.text(lc) : `${lc.story.each(lc.story.a, lc.a)} ${lc.story.each(lc.story.b, lc.b)}`} ${lc.story.ask}</p>`;
 const vocabCard = `<div class="vocab">
   <div><strong>Multiple</strong>Where you land when you count by a number. Multiples of 6: 6, 12, 18, 24...</div>
   <div><strong>Factor</strong>A number that fits into it evenly. 3 is a factor of 6. Factors are small, multiples are big.</div>
@@ -1282,6 +1310,8 @@ function lcmPick() {
     <div class="choices" id="st">
       <button type="button" data-k="frogs">Two frogs</button>
       <button type="button" data-k="buses">Two buses</button>
+      <button type="button" data-k="sales">Word problem: sales</button>
+      <button type="button" data-k="packs">Word problem: packs that match</button>
     </div>
     <span class="label">Number size</span>
     <div class="choices" id="sz">
@@ -1311,6 +1341,17 @@ function lcmGuess() {
   stage.appendChild(c);
   c.querySelectorAll("[data-g]").forEach(b => b.onclick = () => {
     const fb = c.querySelector("#fb");
+    const S2 = lc.story, smallName = bigName === S2.a ? S2.b : S2.a, small = Math.min(lc.a, lc.b);
+    if (S2.word && b.dataset.g === "big") {
+      c.querySelectorAll("[data-g]").forEach(x => x.disabled = x !== b); b.classList.add("picked");
+      fb.innerHTML = `<div class="note ok">Right. ${S2.money ? `Just one sale already brings ${bigName} $${big}.` : `Just one pack already has ${big} ${bigName.toLowerCase()}.`} And ${big} might not even work for ${S2.money ? smallName : smallName.toLowerCase()}: counting by ${small}s goes ${[1, 2, 3].map(k => k * small).join(", ")}... The answer has to be on both lists.</div>${vocabCard}`;
+      fb.appendChild(nextBtn(() => { state.step = 2; render(); }, S2.go));
+      return;
+    }
+    if (S2.word) {
+      fb.innerHTML = `<div class="note look">${S2.money ? `${bigName} gets $${big} from just one sale. To end up with less than $${big}, ${bigName} would have to sell less than one!` : `One pack of ${bigName.toLowerCase()} already has ${big}. You can't buy less than one pack!`}</div>`;
+      return;
+    }
     if (b.dataset.g === "big") {
       c.querySelectorAll("[data-g]").forEach(x => x.disabled = x !== b); b.classList.add("picked");
       fb.innerHTML = `<div class="note ok">Right. ${bigName}'s very first ${lc.story.first} is already at ${big}, so every ${lc.story.spot} it ${lc.story.lands} is ${big} or bigger. If you ever get a tiny answer like ${gcd(lc.a, lc.b) > 1 ? gcd(lc.a, lc.b) : 1}, that's a clue something went goofy.</div>${vocabCard}`;
@@ -1385,7 +1426,62 @@ function lcmJump() {
   input.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
 }
 
+function lcmCount() {
+  const lc = state.lc, s = lc.story, who = lc.bx === 0 ? s.a : s.b, price = lc.bx === 0 ? lc.a : lc.b, other = lc.bx === 0 ? lc.b : lc.a;
+  const ans = lc.L / price, list = Array.from({ length: ans }, (_, i) => price * (i + 1));
+  const c = el(`<section class="card">
+    ${lcmLine(lc)}
+    <div class="note ok">${s.money ? `The dollar amount: <b>$${lc.L}</b>.` : `The smallest number of each: <b>${lc.L}</b>.`}${lc.bx === 1 ? ` ${s.countQ(s.a)} <b>${lc.L / lc.a}</b>.` : ""}</div>
+    <h2>${s.countQ(who)}</h2>
+    <p>${cap(s.unitOf(who))}${price}. How many ${price}s make ${s.fmt(lc.L)}?</p>
+    <div class="row" style="align-items:center">
+      <span class="ask">${s.fmt(lc.L)} ÷ ${s.fmt(price)} =</span>
+      <input type="number" id="ans" inputmode="numeric" aria-label="${s.countQ(who)}">
+      <button class="primary" id="chk" type="button">Check</button>
+    </div>
+    <button class="quiet" id="hintBtn" type="button">Show me a hint</button>
+    <div id="hint"></div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelector("#hintBtn").onclick = e => { c.querySelector("#hint").innerHTML = `<div class="hint">Count ${who}'s ${s.money ? "totals" : "packs"}: ${list.map(s.fmt).join(", ")}. That's ${ans} ${s.count === "packs" ? "packs" : "sales"}. Count them on your fingers.</div>`; e.target.disabled = true; };
+  const input = c.querySelector("#ans");
+  const check = () => {
+    const fb = c.querySelector("#fb");
+    if (!input.value) { fb.innerHTML = `<div class="note look">Type a number first, then press Check.</div>`; return; }
+    const v = Number(input.value);
+    if (v === ans) { lc.bx++; render(); return; }
+    const got = v * price, big = got >= lc.L * 4;
+    const funny = !big ? "" : s.money ? ` That's a mountain of ${s.count}! ${who} would need a truck.` : ` That's enough for the whole neighborhood!`;
+    const msg = `Let's test ${v} ${s.count}: ${v} × ${s.fmt(price)} = ${s.fmt(got)}. We need ${s.fmt(lc.L)}.${funny} ${got > lc.L ? "Try a smaller number." : "Try a bigger number."} How many ${price}s make ${lc.L}?`;
+    fb.innerHTML = `<div class="note look">${msg}</div>`;
+  };
+  c.querySelector("#chk").onclick = check;
+  input.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+  input.focus();
+}
+function lcmWordDone() {
+  const lc = state.lc, s = lc.story, na = lc.L / lc.a, nb = lc.L / lc.b;
+  const c = el(`<section class="card">
+    ${lcmLine(lc)}
+    <h2>All three answers</h2>
+    <div class="tbl-wrap"><table class="rt">
+      <tr><th scope="row" style="text-align:left">${s.ask}</th><td>${s.fmt(lc.L)}</td></tr>
+      <tr><th scope="row" style="text-align:left">${s.countQ(s.a)}</th><td>${na} ${s.count}</td></tr>
+      <tr><th scope="row" style="text-align:left">${s.countQ(s.b)}</th><td>${nb} ${s.count}</td></tr>
+    </table></div>
+    <div class="note ok">Check: ${na} × ${s.fmt(lc.a)} = ${s.fmt(lc.L)} and ${nb} × ${s.fmt(lc.b)} = ${s.fmt(lc.L)}. Both match, so it works.<br>Notice the answer wasn't ${s.fmt(lc.a * lc.b)} (${lc.a} × ${lc.b}). ${lc.L === lc.a * lc.b ? "This time it is, because these two numbers don't share any factors." : `That works too, but ${s.fmt(lc.L)} comes first, and the problem asks for the smallest.`}</div>
+    <div class="row">
+      <button class="primary" id="again" type="button">Another one</button>
+      <button id="new" type="button">Change story or size</button>
+    </div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelector("#again").onclick = () => { state.solved.lcm++; save(); state.lc = makeLcm(s.key, state.lcSize); state.step = 1; render(); };
+  c.querySelector("#new").onclick = () => { state.solved.lcm++; save(); state.step = 0; render(); };
+}
 function lcmDone() {
+  if (state.lc.story.word) return state.lc.bx < 2 ? lcmCount() : lcmWordDone();
   const lc = state.lc, s = lc.story, big = Math.max(lc.a, lc.b);
   const listA = Array.from({ length: lc.L / lc.a }, (_, i) => lc.a * (i + 1)), listB = Array.from({ length: lc.L / lc.b }, (_, i) => lc.b * (i + 1));
   const c = el(`<section class="card">
@@ -1432,6 +1528,12 @@ function makeMulEq() {
   // ÷ : v / a = q  ->  v = q × a        × : a·v = a·q  ->  v = q
   return op === "÷" ? { v, op, a, c: q, s: q * a, mul: true, varLeft: Math.random() < .5, phase: 0, dot: null }
                     : { v, op, a, c: q * a, s: q, mul: true, varLeft: Math.random() < .5, phase: 0, dot: null };
+}
+function testSide(e, v) {           // plug a guess back into the original equation
+  const r = e.op === "÷" ? v / e.a : e.op === "×" ? e.a * v : e.op === "+" ? v + e.a : v - e.a;
+  const shown = Math.round(r * 100) / 100, approx = Math.abs(shown - r) > 1e-9;
+  const lhs = e.op === "÷" ? `${fmt(v)} ÷ ${e.a}` : e.op === "×" ? `${e.a} × ${par(v)}` : `${fmt(v)} ${e.op} ${e.a}`;
+  return `${lhs} = ${approx ? "about " : ""}${fmt(shown)}`;
 }
 const varExpr = e => e.op === "÷" ? `<span class="fr"><span class="t"><em>${e.v}</em></span><span class="bar"></span><span class="b">${e.a}</span></span>`
   : e.op === "×" ? `${e.a}<em>${e.v}</em>` : `<em>${e.v}</em> ${e.op} ${e.a}`;
@@ -1557,11 +1659,11 @@ function eqSolve() {
       fb.appendChild(nextBtn(() => { state.step = e.dec || e.mul ? 4 : 3; render(); }, e.dec || e.mul ? "Check the answer" : "Put it on the number line"));
       input.disabled = true; c.querySelector("#chk").disabled = true;
     } else if (v === (e.mul ? (e.op === "÷" ? e.c / e.a : e.c * e.a) : e.dec ? (e.op === "−" ? e.cC - e.aC : e.cC + e.aC) / 100 : (e.op === "−" ? e.c - e.a : e.c + e.a))) {
-      fb.innerHTML = `<div class="note look">That's ${fmt(e.c)} ${e.op} ${e.a}. That does the same thing that's already happening to ${e.v}, so it can't undo it. To undo "${e.op} ${e.a}", do the opposite: ${numSide(e)}.</div>`;
+      fb.innerHTML = `<div class="note look">Let's test ${fmt(v)}. Put it in for ${e.v}: ${testSide(e, v)}. We need ${fmt(e.c)}, so that doesn't balance. To undo "${e.op} ${e.a}", do the opposite: ${numSide(e)}.</div>`;
     } else if (e.dec && e.cC % 10 === 0 && Math.round(v * 100) === (e.op === "−" ? e.cC / 10 + e.aC : e.cC / 10 - e.aC)) {
       fb.innerHTML = `<div class="note look">So close! Check how the decimal points line up. ${fmt(e.c)} is the same as ${pad2(e.c)}, so its last digit is in the tenths place, not the hundredths. Write it as ${pad2(e.c)} ${e.op === "−" ? "+" : "−"} ${pad2(e.a)} and try again.</div>`;
     } else if (e.mul) {
-      fb.innerHTML = `<div class="note look">${e.op === "÷" && v < e.c ? `Hmm, ${v} is smaller than ${e.c}. Multiplying by ${e.a} should make it bigger. ` : ""}Let's check it in pieces. ${mulHint(e)}</div>`;
+      fb.innerHTML = `<div class="note look">Let's test ${fmt(v)}: ${testSide(e, v)}. We need ${fmt(e.c)}. ${mulHint(e)}</div>`;
     } else if (v === -e.s) {
       fb.innerHTML = `<div class="note look">So close! The ${Math.abs(e.s)} part is right. Now check the sign. ${hopHint(e.c, e.a, dir, 0)} Do you end up on the left or right side of 0?</div>`;
     } else {
@@ -1843,7 +1945,7 @@ function tblFill() {
     if (v === t.g || v === t.g * t.u) {
       fb.innerHTML = `<div class="note look">${v} is a number from the first column. That column starts with ${t.g} ${many}, but this column starts with ${known}, so it needs its own answer. Use the magic number: 1 ${one} = ${f(t.u)}. ${expr} = ?</div>`;
     } else if (!toBottom && v === C.d * t.u) {
-      fb.innerHTML = `<div class="note look">${v} ${many} for only ${f(C.d)}? That's way too many! That number came from multiplying. Try ${expr} instead.</div>`;
+      fb.innerHTML = `<div class="note look">Let's test ${v} ${many}: at ${f(t.u)} each, that would be ${f(v * t.u)}. We only have ${f(C.d)}! That's a giant pile. Try ${expr}.</div>`;
     } else if (toBottom) {
       fb.innerHTML = `<div class="note look">Let's test it: ${v} split over ${C.n} ${many} would be ${(v / C.n).toFixed(v % C.n ? 2 : 0)} for each ${one}. We need ${t.u} for each. ${v > ans ? "Try a smaller number." : "Try a bigger number."}</div>`;
     } else {
@@ -2033,7 +2135,7 @@ function decMult() {
     if (k === 2 && v === noCarrySum(d.p1, d.p2)) {
       fb.innerHTML = `<div class="note look">So close! Every place is right except one. Look for a place where the digits add to 10 or more. That extra 1 has to carry over to the next place on the left.</div>`;
     } else if (k === 1 && v === d.A * d.tens / 10) {
-      fb.innerHTML = `<div class="note look">That's ${d.A} × ${d.tens / 10}. But we're multiplying by ${d.tens}, which is tens. Add a 0 on the end.</div>`;
+      fb.innerHTML = `<div class="note look">So close! ${d.A} × ${d.tens / 10} makes ${v}. But ${d.tens} is ${d.tens / 10} <i>tens</i>, so the answer needs a 0 on the end.</div>`;
     } else {
       fb.innerHTML = `<div class="note look">Let's look again. ${cur.hint}</div>`;
     }
@@ -2095,6 +2197,13 @@ function decCheck() {
 /* ---------- fraction times (multiply fractions, simplest form) ---------- */
 const FR = (t, b, cls = "") => `<span class="fr ${cls}"><span class="t">${t}</span><span class="bar"></span><span class="b">${b}</span></span>`;
 function makeFrac(level) {
+  if (level === "pow") {
+    for (let i = 0; i < 500; i++) {
+      const a = rint(1, 9), b = rint(2, 9);
+      if (gcd(a, b) !== 1 || a === b || b * b > 100) continue;
+      return { a, b, c: a, d: b, N: a * a, D: b * b, n: a * a, dn: b * b, cur: [a * a, b * b], phase: 0, est: null, level, pow: true };
+    }
+  }
   for (let i = 0; i < 5000; i++) {
     let a, b, c, d;
     if (level === "easy") { a = rint(1, 9); b = rint(2, 9); c = rint(1, 9); d = rint(2, 9); }
@@ -2114,7 +2223,8 @@ function sizeWord(v) {
   if (v < 1.6) return "a little more than 1";
   return "a lot more than 1";
 }
-const frProblem = f => `<div class="fx">${FR(f.a, f.b)}<span>×</span>${FR(f.c, f.d)}</div>`;
+const powFR = f => `<span style="display:inline-flex;align-items:flex-start"><span style="font-size:2.6rem;font-weight:300;align-self:center">(</span>${FR(f.a, f.b)}<span style="font-size:2.6rem;font-weight:300;align-self:center">)</span><sup style="font-size:1.1rem">2</sup></span>`;
+const frProblem = f => f.pow ? `<div class="fx">${powFR(f)}<span>=</span>${FR(f.a, f.b)}<span>×</span>${FR(f.a, f.b)}</div>` : `<div class="fx">${FR(f.a, f.b)}<span>×</span>${FR(f.c, f.d)}</div>`;
 
 function frPick() {
   const c = el(`<section class="card">
@@ -2122,6 +2232,7 @@ function frPick() {
     <div class="choices" id="lv">
       <button class="home-pick" type="button" data-l="easy"><strong>Smaller numbers</strong><span>Like 6/5 × 3/7</span></button>
       <button class="home-pick" type="button" data-l="hard"><strong>Bigger numbers</strong><span>Like 3/2 × 14/15</span></button>
+      <button class="home-pick" type="button" data-l="pow"><strong>Squared fractions</strong><span>Like (3/2)²</span></button>
     </div>
   </section>`);
   stage.appendChild(c);
@@ -2133,7 +2244,7 @@ function frEst() {
   const c = el(`<section class="card">
     ${frProblem(f)}
     <h2>Before any math: will the answer be more than 1 or less than 1?</h2>
-    <p class="sub">${FR(f.a, f.b)} is ${sizeWord(v1)}. ${FR(f.c, f.d)} is ${sizeWord(v2)}.</p>
+    <p class="sub">${f.pow ? `The small 2 means use ${f.a}/${f.b} two times: ${f.a}/${f.b} × ${f.a}/${f.b}. ${FR(f.a, f.b)} is ${sizeWord(v1)}.` : `${FR(f.a, f.b)} is ${sizeWord(v1)}. ${FR(f.c, f.d)} is ${sizeWord(v2)}.`}</p>
     <div class="choices">
       <button type="button" data-g="more">More than 1</button>
       <button type="button" data-g="less">Less than 1</button>
@@ -2167,7 +2278,7 @@ function frMult() {
   const c = el(`<section class="card">
     <div class="fx">${FR(f.a, f.b)}<span>×</span>${FR(f.c, f.d)}<span>=</span>${FR(k > 0 ? f.N : "?", "?", "")}</div>
     <h2>Multiply straight across. ${k === 0 ? "Tops first:" : "Now the bottoms:"} ${q.x} × ${q.y}</h2>
-    <p class="sub">Tops times tops, bottoms times bottoms. No common bottom needed when you multiply.</p>
+    <p class="sub">${f.pow ? `${powFR(f)} means ${f.a}/${f.b} × ${f.a}/${f.b}. So the top is ${f.a} × ${f.a} and the bottom is ${f.b} × ${f.b}.` : "Tops times tops, bottoms times bottoms. No common bottom needed when you multiply."}</p>
     <div class="row" style="align-items:center">
       <span class="ask">${q.x} × ${q.y} =</span>
       <input type="number" id="ans" inputmode="numeric" aria-label="${q.x} times ${q.y}">
@@ -2192,10 +2303,12 @@ function frMult() {
       fb.innerHTML = `<div class="note ok">${f.a} × ${f.c} = ${f.N} on top, and ${f.b} × ${f.d} = ${f.D} on the bottom. That makes ${FR(f.N, f.D)}.</div>`;
       fb.appendChild(nextBtn(() => { state.step = 3; render(); }, "Simplify it"));
       input.disabled = true; c.querySelector("#chk").disabled = true;
+    } else if (f.pow && v === q.x * 2 && q.x !== 2) {
+      fb.innerHTML = `<div class="note look">Let's test it with the long way: ${f.a}/${f.b} × ${f.a}/${f.b}. The two ${q.where} are ${q.x} and ${q.x}. What is ${q.x} × ${q.x}? That little 2 is sneaky. It tells how many times to use the number, not what to multiply by!</div>`;
     } else if (v === q.x + q.y) {
-      fb.innerHTML = `<div class="note look">That's ${q.x} + ${q.y}. Adding is easy to slip into! When we multiply fractions, we multiply the ${q.where}: ${q.x} × ${q.y}.</div>`;
+      fb.innerHTML = `<div class="note look">Let's test ${v}: ${q.x} + ${q.y} makes ${v}. But look at the sign between the fractions. It's ×! What do you get with ${q.x} × ${q.y}?</div>`;
     } else {
-      fb.innerHTML = `<div class="note look">Let's check that one. ${q.x} × ${q.y} means ${q.x} groups of ${q.y}. Try the hint if you'd like to count it.</div>`;
+      fb.innerHTML = `<div class="note look">Let's test it: ${q.x} × ${q.y} means ${q.x} groups of ${q.y}. Count by ${q.y}s, ${q.x} times. Do you land on ${v}? The hint can count it with you.</div>`;
     }
   };
   c.querySelector("#chk").onclick = check;
@@ -2246,7 +2359,7 @@ function frCheck() {
   const f = state.fr, more = f.n > f.dn, whole = Math.floor(f.n / f.dn), rem = f.n % f.dn;
   const shortcut = gcd(f.a, f.d) > 1 || gcd(f.c, f.b) > 1;
   const c = el(`<section class="card">
-    <div class="fx">${FR(f.a, f.b)}<span>×</span>${FR(f.c, f.d)}<span>=</span>${FR(f.n, f.dn, "hi")}</div>
+    <div class="fx">${f.pow ? powFR(f) : `${FR(f.a, f.b)}<span>×</span>${FR(f.c, f.d)}`}<span>=</span>${FR(f.n, f.dn, "hi")}</div>
     <h2>The answer is ${f.n}/${f.dn}${more && rem ? `, which is the same as ${whole} ${rem}/${f.dn}` : ""}.</h2>
     <div class="note ok">Sense check: we guessed the answer would be ${f.est} than 1. ${f.n}/${f.dn} is ${more ? "more" : "less"} than 1, so it fits.${f.N !== f.n ? ` Simplifying didn't change the size. ${f.N}/${f.D} and ${f.n}/${f.dn} are the same amount, just written with smaller numbers.` : ""}</div>
     ${shortcut ? `<p class="sub">Shortcut for next time: you can simplify before you multiply. A top number and a bottom number that share a factor can both be divided first, so the numbers stay small.</p>` : ""}
@@ -2368,10 +2481,10 @@ function estAdd() {
     const v = Number(input.value);
     if (v === e.est) { state.step = 3; render(); return; }
     let msg;
-    if (v === e.exact) msg = `That's the exact answer, using the original numbers. For an estimate, use the rounded numbers: ${rx} ${e.op} ${ry}.`;
-    else if (e.op === "+" && v === Math.abs(rx - ry) && wrongPlace !== null && v === wrongPlace) msg = `Let's look at where ${v} came from. It could be ${Math.max(rx, ry)} − ${Math.min(rx, ry)}, but the problem says +. Or a number might have been rounded to the nearest hundred instead of the nearest ten. Use ${rx} and ${ry}, and add.`;
-    else if (e.op === "+" && (v === Math.abs(rx - ry))) msg = `That number came from subtracting. The problem says +, so add: ${rx} + ${ry}.`;
-    else if (wrongPlace !== null && v === wrongPlace && wrongPlace !== e.est) msg = `It looks like a number got rounded to the nearest hundred. Today we round to the nearest ten: ${x} → ${rx} and ${y} → ${ry}.`;
+    if (v === e.exact) msg = `${v} is the exact answer, and your adding is right! An estimate uses the rounded numbers instead: ${rx} ${e.op} ${ry}. Rounded numbers are quicker to work with.`;
+    else if (e.op === "+" && v === Math.abs(rx - ry) && wrongPlace !== null && v === wrongPlace) msg = `Hmm, let's test ${v}. It's what ${Math.max(rx, ry)} − ${Math.min(rx, ry)} makes, and it's also what you'd get rounding to the nearest hundred. The problem asks for + and the nearest ten. What is ${rx} + ${ry}?`;
+    else if (e.op === "+" && (v === Math.abs(rx - ry))) msg = `Let's test ${v}: ${Math.max(rx, ry)} − ${Math.min(rx, ry)} makes ${v}. Peek at the sign in the problem. It's +! What is ${rx} + ${ry}?`;
+    else if (wrongPlace !== null && v === wrongPlace && wrongPlace !== e.est) msg = `Let's test ${v}: that's what we'd get rounding to the nearest hundred. Today it's the nearest ten, so ${x} → ${rx} and ${y} → ${ry}. Try those.`;
     else msg = `Let's check that one. Try the hint: cover the zeros, then put them back.`;
     fb.innerHTML = `<div class="note look">${msg}</div>`;
   };
@@ -2465,8 +2578,8 @@ function mixStep1() {
       ans: m.w * m.d,
       hint: `That's ${m.w} × ${m.d}. ${m.w} wholes, ${m.d} pieces in each one.`,
       wrong: v => v === m.w * m.n
-        ? `That's ${m.w} × ${m.n}, the whole number times the top. The top number is the extra pieces. To count the pieces in the wholes, use the bottom number: each whole has ${m.d} ${P}. So it's ${m.w} × ${m.d}.`
-        : `Count the pieces in the bars. Each bar has ${m.d}, and there ${m.w > 1 ? `are ${m.w} bars` : "is 1 bar"}. That's ${m.w} × ${m.d}.`,
+        ? `Let's test ${v} with the bars. ${v} pieces would mean only ${m.n} in each bar. Count the pieces in one bar. Each whole has ${m.d}, so ${m.w} bar${m.w > 1 ? "s" : ""} is ${m.w} × ${m.d}.`
+        : `Let's count the bars together. Each bar has ${m.d} pieces, and there ${m.w > 1 ? `are ${m.w} bars` : "is 1 bar"}. Does ${v} match? Try ${m.w} × ${m.d}.`,
       next: () => { state.step = 2; render(); }
     });
   } else {
@@ -2492,7 +2605,7 @@ function mixStep2() {
       extra: pieceBars(m, "all"),
       ans: m.N,
       hint: `Start at ${inWholes} and count up ${m.n}.`,
-      wrong: v => v === inWholes ? `That's just the wholes. Don't forget the ${m.n} extra pieces in the last bar.` : `Let's add again: ${inWholes} + ${m.n}.`,
+      wrong: v => v === inWholes ? `${v} counts all the whole bars. Look at the last bar. There are ${m.n} more pieces waiting to be counted!` : `Let's count it: start at ${inWholes} and count up ${m.n}. Do you land on ${v}?`,
       next: (fb, input) => {
         fb.innerHTML = `<div class="note ok">${m.N} pieces in all, and every piece is still a ${ordinalOne(m.d)}. So ${MIX(m.w, m.n, m.d)} = <b>${FR(m.N, m.d)}</b>. The bottom number stays ${m.d}.</div>`;
         fb.appendChild(nextBtn(() => { state.step = 3; render(); }, "Check it"));
@@ -2505,7 +2618,7 @@ function mixStep2() {
       q: `${m.w} whole${m.w > 1 ? "s" : ""} use ${inWholes} pieces. How many pieces are left over? ${m.N} − ${inWholes} = ?`,
       ans: m.n,
       hint: `Start at ${inWholes} and count up to ${m.N}. How many steps?`,
-      wrong: v => v >= m.d ? `${v} left over is enough to make another whole. Check the first step again.` : `Let's subtract again: ${m.N} − ${inWholes}.`,
+      wrong: v => v >= m.d ? `${v} leftover pieces is enough to fill another whole bar! Let's check: ${m.N} − ${inWholes}.` : `Let's test it: ${inWholes} + ${v} = ${inWholes + v}. We need ${m.N}. ${inWholes + v > m.N ? "Try a smaller number." : "Try a bigger number."}`,
       next: (fb, input) => {
         fb.innerHTML = `<div class="note ok">${m.n} left over. So ${FR(m.N, m.d)} = <b>${MIX(m.w, m.n, m.d)}</b>: ${m.w} whole${m.w > 1 ? "s" : ""} and ${m.n} ${m.n > 1 ? P : ordinalOne(m.d)} more.</div>`;
         fb.appendChild(nextBtn(() => { state.step = 3; render(); }, "Check it"));
@@ -2532,6 +2645,183 @@ function mixDone() {
   stage.appendChild(c);
   c.querySelector("#again").onclick = () => { state.solved.mix++; save(); state.mx = makeMix(state.mixMode); state.step = 1; render(); };
   c.querySelector("#pick").onclick = () => { state.solved.mix++; save(); state.step = 0; render(); };
+}
+
+
+/* ---------- fractions, decimals & percents on a number line ---------- */
+function makeFdp(kind = "mix") {
+  const dens = kind === "easy" ? [2, 4, 4, 5, 5] : kind === "tenths" ? [10, 10, 20] : [2, 4, 5, 5, 10, 20];
+  for (let i = 0; i < 500; i++) {
+    const b = pick(dens), a = rint(1, b - 1);
+    if (gcd(a, b) !== 1) continue;
+    const fH = a * 100 / b;                       // fraction in hundredths (always a multiple of 5)
+    let p = rint(1, 19) * 5;
+    if (Math.random() < .2) p = fH;               // sometimes they're equal
+    if (p === fH && Math.random() < .5) continue;
+    return { a, b, fH, p, dotF: null, dotP: null, plotPhase: 0 };
+  }
+}
+const decStr = h => String(+(h / 100).toFixed(2));   // 40 -> "0.4", 55 -> "0.55"
+function fdpLine(f, live) {
+  const X = h => 30 + h / 100 * 580;
+  let t = "";
+  for (let h = 0; h <= 100; h += 5) {
+    const big = h % 10 === 0;
+    t += `<line x1="${X(h)}" y1="${big ? 40 : 44}" x2="${X(h)}" y2="${big ? 60 : 56}" style="stroke:var(--ink);stroke-width:${big ? 2 : 1.2}"/>`;
+    t += `<text x="${X(h)}" y="${big ? 80 : 76}" text-anchor="middle" style="fill:var(--soft);font:${big ? "600 16px" : "500 12px"} var(--font-body)">${decStr(h)}</text>`;
+  }
+  const dot = (h, label, col, up) => h === null ? "" : `<circle cx="${X(h)}" cy="50" r="11" style="fill:${col}"/>
+    <text x="${X(h)}" y="${up ? 22 : 106}" text-anchor="middle" style="fill:${col};font:700 18px var(--font-body)">${label}</text>`;
+  return `<div class="nl-wrap"><svg class="nl" viewBox="0 0 640 112" style="min-width:560px;${live ? "" : "cursor:default"}" role="img" aria-label="Number line from 0 to 1">
+    <line x1="20" y1="50" x2="620" y2="50" style="stroke:var(--ink);stroke-width:2"/>${t}
+    <rect x="0" y="20" width="640" height="70" style="fill:transparent"/>
+    ${dot(f.dotF, `${f.a}/${f.b}`, "var(--accent)", true)}${dot(f.dotP, `${f.p}%`, "var(--look)", false)}</svg></div>`;
+}
+function fdpAsk({ q, sub, ans, hint, wrong, next }) {
+  const f = state.fd;
+  const c = el(`<section class="card">
+    <div class="fx">${FR(f.a, f.b)}<span style="font-size:1.2rem;color:var(--soft)">and</span><span>${f.p}%</span></div>
+    <h2>${q}</h2>
+    ${sub ? `<p>${sub}</p>` : ""}
+    <div class="row" style="align-items:center">
+      <input type="number" id="ans" step="any" inputmode="decimal" placeholder="decimal" aria-label="${q.replace(/<[^>]+>/g, "")}">
+      <button class="primary" id="chk" type="button">Check</button>
+    </div>
+    <button class="quiet" id="hintBtn" type="button">Show me a hint</button>
+    <div id="hint"></div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelector("#hintBtn").onclick = e => { c.querySelector("#hint").innerHTML = `<div class="hint">${hint}</div>`; e.target.disabled = true; };
+  const input = c.querySelector("#ans");
+  const check = () => {
+    const fb = c.querySelector("#fb");
+    if (input.value === "") { fb.innerHTML = `<div class="note look">Type a number first, then press Check.</div>`; return; }
+    const v = Math.round(Number(input.value) * 1000) / 1000;
+    if (v === ans) { next(fb, input, c); return; }
+    fb.innerHTML = `<div class="note look">${wrong(v)}</div>`;
+  };
+  c.querySelector("#chk").onclick = check;
+  input.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+  input.focus();
+}
+function fdpPick() {
+  const c = el(`<section class="card">
+    <h2>Which fractions do you want?</h2>
+    <p class="sub">Every round has a fraction and a percent to compare. You can switch any time.</p>
+    <div class="choices" id="kinds">
+      <button class="home-pick" type="button" data-k="easy"><strong>Halves, fourths &amp; fifths</strong><span>Like 2/5 and 55%</span></button>
+      <button class="home-pick" type="button" data-k="tenths"><strong>Tenths &amp; twentieths</strong><span>Like 7/10 and 65%</span></button>
+      <button class="home-pick" type="button" data-k="mix"><strong>Mix them up</strong><span>Any of them</span></button>
+    </div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelectorAll("[data-k]").forEach(b => b.onclick = () => { state.fdKind = b.dataset.k; state.fd = makeFdp(b.dataset.k); state.step = 1; render(); });
+}
+function fdpFrac() {
+  const f = state.fd, m = f.b <= 10 ? 10 / f.b : 100 / f.b, to = f.b <= 10 ? 10 : 100, top = f.a * m;
+  const easy = Number.isInteger(m);
+  fdpAsk({
+    q: `Write ${FR(f.a, f.b)} as a decimal.`,
+    sub: `A fraction is easy to turn into a decimal when the bottom is 10 or 100.`,
+    ans: f.fH / 100,
+    hint: easy ? `${f.b} × ${m} = ${to}. Do the same to the top: ${f.a} × ${m} = ${top}. So ${f.a}/${f.b} = ${top}/${to}, which is ${decStr(f.fH)}.`
+               : `Divide the top by the bottom: ${f.a} ÷ ${f.b}.`,
+    wrong: v => {
+      if (Math.abs(v - f.b / f.a) < .001) return `Let's test ${v}: that's more than 1 whole. But ${f.a}/${f.b} is only part of a whole, because the top is smaller than the bottom. The division goes top ÷ bottom: ${f.a} ÷ ${f.b}.`;
+      if (v >= 1) return `Let's test ${v}: that's 1 whole or more. ${f.a}/${f.b} is only part of a whole, since the top is smaller than the bottom. So the decimal will look like 0.something.`;
+      if (Math.abs(v - f.a / 10) < .001 && f.b !== 10) return `Let's test ${v}: that's ${f.a}/10. But these are ${f.b === 2 ? "halves" : f.b === 4 ? "fourths" : f.b === 5 ? "fifths" : "twentieths"}, not tenths. Make the bottom ${to} first.`;
+      return `Let's make the bottom ${to}. Try the hint.`;
+    },
+    next: (fb, input) => {
+      fb.innerHTML = `<div class="note ok">${FR(f.a, f.b)} = ${FR(top, to)} = <b>${decStr(f.fH)}</b>.</div>`;
+      fb.appendChild(nextBtn(() => { state.step = 2; render(); })); input.disabled = true;
+    }
+  });
+}
+function fdpPct() {
+  const f = state.fd;
+  fdpAsk({
+    q: `Write ${f.p}% as a decimal.`,
+    sub: `Percent means "out of 100." So ${f.p}% is ${f.p}/100.`,
+    ans: f.p / 100,
+    hint: `${f.p}/100 is ${f.p} hundredths. Divide by 100: move the decimal point two places to the left. ${f.p} → ${(f.p / 10).toString()} → ${decStr(f.p)}.`,
+    wrong: v => {
+      if (v === f.p) return `${f.p} wholes would be like ${f.p} whole pizzas! ${f.p}% is only part of one pizza. Percent means out of 100, so divide by 100: move the decimal point two places left.`;
+      if (Math.abs(v - f.p / 10) < .001) return `So close! That moved the decimal point one place. Percent means hundredths, so move it two places.`;
+      if (Math.abs(v - f.p / 1000) < .0001) return `That moved the decimal point three places. Percent means hundredths, so move it just two places.`;
+      return `Percent means out of 100: ${f.p}/100. Try the hint.`;
+    },
+    next: (fb, input) => {
+      fb.innerHTML = `<div class="note ok">${f.p}% = ${f.p}/100 = <b>${decStr(f.p)}</b>.</div>`;
+      fb.appendChild(nextBtn(() => { state.step = 3; render(); }, "Plot them")); input.disabled = true;
+    }
+  });
+}
+function fdpPlot() {
+  const f = state.fd, which = f.plotPhase === 0 ? "F" : "P";
+  const target = which === "F" ? f.fH : f.p, name = which === "F" ? `${f.a}/${f.b} (${decStr(f.fH)})` : `${f.p}% (${decStr(f.p)})`;
+  const c = el(`<section class="card">
+    <h2>${f.plotPhase < 2 ? `Tap the number line to put ${name} on it.` : "Both are on the number line."}</h2>
+    <p class="sub">Each small tick is 0.05. Use the arrows to move your dot one tick.</p>
+    <div id="nl"></div>
+    ${f.plotPhase < 2 ? `<div class="row"><button id="lft" type="button">← Left</button><button id="rgt" type="button">Right →</button></div>
+    <button class="primary" id="chk" type="button">Check my dot</button>` : ""}
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  const key = which === "F" ? "dotF" : "dotP";
+  const draw = () => {
+    c.querySelector("#nl").innerHTML = fdpLine(f, f.plotPhase < 2);
+    if (f.plotPhase >= 2) return;
+    c.querySelector("svg").addEventListener("click", ev => {
+      const r = ev.currentTarget.getBoundingClientRect(), x = (ev.clientX - r.left) / r.width * 640;
+      f[key] = Math.max(0, Math.min(100, Math.round((x - 30) / 580 * 20) * 5)); draw();
+    });
+  };
+  draw();
+  if (f.plotPhase >= 2) {
+    c.querySelector("#fb").innerHTML = `<div class="note ok">${f.a}/${f.b} is at ${decStr(f.fH)} and ${f.p}% is at ${decStr(f.p)}.</div>`;
+    c.querySelector("#fb").appendChild(nextBtn(() => { state.step = 4; render(); }, "Compare them"));
+    return;
+  }
+  c.querySelector("#lft").onclick = () => { f[key] = Math.max(0, (f[key] ?? 50) - 5); draw(); };
+  c.querySelector("#rgt").onclick = () => { f[key] = Math.min(100, (f[key] ?? 50) + 5); draw(); };
+  c.querySelector("#chk").onclick = () => {
+    const fb = c.querySelector("#fb"), d = f[key];
+    if (d === null || d === undefined) { fb.innerHTML = `<div class="note look">Tap the number line to put your dot down first.</div>`; return; }
+    if (d === target) { f.plotPhase++; render(); return; }
+    fb.innerHTML = `<div class="note look">Your dot is on ${decStr(d)}. We need ${decStr(target)}. ${d < target ? "Move it to the right" : "Move it to the left"} ${Math.abs(target - d) / 5} tick${Math.abs(target - d) === 5 ? "" : "s"}.</div>`;
+  };
+}
+function fdpCompare() {
+  const f = state.fd, right = f.fH < f.p ? "<" : f.fH > f.p ? ">" : "=";
+  const c = el(`<section class="card">
+    ${fdpLine(f, false)}
+    <h2>Which sign goes in the box?</h2>
+    <div class="fx">${FR(f.a, f.b)}<span style="border:2px dashed var(--line);border-radius:8px;min-width:48px;text-align:center" id="box">?</span><span>${f.p}%</span></div>
+    <div class="choices" id="opts">
+      <button type="button" data-s="<">&lt;  less than</button>
+      <button type="button" data-s=">">&gt;  greater than</button>
+      <button type="button" data-s="=">=  equal to</button>
+    </div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelectorAll("[data-s]").forEach(b => b.onclick = () => {
+    const fb = c.querySelector("#fb"), v = b.dataset.s;
+    if (v === right) {
+      c.querySelector("#box").textContent = v;
+      c.querySelectorAll("[data-s]").forEach(x => x.disabled = x !== b); b.classList.add("picked");
+      fb.innerHTML = `<div class="note ok">${right === "=" ? `They're on the same spot: ${decStr(f.fH)} = ${decStr(f.p)}.` : `${right === "<" ? `${f.a}/${f.b} is to the left of ${f.p}%` : `${f.a}/${f.b} is to the right of ${f.p}%`}, so ${f.a}/${f.b} ${right} ${f.p}%. (${decStr(f.fH)} ${right} ${decStr(f.p)})`}<br>Tip: the open side of &lt; or &gt; faces the bigger number.</div>`;
+      const row = el(`<div class="row"></div>`), again = el(`<button class="primary" type="button">Another one</button>`), kind = el(`<button type="button">Pick different fractions</button>`);
+      again.onclick = () => { state.solved.fdp++; save(); state.fd = makeFdp(state.fdKind); state.step = 1; render(); };
+      kind.onclick = () => { state.solved.fdp++; save(); state.step = 0; render(); };
+      row.append(again, kind); fb.appendChild(row);
+    } else {
+      fb.innerHTML = `<div class="note look">${v === "=" ? `They're on different spots, so they aren't equal.` : `Look at the number line. Which dot is farther to the right? Numbers get bigger as you go right.`}</div>`;
+    }
+  });
 }
 
 

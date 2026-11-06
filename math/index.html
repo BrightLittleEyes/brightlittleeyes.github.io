@@ -209,6 +209,12 @@ table.rt { border-collapse: collapse; width: 100%; font-variant-numeric: tabular
 .factors { display: grid; grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); gap: 8px; }
 .factors button { padding: 10px 0; font-size: 1.1rem; }
 
+/* backup */
+details.backup summary { cursor: pointer; font-weight: 600; color: var(--soft); }
+details.backup[open] summary { color: var(--ink); }
+details.backup textarea { font: .8rem/1.4 ui-monospace, Menlo, monospace; width: 100%; padding: 10px; border-radius: 10px;
+  border: 2px solid var(--line); background: var(--card); color: var(--ink); resize: vertical; min-width: 0; word-break: break-all; }
+
 /* what does it mean */
 .solved { font-size: 1.2rem; line-height: 2.1; }
 .solved .sn { font-size: inherit; padding: 2px 12px; margin: 0 2px; line-height: 1.4; }
@@ -320,6 +326,44 @@ function renderHome() {
   </section>`);
   stage.appendChild(c);
   c.querySelectorAll("[data-s]").forEach(b => b.onclick = () => { state.section = b.dataset.s; state.step = 0; render(); });
+  renderBackup();
+}
+
+/* ---------- backup code (same idea as the science app) ---------- */
+function makeBackupCode() {
+  try { return btoa(unescape(encodeURIComponent(JSON.stringify({ app: "math", v: 1, saved: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }), solved: state.solved })))); }
+  catch (e) { return ""; }
+}
+function renderBackup() {
+  const total = Object.values(state.solved).reduce((a, b) => a + b, 0);
+  const d = el(`<details class="card backup">
+    <summary>Back up or restore progress</summary>
+    <p class="sub">Progress is saved in this browser on this tablet. If the tablet is reset or Safari's data is cleared, it's erased. Copy this backup code into a note or a text to yourself so you can bring it back.</p>
+    <span class="label">Backup code (${total} problem${total === 1 ? "" : "s"} finished)</span>
+    <textarea id="bk" readonly rows="3"></textarea>
+    <div class="row"><button class="primary" id="bkcopy" type="button">Copy backup code</button><span id="bkmsg" class="sub" style="margin:0"></span></div>
+    <span class="label">Restore from a backup code</span>
+    <textarea id="rs" rows="3" placeholder="Paste a backup code here"></textarea>
+    <div class="row"><button id="rsgo" type="button">Restore</button><span id="rsmsg" class="sub" style="margin:0"></span></div>
+  </details>`);
+  stage.appendChild(d);
+  const code = makeBackupCode(), ta = d.querySelector("#bk");
+  ta.value = code;
+  d.querySelector("#bkcopy").onclick = () => {
+    const done = () => { d.querySelector("#bkmsg").textContent = "Copied. Paste it into a note to keep it safe."; };
+    const fallback = () => { ta.focus(); ta.select(); d.querySelector("#bkmsg").textContent = "Selected. Tap Copy to copy it."; };
+    try { navigator.clipboard.writeText(code).then(done, fallback); } catch (e) { fallback(); }
+  };
+  d.querySelector("#rsgo").onclick = () => {
+    const msg = d.querySelector("#rsmsg");
+    let data;
+    try { data = JSON.parse(decodeURIComponent(escape(atob(d.querySelector("#rs").value.trim())))); } catch (e) { msg.textContent = "That code isn't a valid backup. Check that the whole code was pasted."; return; }
+    if (!data || data.app !== "math" || !data.solved) { msg.textContent = "That backup code is from a different app. Use a code copied from this math app."; return; }
+    Object.keys(state.solved).forEach(k => { if (typeof data.solved[k] === "number") state.solved[k] = data.solved[k]; });
+    save(); render();
+    const m = document.querySelector("#rsmsg");
+    if (m) { document.querySelector("details.backup").open = true; m.textContent = `Restored from the backup saved ${data.saved || "earlier"}.`; }
+  };
 }
 
 function renderBreak() {

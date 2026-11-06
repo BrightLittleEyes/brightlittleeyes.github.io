@@ -984,9 +984,12 @@ function tagsEd(k, title, help, hasSub, hasTimer, hasSnack){
       <input data-path="tags.${k}.${ti}.name" value="${esc(t.name)}" placeholder="Tag name">
       ${hasSub?`<input data-path="tags.${k}.${ti}.sub" value="${esc(t.sub)}" placeholder="Small line under it (optional)">`:''}
       ${hasTimer?`<label class="ed-min">Timer <input type="number" min="1" max="300" inputmode="numeric" data-path="tags.${k}.${ti}.timer" data-type="min" value="${t.timer?Math.round(t.timer/60):''}" placeholder="none"> min</label>`:''}
-      ${hasSnack?`<label class="ed-chk" title="Shows 8 tappable squares under this tag"><input type="checkbox" data-path="tags.${k}.${ti}.snack" data-type="bool" ${t.snack?'checked':''}> 8 snack squares</label>`:''}
       ${mv('tags.'+k, ti, list.length)}</div>`).join('')}
-    <button class="ed-add" data-act="addtag" data-k="${k}">+ Add a tag</button></div>`;
+    <button class="ed-add" data-act="addtag" data-k="${k}">+ Add a tag</button>
+    ${hasSnack?`<label class="ed-f" style="margin-top:14px">Snack-box squares show under
+      <select data-snackpick="${k}">${list.map((t,ti)=>`<option value="${ti}" ${t.snack?'selected':''}>${esc(t.name||'Untitled tag')}</option>`).join('')}
+        <option value="" ${list.some(t=>t.snack)?'':'selected'}>No tag (turn snack squares off)</option></select></label>
+      <p class="help" style="margin-top:6px">When she places this tag, 8 squares appear under it, one for each section of her snack box. She taps each one as she fills it.</p>`:''}</div>`;
 }
 function renderEditor(){
   const E=S.edit, y=window.scrollY;
@@ -1001,7 +1004,7 @@ function renderEditor(){
       ${E.blocks.map((b,bi)=>blockEd(b,bi,E.blocks.length)).join('')}
       <button class="ed-add" data-act="addblock">+ Add a block</button></div>
     ${tagsEd('fun','Fun Choice tags','She picks these for the Fun Choice slots. A timer shows under the tag when it\'s placed.',false,true)}
-    ${tagsEd('mech','Helping Hands tags','She picks these for the Helping Hands slots. "8 snack squares" shows the snack-box compartments to tap under that tag.',true,true,true)}
+    ${tagsEd('mech','Helping Hands tags','She picks these for the Helping Hands slots.',true,true,true)}
     ${tagsEd('flag','Change of Routine tags','The red tags for "Anything different today?"',false,false)}
     <div class="ed-sec"><h3>Timer sound</h3><p class="help">What plays when a timer runs out. A "Time's up!" card also pops up until she taps OK.</p>
       <div class="ed-grid" style="align-items:center">
@@ -1034,6 +1037,11 @@ function readField(el){
 $('#editor').addEventListener('input', e=>{ const el=e.target; if(el.dataset.path) setAt(el.dataset.path, readField(el)); });
 $('#editor').addEventListener('change', e=>{
   const el=e.target;
+  if(el.dataset.snackpick){
+    const list=S.edit.tags[el.dataset.snackpick], pickI=el.value===''?-1:+el.value;
+    list.forEach((t,i)=>{ if(i===pickI) t.snack=true; else delete t.snack; });
+    renderEditor(); return;
+  }
   if(el.dataset.kind){
     const it=getAt(el.dataset.kind), v=el.value;
     if(v==='task'){ delete it.slot; } else { it.slot=v; delete it.d; delete it.timer; delete it.endMsg; delete it.snack; }

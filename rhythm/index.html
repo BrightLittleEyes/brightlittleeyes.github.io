@@ -256,75 +256,75 @@ const DEFAULT_CONFIG = {
   "repeat": true,
   "blocks": [
     {
-      "color": "#27A55A",
-      "icon": "heart",
-      "id": "morning",
+      "icon": "sun",
       "items": [
         {
-          "d": "Start the day fueled and grounded together.",
           "id": "breakfast",
+          "d": "Start the day fueled and grounded together.",
           "t": "Breakfast & Morning Prep"
         },
         {
           "d": "Morning drive. A calm ride and a look at what comes next.",
-          "id": "carpool_am",
-          "t": "Carpool"
+          "t": "Carpool",
+          "id": "carpool_am"
         },
         {
-          "d": "Individual Bible reading and quiet devotional time.",
           "id": "bible",
+          "d": "Individual Bible reading and quiet devotional time.",
           "t": "Bible Block"
         }
       ],
+      "sub": "New Every Morning · Lamentations 3:22–23",
+      "color": "#27A55A",
       "name": "Morning Block",
-      "sub": "New Every Morning · Lamentations 3:22–23"
+      "id": "morning"
     },
     {
-      "color": "#2A7FBA",
-      "icon": "sun",
       "id": "midmorning",
+      "color": "#2A7FBA",
       "items": [
         {
-          "d": "High-focus core academic work.",
-          "endMsg": "Math time is finished. Nice focus! Time for a snack break.",
           "id": "math",
           "t": "Math Block",
+          "endMsg": "Math time is finished. Nice focus! Time for a snack break.",
+          "d": "High-focus core academic work.",
           "timer": 2700
         },
         {
-          "d": "Intentional, timed brain break.",
-          "endMsg": "Snack time is finished. Time for Language & Writing.",
           "id": "snacktime",
+          "endMsg": "Snack time is finished. Time for Language & Writing.",
           "t": "5-Minute Snack Time",
-          "timer": 300
+          "timer": 300,
+          "d": "Intentional, timed brain break."
         },
         {
           "d": "Grammar, journaling, or writing assignments.",
-          "id": "language",
-          "t": "Language & Writing Block"
+          "t": "Language & Writing Block",
+          "id": "language"
         },
         {
           "id": "m1",
-          "slot": "mech",
-          "t": "Helping Hands Slot 1"
+          "t": "Helping Hands Slot 1",
+          "slot": "mech"
         },
         {
+          "t": "Fun Choice Slot 1",
           "id": "f1",
-          "slot": "fun",
-          "t": "Fun Choice Slot 1"
+          "slot": "fun"
         }
       ],
       "name": "Mid-Morning Block",
-      "sub": "Growing in Wisdom · Luke 2:52"
+      "sub": "Growing in Wisdom · Luke 2:52",
+      "icon": "book"
     },
     {
-      "color": "#D63384",
-      "icon": "basket",
-      "id": "midday",
+      "icon": "heart",
+      "sub": "My Help Comes from the Lord · Psalm 121:2",
+      "name": "Mid-Day Block",
       "items": [
         {
-          "d": "Historical readings, timelines, or stories.",
           "id": "history",
+          "d": "Historical readings, timelines, or stories.",
           "t": "History Block"
         },
         {
@@ -333,60 +333,60 @@ const DEFAULT_CONFIG = {
           "d": "Midday meal and a calm break."
         },
         {
-          "id": "m2",
           "slot": "mech",
-          "t": "Helping Hands Slot 2"
+          "t": "Helping Hands Slot 2",
+          "id": "m2"
         },
         {
+          "t": "Science Block",
           "d": "Core science lesson, reading, or experiments.",
-          "id": "science",
-          "t": "Science Block"
+          "id": "science"
         }
       ],
-      "name": "Mid-Day Block",
-      "sub": "My Help Comes from the Lord · Psalm 121:2"
+      "id": "midday",
+      "color": "#D63384"
     },
     {
       "color": "#8E44AD",
-      "icon": "palette",
-      "id": "afternoon",
       "items": [
         {
           "id": "f2",
-          "slot": "fun",
-          "t": "Fun Choice Slot 2"
+          "t": "Fun Choice Slot 2",
+          "slot": "fun"
         },
         {
           "id": "m3",
-          "slot": "mech",
-          "t": "Helping Hands Slot 3"
+          "t": "Helping Hands Slot 3",
+          "slot": "mech"
         }
       ],
       "name": "Afternoon Rhythm",
-      "sub": "He Refreshes My Soul · Psalm 23:3"
+      "icon": "palette",
+      "sub": "He Refreshes My Soul · Psalm 23:3",
+      "id": "afternoon"
     },
     {
-      "color": "#D35400",
-      "icon": "moon",
-      "id": "evening",
+      "name": "Evening Block",
       "items": [
         {
-          "d": "Afternoon drive. Settle in and get ready for the evening.",
           "id": "carpool_pm",
+          "d": "Afternoon drive. Settle in and get ready for the evening.",
           "t": "Carpool"
         },
         {
-          "d": "Shared family mealtime and gradual evening wind-down.",
           "id": "dinner",
-          "t": "Dinner Block"
+          "t": "Dinner Block",
+          "d": "Shared family mealtime and gradual evening wind-down."
         },
         {
+          "t": "Fun Choice Slot 3",
           "id": "f3",
-          "slot": "fun",
-          "t": "Fun Choice Slot 3"
+          "slot": "fun"
         }
       ],
-      "name": "Evening Block",
+      "color": "#D35400",
+      "icon": "moon",
+      "id": "evening",
       "sub": "Safe to Rest · Psalm 4:8"
     }
   ],
@@ -394,66 +394,66 @@ const DEFAULT_CONFIG = {
     "fun": [
       {
         "id": "reading",
-        "name": "Free Reading",
-        "timer": 3600
+        "timer": 3600,
+        "name": "Free Reading"
       },
       {
-        "id": "drawing",
         "name": "Free Drawing",
+        "id": "drawing",
         "timer": 3600
       },
       {
-        "id": "crafting",
         "name": "Free Crafting",
+        "id": "crafting",
         "timer": 2700
       },
       {
-        "id": "tmw3otuuh40y7",
         "name": "Outdoor Time",
-        "timer": 2700
+        "timer": 2700,
+        "id": "tmw3otuuh40y7"
       },
       {
-        "id": "build",
         "name": "Build Something",
-        "timer": 2700
+        "timer": 2700,
+        "id": "build"
       },
       {
-        "id": "tmw3oublrcqh9",
+        "timer": 2700,
         "name": "Play in Room",
-        "timer": 2700
+        "id": "tmw3oublrcqh9"
       }
     ],
     "mech": [
       {
-        "id": "laundry",
+        "sub": "Sort, load, or fold",
         "name": "Laundry",
-        "sub": "Sort, load, or fold together"
+        "id": "laundry"
       },
       {
-        "id": "dishes",
+        "sub": "Clear, rinse, or load kitchen",
         "name": "Dishes",
-        "sub": "Clear, rinse, or load kitchen"
+        "id": "dishes"
       },
       {
-        "id": "tidy",
+        "sub": "Reset room & craft space",
         "name": "Quick Tidy",
-        "sub": "Reset room & craft space"
+        "id": "tidy"
       },
       {
-        "id": "snackbox",
         "name": "Fill Snack Box",
         "sub": "Restock 8 compartments",
+        "id": "snackbox",
         "snack": true
       },
       {
-        "id": "plants",
         "name": "Plant Care",
-        "sub": "Watering or nurturing plants"
+        "sub": "Watering or nurturing plants",
+        "id": "plants"
       },
       {
-        "id": "sensory",
         "name": "Sensory Reset",
-        "sub": "Heavy work"
+        "sub": "Heavy work",
+        "id": "sensory"
       }
     ],
     "flag": [
@@ -466,12 +466,12 @@ const DEFAULT_CONFIG = {
         "name": "Appointment / Errand"
       },
       {
-        "id": "travel",
-        "name": "Out of Routine / Travel"
+        "name": "Out of Routine / Travel",
+        "id": "travel"
       },
       {
-        "id": "visitors",
-        "name": "Visitors / Company"
+        "name": "Visitors / Company",
+        "id": "visitors"
       },
       {
         "id": "tmw4ajkewiim1",

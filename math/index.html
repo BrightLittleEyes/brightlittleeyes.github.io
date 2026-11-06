@@ -29,17 +29,20 @@
   --look-wash: #fbf0dc;
   --road: #4a5753;
   --block: #7fb8a9;
+  --g-rate: #2A7FBA; --g-num: #0E7C6B; --g-frac: #C2562D; --g-alg: #6B3FA0; --g-think: #C2446E;
   --font-display: "Baloo 2", "Trebuchet MS", system-ui, sans-serif;
   --font-body: "Lexend", "Segoe UI", system-ui, sans-serif;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #151c1a; --card: #1f2926; --ink: #e5eeea; --soft: #a2b4ad; --line: #34433e;
   --accent: #6cc2ad; --accent-ink: #10201c; --accent-wash: #20372f;
-  --look: #e5b35c; --look-wash: #3a3020; --road: #0e1412; --block: #4f9483; color-scheme: dark; } }
+  --look: #e5b35c; --look-wash: #3a3020; --road: #0e1412; --block: #4f9483;
+  --g-rate: #6CB4E8; --g-num: #3FBFA8; --g-frac: #E57C52; --g-alg: #B48AE6; --g-think: #F08AAE; color-scheme: dark; } }
 :root[data-theme="dark"] {
   --bg: #151c1a; --card: #1f2926; --ink: #e5eeea; --soft: #a2b4ad; --line: #34433e;
   --accent: #6cc2ad; --accent-ink: #10201c; --accent-wash: #20372f;
-  --look: #e5b35c; --look-wash: #3a3020; --road: #0e1412; --block: #4f9483; color-scheme: dark; }
+  --look: #e5b35c; --look-wash: #3a3020; --road: #0e1412; --block: #4f9483;
+  --g-rate: #6CB4E8; --g-num: #3FBFA8; --g-frac: #E57C52; --g-alg: #B48AE6; --g-think: #F08AAE; color-scheme: dark; }
 
 * { box-sizing: border-box; }
 body {
@@ -90,6 +93,25 @@ input[type="number"] { font: inherit; padding: 12px; border-radius: 10px; border
 .note.ok { background: var(--accent-wash); }
 .note.look { background: var(--look-wash); border-left: 4px solid var(--look); }
 .hint { background: var(--bg); border-radius: 10px; padding: 12px 14px; color: var(--soft); font-size: .95rem; }
+
+/* home tiles */
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(138px, 1fr)); gap: 10px; }
+.tile { --c: var(--accent); text-align: left; background: var(--card); color: var(--ink); border: 2px solid var(--c); border-radius: 8px;
+  padding: 10px 12px 12px; display: grid; gap: 4px; align-content: start; font: inherit; cursor: pointer; transition: transform .15s, box-shadow .15s; }
+button.tile:hover:not(:disabled) { background: var(--card); transform: translateY(-2px); box-shadow: 0 6px 14px -8px var(--c); }
+.tile .sym { font-family: var(--font-display); font-weight: 700; font-size: 1.9rem; line-height: 1; color: var(--c); min-height: 1.9rem; display: flex; align-items: center; }
+.tile .sym svg { width: 34px; height: 34px; }
+.tile .nm { font-weight: 600; font-size: .95rem; line-height: 1.25; }
+.tile .ct { font-size: .75rem; color: var(--soft); font-variant-numeric: tabular-nums; }
+.tile.wide { grid-column: 1 / -1; grid-template-columns: auto 1fr; align-items: center; gap: 12px; }
+.tile.wide .sym svg { width: 46px; height: 46px; }
+.tile.wide .nm { font-family: var(--font-display); font-size: 1.25rem; }
+.tiles.small { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+.tiles.small .sym { font-size: 1.5rem; min-height: 1.5rem; }
+.legend-g { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .8rem; color: var(--soft); }
+.legend-g span { display: inline-flex; align-items: center; gap: 6px; }
+.legend-g i { width: 10px; height: 10px; border-radius: 3px; background: var(--c); }
+@media (prefers-reduced-motion: reduce) { .tile { transition: none; } }
 
 /* home */
 .home-pick { text-align: left; display: flex; flex-direction: column; gap: 4px; padding: 18px; }
@@ -308,24 +330,29 @@ function render() {
   return [opsPick, opsSolve, opsDone][state.step]();
 }
 
+const HOME_GROUPS = [["rate", "Rates & tables"], ["num", "Numbers"], ["frac", "Fractions"], ["alg", "Equations"], ["think", "Thinking games"]];
+const HOME_TILES = [
+  ["trip", "Trip Planner", "mph", "rate"], ["rate", "Who's Fastest?", "÷1", "rate"], ["tbl", "Fill the Table", "▦", "rate"],
+  ["est", "Round & Estimate", "≈", "num"], ["dec", "Decimal Times", "0.1", "num"], ["fdp", "Fractions, Decimals & Percents", "%", "num"], ["lcm", "Least Common Multiple", "LCM", "num"],
+  ["frac", "Fraction Times", "½×", "frac"], ["mix", "Mixed Numbers", "4⅝", "frac"],
+  ["ops", "Order of Operations", "( )", "alg"], ["eq", "Solve & Plot", "x=", "alg"],
+  ["mean", "What Does It Mean?", "?", "think"]
+];
 function renderHome() {
   const c = el(`<section class="card">
     <h2>What do you want to work on?</h2>
-    <div class="choices">
-      <button class="home-pick" type="button" data-s="trip"><strong>Trip Planner</strong><span>Miles, hours, and how fast things go.</span></button>
-      <button class="home-pick" type="button" data-s="ops"><strong>Order of Operations</strong><span>Which part of a math problem goes first.</span></button>
-      <button class="home-pick" type="button" data-s="rate"><strong>Who's Fastest?</strong><span>Compare people's work using a table.</span></button>
-      <button class="home-pick" type="button" data-s="tbl"><strong>Fill the Table</strong><span>Find the missing numbers when the price stays the same.</span></button>
-      <button class="home-pick" type="button" data-s="lcm"><strong>Least Common Multiple</strong><span>Frogs or buses. When do they meet first?</span></button>
-      <button class="home-pick" type="button" data-s="eq"><strong>Solve &amp; Plot</strong><span>One-step equations and the number line.</span></button>
-      <button class="home-pick" type="button" data-s="dec"><strong>Decimal Times</strong><span>Word problems that multiply two decimals.</span></button>
-      <button class="home-pick" type="button" data-s="frac"><strong>Fraction Times</strong><span>Multiply fractions and write them in simplest form.</span></button>
-      <button class="home-pick" type="button" data-s="mix"><strong>Mixed Numbers</strong><span>Like 4 5/7 as an improper fraction, and back.</span></button>
-      <button class="home-pick" type="button" data-s="fdp"><strong>Fractions, Decimals &amp; Percents</strong><span>Change to decimals, plot on a number line, compare.</span></button>
-      <button class="home-pick" type="button" data-s="est"><strong>Round &amp; Estimate</strong><span>Round to the nearest ten or hundred, then add or subtract.</span></button>
-      <button class="home-pick" type="button" data-s="pip"><strong>Help Pip</strong><span>A robot's math got tangled. You be the teacher.</span></button>
-      <button class="home-pick" type="button" data-s="mean"><strong>What Does It Mean?</strong><span>No math to do. Just find what the numbers mean.</span></button>
-    </div>
+    <div class="legend-g">${HOME_GROUPS.map(([g, n]) => `<span style="--c:var(--g-${g})"><i></i>${n}</span>`).join("")}</div>
+    <div class="tiles">
+      <button class="tile wide" type="button" data-s="pip" style="--c:var(--g-think)">
+        <span class="sym">${pipFace}</span>
+        <span><span class="nm">Help Pip</span><span class="ct" style="display:block">Pip's math got tangled again. Be the teacher!${state.solved.pip ? ` · ${state.solved.pip} finished` : ""}</span></span>
+      </button>
+      ${HOME_TILES.map(([k, n, sym, g]) => {
+      const done = state.solved[k] || 0;
+      return `<button class="tile" type="button" data-s="${k}" style="--c:var(--g-${g})">
+        <span class="sym">${sym === "PIP" ? pipFace : sym}</span><span class="nm">${n.replace("&", "&amp;")}</span>
+        <span class="ct">${done ? `${done} finished` : "&nbsp;"}</span></button>`;
+    }).join("")}</div>
   </section>`);
   stage.appendChild(c);
   c.querySelectorAll("[data-s]").forEach(b => b.onclick = () => { state.section = b.dataset.s; state.step = 0; render(); });
@@ -1032,41 +1059,182 @@ const pipFace = `<svg viewBox="0 0 56 56" aria-hidden="true">
   <path d="M19 39 q4.5 -4 9 0 t9 0" style="fill:none;stroke:var(--ink);stroke-width:2.5;stroke-linecap:round"/>
 </svg>`;
 const pipSay = t => `<div class="pip">${pipFace}<div class="bubble">${t}</div></div>`;
+const pipPeople = ["Maya", "Leo", "Grandpa Joe", "Aunt Rosa", "Christine", "Frank", "Omar", "Jessica"];
+const fx = (t, b) => `${t}/${b}`;
 
-function makePip() {
-  const who = pick(["Maya", "Leo", "Grandpa Joe", "Aunt Rosa"]);
-  const r = pick([45, 50, 55, 60, 65]), t1 = rint(2, 7), t2 = rint(t1 + 2, t1 + 8);
-  const d1 = r * t1, d2 = r * t2;
-  const kind = pick(["right", "multB", "multB", "multA"]);
-  const good = [`${d1} ÷ ${t1} = ${r}`, `${d2} ÷ ${r} = ${t2}`];
-  const steps = [
-    { label: "Step 1: Miles in 1 hour", math: kind === "multA" ? `${d1} × ${t1} = ${d1 * t1}` : good[0] },
-    { label: `Step 2: Hours for ${d2} miles`, math: kind === "multB" ? `${d2} × ${r} = ${d2 * r}` : kind === "multA" ? `${d2} ÷ ${d1 * t1} = ... ?` : good[1] }
-  ];
-  const answer = kind === "right" ? `I think the trip takes <b>${t2} hours</b>. Did I get it?`
-    : kind === "multB" ? `I think the trip takes <b>${d2 * r} hours</b>. Did I get it?`
-    : `I think the car goes <b>${d1 * t1} miles in 1 hour</b>. Then I got stuck on step 2. Did I mess up?`;
-  return { who, r, t1, t2, d1, d2, kind, good, steps, answer, wrong: kind === "multA" ? 0 : kind === "multB" ? 1 : -1 };
+/* Each topic makes one problem: Pip's work, where it went wrong (or -1 if Pip is right), and what to say. */
+const PIP_TOPICS = {
+  trip: { label: "Road trips", sym: "mph", make() {
+    const who = pick(pipPeople), r = pick([45, 50, 55, 60, 65]), t1 = rint(2, 7), t2 = rint(t1 + 2, t1 + 8), d1 = r * t1, d2 = r * t2;
+    const kind = pick(["right", "B", "B", "A"]), H = d2 * r, days = Math.round(H / 24), fast = d1 * t1;
+    const good = [{ label: "Step 1: Miles in 1 hour", math: `${d1} ÷ ${t1} = ${r}` }, { label: `Step 2: Hours for ${d2} miles`, math: `${d2} ÷ ${r} = ${t2}` }];
+    const steps = good.map(x => ({ ...x }));
+    if (kind === "A") { steps[0].math = `${d1} × ${t1} = ${fast}`; steps[1].math = `${d2} ÷ ${fast} = ... ?`; }
+    if (kind === "B") steps[1].math = `${d2} × ${r} = ${H}`;
+    const w = kind === "A" ? 0 : kind === "B" ? 1 : -1;
+    return { q: `${who} drove <b>${d1} miles</b> in <b>${t1} hours</b>. At the same speed, how long will a <b>${d2}-mile</b> trip take?`,
+      good, steps, wrong: w,
+      claim: kind === "A" ? `I think the car goes <b>${fast} miles in 1 hour</b>. Then I got stuck.` : `I think the trip takes <b>${kind === "B" ? H : t2} hours</b>.`,
+      offRight: kind === "A" ? `Good eye. ${fast} miles in 1 hour is faster than a jet plane! A car can't go that fast.` : `Good eye. ${H} hours is about ${days} days in the car! Their legs would fall asleep.`,
+      yesWrong: kind === "A" ? `Hmm, Pip says the car goes ${fast} miles in just 1 hour. A jet plane goes about 500. Could a car go that fast?` : `Hmm, ${H} hours. A day has 24 hours, so that's about ${days} days of driving! Does that fit a trip just a bit longer than the first one?`,
+      yesRight: `You checked it. The new trip is longer, so it should take more than ${t1} hours, and ${t2} is more. Also ${r} × ${t2} = ${d2}. It fits.`,
+      offWrong: `Let's check together. The new trip is longer, so it should take more than ${t1} hours. Pip says ${t2}. And ${r} × ${t2} = ${d2}. Does that fit?`,
+      stepOk: i => i === 0 ? `Let's check Step 1: ${r} × ${t1} = ${d1}. That matches the story, so Step 1 works.` : `Step 2 got stuck because of the number from Step 1. Look at the step before it.`,
+      fixQ: w === 0 ? `I multiplied in Step 1. What should I do instead to find the miles in just 1 hour?` : `I multiplied in Step 2. What should I do instead to find how many ${r}-mile hours fit in ${d2} miles?`,
+      fixes: [["Divide ÷", true], ["Multiply ×", false, "That's what Pip tried, and it made the giant number. Which sign splits things into equal pieces?"], ["Add +", false, "Adding makes it a little bigger. Which sign splits things into equal pieces?"]],
+      fixed: `<b>${t2} hours.</b> Dividing splits the miles into equal hour-pieces. ${t2} hours is more than ${t1}, so it fits.` };
+  } },
+
+  mixed: { label: "Mixed numbers", sym: "4⅝", make() {
+    const d = pick([3, 4, 5, 6, 7, 8]), w = rint(2, 6), n = rint(1, d - 1), N = w * d + n, bad = w * n + 0, right = Math.random() < .25;
+    const good = [{ label: `Step 1: Pieces in ${w} wholes`, math: `${w} × ${d} = ${w * d}` }, { label: "Step 2: Add the extra pieces", math: `${w * d} + ${n} = ${N}` }];
+    const steps = right ? good.map(x => ({ ...x })) : [{ label: `Step 1: Pieces in ${w} wholes`, math: `${w} × ${n} = ${bad}` }, { label: "Step 2: Add the extra pieces", math: `${bad} + ${n} = ${bad + n}` }];
+    const pipAns = right ? N : bad + n, pipW = +(pipAns / d).toFixed(1);
+    return { q: `Write <b>${w} ${n}/${d}</b> as an improper fraction.`, good, steps, wrong: right ? -1 : 0,
+      claim: `I think ${w} ${n}/${d} = <b>${pipAns}/${d}</b>.`,
+      offRight: `Good eye. ${w} ${n}/${d} is about ${+(N / d).toFixed(1)} wholes. But ${pipAns}/${d} is only about ${pipW} wholes. Some pieces went missing!`,
+      yesWrong: `Let's check the size. ${w} ${n}/${d} is about ${+(N / d).toFixed(1)} wholes. ${pipAns}/${d} is only about ${pipW} wholes. Does that match?`,
+      yesRight: `You checked it. ${N} ÷ ${d} = ${w} with ${n} left over. That's ${w} ${n}/${d}. It matches.`,
+      offWrong: `Let's check together. ${N} ÷ ${d} = ${w} with ${n} left over. That's ${w} ${n}/${d}. Does it match?`,
+      stepOk: i => `Step 2 adds the extra pieces, and that part is fine. The number coming into it is the problem. Look at the step before it.`,
+      fixQ: `In Step 1 I did ${w} × ${n}. Each whole is cut into ${d} pieces. What should I multiply by?`,
+      fixes: [[`${w} × ${d}, the bottom number`, true], [`${w} × ${n}, the top number`, false, `That's what Pip did. The top number is the extra pieces. How many pieces are in each whole?`], [`${w} + ${n}`, false, `Adding doesn't count the pieces in the wholes. Each whole has ${d} pieces.`]],
+      fixed: `<b>${N}/${d}.</b> ${w} wholes × ${d} pieces = ${w * d}, plus ${n} extra = ${N}. The bottom stays ${d}.` };
+  } },
+
+  frac: { label: "Squared fractions", sym: "(½)²", make() {
+    const a = pick([3, 5, 7, 9]), b = 2, right = Math.random() < .25, N = a * a;
+    const good = [{ label: "Step 1: Top", math: `${a} × ${a} = ${N}` }, { label: "Step 2: Bottom", math: `${b} × ${b} = ${b * b}` }];
+    const steps = right ? good.map(x => ({ ...x })) : [{ label: "Step 1: Top", math: `${a} × 2 = ${a * 2}` }, { label: "Step 2: Bottom", math: `${b} × ${b} = ${b * b}` }];
+    const pip = right ? N : a * 2;
+    return { q: `Evaluate <b>(${a}/${b})²</b>. Write your answer as a fraction.`, good, steps, wrong: right ? -1 : 0,
+      claim: `I think (${a}/${b})² = <b>${pip}/${b * b}</b>.`,
+      offRight: `Good eye. ${pip}/${b * b} is the same size as ${a}/${b}. But squaring a number bigger than 1 should make it bigger!`,
+      yesWrong: `Hmm, let's check the size. ${pip}/${b * b} simplifies to ${a}/${b}. That's the same as before squaring. Squaring something bigger than 1 should make it grow. Does it?`,
+      yesRight: `You checked it. (${a}/${b})² means ${a}/${b} × ${a}/${b}: ${a} × ${a} = ${N} on top, ${b} × ${b} = ${b * b} on the bottom.`,
+      offWrong: `Let's check together. (${a}/${b})² means ${a}/${b} × ${a}/${b}. Top: ${a} × ${a} = ${N}. Bottom: ${b} × ${b} = ${b * b}. Does that match Pip?`,
+      stepOk: i => `Let's check Step 2: ${b} × ${b} = ${b * b}. The bottom used ${b} two times. That works.`,
+      fixQ: `In Step 1 I did ${a} × 2. The little 2 means use ${a}/${b} two times. What should the top be?`,
+      fixes: [[`${a} × ${a}`, true], [`${a} × 2`, false, `That's what Pip did. The little 2 counts how many times to use the number. Use ${a} two times.`], [`${a} + ${a}`, false, `That adds ${a} two times. The fraction is being multiplied by itself.`]],
+      fixed: `<b>${N}/${b * b}.</b> (${a}/${b})² = ${a}/${b} × ${a}/${b} = ${N}/${b * b}. It's bigger than ${a}/${b}, so it fits.` };
+  } },
+
+  lcm: { label: "Cookie sales", sym: "LCM", make() {
+    const [x, y] = pick([[6, 8], [4, 6], [6, 9], [8, 12], [6, 10], [9, 12], [10, 15], [4, 10]]), L = x * y / gcd(x, y), P = x * y, right = Math.random() < .25;
+    const [A, B] = threeOf(pipPeople);
+    const listX = Array.from({ length: L / x }, (_, i) => x * (i + 1)).join(", "), listY = Array.from({ length: L / y }, (_, i) => y * (i + 1)).join(", ");
+    const good = [{ label: "Step 1: Smallest amount they share", math: `${A}: ${listX}  ·  ${B}: ${listY}` }, { label: `Step 2: ${A}'s boxes`, math: `$${L} ÷ $${x} = ${L / x}` }, { label: `Step 3: ${B}'s boxes`, math: `$${L} ÷ $${y} = ${L / y}` }];
+    const steps = right ? good.map(s => ({ ...s })) : [{ label: "Step 1: Smallest amount they share", math: `${x} × ${y} = ${P}` }, { label: `Step 2: ${A}'s boxes`, math: `$${P} ÷ $${x} = ${y}` }, { label: `Step 3: ${B}'s boxes`, math: `$${P} ÷ $${y} = ${x}` }];
+    return { q: `${A} sells boxes of cookies for <b>$${x}</b> each. ${B} sells them for <b>$${y}</b> each. They each sold the same dollar amount, the smallest amount possible. How much, and how many boxes each?`,
+      good, steps, wrong: right ? -1 : 0,
+      claim: `I think they each sold <b>$${right ? L : P}</b>.`,
+      offRight: `Good eye. They both do reach $${P}. But the problem asks for the <i>smallest</i> amount. Is there a smaller one they share?`,
+      yesWrong: `Let's check. ${A}'s totals go ${listX}. ${B}'s totals go ${listY}. Do they meet before $${P}?`,
+      yesRight: `You checked it. ${A}'s totals: ${listX}. ${B}'s totals: ${listY}. They meet first at $${L}.`,
+      offWrong: `Let's check together. ${A}'s totals: ${listX}. ${B}'s totals: ${listY}. Where do they meet first?`,
+      stepOk: i => `Step ${i + 1} divides correctly. The trouble is the number it started with. Look at the first step.`,
+      fixQ: `In Step 1 I just multiplied ${x} × ${y}. How should I find the smallest amount they share?`,
+      fixes: [["Count up each list until they match", true], [`Multiply ${x} × ${y} again`, false, `That's what Pip did. It gives an amount they share, but not always the smallest.`], [`Add ${x} + ${y}`, false, `Let's test it: ${x + y} isn't on ${A}'s list, so it can't work.`]],
+      fixed: `<b>$${L}.</b> ${A} sold ${L / x} boxes and ${B} sold ${L / y} boxes. ${L / x} × $${x} = $${L} and ${L / y} × $${y} = $${L}.` };
+  } },
+
+  eq: { label: "Equations", sym: "x=", make() {
+    let aC; do { aC = rint(101, 799); } while (aC % 10 === 0);
+    const cC = rint(Math.ceil((aC + 20) / 10), 99) * 10, sC = cC + aC, right = Math.random() < .25;
+    const a = (aC / 100).toFixed(2), c = String(cC / 100), s2 = (sC / 100).toFixed(2).replace(/0$/, ""), bad = ((cC - aC) / 100).toFixed(2);
+    const good = [{ label: "Step 1: Undo − " + a, math: `Add ${a} to both sides` }, { label: "Step 2: Work it out", math: `${c} + ${a} = ${s2}` }];
+    const steps = right ? good.map(x => ({ ...x })) : [{ label: "Step 1: Undo − " + a, math: `Subtract ${a} from both sides` }, { label: "Step 2: Work it out", math: `${c} − ${a} = ${bad}` }];
+    const pip = right ? s2 : bad, check = ((Math.round(Number(pip) * 100) - aC) / 100).toFixed(2).replace("-", "−");
+    return { q: `Solve for <i>x</i>: <b>x − ${a} = ${c}</b>`, good, steps, wrong: right ? -1 : 0,
+      claim: `I think <b>x = ${pip}</b>.`,
+      offRight: `Good eye. Put ${pip} back in: ${pip} − ${a} = ${check}. That's not ${c}, so it doesn't balance.`,
+      yesWrong: `Let's test it. Put ${pip} in for x: ${pip} − ${a} = ${check}. Is that ${c}?`,
+      yesRight: `You checked it. ${s2} − ${a} = ${c}. Both sides balance.`,
+      offWrong: `Let's test it together: ${s2} − ${a} = ? Is it ${c}?`,
+      stepOk: i => `Step 2 does its math right. The trouble is the plan from Step 1. Look at the step before it.`,
+      fixQ: `In Step 1 I subtracted ${a}. But x already has ${a} taken away. What undoes taking away?`,
+      fixes: [[`Add ${a} to both sides`, true], [`Subtract ${a} again`, false, `That takes away even more, so x gets more stuck.`], [`Multiply both sides by ${a}`, false, `Multiplying undoes dividing. Here ${a} is being taken away.`]],
+      fixed: `<b>x = ${s2}.</b> ${c} + ${a} = ${s2}. Check: ${s2} − ${a} = ${c}. It balances.` };
+  } },
+
+  ops: { label: "Order of operations", sym: "( )", make() {
+    const x = rint(2, 9), y = rint(2, 6), z = rint(2, 6), right = Math.random() < .25, good1 = y * z, ans = x + good1, bad1 = x + y, badAns = bad1 * z;
+    const good = [{ label: "Step 1: Times first", math: `${y} × ${z} = ${good1}` }, { label: "Step 2: Then plus", math: `${x} + ${good1} = ${ans}` }];
+    const steps = right ? good.map(s => ({ ...s })) : [{ label: "Step 1: Left to right", math: `${x} + ${y} = ${bad1}` }, { label: "Step 2", math: `${bad1} × ${z} = ${badAns}` }];
+    return { q: `Solve: <b>${x} + ${y} × ${z}</b>`, good, steps, wrong: right ? -1 : 0,
+      claim: `I think ${x} + ${y} × ${z} = <b>${right ? ans : badAns}</b>.`,
+      offRight: `Good eye. Pip went straight left to right. But there's a × in there, and × goes before +.`,
+      yesWrong: `Let's check the order rules. Is there a × in the problem? Which goes first, × or +?`,
+      yesRight: `You checked it. × goes before +, so ${y} × ${z} = ${good1} first, then ${x} + ${good1} = ${ans}.`,
+      offWrong: `Let's check together. Pip did ${y} × ${z} first, then added ${x}. Does that follow the order rules?`,
+      stepOk: i => `Step 2 does its math right. The trouble is which part went first. Look at Step 1.`,
+      fixQ: `In Step 1 I added first. Which part should go first?`,
+      fixes: [[`${y} × ${z} first`, true], [`${x} + ${y} first`, false, `That's what Pip did. Check the rules: × and ÷ come before + and −.`], [`Whatever is on the left`, false, `Left to right only works when the signs are on the same step. × is a step before +.`]],
+      fixed: `<b>${ans}.</b> ${y} × ${z} = ${good1} first, then ${x} + ${good1} = ${ans}.` };
+  } },
+
+  pct: { label: "Percents", sym: "%", make() {
+    const p = rint(21, 95), right = Math.random() < .25, d = (p / 100).toFixed(2).replace(/0$/, ""), bad = String(p / 10);
+    const good = [{ label: "Step 1: What percent means", math: `${p}% = ${p}/100` }, { label: "Step 2: Divide by 100", math: `Move the point 2 places: ${p} → ${d}` }];
+    const steps = right ? good.map(s => ({ ...s })) : [{ label: "Step 1: What percent means", math: `${p}% = ${p}/100` }, { label: "Step 2: Divide by 100", math: `Move the point 1 place: ${p} → ${bad}` }];
+    return { q: `Write <b>${p}%</b> as a decimal.`, good, steps, wrong: right ? -1 : 0,
+      claim: `I think ${p}% = <b>${right ? d : bad}</b>.`,
+      offRight: `Good eye. ${bad} is more than ${Math.floor(p / 10)} whole things! But ${p}% is only part of one whole.`,
+      yesWrong: `Let's check the size. ${p}% is less than 100%, so it's less than 1 whole. Is ${bad} less than 1?`,
+      yesRight: `You checked it. ${p}% is less than 1 whole, and ${d} is less than 1. ${p} hundredths = ${d}.`,
+      offWrong: `Let's check together. ${p}% means ${p} out of 100, which is ${p} hundredths. Is ${d} the same as ${p} hundredths?`,
+      stepOk: i => `Step 1 is right: percent means out of 100. Look at the next step.`,
+      fixQ: `In Step 2 I moved the decimal point 1 place. Dividing by 100 moves it how many places?`,
+      fixes: [["2 places, because 100 has two zeros", true], ["1 place", false, "That's what Pip did. 1 place is dividing by 10."], ["3 places", false, "3 places would be dividing by 1,000."]],
+      fixed: `<b>${d}.</b> ${p}% = ${p}/100 = ${d}. It's less than 1, so it fits.` };
+  } },
+
+  round: { label: "Estimating", sym: "≈", make() {
+    const x = rint(11, 49), y = rint(111, 349), rx = Math.round(x / 10) * 10, ry = Math.round(y / 10) * 10, ryBad = Math.round(y / 100) * 100;
+    if (y % 10 === 0 || x % 10 === 0 || ry === ryBad) return PIP_TOPICS.round.make();
+    const right = Math.random() < .25, est = rx + ry, bad = rx + ryBad, exact = x + y;
+    const good = [{ label: `Step 1: Round ${x}`, math: `${x} → ${rx}` }, { label: `Step 2: Round ${y}`, math: `${y} → ${ry}` }, { label: "Step 3: Add", math: `${rx} + ${ry} = ${est}` }];
+    const steps = right ? good.map(s => ({ ...s })) : [{ label: `Step 1: Round ${x}`, math: `${x} → ${rx}` }, { label: `Step 2: Round ${y}`, math: `${y} → ${ryBad}` }, { label: "Step 3: Add", math: `${rx} + ${ryBad} = ${bad}` }];
+    return { q: `Estimate <b>${x} + ${y}</b> by rounding each number to the nearest ten.`, good, steps, wrong: right ? -1 : 1,
+      claim: `I think the estimate is <b>${right ? est : bad}</b>.`,
+      offRight: `Good eye. The real answer is ${exact}, and ${bad} is ${Math.abs(exact - bad)} away. A good estimate lands closer than that.`,
+      yesWrong: `Let's check. The real answer is ${x} + ${y} = ${exact}. Pip's estimate is ${bad}. Is that close?`,
+      yesRight: `You checked it. ${x} + ${y} = ${exact}, and ${est} is close. Good estimate.`,
+      offWrong: `Let's check together. The real answer is ${exact}. Pip says ${est}. Is that close?`,
+      stepOk: i => i === 0 ? `Step 1 is right: ${x} rounds to ${rx}.` : `Step 3 adds correctly. Look at the numbers it used.`,
+      fixQ: `In Step 2 I rounded ${y} to ${ryBad}. To the nearest <b>ten</b>, what should it be?`,
+      fixes: [[`${ry}`, true], [`${ryBad}`, false, `That's the nearest hundred. We want the nearest ten.`], [`${ry === Math.floor(y / 10) * 10 ? ry + 10 : ry - 10}`, false, `Look at the ones digit of ${y}. 0 to 4 rounds down, 5 to 9 rounds up.`]],
+      fixed: `<b>${est}.</b> ${x} → ${rx} and ${y} → ${ry}, then ${rx} + ${ry} = ${est}. That's close to ${exact}.` };
+  } }
+};
+
+function pipStart(topic) {
+  const key = topic === "any" ? pick(Object.keys(PIP_TOPICS)) : topic;
+  state.pp = { ...PIP_TOPICS[key].make(), topic, key };
 }
-const pipStory = pp => `<p class="story">${pp.who} drove <b>${pp.d1} miles</b> in <b>${pp.t1} hours</b>. At the same speed, how long will a <b>${pp.d2}-mile</b> trip take?</p>`;
-const pipWork = (pp, fixed = false) => `<div><span class="label">Pip's work</span><div class="work">${pp.steps.map((s, i) =>
-  `<div class="step${fixed ? " fixed" : ""}"><small>${s.label}</small><b>${fixed ? pp.good[i] : s.math}</b></div>`).join("")}</div></div>`;
+const pipWork = (pp, fixed = false) => `<div><span class="label">Pip's work</span><div class="work">${(fixed ? pp.good : pp.steps).map(s =>
+  `<div class="step${fixed ? " fixed" : ""}"><small>${s.label}</small><b>${s.math}</b></div>`).join("")}</div></div>`;
+const pipQ = pp => `<p class="story">${pp.q}</p>`;
 
 function pipMeet() {
   const c = el(`<section class="card">
-    ${pipSay("Hi! I'm Pip. I'm still learning math, and sometimes my circuits get tangled. Will you be my teacher and check my work?")}
-    <button class="primary" id="go" type="button">Show me Pip's work</button>
+    ${pipSay("Hi! I'm Pip. I'm still learning math, and sometimes my circuits get tangled. Will you be my teacher and check my work? What should I try?")}
+    <div class="tiles small" id="topics"></div>
   </section>`);
   stage.appendChild(c);
-  c.querySelector("#go").onclick = () => { state.pp = makePip(); state.step = 1; render(); };
+  [...Object.entries(PIP_TOPICS).map(([k, t]) => [k, t.label, t.sym]), ["any", "Surprise me", "?!"]].forEach(([k, label, sym]) => {
+    const b = el(`<button class="tile" type="button" style="--c:var(--g-think)${k === "any" ? ";grid-column:1/-1" : ""}"><span class="sym">${sym}</span><span class="nm">${label}</span></button>`);
+    b.onclick = () => { pipStart(k); state.step = 1; render(); };
+    c.querySelector("#topics").appendChild(b);
+  });
 }
 
 function pipSense() {
-  const pp = state.pp, H = pp.d2 * pp.r, days = Math.round(H / 24), fast = pp.d1 * pp.t1;
+  const pp = state.pp;
   const c = el(`<section class="card">
-    ${pipStory(pp)}
+    ${pipQ(pp)}
     ${pipWork(pp)}
-    ${pipSay(pp.answer)}
+    ${pipSay(pp.claim + " Did I get it?")}
     <h2>Does Pip's answer make sense?</h2>
     <div class="choices">
       <button type="button" data-a="yes">Yes, it makes sense</button>
@@ -1077,34 +1245,26 @@ function pipSense() {
   stage.appendChild(c);
   c.querySelectorAll("[data-a]").forEach(b => b.onclick = () => {
     const fb = c.querySelector("#fb"), saysOk = b.dataset.a === "yes";
-    if (pp.kind === "right") {
+    if (pp.wrong < 0) {
       if (saysOk) {
-        fb.innerHTML = `<div class="note ok">You checked it. The new trip is longer, so it should take more than ${pp.t1} hours, and ${pp.t2} is more. Also ${pp.r} × ${pp.t2} = ${pp.d2}. It fits.</div>${pipSay("Phew! Thanks for checking my work, teacher.")}`;
-        fb.appendChild(nextBtn(() => { state.solved.pip++; save(); state.pp = makePip(); render(); }, "Check another one"));
+        fb.innerHTML = `<div class="note ok">${pp.yesRight}</div>${pipSay("Phew! Thanks for checking my work, teacher.")}`;
+        fb.appendChild(pipNextRow());
         c.querySelectorAll("[data-a]").forEach(x => x.disabled = true);
-      } else {
-        fb.innerHTML = `<div class="note look">Let's check together. The new trip is longer, so it should take more than ${pp.t1} hours. Pip says ${pp.t2}. And ${pp.r} miles × ${pp.t2} hours = ${pp.d2} miles. Does that fit?</div>`;
-      }
+      } else fb.innerHTML = `<div class="note look">${pp.offWrong}</div>`;
       return;
     }
     if (!saysOk) {
-      fb.innerHTML = `<div class="note ok">${pp.kind === "multB"
-        ? `Good eye. ${H} hours is about ${days} days in the car! Their legs would fall asleep. The answer should be a little more than ${pp.t1} hours, not thousands.`
-        : `Good eye. ${fast} miles in 1 hour is faster than a jet plane! A car can't go that fast.`}</div>`;
+      fb.innerHTML = `<div class="note ok">${pp.offRight}</div>`;
       fb.appendChild(nextBtn(() => { state.step = 2; render(); }, "Find Pip's mistake"));
       c.querySelectorAll("[data-a]").forEach(x => x.disabled = true);
-    } else {
-      fb.innerHTML = `<div class="note look">${pp.kind === "multB"
-        ? `Hmm, let's think about ${H} hours. A day only has 24 hours, so that's about ${days} days of driving! Does that fit a trip that's just a bit longer than the first one?`
-        : `Hmm, Pip says the car goes ${fast} miles in just 1 hour. A jet plane goes about 500. Could a car go that fast?`}</div>`;
-    }
+    } else fb.innerHTML = `<div class="note look">${pp.yesWrong}</div>`;
   });
 }
 
 function pipFind() {
   const pp = state.pp;
   const c = el(`<section class="card">
-    ${pipStory(pp)}
+    ${pipQ(pp)}
     ${pipSay("Oh no, you're right. My circuits got tangled somewhere. Which step did I mess up? Tap it.")}
     <div class="work" id="steps"></div>
     <div id="fb"></div>
@@ -1114,9 +1274,7 @@ function pipFind() {
     const b = el(`<button class="step" type="button"><small>${s.label}</small><b>${s.math}</b></button>`);
     b.onclick = () => {
       if (i === pp.wrong) { state.step = 3; render(); return; }
-      c.querySelector("#fb").innerHTML = `<div class="note look">${i === 0
-        ? `Let's check Step 1: ${pp.r} × ${pp.t1} = ${pp.d1}. That matches the story, so Step 1 works. Try the other step.`
-        : `Step 2 got stuck because of the number from Step 1. Look at the step before it.`}</div>`;
+      c.querySelector("#fb").innerHTML = `<div class="note look">${pp.stepOk(i)}</div>`;
     };
     c.querySelector("#steps").appendChild(b);
   });
@@ -1125,29 +1283,32 @@ function pipFind() {
 function pipFix() {
   const pp = state.pp, s = pp.steps[pp.wrong];
   const c = el(`<section class="card">
-    ${pipStory(pp)}
+    ${pipQ(pp)}
     <div class="work"><div class="step"><small>${s.label}</small><b>${s.math}</b></div></div>
-    ${pipSay(pp.wrong === 0
-      ? `I multiplied in Step 1. What should I do instead to find the miles in just 1 hour?`
-      : `I multiplied in Step 2. What should I do instead to find how many ${pp.r}-mile hours fit in ${pp.d2} miles?`)}
+    ${pipSay(pp.fixQ)}
     <div class="choices" id="opts"></div>
     <div id="fb"></div>
   </section>`);
   stage.appendChild(c);
-  [["div", "Divide ÷"], ["mul", "Multiply ×"], ["add", "Add +"]].forEach(([k, t]) => {
+  [...pp.fixes].sort(() => Math.random() - .5).forEach(([t, ok, why]) => {
     const b = el(`<button type="button">${t}</button>`);
     b.onclick = () => {
       const fb = c.querySelector("#fb");
-      if (k === "mul") { fb.innerHTML = `<div class="note look">That's what Pip tried, and it made the giant number. We want to split into equal pieces. Which sign splits things up?</div>`; return; }
-      if (k === "add") { fb.innerHTML = `<div class="note look">Adding makes things a little bigger. We want to split into equal pieces. Which sign splits things up?</div>`; return; }
+      if (!ok) { fb.innerHTML = `<div class="note look">${why}</div>`; return; }
       c.querySelectorAll("#opts button").forEach(x => x.disabled = x !== b);
       b.classList.add("picked");
-      fb.innerHTML = `${pipWork(pp, true)}<div class="note ok"><b>${pp.t2} hours.</b> Dividing splits the miles into equal hour-pieces. ${pp.t2} hours is more than ${pp.t1}, so it fits.</div>
-        ${pipSay("Oh! I see it now. Thank you, teacher. My circuits feel much better.")}`;
-      fb.appendChild(nextBtn(() => { state.solved.pip++; save(); state.pp = makePip(); state.step = 1; render(); }, "Help Pip again"));
+      fb.innerHTML = `${pipWork(pp, true)}<div class="note ok">${pp.fixed}</div>${pipSay("Oh! I see it now. Thank you, teacher. My circuits feel much better.")}`;
+      fb.appendChild(pipNextRow());
     };
     c.querySelector("#opts").appendChild(b);
   });
+}
+function pipNextRow() {
+  const row = el(`<div class="row" style="margin-top:10px"></div>`);
+  const again = el(`<button class="primary" type="button">Help Pip again</button>`), other = el(`<button type="button">Pick a different topic</button>`);
+  again.onclick = () => { state.solved.pip++; save(); pipStart(state.pp.topic); state.step = 1; render(); };
+  other.onclick = () => { state.solved.pip++; save(); state.step = 0; render(); };
+  row.append(again, other); return row;
 }
 
 /* ---------- what does it mean? (concept first) ---------- */

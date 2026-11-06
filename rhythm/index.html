@@ -249,7 +249,7 @@ const COL = 'rhythm_days', CFG_DOC = 'rhythm_config/main';
 /* ---------- the starting board (used until you save your own) ---------- */
 /* Your board as of Nov 5, 2026 (saved from the live board). */
 const DEFAULT_CONFIG = {
-  "v": 7,
+  "v": 8,
   "verse": "So do not fear, for I am with you; do not be dismayed, for I am your God. I will strengthen you and help you; I will uphold you with my righteous right hand.",
   "verseRef": "Isaiah 41:10",
   "kidName": "",
@@ -268,6 +268,11 @@ const DEFAULT_CONFIG = {
           "d": "Morning drive. A calm ride and a look at what comes next.",
           "t": "Carpool",
           "id": "carpool_am"
+        },
+        {
+          "id": "attendance",
+          "d": "Check in for today's school day on the attendance register.",
+          "t": "Mark Attendance"
         },
         {
           "id": "bible",
@@ -586,6 +591,16 @@ function normalize(d){
     if(mm && mm.color==='#16A085') mm.color='#2A7FBA';
     if(md && md.color==='#27A55A' && mb && mb.color==='#27A55A') md.color='#D63384';
     c.v = 7;
+  }
+  if(c.v < 8){                       // Mark Attendance goes right before Bible in the morning
+    if(!c.blocks.some(b=>b.items.some(i=>i.id==='attendance'))){
+      const item = {id:'attendance', t:'Mark Attendance', d:"Check in for today's school day on the attendance register."};
+      const bb = c.blocks.find(b=>b.items.some(i=>i.id==='bible')), mb = c.blocks.find(b=>b.id==='morning');
+      if(bb) bb.items.splice(bb.items.findIndex(i=>i.id==='bible'), 0, item);
+      else if(mb) mb.items.push(item);
+      else if(c.blocks[0]) c.blocks[0].items.push(item);
+    }
+    c.v = 8;
   }
   return c;
 }

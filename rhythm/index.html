@@ -249,7 +249,7 @@ const COL = 'rhythm_days', CFG_DOC = 'rhythm_config/main';
 /* ---------- the starting board (used until you save your own) ---------- */
 /* Your board as of Nov 5, 2026 (saved from the live board). */
 const DEFAULT_CONFIG = {
-  "v": 8,
+  "v": 9,
   "verse": "So do not fear, for I am with you; do not be dismayed, for I am your God. I will strengthen you and help you; I will uphold you with my righteous right hand.",
   "verseRef": "Isaiah 41:10",
   "kidName": "",
@@ -448,8 +448,7 @@ const DEFAULT_CONFIG = {
       {
         "name": "Fill Snack Box",
         "sub": "Restock 8 compartments",
-        "id": "snackbox",
-        "snack": true
+        "id": "snackbox"
       },
       {
         "name": "Plant Care",
@@ -601,6 +600,11 @@ function normalize(d){
       else if(c.blocks[0]) c.blocks[0].items.push(item);
     }
     c.v = 8;
+  }
+  if(c.v < 9){                       // Fill Snack Box works like every other tag: checkbox + description, no squares
+    Object.values(c.tags||{}).forEach(list=>(list||[]).forEach(t=>{ delete t.snack; }));
+    c.blocks.forEach(b=>b.items.forEach(i=>{ delete i.snack; }));
+    c.v = 9;
   }
   return c;
 }
@@ -985,11 +989,7 @@ function tagsEd(k, title, help, hasSub, hasTimer, hasSnack){
       ${hasSub?`<input data-path="tags.${k}.${ti}.sub" value="${esc(t.sub)}" placeholder="Small line under it (optional)">`:''}
       ${hasTimer?`<label class="ed-min">Timer <input type="number" min="1" max="300" inputmode="numeric" data-path="tags.${k}.${ti}.timer" data-type="min" value="${t.timer?Math.round(t.timer/60):''}" placeholder="none"> min</label>`:''}
       ${mv('tags.'+k, ti, list.length)}</div>`).join('')}
-    <button class="ed-add" data-act="addtag" data-k="${k}">+ Add a tag</button>
-    ${hasSnack?`<label class="ed-f" style="margin-top:14px">Snack-box squares show under
-      <select data-snackpick="${k}">${list.map((t,ti)=>`<option value="${ti}" ${t.snack?'selected':''}>${esc(t.name||'Untitled tag')}</option>`).join('')}
-        <option value="" ${list.some(t=>t.snack)?'':'selected'}>No tag (turn snack squares off)</option></select></label>
-      <p class="help" style="margin-top:6px">When she places this tag, 8 squares appear under it, one for each section of her snack box. She taps each one as she fills it.</p>`:''}</div>`;
+    <button class="ed-add" data-act="addtag" data-k="${k}">+ Add a tag</button></div>`;
 }
 function renderEditor(){
   const E=S.edit, y=window.scrollY;
@@ -1037,11 +1037,6 @@ function readField(el){
 $('#editor').addEventListener('input', e=>{ const el=e.target; if(el.dataset.path) setAt(el.dataset.path, readField(el)); });
 $('#editor').addEventListener('change', e=>{
   const el=e.target;
-  if(el.dataset.snackpick){
-    const list=S.edit.tags[el.dataset.snackpick], pickI=el.value===''?-1:+el.value;
-    list.forEach((t,i)=>{ if(i===pickI) t.snack=true; else delete t.snack; });
-    renderEditor(); return;
-  }
   if(el.dataset.kind){
     const it=getAt(el.dataset.kind), v=el.value;
     if(v==='task'){ delete it.slot; } else { it.slot=v; delete it.d; delete it.timer; delete it.endMsg; delete it.snack; }

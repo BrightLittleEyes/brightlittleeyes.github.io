@@ -249,7 +249,7 @@ const COL = 'rhythm_days', CFG_DOC = 'rhythm_config/main';
 /* ---------- the starting board (used until you save your own) ---------- */
 /* Your board as of Nov 5, 2026 (saved from the live board). */
 const DEFAULT_CONFIG = {
-  "v": 8,
+  "v": 9,
   "verse": "So do not fear, for I am with you; do not be dismayed, for I am your God. I will strengthen you and help you; I will uphold you with my righteous right hand.",
   "verseRef": "Isaiah 41:10",
   "kidName": "",
@@ -273,6 +273,12 @@ const DEFAULT_CONFIG = {
           "id": "bible",
           "d": "Individual Bible reading and quiet devotional time.",
           "t": "Bible Block"
+        },
+        {
+          "id": "roomtidy",
+          "t": "Room Tidy",
+          "d": "Saturday room reset.",
+          "on": "sat"
         }
       ],
       "sub": "New Every Morning · Lamentations 3:22–23",
@@ -610,9 +616,20 @@ function normalize(d){
     c.v = 7;
   }
   if(c.v < 8){                       // Saturday deep-clean Helping Hands tags
-    const have=new Set((c.tags.mech||[]).map(t=>t.id));
-    [{"id": "deepbath", "name": "Deep Clean Bathrooms", "sub": "Toilets, tubs, sinks & floors", "on": "sat"}, {"id": "deepkitchen", "name": "Deep Clean Kitchen", "sub": "Counters, appliances & floors", "on": "sat"}, {"id": "vacuum", "name": "Vacuum Entire House", "sub": "Every room, top to bottom", "on": "sat"}].forEach(t=>{ if(!have.has(t.id)) c.tags.mech.push(t); });
+    const norm=x=>String(x||'').trim().toLowerCase();
+    const have=new Set((c.tags.mech||[]).flatMap(t=>[t.id, norm(t.name)]));
+    [{"id": "deepbath", "name": "Deep Clean Bathrooms", "sub": "Toilets, tubs, sinks & floors", "on": "sat"}, {"id": "deepkitchen", "name": "Deep Clean Kitchen", "sub": "Counters, appliances & floors", "on": "sat"}, {"id": "vacuum", "name": "Vacuum Entire House", "sub": "Every room, top to bottom", "on": "sat"}].forEach(t=>{
+      const mine=c.tags.mech.find(x=>x.id===t.id || norm(x.name)===norm(t.name));
+      if(!mine) c.tags.mech.push(t); else if(!mine.on) mine.on='sat';
+    });
     c.v = 8;
+  }
+  if(c.v < 9){                       // Room Tidy: fixed Saturday routine
+    const all=c.blocks.flatMap(b=>b.items);
+    const mine=all.find(i=>i.id==='roomtidy' || String(i.t||'').trim().toLowerCase()==='room tidy');
+    if(mine){ if(!mine.on) mine.on='sat'; }
+    else { const mb=c.blocks.find(b=>b.id==='morning') || c.blocks[0]; if(mb) mb.items.push({"id": "roomtidy", "t": "Room Tidy", "d": "Saturday room reset.", "on": "sat"}); }
+    c.v = 9;
   }
   return c;
 }
@@ -748,15 +765,17 @@ function render(){
     + (open ? `<button class="slotbtn flag" data-slot="${open}">${placed.length?'+ Add another':'+ Put a red tag here'}</button>` : '');
   $('#flags').classList.toggle('active', placed.length>0);
 
-  $('#board').innerHTML = BLOCKS.map(b=>`
+  const dow=d.getDay(), shown=b=>b.items.filter(i=>tagToday(i,dow));
+  $('#board').innerHTML = BLOCKS.filter(b=>shown(b).length).map(b=>`
     <section class="block">
       <div class="block-h" style="background:${esc(b.color||'#2C3E50')}">${ICON[b.icon]||''}<span>${esc(b.name)}${b.sub?` <small>(${esc(b.sub)})</small>`:''}</span></div>
-      ${b.items.map(rowHTML).join('')}
+      ${shown(b).map(rowHTML).join('')}
     </section>`).join('');
+  const TODAY = BLOCKS.flatMap(shown);
 
-  const done = ALL_ITEMS.filter(i=>D.checks[i.id]).length, total=ALL_ITEMS.length||1;
+  const done = TODAY.filter(i=>D.checks[i.id]).length, total=TODAY.length||1;
   $('#bar').style.width = (done/total*100)+'%';
-  $('#ptxt').textContent = done===ALL_ITEMS.length && done>0 ? 'Every block done — well done!' : `${done} of ${ALL_ITEMS.length} done`;
+  $('#ptxt').textContent = done===TODAY.length && done>0 ? 'Every block done — well done!' : `${done} of ${TODAY.length} done`;
   paintTimer();
 }
 function rowHTML(i){
@@ -959,6 +978,7 @@ function itemMv(bi, ii, len){
     <button data-act="idown" data-b="${bi}" data-i="${ii}" ${dnOff?'disabled':''} aria-label="${dnT}" title="${dnT}">▼</button>
     <button class="del" data-act="del" data-list="blocks.${bi}.items" data-i="${ii}" aria-label="Remove">✕</button></span>`;
 }
+const showsOn = (p,it) => `<label class="ed-min">Shows on <select data-path="${p}.on" style="width:auto">${Object.entries(DAY_OPTS).map(([v,n])=>`<option value="${v}" ${(it.on||'all')===v?'selected':''}>${n}</option>`).join('')}</select></label>`;
 function itemEd(it, bi, ii, len){
   const p=`blocks.${bi}.items.${ii}`, kind=it.slot||'task';
   const sel = `<select data-kind="${p}" aria-label="Type">
@@ -969,10 +989,11 @@ function itemEd(it, bi, ii, len){
   if(kind==='task'){
     more = `<div class="ed-row2">
       <input data-path="${p}.d" value="${esc(it.d)}" placeholder="Short description (optional)">
+      ${showsOn(p,it)}
       <label class="ed-min">Timer <input type="number" min="1" max="300" inputmode="numeric" data-path="${p}.timer" data-type="min" value="${it.timer?Math.round(it.timer/60):''}" placeholder="none"> min</label>
     </div>${it.timer?`<div class="ed-row2"><input data-path="${p}.endMsg" value="${esc(it.endMsg)}" placeholder="Message when the timer ends, e.g. &quot;${esc(it.t||'Math')} time is finished!&quot;"></div>`:''}`;
   } else {
-    more = `<div class="ed-note">She picks a ${kind==='fun'?'Fun Choice':'Helping Hands'} tag here.</div>`;
+    more = `<div class="ed-row2"><span class="ed-note" style="margin:0;flex:1">She picks a ${kind==='fun'?'Fun Choice':'Helping Hands'} tag here.</span>${showsOn(p,it)}</div>`;
   }
   return `<div class="ed-item"><div class="ed-row">${sel}<input data-path="${p}.t" value="${esc(it.t)}" placeholder="Title">${itemMv(bi,ii,len)}</div>${more}</div>`;
 }

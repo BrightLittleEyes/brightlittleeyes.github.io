@@ -252,7 +252,7 @@ const COL = 'rhythm_days', CFG_DOC = 'rhythm_config/main';
 /* ---------- the starting board (used until you save your own) ---------- */
 /* Your board as of Nov 5, 2026 (saved from the live board). */
 const DEFAULT_CONFIG = {
-  "v": 13,
+  "v": 14,
   "verse": "So do not fear, for I am with you; do not be dismayed, for I am your God. I will strengthen you and help you; I will uphold you with my righteous right hand.",
   "verseRef": "Isaiah 41:10",
   "kidName": "",
@@ -607,32 +607,38 @@ const DEFAULT_CONFIG = {
       {
         "sub": "Sort, load, or fold",
         "name": "Laundry",
-        "id": "laundry"
+        "id": "laundry",
+        "on": "notsat"
       },
       {
         "sub": "Clear, rinse, or load kitchen",
         "name": "Dishes",
-        "id": "dishes"
+        "id": "dishes",
+        "on": "notsat"
       },
       {
         "sub": "Reset room & craft space",
         "name": "Quick Tidy",
-        "id": "tidy"
+        "id": "tidy",
+        "on": "notsat"
       },
       {
         "name": "Fill Snack Box",
         "sub": "Restock 8 compartments",
-        "id": "snackbox"
+        "id": "snackbox",
+        "on": "notsat"
       },
       {
         "name": "Plant Care",
         "sub": "Watering or nurturing plants",
-        "id": "plants"
+        "id": "plants",
+        "on": "notsat"
       },
       {
         "name": "Sensory Reset",
         "sub": "Heavy work",
-        "id": "sensory"
+        "id": "sensory",
+        "on": "notsat"
       },
       {
         "id": "deepbath",
@@ -692,9 +698,9 @@ const ICON_NAMES = {sun:'Sun', basket:'Basket', palette:'Paint palette', moon:'M
 const COLORS = [['#2A7FBA','Blue'],['#27A55A','Green'],['#8E44AD','Purple'],['#D35400','Orange'],['#C0392B','Red'],['#16A085','Teal'],['#2C3E50','Navy'],['#B7950B','Gold'],['#D63384','Pink']];
 
 let CFG = clone(DEFAULT_CONFIG), BLOCKS = [], TAGS = {fun:[],mech:[],flag:[]}, ALL_ITEMS = [], SLOT_IDS = [];
-const DAY_OPTS = {all:'Every day', weekdays:'Weekdays', sat:'Saturdays', sun:'Sundays', weekend:'Weekends'};
+const DAY_OPTS = {all:'Every day', notsat:'Every day but Saturday', weekdays:'Weekdays', sat:'Saturdays', sun:'Sundays', weekend:'Weekends'};
 function tagToday(t, dow){
-  switch(t.on||'all'){ case 'weekdays': return dow>=1&&dow<=5; case 'sat': return dow===6; case 'sun': return dow===0; case 'weekend': return dow===0||dow===6; default: return true; }
+  switch(t.on||'all'){ case 'notsat': return dow!==6; case 'weekdays': return dow>=1&&dow<=5; case 'sat': return dow===6; case 'sun': return dow===0; case 'weekend': return dow===0||dow===6; default: return true; }
 }
 const CHG_IDS = ['chg','chg2','chg3'];      // up to 3 red tags a day
 const CHG = {id:'chg', slot:'flag', t:'Anything different today?'};
@@ -824,6 +830,11 @@ function normalize(d){
       mb.items.splice(at>=0?at+1:mb.items.length, 0, {"id": "sat_roomtidy", "t": "Room Tidy", "d": "Saturday room reset."});
     }
     c.v = 13;
+  }
+  if(c.v < 14){                       // Saturday is deep clean day: only the Saturday jobs are offered then
+    const sat=c.tags.mech.filter(t=>t.on==='sat');
+    if(sat.length) c.tags.mech.forEach(t=>{ if(!t.on || t.on==='all') t.on='notsat'; });
+    c.v = 14;
   }
   return c;
 }

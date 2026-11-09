@@ -289,10 +289,11 @@ const sections = {
   est:  { title: "Round & Estimate", sub: "Round each number first, then add or subtract.", steps: ["Pick", "Round", "Estimate", "Check"] },
   mix:  { title: "Mixed Numbers", sub: "Switch between mixed numbers and improper fractions.", steps: ["Pick", "Wholes", "Pieces", "Check"] },
   fdp:  { title: "Fractions, Decimals & Percents", sub: "Change each one to a decimal, plot it, then compare.", steps: ["Pick", "Fraction", "Percent", "Plot", "Compare"] },
+  area: { title: "Area", sub: "Same-size squares, in rows and columns.", steps: ["Pick", "Look", "Build", "Area", "Packs"] },
   mean: { title: "What Does It Mean?", sub: "The math is already done. You find what each number means.", steps: ["Pick a story", "Find the numbers", "Match the math"] }
 };
 
-let state = { section: null, step: 0, onBreak: false, solved: { trip: 0, ops: 0, rate: 0, pip: 0, mean: 0, lcm: 0, eq: 0, tbl: 0, dec: 0, frac: 0, est: 0, mix: 0, fdp: 0 }, fd: null, fdKind: "mix", mx: null, mixMode: "toImp", es: null, esLevel: "ten", t: null, dc: null, fr: null, frLevel: "easy", lc: null, lcSize: "easy", e: null, eqLevel: "pos",
+let state = { section: null, step: 0, onBreak: false, solved: { trip: 0, ops: 0, rate: 0, pip: 0, mean: 0, lcm: 0, eq: 0, tbl: 0, dec: 0, frac: 0, est: 0, mix: 0, fdp: 0, area: 0 }, ar: null, arKind: "see", fd: null, fdKind: "mix", mx: null, mixMode: "toImp", es: null, esLevel: "ten", t: null, dc: null, fr: null, frLevel: "easy", lc: null, lcSize: "easy", e: null, eqLevel: "pos",
   p: null, size: "small", q: null, level: "easy", r: null, pp: null, m: null };
 try { const s = JSON.parse(localStorage.getItem("mathPlanner")); if (s && s.solved) state.solved = Object.assign(state.solved, s.solved); } catch (e) {}
 function save() { try { localStorage.setItem("mathPlanner", JSON.stringify({ solved: state.solved })); } catch (e) {} }
@@ -326,6 +327,7 @@ function render() {
   if (state.section === "est") return [estPick, estRound, estAdd, estDone][state.step]();
   if (state.section === "mix") return [mixPick, mixStep1, mixStep2, mixDone][state.step]();
   if (state.section === "fdp") { if (state.step > 0 && !state.fd) state.fd = makeFdp(state.fdKind); return [fdpPick, fdpFrac, fdpPct, fdpPlot, fdpCompare][state.step](); }
+  if (state.section === "area") return [arPick, arLook, arBuild, arArea, arPacks][state.step]();
   if (state.section === "mean") return [meanPick, meanTap, meanMath][state.step]();
   return [opsPick, opsSolve, opsDone][state.step]();
 }
@@ -333,7 +335,7 @@ function render() {
 const HOME_GROUPS = [["rate", "Rates & tables"], ["num", "Numbers"], ["frac", "Fractions"], ["alg", "Equations"], ["think", "Thinking games"]];
 const HOME_TILES = [
   ["trip", "Trip Planner", "mph", "rate"], ["rate", "Who's Fastest?", "÷1", "rate"], ["tbl", "Fill the Table", "▦", "rate"],
-  ["est", "Round & Estimate", "≈", "num"], ["dec", "Decimal Times", "0.1", "num"], ["fdp", "Fractions, Decimals & Percents", "%", "num"], ["lcm", "Least Common Multiple", "LCM", "num"],
+  ["est", "Round & Estimate", "≈", "num"], ["dec", "Decimal Times", "0.1", "num"], ["fdp", "Fractions, Decimals & Percents", "%", "num"], ["lcm", "Least Common Multiple", "LCM", "num"], ["area", "Area", "ft²", "num"],
   ["frac", "Fraction Times", "½×", "frac"], ["mix", "Mixed Numbers", "4⅝", "frac"],
   ["ops", "Order of Operations", "( )", "alg"], ["eq", "Solve & Plot", "x=", "alg"],
   ["mean", "What Does It Mean?", "?", "think"]
@@ -1327,6 +1329,33 @@ const PIP_TOPICS = {
       fixQ: `In Step 3 I turned ${N}/${D} into 1/${N}. What does simplest form really mean?`,
       fixes: [["Divide top and bottom by the same number. If none works, leave it.", true], ["Make the top 1", false, `Let's test it: 1/${N} is much smaller than ${N}/${D}. Simplifying never changes the size.`], [`Divide both by ${N}`, false, `Let's test it: ${D} ÷ ${N} doesn't come out even, so ${N} doesn't divide both.`]],
       fixed: `<b>${N}/${D}.</b> No number except 1 divides both ${N} and ${D}, so it's already in simplest form.` };
+  } }  ,
+  area: { label: "Area", sym: "ft²", make() {
+    const s = pick(arStories), kind = pick(["add", "forget"]), right = Math.random() < .25;
+    let L, W, k;
+    for (let t = 0; t < 5000; t++) {
+      L = rint(6, 24); W = rint(4, 15); k = pick([2, 3, 4, 5, 6, 8, 10, 12]);
+      if (L === W || (L * W) % k || L * W / k < 4) continue;
+      if (kind === "add" && (L + W) % k) continue; break;
+    }
+    const [who, pr, job, place, one, many] = s, A = L * W, q = A / k;
+    const good = [{ label: "Step 1: Area", math: `${L} × ${W} = ${A} square feet` }, { label: `Step 2: How many ${many}?`, math: `${A} ÷ ${k} = ${q}` }];
+    const steps = good.map(x => ({ ...x }));
+    let pipN = q, w = -1;
+    if (!right && kind === "add") { steps[0].math = `${L} + ${W} = ${L + W} square feet`; steps[1].math = `${L + W} ÷ ${k} = ${(L + W) / k}`; pipN = (L + W) / k; w = 0; }
+    if (!right && kind === "forget") { steps[1].math = `${A} square feet, so ${A} ${many}`; pipN = A; w = 1; }
+    return { q: `${who} wants to ${job}. The ${place} is ${L} feet long and ${W} feet wide. Each ${one} covers ${k} square feet. How many ${many} will ${pr} need?`,
+      good, steps, wrong: w,
+      claim: `I think ${pr} needs <b>${pipN} ${pipN === 1 ? one : many}</b>.`,
+      offRight: w === 1 ? `Good eye. ${A} ${many} is one for every square foot. ${who} would have enough for the whole street!` : `Good eye. Let's test it: ${pipN} × ${k} = ${pipN * k} square feet. The ${place} is way bigger than that.`,
+      yesWrong: `Let's test it: ${pipN} ${many} × ${k} square feet each = ${pipN * k} square feet. The ${place} is ${L} × ${W}. Does it match?`,
+      yesRight: `You checked it. ${q} × ${k} = ${A}, and ${L} × ${W} = ${A}. It covers the whole ${place}.`,
+      offWrong: `Let's check together: ${q} × ${k} = ${A} square feet, and ${L} × ${W} = ${A}. Does it match?`,
+      stepOk: i => i === 0 ? `Step 1 is right: ${W} rows of ${L} squares is ${L} × ${W} = ${A}.` : `Step 2 divides what Step 1 gave it. Look where that number came from.`,
+      fixQ: w === 0 ? `In Step 1 I added ${L} + ${W}. How do you find how many squares cover a rectangle?` : `In Step 2 I said ${A} square feet means ${A} ${many}. But each one covers ${k} square feet. What should I do?`,
+      fixes: w === 0 ? [[`Multiply: ${W} rows of ${L} = ${L} × ${W}`, true], [`Add: ${L} + ${W}`, false, `That's what Pip did. That only counts squares along the top and one side. The middle is still empty!`], [`Go around the edge: ${L} + ${W} + ${L} + ${W}`, false, `Let's test it: that's a fence around the edge. Area is the inside.`]]
+                     : [[`Divide: ${A} ÷ ${k}`, true], [`Multiply: ${A} × ${k}`, false, `Let's test it: that's ${A * k}, even more ${many}!`], ["Keep it the same", false, `That's what Pip did. One for every square foot is way too many.`]],
+      fixed: `<b>${q} ${many}.</b> Area: ${L} × ${W} = ${A} square feet. Then ${A} ÷ ${k} = ${q}. Check: ${q} × ${k} = ${A}.` };
   } }
 };
 
@@ -3103,6 +3132,237 @@ function fdpCompare() {
       row.append(again, kind); fb.appendChild(row);
     } else {
       fb.innerHTML = `<div class="note look">${v === "=" ? `They're on different spots, so they aren't equal.` : `Look at the number line. Which dot is farther to the right? Numbers get bigger as you go right.`}</div>`;
+    }
+  });
+}
+
+/* ---------- area: same-size squares in rows and columns ---------- */
+const arStories = [
+  ["Goran", "he", "plant grass in his backyard", "backyard", "pack of seed", "packs of seed"],
+  ["Nicole", "she", "put tiles on her patio", "patio", "box of tiles", "boxes of tiles"],
+  ["Marcus", "he", "paint a wall in his room", "wall", "can of paint", "cans of paint"],
+  ["Ivy", "she", "cover her garden with mulch", "garden", "bag of mulch", "bags of mulch"],
+  ["Ben", "he", "put new carpet in the playroom", "playroom", "roll of carpet", "rolls of carpet"],
+  ["Rosa", "she", "plant flowers in a garden bed", "garden bed", "tray of flowers", "trays of flowers"]
+];
+function makeArea(kind) {
+  const s = pick(arStories);
+  let L, W, k;
+  if (kind === "see") {
+    for (let t = 0; t < 500; t++) {
+      L = rint(4, 9); W = rint(2, 6); if (L === W) continue;
+      const divs = []; for (let d = 2; d <= L * W / 3; d++) if (L * W % d === 0) divs.push(d);
+      if (!divs.length) continue; k = pick(divs); break;
+    }
+  } else {
+    for (let t = 0; t < 5000; t++) {
+      L = rint(14, 39); W = rint(12, 29); k = pick([4, 6, 8, 9, 12, 12, 15, 16, 24]);
+      if (L % 10 === 0 || W % 10 === 0 || L === W || (L * W) % k) continue;
+      const q = L * W / k; if (q < 15 || q > 99) continue; break;
+    }
+  }
+  const [who, pr, job, place, one, many] = s;
+  return { kind, L, W, A: L * W, k, q: L * W / k, who, pr, job, place, one, many, phase: 0, pick: null };
+}
+const arStory = a => `<p class="story">${a.who} wants to ${a.job}. The ${a.place} is a rectangle, <b>${a.L} feet</b> long and <b>${a.W} feet</b> wide. Each ${a.one} covers <b>${a.k} square feet</b>. How many ${a.many} will ${a.pr} need?</p>`;
+
+// a yard on a grid: `rows` rows filled with 1-foot squares; patch = color in groups of k
+function arGrid(a, rows, patch = 0) {
+  const s = Math.max(14, Math.min(40, Math.floor(320 / a.L), Math.floor(230 / a.W))), ox = 44, oy = 30;
+  const w = a.L * s, h = a.W * s;
+  let cells = "";
+  for (let r = 0; r < rows; r++) for (let c = 0; c < a.L; c++) {
+    const i = r * a.L + c, g = patch ? Math.floor(i / patch) % 2 : 0;
+    cells += `<rect x="${ox + c * s + 1.5}" y="${oy + r * s + 1.5}" width="${s - 3}" height="${s - 3}" rx="3" style="fill:${g ? "var(--look)" : "var(--accent)"}"/>`;
+    if (patch && i % patch === 0) cells += `<text x="${ox + c * s + s / 2}" y="${oy + r * s + s / 2 + 5}" text-anchor="middle" style="fill:var(--accent-ink);font:700 ${Math.min(14, s - 4)}px var(--font-body)">${i / patch + 1}</text>`;
+  }
+  return `<div style="overflow-x:auto"><svg viewBox="0 0 ${ox + w + 12} ${oy + h + 12}" style="width:100%;max-width:${ox + w + 12}px;display:block;margin:0 auto" role="img" aria-label="A rectangle ${a.L} feet by ${a.W} feet">
+    <text x="${ox + w / 2}" y="20" text-anchor="middle" style="fill:var(--ink);font:600 15px var(--font-body)">${a.L} ft</text>
+    <text x="${ox - 8}" y="${oy + h / 2 + 5}" text-anchor="end" style="fill:var(--ink);font:600 15px var(--font-body)">${a.W} ft</text>
+    <rect x="${ox}" y="${oy}" width="${w}" height="${h}" style="fill:var(--accent-wash);stroke:var(--ink);stroke-width:2"/>${cells}</svg></div>`;
+}
+// big yard: split into L × tens and L × ones, faint 1-foot grid so the squares are still there
+function arSplit(a, show = 2) {
+  const T = a.W - a.W % 10, O = a.W % 10, s = Math.min(320 / a.L, 230 / a.W), ox = 44, oy = 30, w = a.L * s, hT = T * s, hO = O * s;
+  const lab = (y, h, t, on) => `<text x="${ox + w / 2}" y="${y + h / 2 + 6}" text-anchor="middle" style="fill:var(--ink);font:700 ${h < 24 ? 13 : 17}px var(--font-body);paint-order:stroke;stroke:var(--card);stroke-width:4">${on ? t : ""}</text>`;
+  return `<div><svg viewBox="0 0 ${ox + w + 12} ${oy + hT + hO + 16}" style="width:100%;max-width:${ox + w + 12}px;display:block;margin:0 auto" role="img" aria-label="The rectangle split into two parts">
+    <defs><pattern id="ft" width="${s}" height="${s}" patternUnits="userSpaceOnUse" x="${ox}" y="${oy}"><path d="M ${s} 0 L 0 0 0 ${s}" style="fill:none;stroke:var(--card);stroke-width:.8"/></pattern></defs>
+    <text x="${ox + w / 2}" y="20" text-anchor="middle" style="fill:var(--ink);font:600 15px var(--font-body)">${a.L} ft</text>
+    <rect x="${ox}" y="${oy}" width="${w}" height="${hT}" style="fill:var(--accent)" opacity=".55"/>
+    <rect x="${ox}" y="${oy + hT + 4}" width="${w}" height="${hO}" style="fill:var(--look)" opacity=".6"/>
+    <rect x="${ox}" y="${oy}" width="${w}" height="${hT}" style="fill:url(#ft)"/><rect x="${ox}" y="${oy + hT + 4}" width="${w}" height="${hO}" style="fill:url(#ft)"/>
+    <text x="${ox - 8}" y="${oy + hT / 2 + 5}" text-anchor="end" style="fill:var(--ink);font:600 15px var(--font-body)">${T} ft</text>
+    <text x="${ox - 8}" y="${oy + hT + 4 + hO / 2 + 5}" text-anchor="end" style="fill:var(--ink);font:600 14px var(--font-body)">${O} ft</text>
+    ${lab(oy, hT, `${a.L} × ${T}`, show >= 1)}${lab(oy + hT + 4, hO, `${a.L} × ${O}`, show >= 2)}</svg>
+    <p class="sub" style="text-align:center">Each tiny square is 1 foot by 1 foot. The ${a.place} is split into two easier parts.</p></div>`;
+}
+// three ways to "cover" the same rectangle: only one is fair
+function arFairPics(a) {
+  const L = a.L, W = a.W, s = Math.min(22, Math.floor(150 / L)), w = L * s, h = W * s;
+  const frame = inner => `<svg viewBox="-3 -3 ${w + 6} ${h + 6}" style="width:100%;max-width:${w + 6}px"><rect x="0" y="0" width="${w}" height="${h}" style="fill:var(--card);stroke:var(--ink);stroke-width:2"/>${inner}</svg>`;
+  const sq = (x, y, ww, hh) => `<rect x="${x + 1}" y="${y + 1}" width="${ww - 2}" height="${hh - 2}" rx="2" style="fill:var(--block);stroke:var(--accent);stroke-width:1"/>`;
+  let even = ""; for (let r = 0; r < W; r++) for (let c = 0; c < L; c++) even += sq(c * s, r * s, s, s);
+  let pcs = [{ x: 0, y: 0, w, h }];
+  while (pcs.length < Math.max(5, Math.round(L * W / 2.5))) {
+    pcs.sort((p, q) => q.w * q.h - p.w * p.h); const p = pcs.shift(), f = .25 + Math.random() * .5;
+    if (p.w >= p.h) pcs.push({ x: p.x, y: p.y, w: p.w * f, h: p.h }, { x: p.x + p.w * f, y: p.y, w: p.w * (1 - f), h: p.h });
+    else pcs.push({ x: p.x, y: p.y, w: p.w, h: p.h * f }, { x: p.x, y: p.y + p.h * f, w: p.w, h: p.h * (1 - f) });
+  }
+  const messy = pcs.map(p => sq(p.x, p.y, p.w, p.h)).join("");
+  let gaps = ""; for (let r = 0; r < W; r++) for (let c = 0; c < L; c++) if ((r * 7 + c * 3) % 4) gaps += sq(c * s + s * .15, r * s + s * .15, s * .7, s * .7);
+  return [["even", frame(even)], ["messy", frame(messy)], ["gaps", frame(gaps)]].sort(() => Math.random() - .5);
+}
+
+function arPick() {
+  const c = el(`<section class="card">
+    <h2>Which yard do you want?</h2>
+    <p class="sub">Area means how many 1-foot squares it takes to cover the whole flat space. You can switch any time.</p>
+    <div class="choices">
+      <button class="home-pick" type="button" data-k="see"><strong>See the squares</strong><span>Small yards. You build the rows yourself.</span></button>
+      <button class="home-pick" type="button" data-k="big"><strong>Big yard</strong><span>Like Goran's 32 ft by 21 ft backyard.</span></button>
+    </div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelectorAll("[data-k]").forEach(b => b.onclick = () => { state.arKind = b.dataset.k; state.ar = makeArea(b.dataset.k); state.step = 1; render(); });
+}
+
+function arLook() {
+  const a = state.ar;
+  if (a.kind === "see") {
+    if (!a.pics) a.pics = arFairPics(a);
+    const c = el(`<section class="card">
+      ${arStory(a)}
+      <h2>Three kids tried to cover the ${a.place} with squares. Which one can we count to find the area?</h2>
+      <div class="choices" id="opts">${a.pics.map(([k, svg]) => `<button type="button" data-k="${k}" style="padding:12px">${svg}</button>`).join("")}</div>
+      <div id="fb"></div>
+    </section>`);
+    stage.appendChild(c);
+    c.querySelectorAll("[data-k]").forEach(b => b.onclick = () => {
+      const fb = c.querySelector("#fb"), k = b.dataset.k;
+      if (k === "messy") { fb.innerHTML = `<div class="note look">Let's test this one. Some boxes are big and some are tiny. If one ${a.one} covers a tiny box, it won't cover a big box! For counting to work, every square has to be the <b>same size</b>.</div>`; return; }
+      if (k === "gaps") { fb.innerHTML = `<div class="note look">Let's test this one. Look between the squares. There are gaps and empty spots. Those parts of the ${a.place} would be left bare! The squares have to touch, with no gaps.</div>`; return; }
+      c.querySelectorAll("[data-k]").forEach(x => x.disabled = x !== b); b.classList.add("picked");
+      fb.innerHTML = `<div class="note ok">That's the one. Every square is the same size (1 foot by 1 foot), they touch with no gaps, and they line up in <b>rows</b> and <b>columns</b>. Now we can count them.</div>`;
+      fb.appendChild(nextBtn(() => { state.step = 2; render(); }, "Build the rows"));
+    });
+  } else {
+    const rl = Math.round(a.L / 10) * 10, rw = Math.round(a.W / 10) * 10, good = rl * rw;
+    const opts = [[good, true], [rl + rw, false, `Let's test ${rl + rw}. That's ${rl} + ${rw}, like walking along two edges of the ${a.place}. But the ${a.place} is covered all the way across the inside: ${rw} rows with ${rl} squares in each row.`],
+      [2 * (rl + rw), false, `Let's test ${2 * (rl + rw)}. That's walking all the way around the edge, like a fence. Area is the inside, not the edge.`]].sort(() => Math.random() - .5);
+    const c = el(`<section class="card">
+      ${arStory(a)}
+      <h2>Estimate first. Round each side to the nearest ten. About how many square feet is the ${a.place}?</h2>
+      <p class="sub">${a.L} is about ${rl}. ${a.W} is about ${rw}.</p>
+      <div class="choices" id="opts">${opts.map(([v], i) => `<button type="button" data-i="${i}">About ${v}</button>`).join("")}</div>
+      <div id="fb"></div>
+    </section>`);
+    stage.appendChild(c);
+    c.querySelectorAll("[data-i]").forEach(b => b.onclick = () => {
+      const fb = c.querySelector("#fb"), [, ok, why] = opts[+b.dataset.i];
+      if (!ok) { fb.innerHTML = `<div class="note look">${why}</div>`; return; }
+      c.querySelectorAll("[data-i]").forEach(x => x.disabled = x !== b); b.classList.add("picked");
+      a.est = good;
+      fb.innerHTML = `<div class="note ok">About ${rw} rows of ${rl} squares. ${rl} × ${rw} = <b>${good}</b> square feet. Keep that number handy to check the real answer.</div>`;
+      fb.appendChild(nextBtn(() => { state.step = 2; render(); }, "Split it up"));
+    });
+  }
+}
+
+function arBuild() {
+  const a = state.ar;
+  if (a.kind === "see") {
+    if (a.phase === 0) return mixAsk({
+      head: arStory(a), extra: arGrid(a, 0),
+      q: `Start with the top row. How many 1-foot squares fit across the ${a.L} ft side?`,
+      ans: a.L,
+      hint: `Each square is 1 foot wide, and the top side is ${a.L} feet long. One square for each foot.`,
+      wrong: v => v === a.W ? `Let's test ${v}. That's the side going down (${a.W} ft). The top row goes across the ${a.L} ft side.` : `Let's test ${v}. Each square is 1 foot wide, so ${v} squares would make a row ${v} feet long. The top is ${a.L} feet.`,
+      next: () => { a.phase = 1; a.rows = 1; render(); }
+    });
+    const full = a.rows >= a.W;
+    const c = el(`<section class="card">
+      ${arGrid(a, a.rows)}
+      <h2>${full ? `The ${a.place} is covered!` : `Every row is the same: ${a.L} squares. Add rows until the ${a.place} is full.`}</h2>
+      <div class="work">${Array.from({ length: a.rows }, (_, i) => `<div class="step"><small>Row ${i + 1}</small><b>${a.L} more · ${a.L * (i + 1)} so far</b></div>`).join("")}</div>
+      <div id="fb"></div>
+    </section>`);
+    stage.appendChild(c);
+    const fb = c.querySelector("#fb");
+    if (!full) { const b = el(`<button class="primary" type="button">Add a row</button>`); b.onclick = () => { a.rows++; render(); }; fb.appendChild(b); }
+    else {
+      fb.innerHTML = `<div class="note ok"><b>${a.W} rows</b> with <b>${a.L} squares</b> in each row. Counting by ${a.L}s gave ${a.A}. That's the same as ${a.W} × ${a.L}.</div>`;
+      fb.appendChild(nextBtn(() => { state.step = 3; render(); }, "Find the area"));
+    }
+    return;
+  }
+  const T = a.W - a.W % 10, O = a.W % 10;
+  if (a.phase === 0) return mixAsk({
+    head: arSplit(a, 1),
+    q: `Big part: ${T} rows of ${a.L} squares. ${a.L} × ${T} = ?`,
+    ans: a.L * T,
+    hint: `${a.L} × ${T / 10} = ${a.L * T / 10}. Then add a zero for the ten: ${a.L} × ${T} = ${a.L * T / 10}0.`,
+    wrong: v => v === a.L * T / 10 ? `Let's test ${v}. That's ${a.L} × ${T / 10}, only ${T / 10} row${T > 10 ? "s" : ""}. There are ${T} rows here, so add a zero.` : `Let's test it: ${a.L} × ${T / 10} = ${a.L * T / 10}, then × 10. Does that make ${v}?`,
+    next: () => { a.phase = 1; render(); }
+  });
+  return mixAsk({
+    head: arSplit(a, 2),
+    q: `Small part: ${O} row${O > 1 ? "s" : ""} of ${a.L} squares. ${a.L} × ${O} = ?`,
+    ans: a.L * O,
+    hint: `Break ${a.L} into ${a.L - a.L % 10} + ${a.L % 10}. ${a.L - a.L % 10} × ${O} = ${(a.L - a.L % 10) * O}, and ${a.L % 10} × ${O} = ${a.L % 10 * O}. Add them.`,
+    wrong: v => v === a.L + O ? `Let's test ${v}. That's ${a.L} + ${O}. But we have ${O} whole row${O > 1 ? "s" : ""}, each with ${a.L} squares. That's ${a.L} × ${O}.` : `Let's test it: ${v} ÷ ${O} would need to be ${a.L}. Try the hint to break ${a.L} into tens and ones.`,
+    next: (fb, input) => { input.disabled = true; fb.innerHTML = `<div class="note ok">Big part: ${a.L * T}. Small part: ${a.L * O}.</div>`; fb.appendChild(nextBtn(() => { state.step = 3; render(); }, "Put them together")); }
+  });
+}
+
+function arAreaWrong(a, v) {
+  if (v === a.L + a.W) return `Let's test ${v}. That's ${a.L} + ${a.W}, just the squares along the top and one side, like an L. The middle of the ${a.place} would still be empty! We need every row.`;
+  if (v === 2 * (a.L + a.W)) return `Let's test ${v}. That's all the way around the edge, like a fence. Area covers the inside.`;
+  if (a.est && Math.abs(v - a.A) > a.A * .3) return `Let's check with the estimate. We said about ${a.est}. ${v} is ${v > a.est ? "way more" : "way less"}. Something got mixed up.`;
+  if (Math.abs(v - a.A) === a.L) return `So close! Let's test it: ${v} is one row ${v > a.A ? "too many" : "short"}. Count the rows again: there are ${a.W}.`;
+  return `Let's test ${v}: ${a.W} rows of ${a.L} would be ${a.W} × ${a.L}. Does it come out to ${v}?`;
+}
+function arArea() {
+  const a = state.ar, T = a.W - a.W % 10, O = a.W % 10;
+  const see = a.kind === "see";
+  mixAsk({
+    head: see ? arGrid(a, a.W) : arSplit(a, 2),
+    q: see ? `${a.W} rows × ${a.L} squares in each row = ? square feet` : `Add the two parts: ${a.L * T} + ${a.L * O} = ? square feet`,
+    ans: a.A,
+    hint: see ? `Count by ${a.L}s, ${a.W} times: ${Array.from({ length: a.W }, (_, i) => a.L * (i + 1)).slice(0, 2).join(", ")}, …` : `Add the hundreds and tens first, then the ones.`,
+    wrong: v => arAreaWrong(a, v),
+    next: (fb, input) => {
+      input.disabled = true;
+      fb.innerHTML = `<div class="note ok">The area is <b>${a.A} square feet</b>. The shortcut: length × width. ${a.L} × ${a.W} = ${a.A}.${a.est ? (Math.abs(a.A - a.est) <= a.A * .2 ? ` That's close to our estimate of ${a.est}.` : ` Our estimate of ${a.est} was ${a.est < a.A ? "low" : "high"} because rounding moved the sides ${a.est < a.A ? "down" : "up"}. It still told us the answer is in the hundreds.`) : ""}</div>`;
+      fb.appendChild(nextBtn(() => { state.step = 4; render(); }, `How many ${a.many.split(" ")[0]}?`));
+    }
+  });
+}
+
+function arPacks() {
+  const a = state.ar, base = Math.floor(a.q / 10) * 10;
+  mixAsk({
+    head: `${arStory(a)}<p class="sub">Area: ${a.A} square feet.</p>`,
+    extra: a.kind === "see" ? arGrid(a, a.W) : "",
+    q: `Each ${a.one} covers ${a.k} square feet. How many ${a.many} for ${a.A} square feet?`,
+    ans: a.q,
+    hint: a.kind === "see" ? `Count by ${a.k}s until you reach ${a.A}: ${a.k}, ${a.k * 2}, ${a.k * 3}, … How many did you count?`
+      : `${a.A} ÷ ${a.k}. Take big chunks: ${a.k} × ${base} = ${a.k * base}. That leaves ${a.A} − ${a.k * base} = ${a.A - a.k * base}. How many more ${a.k}s fit in ${a.A - a.k * base}?`,
+    wrong: v => {
+      if (v === a.A) return `${a.A} ${a.many}? That's one for every single square foot! Each one covers ${a.k} square feet, so ${a.who} needs far fewer. ${a.A} ÷ ${a.k}.`;
+      if (v === a.A * a.k) return `Let's test ${v}. That many ${a.many} could cover a whole neighborhood! Each one covers ${a.k} square feet, so divide: ${a.A} ÷ ${a.k}.`;
+      if (v <= 0) return `${a.who} needs at least one!`;
+      const got = v * a.k;
+      return `Let's test ${v}: ${v} ${v === 1 ? a.one : a.many} × ${a.k} square feet = ${got} square feet. The ${a.place} is ${a.A}. ${got > a.A ? `That's ${got - a.A} square feet too much. Try fewer.` : `That leaves ${a.A - got} square feet bare. Try more.`}`;
+    },
+    next: (fb, input, c) => {
+      input.disabled = true;
+      if (a.kind === "see") { const g = c.querySelector("svg"); if (g) g.parentElement.outerHTML = arGrid(a, a.W, a.k); }
+      fb.innerHTML = `<div class="note ok"><b>${a.q} ${a.q === 1 ? a.one : a.many}.</b> Check: ${a.q} × ${a.k} = ${a.A} square feet. It covers the whole ${a.place}.${a.kind === "see" ? ` Each color patch is one ${a.one}.` : ""}</div>
+        <p class="sub">Two steps: first the area (length × width), then divide by how much one covers.</p>`;
+      const row = el(`<div class="row"></div>`), again = el(`<button class="primary" type="button">Another one</button>`), other = el(`<button type="button">Pick a different size</button>`);
+      again.onclick = () => { state.solved.area++; save(); state.ar = makeArea(state.arKind); state.step = 1; render(); };
+      other.onclick = () => { state.solved.area++; save(); state.step = 0; render(); };
+      row.append(again, other); fb.appendChild(row);
     }
   });
 }

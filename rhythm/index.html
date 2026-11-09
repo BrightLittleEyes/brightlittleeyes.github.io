@@ -252,7 +252,7 @@ const COL = 'rhythm_days', CFG_DOC = 'rhythm_config/main';
 /* ---------- the starting board (used until you save your own) ---------- */
 /* Your board as of Nov 5, 2026 (saved from the live board). */
 const DEFAULT_CONFIG = {
-  "v": 15,
+  "v": 16,
   "verse": "So do not fear, for I am with you; do not be dismayed, for I am your God. I will strengthen you and help you; I will uphold you with my righteous right hand.",
   "verseRef": "Isaiah 41:10",
   "kidName": "",
@@ -627,7 +627,8 @@ const DEFAULT_CONFIG = {
         "sub": "Restock 8 compartments",
         "id": "snackbox",
         "on": "notsat",
-        "weekly": true
+        "every": 8,
+        "lastDone": "2026-11-06"
       },
       {
         "name": "Plant Care",
@@ -853,6 +854,12 @@ function normalize(d){
     }
     c.v = 15;
   }
+  if(c.v < 16){                       // "Once a week" becomes "Every __ days"; snack box is every 8 days
+    ['fun','mech'].forEach(k=>(c.tags[k]||[]).forEach(t=>{ if(t.weekly){ t.every=7; } delete t.weekly; }));
+    const sb=c.tags.mech.find(t=>t.id==='snackbox' || norm(t.name)==='fill snack box');
+    if(sb){ sb.every=8; if(!sb.lastDone) sb.lastDone='2026-11-06'; }   // 3 of 8 snacks eaten by Mon, Nov 9
+    c.v = 16;
+  }
   return c;
 }
 const BOARD_OF_DAY = {6:'satBlocks', 0:'sunBlocks'};   // Saturday, Sunday; every other day uses "blocks"
@@ -962,8 +969,9 @@ function save(){
 }
 function loadYesterday(){
   const k=S.date;
-  S.recent = {};                     // days back (1..6) -> that day's placed tags
-  for(let n=1;n<=6;n++){
+  const longest = Math.max(7, ...['fun','mech'].flatMap(x=>(TAGS[x]||[]).map(t=>+t.every||0)));
+  S.recent = {};                     // days back (1..N) -> that day's placed tags
+  for(let n=1;n<=Math.min(longest-1,31);n++){
     const dk=shift(k,-n);
     S.recent[n] = ((readLocal(dk)||{}).slots)||{};
     if(S.db) S.db.doc(COL+'/'+dk).get().then(s=>{ if(k===S.date && s.exists) S.recent[n]=(s.data().slots)||{}; }).catch(()=>{});
@@ -1138,15 +1146,21 @@ function openPicker(slotId){
   const usedOf = t => (kind==='flag'?CHG_IDS:SLOT_IDS).find(s=>s!==slotId && D.slots[s]===t.id);
   // No repeats: a Helping Hands job done yesterday can't be picked today (unless nothing else would be left)
   const yday = new Set(Object.values((S.recent||{})[1]||{}));
-  const week = new Set(Object.values(S.recent||{}).flatMap(o=>Object.values(o||{})));
-  let weekly = t => !!t.weekly && week.has(t.id) && D.slots[slotId]!==t.id;
+  // "Every N days": the last time it was done (board history, or the date you set in Edit board) decides when it's back
+  const lastDone = t => {
+    let last = t.lastDone || '';
+    Object.entries(S.recent||{}).forEach(([n,o])=>{ if(Object.values(o||{}).includes(t.id)){ const dk=shift(S.date,-n); if(dk>last) last=dk; } });
+    return last;
+  };
+  const dueOn = t => { const l=lastDone(t); return (+t.every>1 && l && l<S.date) ? shift(l, +t.every) : ''; };
+  let weekly = t => { const due=dueOn(t); return !!due && S.date < due && D.slots[slotId]!==t.id; };
   let rested = t => kind==='mech' && CFG.noRepeat!==false && yday.has(t.id) && D.slots[slotId]!==t.id;
   if(!list.some(t=>!usedOf(t) && !rested(t) && !weekly(t))){ rested = ()=>false; if(!list.some(t=>!usedOf(t) && !weekly(t))) weekly = ()=>false; }
   $('#opts').innerHTML = list.map(t=>{
     const usedIn = usedOf(t), wk = !usedIn && weekly(t), rest = !usedIn && !wk && rested(t);
     const cur = D.slots[slotId]===t.id;
     const where = usedIn ? `<small>${kind==='flag'?'Already on the board':'On '+esc(ALL_ITEMS.find(i=>i.id===usedIn).t.replace(/^Lunch & /,''))}</small>`
-                : wk ? `<small>Already done this week</small>` : rest ? `<small>You did this yesterday</small>` : (t.sub?`<small>${esc(t.sub)}</small>`:'');
+                : wk ? `<small>Back ${esc(fromKey(dueOn(t)).toLocaleDateString(undefined,{weekday:'short', month:'short', day:'numeric'}))}</small>` : rest ? `<small>You did this yesterday</small>` : (t.sub?`<small>${esc(t.sub)}</small>`:'');
     return `<button class="opt ${kind} ${cur?'cur':''}" data-pick="${esc(t.id)}" ${usedIn||rest||wk?'disabled':''}>${esc(t.name)}${where}</button>`;
   }).join('') || '<p>No tags yet. Add some in Edit board.</p>';
   $('#clearSlot').hidden = !D.slots[slotId];
@@ -1269,7 +1283,8 @@ function tagsEd(k, title, help, hasSub, hasTimer, hasSnack){
     ${list.map((t,ti)=>`<div class="ed-tag">
       <input data-path="tags.${k}.${ti}.name" value="${esc(t.name)}" placeholder="Tag name">
       ${hasSub?`<input data-path="tags.${k}.${ti}.sub" value="${esc(t.sub)}" placeholder="Small line under it (optional)">`:''}
-      ${k!=='flag'?`<label class="ed-chk" title="After she picks it, it's greyed out for the next 6 days"><input type="checkbox" data-path="tags.${k}.${ti}.weekly" data-type="bool" ${t.weekly?'checked':''}> Once a week</label>`:''}
+      ${k!=='flag'?`<label class="ed-min" title="After she does it, it's greyed out until this many days have passed">Every <input type="number" min="2" max="60" inputmode="numeric" data-path="tags.${k}.${ti}.every" data-type="num" value="${t.every||''}" placeholder="any" style="width:64px!important"> days</label>`:''}
+      ${k!=='flag'&&t.every?`<label class="ed-min" title="When it was last done. The board also remembers each time she picks it.">Last done <input type="date" data-path="tags.${k}.${ti}.lastDone" value="${esc(t.lastDone||'')}" style="width:auto!important"></label>`:''}
       ${hasTimer?`<label class="ed-min">Timer <input type="number" min="1" max="300" inputmode="numeric" data-path="tags.${k}.${ti}.timer" data-type="min" value="${t.timer?Math.round(t.timer/60):''}" placeholder="none"> min</label>`:''}
       ${k!=='flag'?`<label class="ed-min">Shows on <select data-path="tags.${k}.${ti}.on" style="width:auto">${Object.entries(DAY_OPTS).map(([v,n])=>`<option value="${v}" ${(t.on||'all')===v?'selected':''}>${n}</option>`).join('')}</select></label>`:''}
       ${mv('tags.'+k, ti, list.length)}</div>`).join('')}
@@ -1325,6 +1340,7 @@ function renderEditor(){
 function readField(el){
   if(el.dataset.type==='bool') return el.checked || undefined;
   if(el.dataset.type==='flag') return el.checked;
+  if(el.dataset.type==='num'){ const n=parseInt(el.value,10); return n>1 ? n : undefined; }
   if(el.dataset.type==='min'){ const n=parseFloat(el.value); return n>0 ? Math.round(n*60) : undefined; }
   return el.value;
 }

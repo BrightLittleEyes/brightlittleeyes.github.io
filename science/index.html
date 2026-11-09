@@ -189,6 +189,9 @@ tr:last-child td{border-bottom:0}
 .wtrow b{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums}
 .wtbar{height:14px;background:var(--surface);border-radius:7px;overflow:hidden}
 .wtbar i{display:block;height:100%;background:var(--c);border-radius:7px;transition:width .3s}
+.vframe{position:relative;width:100%;max-width:720px;aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:#000}
+.vframe iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.watch .vcap{font-size:15px;color:var(--ink);margin:10px 0 0}
 .watch{margin-top:16px;border-top:1px solid var(--line);padding-top:14px}
 .watch h3{font-size:14px;font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-weight:500}
 .watch ul{list-style:none;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:8px}
@@ -2617,7 +2620,7 @@ function renderUnit(){
   if (step===0) body = `<div class="vocab first"><dl>${L.vocab.map(v=>`<dt>${esc(v[0])}</dt><dd>${esc(v[1])}</dd>`).join("")}</dl></div>`;
   if (step===1) body = `<div class="readbody">${L.body}</div><div class="vocab"><h3>Words to know</h3><dl>${L.vocab.map(v=>`<dt>${esc(v[0])}</dt><dd>${esc(v[1])}</dd>`).join("")}</dl></div>`;
   if (step===2) body = F ? `<figure class="fig" id="fig"><span class="figtag">${F.tag}</span>${F.html}<figcaption>${esc(F.cap)}</figcaption></figure>` : "";
-  if (step===3) body = W ? `<div class="watch"><a class="vid" href="https://www.youtube.com/watch?v=${W.id}" target="_blank" rel="noopener"><span class="play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="#fff"/></svg></span><span><b>${esc(W.title)}</b><small>${esc(W.by)} · YouTube</small></span></a><p>Opens on YouTube in a new tab. Not working? <a href="${YT(W.more)}" target="_blank" rel="noopener">Find more videos on this topic</a>.</p></div>` : "";
+  if (step===3) body = W ? `<div class="watch"><div class="vframe"><iframe src="https://www.youtube-nocookie.com/embed/${W.id}?rel=0&modestbranding=1&playsinline=1" title="${esc(W.title)}" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" loading="lazy"></iframe></div><p class="vcap"><b>${esc(W.title)}</b> · ${esc(W.by)}</p><p>If the video doesn't play, ask a parent for help.</p></div>` : "";
   if (step===4) body = `<div class="flash" id="flash"></div>`;
   if (step===5) body = `<div class="tryit"><b>Try it</b>${esc(L.tryit)}</div>
     <div class="finish ${done?"is-done":""}">${done ? `<span class="got">✓ Lesson finished · <span class="st">★</span> earned</span>` : `<button class="btn big" id="finish">I finished this lesson <span class="st">+★</span></button>`}</div>`;

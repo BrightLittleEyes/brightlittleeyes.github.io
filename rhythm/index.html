@@ -252,7 +252,7 @@ const COL = 'rhythm_days', CFG_DOC = 'rhythm_config/main';
 /* ---------- the starting board (used until you save your own) ---------- */
 /* Your board as of Nov 5, 2026 (saved from the live board). */
 const DEFAULT_CONFIG = {
-  "v": 14,
+  "v": 15,
   "verse": "So do not fear, for I am with you; do not be dismayed, for I am your God. I will strengthen you and help you; I will uphold you with my righteous right hand.",
   "verseRef": "Isaiah 41:10",
   "kidName": "",
@@ -626,7 +626,8 @@ const DEFAULT_CONFIG = {
         "name": "Fill Snack Box",
         "sub": "Restock 8 compartments",
         "id": "snackbox",
-        "on": "notsat"
+        "on": "notsat",
+        "weekly": true
       },
       {
         "name": "Plant Care",
@@ -638,6 +639,12 @@ const DEFAULT_CONFIG = {
         "name": "Sensory Reset",
         "sub": "Heavy work",
         "id": "sensory",
+        "on": "notsat"
+      },
+      {
+        "id": "cleanroom",
+        "name": "Clean Room",
+        "sub": "Bed made, floor clear, things put away",
         "on": "notsat"
       },
       {
@@ -681,7 +688,8 @@ const DEFAULT_CONFIG = {
         "name": "Lunch Plans"
       }
     ]
-  }
+  },
+  "noRepeat": true
 };
 const ICON = {
   sun:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FCE38A" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5" fill="#F9D84A"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>',
@@ -739,6 +747,7 @@ function normalize(d){
   if(d.tags) ['fun','mech','flag'].forEach(k=>{ if(Array.isArray(d.tags[k])) c.tags[k]=d.tags[k]; });
   ['verse','verseRef','kidName','pwKid','pwParent','sound'].forEach(k=>{ if(typeof d[k]==='string') c[k]=d[k]; });
   if(typeof d.repeat==='boolean') c.repeat=d.repeat;
+  if(typeof d.noRepeat==='boolean') c.noRepeat=d.noRepeat;
   if(d.original && typeof d.original==='object') c.original=d.original;
   c.blocks.forEach(b=>{ b.items = Array.isArray(b.items)?b.items:[]; });
   c.satBlocks.forEach(b=>{ b.items = Array.isArray(b.items)?b.items:[]; });
@@ -835,6 +844,14 @@ function normalize(d){
     const sat=c.tags.mech.filter(t=>t.on==='sat');
     if(sat.length) c.tags.mech.forEach(t=>{ if(!t.on || t.on==='all') t.on='notsat'; });
     c.v = 14;
+  }
+  if(c.v < 15){                       // Clean Room job; Fill Snack Box only once a week
+    const sb=c.tags.mech.find(t=>t.id==='snackbox' || norm(t.name)==='fill snack box'); if(sb) sb.weekly=true;
+    if(!c.tags.mech.some(t=>t.id==='cleanroom' || norm(t.name)==='clean room')){
+      const at=c.tags.mech.findIndex(t=>t.id==='sensory');
+      c.tags.mech.splice(at>=0?at+1:c.tags.mech.length, 0, {"id": "cleanroom", "name": "Clean Room", "sub": "Bed made, floor clear, things put away", "on": "notsat"});
+    }
+    c.v = 15;
   }
   return c;
 }
@@ -943,8 +960,18 @@ function save(){
     catch(err){ console.error(err); setStatus('warn','Not saved online — kept on this device'); }
   }, 400);
 }
+function loadYesterday(){
+  const k=S.date;
+  S.recent = {};                     // days back (1..6) -> that day's placed tags
+  for(let n=1;n<=6;n++){
+    const dk=shift(k,-n);
+    S.recent[n] = ((readLocal(dk)||{}).slots)||{};
+    if(S.db) S.db.doc(COL+'/'+dk).get().then(s=>{ if(k===S.date && s.exists) S.recent[n]=(s.data().slots)||{}; }).catch(()=>{});
+  }
+}
 function watchDay(){
   if(S.unsub){ S.unsub(); S.unsub=null; }
+  loadYesterday();
   S.data = Object.assign(blank(), readLocal(S.date)||{});
   render();
   if(!S.db){ setStatus('warn','Saving on this device only'); return; }
@@ -1107,11 +1134,20 @@ function openPicker(slotId){
   S.picking=slotId;
   $('#sheetTitle').textContent = item.t;
   const dow=fromKey(S.date).getDay();
-  $('#opts').innerHTML = (TAGS[kind]||[]).filter(t=>kind==='flag' || tagToday(t,dow) || D.slots[slotId]===t.id).map(t=>{
-    const usedIn = (kind==='flag'?CHG_IDS:SLOT_IDS).find(s=>s!==slotId && D.slots[s]===t.id);
+  const list=(TAGS[kind]||[]).filter(t=>kind==='flag' || tagToday(t,dow) || D.slots[slotId]===t.id);
+  const usedOf = t => (kind==='flag'?CHG_IDS:SLOT_IDS).find(s=>s!==slotId && D.slots[s]===t.id);
+  // No repeats: a Helping Hands job done yesterday can't be picked today (unless nothing else would be left)
+  const yday = new Set(Object.values((S.recent||{})[1]||{}));
+  const week = new Set(Object.values(S.recent||{}).flatMap(o=>Object.values(o||{})));
+  let weekly = t => !!t.weekly && week.has(t.id) && D.slots[slotId]!==t.id;
+  let rested = t => kind==='mech' && CFG.noRepeat!==false && yday.has(t.id) && D.slots[slotId]!==t.id;
+  if(!list.some(t=>!usedOf(t) && !rested(t) && !weekly(t))){ rested = ()=>false; if(!list.some(t=>!usedOf(t) && !weekly(t))) weekly = ()=>false; }
+  $('#opts').innerHTML = list.map(t=>{
+    const usedIn = usedOf(t), wk = !usedIn && weekly(t), rest = !usedIn && !wk && rested(t);
     const cur = D.slots[slotId]===t.id;
-    const where = usedIn ? `<small>${kind==='flag'?'Already on the board':'On '+esc(ALL_ITEMS.find(i=>i.id===usedIn).t.replace(/^Lunch & /,''))}</small>` : (t.sub?`<small>${esc(t.sub)}</small>`:'');
-    return `<button class="opt ${kind} ${cur?'cur':''}" data-pick="${esc(t.id)}" ${usedIn?'disabled':''}>${esc(t.name)}${where}</button>`;
+    const where = usedIn ? `<small>${kind==='flag'?'Already on the board':'On '+esc(ALL_ITEMS.find(i=>i.id===usedIn).t.replace(/^Lunch & /,''))}</small>`
+                : wk ? `<small>Already done this week</small>` : rest ? `<small>You did this yesterday</small>` : (t.sub?`<small>${esc(t.sub)}</small>`:'');
+    return `<button class="opt ${kind} ${cur?'cur':''}" data-pick="${esc(t.id)}" ${usedIn||rest||wk?'disabled':''}>${esc(t.name)}${where}</button>`;
   }).join('') || '<p>No tags yet. Add some in Edit board.</p>';
   $('#clearSlot').hidden = !D.slots[slotId];
   $('#scrim').hidden=false;
@@ -1162,10 +1198,13 @@ async function copyYesterday(){
   if(S.db){ try{ const s=await S.db.doc(COL+'/'+y).get(); if(s.exists) prev=s.data(); }catch(e){} }
   if(!prev) prev=readLocal(y);
   if(!prev || !prev.slots || !Object.keys(prev.slots).filter(k=>!isChg(k)).length){ toast('No tags were placed yesterday.'); return; }
-  const fits = Object.keys(prev.slots).filter(k=>!isChg(k) && SLOT_IDS.includes(k));
-  if(!fits.length){ toast('Yesterday used a different board, so there are no tags to copy.', 3500); return; }
+  const noRep = CFG.noRepeat!==false;
+  const fits = Object.keys(prev.slots).filter(k=>!isChg(k) && SLOT_IDS.includes(k) && !(noRep && (itemById(k)||{}).slot==='mech'));
+  if(!fits.length){ toast(noRep && Object.keys(prev.slots).some(k=>SLOT_IDS.includes(k)) ? 'Nothing to copy. Helping Hands jobs need new picks each day.' : 'Yesterday used a different board, so there are no tags to copy.', 3500); return; }
   const keep={}; CHG_IDS.forEach(k=>{ if(S.data.slots[k]) keep[k]=S.data.slots[k]; });
-  S.data.slots={}; fits.forEach(k=>S.data.slots[k]=prev.slots[k]); Object.assign(S.data.slots, keep); save(); render(); toast('Yesterday\'s tags are on the board.');
+  const keepHH={}; if(noRep) Object.keys(S.data.slots).forEach(k=>{ if((itemById(k)||{}).slot==='mech') keepHH[k]=S.data.slots[k]; });
+  S.data.slots={}; fits.forEach(k=>S.data.slots[k]=prev.slots[k]); Object.assign(S.data.slots, keepHH, keep); save(); render();
+  toast(noRep ? 'Yesterday\'s Fun tags are on the board. Helping Hands jobs need new picks today.' : 'Yesterday\'s tags are on the board.', 4000);
 }
 
 /* ---------- editor (parent only) ---------- */
@@ -1230,6 +1269,7 @@ function tagsEd(k, title, help, hasSub, hasTimer, hasSnack){
     ${list.map((t,ti)=>`<div class="ed-tag">
       <input data-path="tags.${k}.${ti}.name" value="${esc(t.name)}" placeholder="Tag name">
       ${hasSub?`<input data-path="tags.${k}.${ti}.sub" value="${esc(t.sub)}" placeholder="Small line under it (optional)">`:''}
+      ${k!=='flag'?`<label class="ed-chk" title="After she picks it, it's greyed out for the next 6 days"><input type="checkbox" data-path="tags.${k}.${ti}.weekly" data-type="bool" ${t.weekly?'checked':''}> Once a week</label>`:''}
       ${hasTimer?`<label class="ed-min">Timer <input type="number" min="1" max="300" inputmode="numeric" data-path="tags.${k}.${ti}.timer" data-type="min" value="${t.timer?Math.round(t.timer/60):''}" placeholder="none"> min</label>`:''}
       ${k!=='flag'?`<label class="ed-min">Shows on <select data-path="tags.${k}.${ti}.on" style="width:auto">${Object.entries(DAY_OPTS).map(([v,n])=>`<option value="${v}" ${(t.on||'all')===v?'selected':''}>${n}</option>`).join('')}</select></label>`:''}
       ${mv('tags.'+k, ti, list.length)}</div>`).join('')}
@@ -1258,6 +1298,7 @@ function renderEditor(){
       <button class="ed-add" data-act="addblock" data-root="${R}">+ Add a block</button></div>
     ${tagsEd('fun','Fun Choice tags','She picks these for the Fun Choice slots. A timer shows under the tag when it\'s placed.',false,true)}
     ${tagsEd('mech','Helping Hands tags','She picks these for the Helping Hands slots. "Shows on" picks which days a tag is offered.',true,true,true)}
+    <div class="ed-sec" style="margin-top:-8px"><label class="ed-chk" style="font-weight:700;color:var(--ink)"><input type="checkbox" data-path="noRepeat" data-type="flag" ${E.noRepeat!==false?'checked':''}> No repeats: a Helping Hands job she did yesterday is greyed out today ("You did this yesterday")</label></div>
     ${tagsEd('flag','Change of Routine tags','The red tags for "Anything different today?"',false,false)}
     <div class="ed-sec"><h3>Timer sound</h3><p class="help">What plays when a timer runs out. A "Time's up!" card also pops up until she taps OK.</p>
       <div class="ed-grid" style="align-items:center">

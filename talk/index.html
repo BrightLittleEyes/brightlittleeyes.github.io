@@ -1084,7 +1084,15 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     try { speechSynthesis.cancel(); } catch (e) {}
     player.classList.add('open'); setLayer('player');
     video.src = d.video; video.currentTime = 0;
-    video.play().catch(() => speak(d.say || d.label));
+    video.muted = false;
+    video.play().catch(() => {
+      // The browser won't start sound until someone touches the screen (choosing by looking doesn't count).
+      // Play it silently so she still sees her animal, and turn the sound on at the next touch.
+      video.muted = true;
+      video.play().catch(() => speak(d.say || d.label));
+      const unmute = () => { video.muted = false; removeEventListener('pointerdown', unmute, true); };
+      addEventListener('pointerdown', unmute, true);
+    });
     clearTimeout(videoTimer); clearTimeout(nameTimer);
     if (d.sayName) nameTimer = setTimeout(() => speak(d.say || d.label), 1000);   // her videos say the name at 1 second
     videoTimer = setTimeout(stopVideo, (S.videoSecs || 12.4) * 1000);   // one turn of the clip, then back

@@ -248,6 +248,14 @@
   #grid .tile img{max-width:88%;max-height:64cqh;object-fit:contain;border-radius:0}
   body.nolabels #grid .tile img{max-height:82cqh}
 </style>
+<style>/* Bright Little Eyes: no long-press menus or blue text selection, except where grown-ups type */
+*{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}img{-webkit-user-drag:none}
+input,textarea,[contenteditable="true"]{-webkit-touch-callout:default;-webkit-user-select:text;user-select:text}</style>
+<script>/* a long press or right-click never brings up the browser's menu (the gear hold included), and holding never selects (blue) the page */
+(function(){function typing(t){return t&&t.closest&&t.closest('input,textarea,[contenteditable="true"]');}
+document.addEventListener('contextmenu',function(e){if(!typing(e.target))e.preventDefault();});
+document.addEventListener('selectstart',function(e){if(!typing(e.target))e.preventDefault();});
+document.addEventListener('dragstart',function(e){e.preventDefault();});})();</script>
 </head>
 <body>
 

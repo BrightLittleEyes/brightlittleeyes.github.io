@@ -989,5 +989,41 @@ __r(0);</script>
   addEventListener('keydown',first,true);
 })();
 </script>
+<!-- Bright Little Eyes: a Talk button back to I Can Talk, shown only when she came here from her talk board -->
+<style>
+  #bleTalkBack{position:fixed;z-index:2147483000;top:calc(8px + env(safe-area-inset-top));left:calc(12px + env(safe-area-inset-left));
+    height:72px;padding:0 30px;display:flex;align-items:center;gap:14px;overflow:hidden;
+    background:#000;color:#fff;font:800 30px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;cursor:pointer;
+    border:6px solid #ff2b2b;border-radius:20px;-webkit-tap-highlight-color:transparent;}
+  #bleTalkBack svg{width:42px;height:42px;fill:#ff2b2b;position:relative;z-index:1}
+  #bleTalkBack span{position:relative;z-index:1}
+  #bleTalkBack::after{content:'';position:absolute;left:0;right:0;bottom:0;height:calc(var(--p,0)*100%);background:rgba(255,43,43,.45);pointer-events:none}
+  #bleTalkBack.hover{box-shadow:0 0 0 6px #fff}
+</style>
+<script>
+(function(){
+  var KEY = 'bleFromTalk:' + location.pathname;
+  try {
+    var q = new URLSearchParams(location.search);
+    if (q.get('from') === 'talk') {
+      sessionStorage.setItem(KEY, '1');
+      q.delete('from');                                   // tidy the address
+      history.replaceState(history.state, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash);
+    }
+    if (sessionStorage.getItem(KEY) !== '1') return;      // not opened from her talk board: no button
+  } catch (e) { return; }
+  var b = document.createElement('button');
+  b.id = 'bleTalkBack'; b.type = 'button'; b.setAttribute('aria-label', 'Back to I Can Talk');
+  b.innerHTML = '<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 6l46 40H82v48H58V66H42v28H18V46H4z"/></svg><span>Talk</span>';
+  function go(){ location.href = '/talk/?home'; }
+  b.addEventListener('click', go);
+  document.body.appendChild(b);
+  // Look and hold / Look and press, in apps that use the Bright Little Eyes selection system
+  if (window.BLEAccess && window.BLEAccess.register) {
+    window.BLEAccess.register({ node: b, run: go, layer: 'app',
+      progress: function(p){ b.style.setProperty('--p', p); b.classList.toggle('hover', p > 0); } });
+  }
+})();
+</script>
 </body>
 </html>

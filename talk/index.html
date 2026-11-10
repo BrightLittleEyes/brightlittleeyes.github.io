@@ -996,7 +996,7 @@
     // On her site the app opens in place (browser Back returns here). Anywhere else it opens in a new tab.
     try {
       const u = new URL(url, location.href);
-      if (u.origin === location.origin) { location.href = u.href; return; }
+      if (u.origin === location.origin) { u.searchParams.set('from', 'talk'); location.href = u.href; return; }   // tells the app she came from her board
     } catch (e) {}
     const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener';
     document.body.appendChild(a); a.click(); a.remove();

@@ -696,10 +696,10 @@
   let tileUnregs = [];
 
   // ---------- A picture for each video ----------
-  // Many of her videos open with a title card (white words on black) for a few seconds,
-  // so the app looks at moments across the first part of the video and keeps the most
-  // colourful picture. Saved with the video.
-  const THUMB_VER = 4;   // bump to retake every saved picture
+  // Her videos open with a title card (words on black) for a few seconds. The app looks
+  // every 2 seconds through the opening and keeps the first real picture after the title,
+  // once it has settled: usually the main character (the bear, the mouse, the pig).
+  const THUMB_VER = 5;   // bump to retake every saved picture
   function makeThumb(blob) {
     return new Promise(resolve => {
       const url = URL.createObjectURL(blob);
@@ -712,18 +712,9 @@
       const W = 192, H = 108;
       const small = document.createElement('canvas'); small.width = W; small.height = H;
       const sctx = small.getContext('2d', { willReadFrequently: true });
-      // How much solid colour is in the frame. Words and thin outlines (title cards) are
-      // shaved away first, so only real pictures count.
-      function colourScore() {
-        sctx.drawImage(v, 0, 0, W, H);
-        const px = sctx.getImageData(0, 0, W, H).data;
-        let c = new Uint8Array(W * H);
-        for (let i = 0, j = 0; i < px.length; i += 4, j++) {
-          const r = px[i], g = px[i + 1], b = px[i + 2];
-          const mx = Math.max(r, g, b), mn = Math.min(r, g, b);
-          c[j] = mx > 60 && (mx - mn) / mx > 0.35 ? 1 : 0;   // a coloured (not black, white or grey) pixel
-        }
-        for (let pass = 0; pass < 2; pass++) {               // keep only pixels whose neighbours are coloured too
+      // Shave away thin things (words, outlines) twice, then count what is left.
+      function solid(c) {
+        for (let pass = 0; pass < 2; pass++) {
           const e = new Uint8Array(W * H);
           for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
             const j = y * W + x;
@@ -734,22 +725,31 @@
         let n = 0; for (let j = 0; j < c.length; j++) n += c[j];
         return n;
       }
+      // [how much solid picture, how much of it is solid colour]
+      function scores() {
+        sctx.drawImage(v, 0, 0, W, H);
+        const px = sctx.getImageData(0, 0, W, H).data;
+        const any = new Uint8Array(W * H), col = new Uint8Array(W * H);
+        for (let i = 0, j = 0; i < px.length; i += 4, j++) {
+          const mx = Math.max(px[i], px[i + 1], px[i + 2]), mn = Math.min(px[i], px[i + 1], px[i + 2]);
+          any[j] = mx > 70 ? 1 : 0;
+          col[j] = mx > 60 && (mx - mn) / mx > 0.35 ? 1 : 0;
+        }
+        return [solid(any), solid(col)];
+      }
       v.addEventListener('loadedmetadata', async () => {
         try {
           const d = isFinite(v.duration) && v.duration > 0 ? v.duration : 10;
-          const times = new Set();
-          for (let s = 2; s <= Math.min(40, d * 0.6); s += 2) times.add(s);          // every 2 s through the opening
-          [0.1, 0.2, 0.3, 0.4, 0.5].forEach(f => times.add(Math.round(d * f * 10) / 10));
-          if (!times.size) times.add(d / 3);
-          let best = null, bestScore = -1;
-          for (const t of [...times].sort((a, b) => a - b)) {
-            if (t >= d) continue;
-            await seekTo(t);
-            const s = colourScore();
-            if (s > bestScore * 1.15) { bestScore = s; best = t; }   // prefer the earlier of two similar pictures
-          }
-          if (bestScore < 150) best = d / 3;   // mostly black-and-white pictures: a third of the way in
-          await seekTo(best == null ? d / 3 : best);
+          const times = [];
+          for (let s = 2; s <= Math.min(40, d * 0.6) && s < d; s += 2) times.push(s);
+          const sc = {};
+          for (const t of times) { await seekTo(t); sc[t] = scores(); }
+          const real = t => sc[t] && sc[t][0] >= 300 && sc[t][1] >= 100;          // a real, coloured picture
+          let pick = times.find(t => real(t) && real(t - 2))                        // ...that has settled
+                  ?? times.find(real)
+                  ?? times.find(t => sc[t][0] >= 300)                               // black-and-white pictures
+                  ?? d / 3;
+          await seekTo(pick);
           const w = v.videoWidth, h = v.videoHeight;
           if (!w || !h) return finish(null);
           const k = Math.min(1, 640 / Math.max(w, h));

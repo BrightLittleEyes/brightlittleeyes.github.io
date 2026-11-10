@@ -229,6 +229,22 @@
   #grid .tile img{max-height:62cqh}
   #grid .tile .label{font-size:min(14cqh,10cqw)!important;line-height:1.15;padding-bottom:.1em;flex:none;max-width:100%}
   body.nolabels #grid .tile .sym{font-size:min(70cqh,70cqw)!important}
+
+  /* simple shapes */
+  #grid .tile .ico{width:min(62cqh,64cqw);height:min(62cqh,64cqw);color:var(--pic,#ff2b2b);flex:none}
+  body.nolabels #grid .tile .ico{width:min(78cqh,78cqw);height:min(78cqh,78cqw)}
+  #startBtn .ico{width:50%;height:50%;color:var(--pic,#ff2b2b)}
+  #eShapePrev{width:80px;height:80px;margin-top:8px;background:#000;border-radius:10px;padding:8px;color:var(--pic,#ff2b2b)}
+  #eShapePrev:empty{display:none}
+  #eShapePrev svg{width:100%;height:100%}
+  #segPicColor button[data-v="#ff2b2b"]{color:#ff2b2b} #segPicColor button[data-v="#ff7a00"]{color:#ff7a00}
+  #segPicColor button[data-v="#ffd400"]{color:#c9a800} #segPicColor button[data-v="#2ecc40"]{color:#1f9a2e}
+  #segPicColor button[data-v="#1e90ff"]{color:#1e90ff} #segPicColor button[data-v="#b84dff"]{color:#b84dff}
+  #segPicColor button.sel{color:#fff}
+  #homeBtn .ico{width:38px;height:38px;color:var(--pic,#ff2b2b)}
+  #homeBtn .sym{font-size:30px}
+  #homeBtn{gap:12px}
+  #grid .tile .ico{width:min(66cqh,66cqw);height:min(66cqh,66cqw)}
 </style>
 </head>
 <body>
@@ -272,6 +288,10 @@
   <div class="psec">
     <span class="alabel" style="margin-top:0">Buttons on the screen</span>
     <div class="seg" id="segGrid"><button type="button" data-v="2x2">4</button><button type="button" data-v="3x2">6</button><button type="button" data-v="3x3">9</button><button type="button" data-v="4x3">12</button><button type="button" data-v="5x4">20</button></div>
+    <span class="alabel">Pictures</span>
+    <div class="seg" id="segPics"><button type="button" data-v="shapes">Simple shapes</button><button type="button" data-v="emoji">Colorful</button></div>
+    <span class="alabel">Picture color</span>
+    <div class="seg" id="segPicColor"><button type="button" data-v="#ff2b2b">Red</button><button type="button" data-v="#ff7a00">Orange</button><button type="button" data-v="#ffd400">Yellow</button><button type="button" data-v="#2ecc40">Green</button><button type="button" data-v="#1e90ff">Blue</button><button type="button" data-v="#b84dff">Purple</button><button type="button" data-v="#ffffff">White</button></div>
     <div class="trow" role="switch" tabindex="0" data-toggle="tLabels"><span class="alabel">Show words</span><div class="toggle" id="tLabels"></div></div>
     <div class="trow" role="switch" tabindex="0" data-toggle="tPulse"><span class="alabel">Pulse</span><div class="toggle" id="tPulse"></div></div>
     <div class="trow" role="switch" tabindex="0" data-toggle="tWiggle"><span class="alabel">Wiggle when chosen</span><div class="toggle" id="tWiggle"></div></div>
@@ -320,7 +340,9 @@
     <h3>Edit button</h3>
     <label>Word on the button</label><input id="eLabel">
     <label>What it says out loud (blank = the word)</label><input id="eSay">
-    <label>Picture (an emoji)</label><input id="eSym" maxlength="8">
+    <label>Simple shape</label><select id="eShape"></select>
+    <div id="eShapePrev"></div>
+    <label>Colorful picture (an emoji)</label><input id="eSym" maxlength="8">
     <label>Or a photo</label><input type="file" id="eImg" accept="image/*">
     <div class="note" id="eImgNote"></div>
     <label>When she chooses it</label>
@@ -685,6 +707,83 @@
   const $ = id => document.getElementById(id);
   const SITE = 'https://brightlittleeyes.github.io';
 
+  // ---------- Simple shapes for CVI (gross form): one bright color, solid, no small detail ----------
+  // Drawn on a 100×100 grid. "currentColor" is her picture color; black (#000) cuts holes.
+  const K = '#000';
+  const ICONS = {
+    more: `<path d="M38 12h24v26h26v24H62v26H38V62H12V38h26z"/>`,
+    go: `<path d="M10 36h44V14l38 36-38 36V64H10z"/>`,
+    hello: `<path d="M30 92c-10-6-16-18-16-30V48c0-5 7-5 8 0v10h4V18c0-6 9-6 9 0v30h4V10c0-6 9-6 9 0v38h4V14c0-6 9-6 9 0v36h4V24c0-6 9-6 9 0v40c0 16-10 28-26 28z"/>`,
+    open: `<rect x="14" y="10" width="72" height="84" rx="4"/><rect x="22" y="18" width="56" height="76" fill="${K}"/><path d="M22 18l40 8v74l-40-6z"/><circle cx="54" cy="58" r="5" fill="${K}"/>`,
+    yes: `<path d="M8 52l14-14 18 18 40-42 14 14-54 56z"/>`,
+    alldone: `<path d="M8 88c-4-10-4-22 0-30l8-24c2-5 9-3 8 2l-4 16 6 2 6-34c1-6 9-5 9 1l-3 34h4V20c0-6 9-6 9 0v36c0 14-8 26-20 32z"/><path d="M92 88c4-10 4-22 0-30l-8-24c-2-5-9-3-8 2l4 16-6 2-6-34c-1-6-9-5-9 1l3 34h-4V20c0-6-9-6-9 0v36c0 14 8 26 20 32z"/>`,
+    stop: `<path d="M32 6h36l26 26v36L68 94H32L6 68V32z"/><rect x="24" y="44" width="52" height="12" rx="3" fill="${K}"/>`,
+    goodbye: `<path d="M40 94c-10-6-16-18-16-30V50c0-5 7-5 8 0v10h4V20c0-6 9-6 9 0v30h4V12c0-6 9-6 9 0v38h4V16c0-6 9-6 9 0v36h4V26c0-6 9-6 9 0v40c0 16-10 28-26 28z"/><path d="M10 30c-4 8-4 18 0 26M18 34c-2 5-2 11 0 16M86 8c6 4 9 10 9 16" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>`,
+    closed: `<rect x="18" y="8" width="64" height="88" rx="4"/><circle cx="68" cy="54" r="6" fill="${K}"/>`,
+    no: `<path d="M22 8l28 28L78 8l14 14-28 28 28 28-14 14-28-28-28 28L8 78l28-28L8 22z"/>`,
+    paw: `<ellipse cx="50" cy="68" rx="24" ry="20"/><ellipse cx="20" cy="42" rx="10" ry="13"/><ellipse cx="38" cy="22" rx="10" ry="13"/><ellipse cx="62" cy="22" rx="10" ry="13"/><ellipse cx="80" cy="42" rx="10" ry="13"/>`,
+    pawsound: `<ellipse cx="38" cy="70" rx="20" ry="17"/><ellipse cx="12" cy="48" rx="8" ry="11"/><ellipse cx="27" cy="30" rx="8" ry="11"/><ellipse cx="47" cy="30" rx="8" ry="11"/><ellipse cx="63" cy="48" rx="8" ry="11"/><path d="M74 22c10 8 14 18 14 28s-4 20-14 28M82 10c14 12 18 26 18 40s-4 28-18 40" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>`,
+    note: `<path d="M58 8h12v62c0 12-10 22-24 22s-20-8-20-16 10-16 22-16c4 0 7 1 10 2z"/><path d="M70 8c8 6 22 10 22 26-6-8-14-10-22-10z"/>`,
+    notes: `<path d="M30 20l54-12v58c0 10-9 18-20 18s-16-7-16-13 9-13 18-13c3 0 6 1 6 2V30L42 36v40c0 10-9 18-20 18S6 87 6 81s9-13 18-13c3 0 6 0 6 1z"/>`,
+    ball: `<circle cx="50" cy="50" r="42"/><path d="M14 36c18 6 54 6 72 0M14 64c18-6 54-6 72 0M50 8c-12 20-12 64 0 84" fill="none" stroke="${K}" stroke-width="5"/>`,
+    heart: `<path d="M50 92L12 52C2 40 4 20 20 14c12-4 22 2 30 12 8-10 18-16 30-12 16 6 18 26 8 38z"/>`,
+    book: `<path d="M4 20c16-6 32-6 44 4v66c-12-8-28-8-44-4z"/><path d="M96 20c-16-6-32-6-44 4v66c12-8 28-8 44-4z"/>`,
+    tablet: `<rect x="16" y="4" width="68" height="92" rx="10"/><rect x="24" y="14" width="22" height="22" rx="4" fill="${K}"/><rect x="54" y="14" width="22" height="22" rx="4" fill="${K}"/><rect x="24" y="44" width="22" height="22" rx="4" fill="${K}"/><rect x="54" y="44" width="22" height="22" rx="4" fill="${K}"/><circle cx="50" cy="84" r="5" fill="${K}"/>`,
+    dog: `<ellipse cx="50" cy="52" rx="30" ry="32"/><ellipse cx="16" cy="44" rx="12" ry="26" transform="rotate(18 16 44)"/><ellipse cx="84" cy="44" rx="12" ry="26" transform="rotate(-18 84 44)"/><circle cx="38" cy="44" r="6" fill="${K}"/><circle cx="62" cy="44" r="6" fill="${K}"/><ellipse cx="50" cy="66" rx="10" ry="7" fill="${K}"/>`,
+    cat: `<path d="M14 6l26 22h20L86 6l2 50c0 22-16 38-38 38S12 78 12 56z"/><ellipse cx="36" cy="52" rx="6" ry="9" fill="${K}"/><ellipse cx="64" cy="52" rx="6" ry="9" fill="${K}"/><path d="M44 68h12l-6 7z" fill="${K}"/>`,
+    cow: `<path d="M10 14c4 12 12 18 22 18M90 14c-4 12-12 18-22 18" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round"/><ellipse cx="50" cy="46" rx="28" ry="24"/><ellipse cx="14" cy="40" rx="12" ry="7"/><ellipse cx="86" cy="40" rx="12" ry="7"/><ellipse cx="50" cy="74" rx="26" ry="18"/><circle cx="38" cy="42" r="5" fill="${K}"/><circle cx="62" cy="42" r="5" fill="${K}"/><ellipse cx="40" cy="76" rx="5" ry="7" fill="${K}"/><ellipse cx="60" cy="76" rx="5" ry="7" fill="${K}"/>`,
+    pig: `<circle cx="50" cy="54" r="38"/><path d="M16 30L18 4l24 16zM84 30L82 4 58 20z"/><ellipse cx="50" cy="64" rx="18" ry="13" fill="${K}"/><ellipse cx="50" cy="64" rx="13" ry="8"/><circle cx="44" cy="64" r="3" fill="${K}"/><circle cx="56" cy="64" r="3" fill="${K}"/><circle cx="34" cy="40" r="5" fill="${K}"/><circle cx="66" cy="40" r="5" fill="${K}"/>`,
+    sheep: `<circle cx="30" cy="38" r="16"/><circle cx="52" cy="32" r="18"/><circle cx="72" cy="40" r="16"/><circle cx="26" cy="58" r="16"/><circle cx="50" cy="60" r="20"/><circle cx="74" cy="58" r="16"/><rect x="30" y="70" width="9" height="24" rx="4"/><rect x="62" y="70" width="9" height="24" rx="4"/><ellipse cx="14" cy="42" rx="12" ry="14"/><circle cx="10" cy="40" r="3" fill="${K}"/>`,
+    horse: `<path d="M72 96l-4-36c-6-4-14-4-20 0L26 72c-8 4-18-2-16-10l8-18c4-10 14-18 26-22l2-14 8 8 6-10 4 14c16 8 26 26 28 48l2 28z"/><circle cx="40" cy="36" r="5" fill="${K}"/><ellipse cx="17" cy="62" rx="3" ry="4" fill="${K}"/>`,
+    duck: `<ellipse cx="54" cy="66" rx="40" ry="24"/><circle cx="34" cy="32" r="20"/><path d="M14 30H2l4 10h14z"/><circle cx="32" cy="26" r="4" fill="${K}"/><path d="M58 60c10-10 26-10 30 2-10 0-20 2-30-2z" fill="${K}"/>`,
+    chicken: `<ellipse cx="54" cy="62" rx="34" ry="28"/><circle cx="32" cy="36" r="18"/><path d="M22 18c0-10 8-14 12-6 2-8 12-8 12 2 6-2 10 4 6 10H24z"/><path d="M14 36L2 42l12 4z"/><path d="M20 48c-4 4-4 12 2 14 4-4 4-10-2-14z"/><circle cx="30" cy="32" r="4" fill="${K}"/><path d="M84 40l12-14-2 22z"/><rect x="40" y="86" width="6" height="12"/><rect x="58" y="86" width="6" height="12"/>`,
+    bird: `<ellipse cx="44" cy="60" rx="34" ry="24"/><circle cx="72" cy="36" r="18"/><path d="M86 30l14 8-14 6z"/><path d="M14 52L0 36l4 28z"/><circle cx="76" cy="32" r="4" fill="${K}"/><path d="M26 56c10 8 24 8 34-2" fill="none" stroke="${K}" stroke-width="5" stroke-linecap="round"/>`,
+    fish: `<path d="M6 50c14-24 44-30 64-14l24-18-6 32 6 32-24-18C50 80 20 74 6 50z"/><circle cx="26" cy="46" r="6" fill="${K}"/>`,
+    bear: `<circle cx="20" cy="24" r="14"/><circle cx="80" cy="24" r="14"/><circle cx="50" cy="54" r="38"/><circle cx="36" cy="44" r="5" fill="${K}"/><circle cx="64" cy="44" r="5" fill="${K}"/><ellipse cx="50" cy="68" rx="16" ry="12" fill="${K}"/><ellipse cx="50" cy="64" rx="7" ry="5"/>`,
+    lion: `<circle cx="50" cy="50" r="46"/><circle cx="50" cy="54" r="30" fill="${K}"/><circle cx="50" cy="54" r="26"/><circle cx="40" cy="48" r="4" fill="${K}"/><circle cx="60" cy="48" r="4" fill="${K}"/><path d="M42 62h16l-8 8z" fill="${K}"/>`,
+    monkey: `<circle cx="14" cy="50" r="13"/><circle cx="86" cy="50" r="13"/><circle cx="50" cy="48" r="36"/><path d="M28 50c0-14 8-20 22-12 14-8 22-2 22 12 6 6 6 26-22 30-28-4-28-24-22-30z" fill="${K}"/><path d="M33 52c0-9 6-12 17-6 11-6 17-3 17 6 4 4 4 20-17 22-21-2-21-18-17-22z"/><circle cx="42" cy="50" r="4" fill="${K}"/><circle cx="58" cy="50" r="4" fill="${K}"/><path d="M40 64c6 6 14 6 20 0" fill="none" stroke="${K}" stroke-width="4" stroke-linecap="round"/>`,
+    frog: `<circle cx="28" cy="28" r="16"/><circle cx="72" cy="28" r="16"/><ellipse cx="50" cy="60" rx="44" ry="32"/><circle cx="28" cy="28" r="7" fill="${K}"/><circle cx="72" cy="28" r="7" fill="${K}"/><path d="M22 62c16 14 40 14 56 0" fill="none" stroke="${K}" stroke-width="6" stroke-linecap="round"/>`,
+    kangaroo: `<ellipse cx="48" cy="62" rx="20" ry="28" transform="rotate(-20 48 62)"/><ellipse cx="68" cy="26" rx="14" ry="10"/><ellipse cx="60" cy="12" rx="5" ry="11" transform="rotate(-15 60 12)"/><path d="M58 30l-6 14 14-6z"/><path d="M34 80L6 96" stroke="currentColor" stroke-width="12" stroke-linecap="round"/><rect x="40" y="84" width="42" height="10" rx="5"/><path d="M62 52l14 8" stroke="currentColor" stroke-width="7" stroke-linecap="round"/><circle cx="70" cy="24" r="3" fill="${K}"/>`,
+    owl: `<path d="M18 8l14 14h36L82 8v58c0 16-14 28-32 28S18 82 18 66z"/><circle cx="36" cy="40" r="13" fill="${K}"/><circle cx="64" cy="40" r="13" fill="${K}"/><circle cx="36" cy="40" r="6"/><circle cx="64" cy="40" r="6"/><path d="M44 54h12l-6 10z" fill="${K}"/>`,
+    snake: `<path d="M14 84c20 8 40 4 40-12s-30-12-30-30 22-24 44-24" fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round"/><ellipse cx="78" cy="18" rx="16" ry="12"/><circle cx="82" cy="14" r="3" fill="${K}"/><path d="M93 20l6 4-6 2" fill="none" stroke="currentColor" stroke-width="3"/>`,
+    bee: `<ellipse cx="34" cy="26" rx="18" ry="14" transform="rotate(-30 34 26)"/><ellipse cx="66" cy="26" rx="18" ry="14" transform="rotate(30 66 26)"/><ellipse cx="50" cy="62" rx="40" ry="28"/><rect x="34" y="34" width="8" height="56" fill="${K}"/><rect x="56" y="34" width="8" height="56" fill="${K}"/>`,
+    star: `<path d="M50 4l13 30 33 3-25 22 8 33-29-17-29 17 8-33L4 37l33-3z"/>`,
+    tractor: `<path d="M8 66V44h30V18h34l6 26h14v22z"/><rect x="44" y="24" width="22" height="18" fill="${K}"/><circle cx="30" cy="70" r="24"/><circle cx="30" cy="70" r="9" fill="${K}"/><circle cx="80" cy="78" r="14"/><circle cx="80" cy="78" r="5" fill="${K}"/>`,
+    bus: `<rect x="6" y="14" width="88" height="62" rx="10"/><rect x="14" y="22" width="20" height="20" rx="3" fill="${K}"/><rect x="40" y="22" width="20" height="20" rx="3" fill="${K}"/><rect x="66" y="22" width="20" height="20" rx="3" fill="${K}"/><circle cx="26" cy="78" r="12"/><circle cx="74" cy="78" r="12"/><circle cx="26" cy="78" r="5" fill="${K}"/><circle cx="74" cy="78" r="5" fill="${K}"/>`,
+    spider: `<g fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"><path d="M38 46L14 30 6 44M36 54L10 54 4 68M38 62L18 76 14 92M42 66l-6 20-2 10M62 46l24-16 8 14M64 54h26l6 14M62 62l20 14 4 16M58 66l6 20 2 10"/></g><circle cx="50" cy="56" r="20"/><circle cx="50" cy="28" r="12"/>`,
+    abc: `<text x="50" y="72" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="46">ABC</text>`,
+    boat: `<path d="M4 64h92L80 90H20z"/><path d="M52 6v54H14z"/><path d="M58 18c16 8 26 24 28 42H58z"/>`,
+    happy: `<circle cx="50" cy="50" r="44"/><circle cx="34" cy="40" r="7" fill="${K}"/><circle cx="66" cy="40" r="7" fill="${K}"/><path d="M26 58c10 22 38 22 48 0z" fill="${K}"/>`,
+    again: `<path d="M78 32A34 34 0 1 0 84 62" fill="none" stroke="currentColor" stroke-width="13" stroke-linecap="round"/><path d="M62 30L94 8l2 38z"/>`,
+    person: `<circle cx="50" cy="28" r="22"/><path d="M8 96c0-26 18-42 42-42s42 16 42 42z"/>`,
+    sun: `<circle cx="50" cy="50" r="24"/><g stroke="currentColor" stroke-width="9" stroke-linecap="round"><path d="M50 4v10M50 86v10M4 50h10M86 50h10M17 17l7 7M76 76l7 7M17 83l7-7M76 24l7-7"/></g>`,
+    rain: `<path d="M22 56c-12 0-18-8-18-16 0-10 8-16 18-16 2-12 12-20 26-20 12 0 22 8 24 18 12 0 22 8 22 18 0 10-8 16-18 16z"/><path d="M26 68l-6 14M50 68l-6 14M74 68l-6 14M38 84l-4 10M62 84l-4 10" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>`,
+    cake: `<rect x="10" y="56" width="80" height="36" rx="6"/><rect x="22" y="34" width="56" height="26" rx="5"/><rect x="46" y="14" width="8" height="20"/><path d="M50 2c6 6 6 12 0 12s-6-6 0-12z"/><path d="M10 70c10 8 20 8 26 0 8 8 20 8 28 0 6 8 18 8 26 0" fill="none" stroke="${K}" stroke-width="5"/>`,
+    xylophone: `<rect x="6" y="20" width="14" height="66" rx="4"/><rect x="24" y="26" width="14" height="54" rx="4"/><rect x="42" y="32" width="14" height="42" rx="4"/><rect x="60" y="38" width="14" height="30" rx="4"/><rect x="78" y="44" width="14" height="18" rx="4"/><path d="M60 6l30 6" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><circle cx="93" cy="12" r="6"/>`,
+    eyes: `<ellipse cx="27" cy="50" rx="24" ry="30"/><ellipse cx="73" cy="50" rx="24" ry="30"/><circle cx="32" cy="56" r="11" fill="${K}"/><circle cx="68" cy="56" r="11" fill="${K}"/>`,
+    letters: `<text x="50" y="74" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="64">Aa</text>`,
+    bubbles: `<g fill="none" stroke="currentColor" stroke-width="8"><circle cx="38" cy="58" r="30"/><circle cx="78" cy="28" r="16"/><circle cx="80" cy="78" r="10"/></g><path d="M22 50c2-10 8-16 16-18" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>`,
+    play: `<path d="M24 10l64 40-64 40z"/>`,
+    home: `<path d="M50 6l46 40H82v48H58V66H42v28H18V46H4z"/>`,
+    talk: `<path d="M50 8C24 8 4 24 4 44c0 12 7 22 18 29l-6 19 22-13c4 1 8 1 12 1 26 0 46-16 46-36S76 8 50 8z"/><circle cx="30" cy="44" r="6" fill="${K}"/><circle cx="50" cy="44" r="6" fill="${K}"/><circle cx="70" cy="44" r="6" fill="${K}"/>`,
+  };
+  // Which shape goes with which word (used when a button doesn't name one).
+  const LABEL_ICON = {
+    'more': 'more', 'go': 'go', 'hello': 'hello', 'open': 'open', 'yes': 'yes', 'all done': 'alldone', 'stop': 'stop',
+    'goodbye': 'goodbye', 'closed': 'closed', 'no': 'no', 'animals': 'paw', 'animal noise': 'pawsound', 'sing songs': 'note',
+    'more songs': 'notes', 'play': 'ball', 'i want a hug': 'heart', 'read': 'book', 'my apps': 'tablet',
+    'dog': 'dog', 'cat': 'cat', 'cow': 'cow', 'pig': 'pig', 'sheep': 'sheep', 'horse': 'horse', 'duck': 'duck', 'chicken': 'chicken',
+    'bird': 'bird', 'fish': 'fish', 'bear': 'bear', 'lion': 'lion', 'monkey': 'monkey', 'frog': 'frog', 'kangaroo': 'kangaroo',
+    'owl': 'owl', 'snake': 'snake', 'bee': 'bee', 'twinkle twinkle': 'star', 'old macdonald': 'tractor', 'wheels on the bus': 'bus',
+    'itsy bitsy spider': 'spider', 'abcs': 'abc', 'row your boat': 'boat', "if you're happy": 'happy', 'sing again': 'again',
+    'five little monkeys': 'monkey', 'head shoulders': 'person', 'bingo': 'dog', "mary's lamb": 'sheep', 'you are my sunshine': 'sun',
+    'rain rain go away': 'rain', 'happy birthday': 'cake', 'xylophone': 'xylophone', 'i can learn to see': 'eyes',
+    'i can learn to read': 'letters', 'bubbles': 'bubbles', 'hug': 'heart',
+  };
+  const iconOf = d => d.icon === 'none' ? null : (d.icon && ICONS[d.icon] ? d.icon : LABEL_ICON[(d.label || '').trim().toLowerCase()] || null);
+  const svgOf = name => `<svg class="ico" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">${ICONS[name]}</svg>`;
+
+
   // ---------- Her board ----------
   const C = (label, sym, extra = {}) => ({ label, sym, ...extra });
   const STARTER = {
@@ -722,7 +821,7 @@
   // ---------- Settings (stored on this device) ----------
   const KEY = 'ble-talk-v1';
   const TOUCH_DEVICE = matchMedia('(pointer: coarse)').matches && !matchMedia('(pointer: fine)').matches;
-  const SCREEN_DEFAULTS = { grid: '5x4', showLabels: true, pulse: false, wiggle: true };
+  const SCREEN_DEFAULTS = { grid: '5x4', showLabels: true, pulse: false, wiggle: true, picStyle: 'shapes', picColor: '#ff2b2b' };
   const defaults = Object.assign({}, A.DEFAULTS, SCREEN_DEFAULTS, { accessMode: TOUCH_DEVICE ? 'tap' : 'dwell', dwellMs: 1500 });
   let S = { ...defaults };
   let B = JSON.parse(JSON.stringify(STARTER));
@@ -784,6 +883,7 @@
     document.body.classList.toggle('pulse', !!S.pulse);
     document.body.classList.toggle('nolabels', !S.showLabels);
     document.body.classList.toggle('editing', editing);
+    document.documentElement.style.setProperty('--pic', S.picColor || '#ff2b2b');
     document.body.dataset.size = n <= 6 ? 'big' : n <= 12 ? 'mid' : 'small';
     grid.style.gridTemplateColumns = `repeat(${c}, minmax(0, 1fr))`;
     grid.style.gridTemplateRows = `repeat(${r}, minmax(0, 1fr))`;
@@ -800,13 +900,16 @@
         grid.appendChild(el); continue;
       }
       el.className = 'tile fill' + (d.link ? ' link' : '') + (d.url ? ' app' : '');
-      el.innerHTML = (d.img ? '<img alt="">' : `<span class="sym">${esc(d.sym || '')}</span>`) + `<span class="label">${esc(d.label || '')}</span>`;
+      const ic = S.picStyle === 'shapes' ? iconOf(d) : null;
+      el.innerHTML = (d.img ? '<img alt="">' : ic ? svgOf(ic) : `<span class="sym">${esc(d.sym || '')}</span>`) + `<span class="label">${esc(d.label || '')}</span>`;
       if (d.img) el.querySelector('img').src = d.img;
       el.setAttribute('aria-label', d.label || '');
       grid.appendChild(el);
       if (editing) el.onclick = () => openEdit(i);
       else unregs.push(childTarget(el, () => choose(d, el)));
     }
+    homeBtn.innerHTML = (S.picStyle === 'shapes' ? svgOf('home') : '<span class="sym">🏠</span>') + '<span class="label">Home</span>';
+    $('startBtn').innerHTML = (S.picStyle === 'shapes' ? svgOf('talk') : '<span class="sym">🗣️</span>') + '<span class="label">Start</span>';
     const home = B.pages[0];
     homeBtn.hidden = cur === home;
     $('pageName').textContent = cur === home ? '' : cur;
@@ -851,6 +954,8 @@
   }
   const syncers = [];
   syncers.push(seg('segGrid', () => S.grid, v => { S.grid = v; render(); }));
+  syncers.push(seg('segPics', () => S.picStyle, v => { S.picStyle = v; render(); }));
+  syncers.push(seg('segPicColor', () => S.picColor, v => { S.picColor = v; render(); }));
 
   document.querySelectorAll('.trow[data-toggle]').forEach(row => {
     const el = $(row.dataset.toggle);
@@ -941,6 +1046,9 @@
     editIdx = i; pendingImg = null;
     const d = (B.cells[cur] || [])[i] || {};
     $('eLabel').value = d.label || ''; $('eSay').value = d.say || ''; $('eSym').value = d.sym || '';
+    const sh = $('eShape'); sh.innerHTML = '<option value="">Match the word (if there is one)</option><option value="none">No shape</option>' +
+      Object.keys(ICONS).sort().map(k => `<option value="${k}">${k}</option>`).join('');
+    sh.value = d.icon || ''; showShape();
     $('eImg').value = ''; $('eImgNote').textContent = d.img ? 'This button has a photo. Choose another to replace it, or type an emoji to use that instead.' : '';
     const sel = $('eLink'); sel.innerHTML = '<option value="">Just say it</option><option value="app">Say it, then open an app</option>';
     B.pages.forEach(p => { const o = document.createElement('option'); o.value = 'page:' + p; o.textContent = 'Say it, then open page: ' + p; sel.appendChild(o); });
@@ -949,6 +1057,11 @@
     $('eUrlRow').hidden = sel.value !== 'app';
     $('editScrim').classList.add('show');
   }
+  function showShape() {
+    const v = $('eShape').value, name = v === 'none' ? null : v || LABEL_ICON[$('eLabel').value.trim().toLowerCase()];
+    $('eShapePrev').innerHTML = name && ICONS[name] ? svgOf(name) : '';
+  }
+  $('eShape').onchange = showShape; $('eLabel').oninput = showShape;
   $('eLink').onchange = e => { $('eUrlRow').hidden = e.target.value !== 'app'; };
   $('eImg').onchange = e => {
     const f = e.target.files[0]; if (!f) return;
@@ -968,6 +1081,7 @@
     const list = B.cells[cur]; const old = list[editIdx] || {};
     const d = { label: $('eLabel').value.trim(), sym: $('eSym').value.trim() };
     const say = $('eSay').value.trim(); if (say) d.say = say;
+    if ($('eShape').value) d.icon = $('eShape').value;
     const v = $('eLink').value;
     if (v.startsWith('page:')) d.link = v.slice(5);
     if (v === 'app' && $('eUrl').value.trim()) d.url = $('eUrl').value.trim();

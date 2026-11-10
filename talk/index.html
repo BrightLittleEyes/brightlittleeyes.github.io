@@ -810,15 +810,15 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   // ---------- Her board ----------
   const C = (label, sym, extra = {}) => ({ label, sym, ...extra });
   const STARTER = {
-    v: 7,
+    v: 8,
     grids: { 'My Apps': '3x2' },
     pages: ['Home', 'Animals', 'More Animals', 'Animal Noise', 'Sing Songs', 'More Songs', 'My Apps'],
     cells: {
       'Home': [
         C('More', '🤲'), C('Go', '🟢'), C('Hello', '🙋‍♀️'), C('Open', '📖'), C('Yes', '✅'),
         C('All Done', '🙌'), C('Stop', '🛑'), C('Goodbye', '👋'), C('Closed', '📕'), C('No', '❌'),
-        C('Animals', '🐄', { link: 'Animals' }), C('Animal Noise', '🐷', { link: 'Animal Noise' }), C('Sing Songs', '🎸', { url: SITE + '/my-videos/' }), C('More Songs', '🎺', { link: 'More Songs' }), C('Play', '🎭'),
-        C('I want a Hug', '🤗'), C('Read', '📚', { url: SITE + '/my-books/' }), C('My Apps', '📱', { link: 'My Apps' })],
+        C('Animals', '🐄', { link: 'Animals' }), C('Animal Noise', '🐷', { link: 'Animal Noise' }), C('Sing Songs', '🎸', { url: SITE + '/my-videos/' }), C('Read', '📚', { url: SITE + '/my-books/' }), C('Play', '🎭'),
+        C('I want a Hug', '🤗'), C('More Songs', '🎺', { link: 'More Songs' }), C('My Apps', '📱', { link: 'My Apps' })],
       'Animals': [
         C('Dog', '', { still: 'animals/dog.png', video: 'animals/dog.mp4' }), C('Cat', '', { still: 'animals/cat.png', video: 'animals/cat.mp4' }), C('Cow', '', { still: 'animals/cow.png', video: 'animals/cow.mp4' }), C('Pig', '', { still: 'animals/pig.png', video: 'animals/pig.mp4' }), C('Horse', '', { still: 'animals/horse.png', video: 'animals/horse.mp4' }),
         C('Chicken', '', { still: 'animals/chicken.png', video: 'animals/chicken.mp4' }), C('Fish', '', { still: 'animals/fish.png', video: 'animals/fish.mp4' }), C('Frog', '', { still: 'animals/frog.png', video: 'animals/frog.mp4' }), C('Bear', '', { still: 'animals/bear.png', video: 'animals/bear.mp4' }), C('Lion', '', { still: 'animals/lion.png', video: 'animals/lion.mp4' }),
@@ -885,6 +885,12 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     if (B.v < 7) {   // v7: My Apps shows 6 big buttons; Home and the rest keep the board size
       B.grids = Object.assign({ 'My Apps': '3x2' }, B.grids || {});
       B.v = 7;
+    }
+    if (B.v < 8) {   // v8: Read moves to where More Songs was (next to Sing Songs); More Songs takes Read's old spot
+      const home = B.cells[B.pages[0]] || [];
+      const r = home.findIndex(c => c && c.label === 'Read'), m = home.findIndex(c => c && c.label === 'More Songs');
+      if (r >= 0 && m >= 0 && m < r) { const t = home[r]; home[r] = home[m]; home[m] = t; }
+      B.v = 8;
     }
   } catch (e) {}
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ settings: S, board: B })); } catch (e) {} };

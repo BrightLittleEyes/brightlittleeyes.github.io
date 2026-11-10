@@ -41,7 +41,8 @@
     min-width: 0; min-height: 0; outline: none;
   }
   .tile svg { width: 45%; max-width: 320px; height: auto; max-height: 60%; }
-  .tile img.thumb { width: 92%; flex: 1 1 auto; min-height: 0; object-fit: contain; border-radius: 14px; display: block; }
+  .tile img.thumb { width: 100%; height: 100%; flex: 1 1 auto; min-height: 0; object-fit: contain; border-radius: 10px; display: block; }
+  .tile:has(img.thumb) { padding: 2vmin; }
   .tile .label {
     font-size: clamp(22px, 4.5vmin, 56px); font-weight: 800;
     text-align: center; line-height: 1.15;
@@ -719,7 +720,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   // Her videos open with a title card (words on black) for a few seconds. The app looks
   // every 2 seconds through the opening and keeps the first real picture after the title,
   // once it has settled: usually the main character (the bear, the mouse, the pig).
-  const THUMB_VER = 5;   // bump to retake every saved picture
+  const THUMB_VER = 6;   // bump to retake every saved picture
   function makeThumb(blob) {
     return new Promise(resolve => {
       const url = URL.createObjectURL(blob);
@@ -732,8 +733,8 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
       const W = 192, H = 108;
       const small = document.createElement('canvas'); small.width = W; small.height = H;
       const sctx = small.getContext('2d', { willReadFrequently: true });
-      // Shave away thin things (words, outlines) twice, then count what is left.
-      function solid(c) {
+      // Shave away thin things (words, outlines) twice; returns what is left.
+      function shave(c) {
         for (let pass = 0; pass < 2; pass++) {
           const e = new Uint8Array(W * H);
           for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
@@ -742,10 +743,10 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
           }
           c = e;
         }
-        let n = 0; for (let j = 0; j < c.length; j++) n += c[j];
-        return n;
+        return c;
       }
-      // [how much solid picture, how much of it is solid colour]
+      const count = c => { let n = 0; for (let j = 0; j < c.length; j++) n += c[j]; return n; };
+      // [how much solid picture, how much of it is solid colour, where the picture is]
       function scores() {
         sctx.drawImage(v, 0, 0, W, H);
         const px = sctx.getImageData(0, 0, W, H).data;
@@ -755,28 +756,54 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
           any[j] = mx > 70 ? 1 : 0;
           col[j] = mx > 60 && (mx - mn) / mx > 0.35 ? 1 : 0;
         }
-        return [solid(any), solid(col)];
+        const m = shave(any);
+        return [count(m), count(shave(col)), m];
       }
       v.addEventListener('loadedmetadata', async () => {
         try {
           const d = isFinite(v.duration) && v.duration > 0 ? v.duration : 10;
           const times = [];
-          for (let s = 2; s <= Math.min(40, d * 0.6) && s < d; s += 2) times.push(s);
+          for (let s = 2; s <= Math.min(48, d * 0.7) && s < d; s += 2) times.push(s);
           const sc = {};
           for (const t of times) { await seekTo(t); sc[t] = scores(); }
           const real = t => sc[t] && sc[t][0] >= 300 && sc[t][1] >= 100;          // a real, coloured picture
           let pick = times.find(t => real(t) && real(t - 2))                        // ...that has settled
-                  ?? times.find(real)
-                  ?? times.find(t => sc[t][0] >= 300)                               // black-and-white pictures
-                  ?? d / 3;
+                  ?? times.find(real);
+          if (pick != null) {
+            // Wait a little longer if something appears beside the main picture (the pig's balloons,
+            // the mouse's lunchbox), as long as the main picture is still there.
+            const base = sc[pick][2], baseN = sc[pick][0];
+            let best = baseN;
+            for (const t of times.filter(x => x > pick).slice(0, 5)) {
+              let keep = 0; for (let j = 0; j < base.length; j++) keep += base[j] & sc[t][2][j];
+              if (keep / Math.max(1, baseN) < 0.7) break;
+              if (sc[t][0] >= 1.2 * baseN && sc[t][0] > best) { best = sc[t][0]; pick = t; }
+            }
+          }
+          pick = pick ?? times.find(t => sc[t][0] >= 300) ?? d / 3;                 // black-and-white pictures
           await seekTo(pick);
           const w = v.videoWidth, h = v.videoHeight;
           if (!w || !h) return finish(null);
-          const k = Math.min(1, 640 / Math.max(w, h));
+          // Crop away the empty black around the picture, so it fills her choice.
+          sctx.drawImage(v, 0, 0, W, H);
+          const px = sctx.getImageData(0, 0, W, H).data;
+          let x0 = W, y0 = H, x1 = -1, y1 = -1;
+          for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+            const i = (y * W + x) * 4;
+            if (Math.max(px[i], px[i + 1], px[i + 2]) > 40) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+          }
+          let sx = 0, sy = 0, sw = w, sh = h;
+          if (x1 >= x0 && y1 >= y0) {
+            const m = 0.06, fx = w / W, fy = h / H;
+            const bw = (x1 - x0 + 1), bh = (y1 - y0 + 1);
+            sx = Math.max(0, (x0 - bw * m) * fx); sy = Math.max(0, (y0 - bh * m) * fy);
+            sw = Math.min(w - sx, (bw * (1 + 2 * m)) * fx); sh = Math.min(h - sy, (bh * (1 + 2 * m)) * fy);
+          }
+          const k = Math.min(1, 720 / Math.max(sw, sh));
           const c = document.createElement('canvas');
-          c.width = Math.round(w * k); c.height = Math.round(h * k);
-          c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
-          c.toBlob(b => finish(b), 'image/jpeg', 0.85);
+          c.width = Math.max(1, Math.round(sw * k)); c.height = Math.max(1, Math.round(sh * k));
+          c.getContext('2d').drawImage(v, sx, sy, sw, sh, 0, 0, c.width, c.height);
+          c.toBlob(b => finish(b), 'image/jpeg', 0.88);
         } catch (e) { finish(null); }
       });
       v.addEventListener('error', () => finish(null));

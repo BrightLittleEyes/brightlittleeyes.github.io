@@ -657,7 +657,19 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   let S = { ...defaults };
   let videos = [];
   let page = 0, focusIndex = 0;
-  const accessOf = () => { const o = {}; A.KEYS.forEach(k => o[k] = S[k]); return o; };
+  // Opened from her I Can Talk board? Then choose by Look and hold with the board's hold time,
+  // for this visit only (her own settings here are kept and come back when opened any other way).
+  let talkAccess = null;
+  try {
+    const FLAG = 'bleFromTalk:' + location.pathname;
+    if (/[?&]from=talk\b/.test(location.search)) sessionStorage.setItem(FLAG, '1');
+    if (sessionStorage.getItem(FLAG) === '1') {
+      const ts = (JSON.parse(localStorage.getItem('ble-talk-v1') || '{}').settings) || {};
+      talkAccess = { accessMode: 'dwell', dwellMs: ts.dwellMs || 1500, aimSource: ts.aimSource || 'mouse' };
+      ['cooldownMs', 'gain', 'showDot'].forEach(k => { if (ts[k] !== undefined) talkAccess[k] = ts[k]; });
+    }
+  } catch (e) {}
+  const accessOf = () => { const o = {}; A.KEYS.forEach(k => o[k] = S[k]); return Object.assign(o, talkAccess || {}); };
   const save = () => { if (db) putSettings(S).catch(() => {}); };
 
   // ---------- Layers: which set of targets can be chosen right now ----------
@@ -674,7 +686,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   });
   function lockUnderAim() {
     lockedNode = null;
-    if (S.accessMode === 'tap') return;
+    if (A.settings().accessMode === 'tap') return;
     requestAnimationFrame(() => {
       const el = document.elementFromPoint(aim.x, aim.y);
       lockedNode = el && el.closest('.tile, .nav, #closeBtn, #talkBtn');
@@ -850,7 +862,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     player.classList.remove('open');
     setLayer('app');
     const t = grid.querySelectorAll('.tile')[focusIndex];
-    if (t && S.accessMode === 'tap') t.focus({ preventScroll: true });
+    if (t && A.settings().accessMode === 'tap') t.focus({ preventScroll: true });
   }
   video.addEventListener('ended', () => { if (S.autoBack) stop(); });
   childTarget(closeBtn, stop, 'player');
@@ -930,26 +942,27 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   // ---- Choosing without touch: the same rows and steps as every Bright Little Eyes app ----
   function applyAccess() { A.configure(accessOf()); syncAccessRows(); }
   function syncAccessRows() {
+    const E = Object.assign({}, S, accessOf());   // what is in use right now
     const mark = (id, v) => $(id).querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === v));
-    mark('segMode', S.accessMode); mark('segAim', S.aimSource); mark('segDot', S.showDot ? 'on' : 'off');
-    $('stDwell').querySelector('.sv').textContent = S.dwellMs + ' ms';
-    $('stCool').querySelector('.sv').textContent = S.cooldownMs + ' ms';
-    $('stGain').querySelector('.sv').textContent = S.gain + '×';
+    mark('segMode', E.accessMode); mark('segAim', E.aimSource); mark('segDot', E.showDot ? 'on' : 'off');
+    $('stDwell').querySelector('.sv').textContent = E.dwellMs + ' ms';
+    $('stCool').querySelector('.sv').textContent = E.cooldownMs + ' ms';
+    $('stGain').querySelector('.sv').textContent = E.gain + '×';
     // everything below "How to select" only when it isn't Touch; the camera rows only when Aim with = Camera
-    $('accessMore').style.display = S.accessMode === 'tap' ? 'none' : 'block';
-    $('cameraRows').style.display = S.aimSource === 'head' ? 'block' : 'none';
+    $('accessMore').style.display = E.accessMode === 'tap' ? 'none' : 'block';
+    $('cameraRows').style.display = E.aimSource === 'head' ? 'block' : 'none';
     const c = A.cameraState();
-    $('camStatus').textContent = !c.on ? (S.aimSource === 'head' ? 'Starting the camera… (allow it if the browser asks)' : '')
+    $('camStatus').textContent = !c.on ? (E.aimSource === 'head' ? 'Starting the camera… (allow it if the browser asks)' : '')
       : c.noFace ? 'No face found — check the lighting and stay in frame' : 'The yellow circle shows the face it found.';
   }
   A.onCameraChange(syncAccessRows);
-  function setAccess(k, v) { S[k] = v; applyAccess(); save(); }
+  function setAccess(k, v) { if (talkAccess) { Object.assign(S, talkAccess); talkAccess = null; } S[k] = v; applyAccess(); save(); }
   $('segMode').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setAccess('accessMode', b.dataset.v); });
   $('segAim').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setAccess('aimSource', b.dataset.v); });
   $('segDot').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setAccess('showDot', b.dataset.v === 'on'); });
   function stepper(id, key, step, min, max) {
     $(id).addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return;
-      setAccess(key, Math.max(min, Math.min(max, S[key] + step * (+b.dataset.d)))); });
+      setAccess(key, Math.max(min, Math.min(max, accessOf()[key] + step * (+b.dataset.d)))); });
   }
   stepper('stDwell', 'dwellMs', 50, 250, 2000);
   stepper('stCool', 'cooldownMs', 40, 80, 1200);

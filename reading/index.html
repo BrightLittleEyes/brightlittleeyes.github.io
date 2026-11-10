@@ -16,6 +16,45 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Bright Little Eyes Reading">
+<script>
+/* Bright Little Eyes: opened from her I Can Talk board? Then choose by Look and hold, with the
+   same hold time as her board, for this visit only. The app's own settings come back when she leaves. */
+(function(){
+  var KIND = 'flat';                       // 'flat' (settings object) or 'profiles' (I Can Learn To See)
+  var STORE = 'ble.reading.settings.v1';
+  var KEYS = ['accessMode','aimSource','dwellMs','cooldownMs','gain','showDot'];
+  var FLAG = 'bleFromTalk:' + location.pathname, SAVED = 'bleOwnAccess:' + location.pathname;
+  try {
+    if (/[?&]from=talk\b/.test(location.search)) sessionStorage.setItem(FLAG, '1');
+    if (sessionStorage.getItem(FLAG) !== '1') return;
+    var t = (JSON.parse(localStorage.getItem('ble-talk-v1') || '{}').settings) || {};
+    var talk = { accessMode: 'dwell', dwellMs: t.dwellMs || 1500, aimSource: t.aimSource || 'mouse' };
+    ['cooldownMs','gain','showDot'].forEach(function(k){ if (t[k] !== undefined) talk[k] = t[k]; });
+    window.BLE_TALK_ACCESS = talk;
+    var all = JSON.parse(localStorage.getItem(STORE) || 'null');
+    function target(o){ if (KIND === 'flat') return o; var p = o && o.profiles; if (!p) return null;
+      var id = o.activeId; return Array.isArray(p) ? (p.find(function(x){return x.id===id;}) || p[0]).settings : (p[id] || p[Object.keys(p)[0]] || {}).settings; }
+    if (KIND === 'flat' && !all) all = {};
+    var s = target(all);
+    if (!s) return;
+    if (!sessionStorage.getItem(SAVED)) {        // remember the app's own choosing settings once
+      var own = {}; KEYS.forEach(function(k){ own[k] = (k in s) ? s[k] : null; });
+      sessionStorage.setItem(SAVED, JSON.stringify(own));
+    }
+    KEYS.forEach(function(k){ if (k in talk) s[k] = talk[k]; });
+    localStorage.setItem(STORE, JSON.stringify(all));
+    addEventListener('pagehide', function(){    // leaving: put the app's own settings back
+      try {
+        var own = JSON.parse(sessionStorage.getItem(SAVED) || 'null'); if (!own) return;
+        var now = JSON.parse(localStorage.getItem(STORE) || 'null'); var ns = now && target(now); if (!ns) return;
+        KEYS.forEach(function(k){ if (own[k] === null) delete ns[k]; else ns[k] = own[k]; });
+        localStorage.setItem(STORE, JSON.stringify(now));
+        sessionStorage.removeItem(SAVED);
+      } catch (e) {}
+    });
+  } catch (e) {}
+})();
+</script>
 </head>
 <body>
 <div id="root"></div>
@@ -1019,6 +1058,9 @@ __r(0);</script>
   b.addEventListener('click', go);
   document.body.appendChild(b);
   // Look and hold / Look and press, in apps that use the Bright Little Eyes selection system
+  if (window.BLE_TALK_ACCESS && window.BLEAccess && window.BLEAccess.configure) {
+    window.BLEAccess.configure(Object.assign({}, window.BLEAccess.settings(), window.BLE_TALK_ACCESS));
+  }
   if (window.BLEAccess && window.BLEAccess.register) {
     window.BLEAccess.register({ node: b, run: go, layer: 'app',
       progress: function(p){ b.style.setProperty('--p', p); b.classList.toggle('hover', p > 0); } });

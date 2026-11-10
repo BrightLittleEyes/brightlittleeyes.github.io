@@ -851,12 +851,14 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   const KEY = 'ble-talk-v1';
   const TOUCH_DEVICE = matchMedia('(pointer: coarse)').matches && !matchMedia('(pointer: fine)').matches;
   const SCREEN_DEFAULTS = { fullscreen: true, grid: '5x4', showLabels: true, pulse: false, wiggle: true, playVideos: true, picStyle: 'shapes', picColor: '#ff2b2b' };
-  const defaults = Object.assign({}, A.DEFAULTS, SCREEN_DEFAULTS, { accessMode: TOUCH_DEVICE ? 'tap' : 'dwell', dwellMs: 1500 });
+  const defaults = Object.assign({}, A.DEFAULTS, SCREEN_DEFAULTS, { accessMode: 'dwell', dwellMs: 1500 });
   let S = { ...defaults };
   let B = JSON.parse(JSON.stringify(STARTER));
   try {
     const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (saved) { if (saved.settings) S = { ...defaults, ...saved.settings }; if (saved.board && saved.board.pages) B = saved.board; }
+    if (saved) { if (saved.settings) S = { ...defaults, ...saved.settings };
+      if (!S.migDwell) { S.accessMode = 'dwell'; S.migDwell = true; }   /* Look and hold is her way of choosing now */
+      if (saved.board && saved.board.pages) B = saved.board; }
     if ((B.v || 1) < 3) {   // v2: her own animal pictures and videos; v3: six more animals and a More Animals page
       ['Animals', 'More Animals', 'Animal Noise'].forEach(p => { B.cells[p] = JSON.parse(JSON.stringify(STARTER.cells[p])); });
       if (!B.pages.includes('More Animals')) { const i = B.pages.indexOf('Animals'); B.pages.splice(i < 0 ? B.pages.length : i + 1, 0, 'More Animals'); }

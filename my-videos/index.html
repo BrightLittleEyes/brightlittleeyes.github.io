@@ -1062,7 +1062,17 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   });
 
   // ---------- Start ----------
-  addEventListener('resize', () => { if (layer === 'app') render(); });
+  // Redraw after the screen changes size, but never in the middle of a tap: going full screen
+  // on her first tap resizes the screen, and redrawing then would swallow that tap.
+  let lastDown = 0, resizeTimer = 0;
+  addEventListener('pointerdown', () => { lastDown = Date.now(); }, true);
+  addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function later() {
+      if (Date.now() - lastDown < 700) { resizeTimer = setTimeout(later, 300); return; }
+      if (layer === 'app') render();
+    }, 250);
+  });
   (async () => {
     try {
       if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});

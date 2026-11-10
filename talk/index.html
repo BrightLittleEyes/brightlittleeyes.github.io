@@ -810,15 +810,15 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   // ---------- Her board ----------
   const C = (label, sym, extra = {}) => ({ label, sym, ...extra });
   const STARTER = {
-    v: 9,
+    v: 10,
     grids: { 'My Apps': '3x2' },
     pages: ['Home', 'Animals', 'More Animals', 'Animal Noise', 'Sing Songs', 'More Songs', 'My Apps'],
     cells: {
       'Home': [
         C('More', '🤲'), C('Go', '🟢'), C('Hello', '🙋‍♀️'), C('Open', '📖'), C('Yes', '✅'),
         C('All Done', '🙌'), C('Stop', '🛑'), C('Goodbye', '👋'), C('Closed', '📕'), C('No', '❌'),
-        C('Animals', '🐄', { link: 'Animals' }), C('Animal Noise', '🐷', { link: 'Animal Noise' }), C('Sing Songs', '🎸', { url: SITE + '/my-videos/' }), C('Read', '📚', { url: SITE + '/my-books/' }), C('Play', '🎭'),
-        C('I want a Hug', '🤗'), C('More Songs', '🎺', { link: 'More Songs' }), C('My Apps', '📱', { link: 'My Apps' })],
+        C('Animals', '🐄', { link: 'Animals' }), C('Animal Noise', '🐷', { link: 'Animal Noise' }), C('Sing Songs', '🎸', { url: SITE + '/my-videos/' }), C('Read', '📚', { url: SITE + '/my-books/' }), C('My Apps', '📱', { link: 'My Apps' }),
+        C('I want a Hug', '🤗'), C('More Songs', '🎺', { link: 'More Songs' }), C('Play', '🎭')],
       'Animals': [
         C('Dog', '', { still: 'animals/dog.png', video: 'animals/dog.mp4' }), C('Cat', '', { still: 'animals/cat.png', video: 'animals/cat.mp4' }), C('Cow', '', { still: 'animals/cow.png', video: 'animals/cow.mp4' }), C('Pig', '', { still: 'animals/pig.png', video: 'animals/pig.mp4' }), C('Horse', '', { still: 'animals/horse.png', video: 'animals/horse.mp4' }),
         C('Chicken', '', { still: 'animals/chicken.png', video: 'animals/chicken.mp4' }), C('Fish', '', { still: 'animals/fish.png', video: 'animals/fish.mp4' }), C('Frog', '', { still: 'animals/frog.png', video: 'animals/frog.mp4' }), C('Bear', '', { still: 'animals/bear.png', video: 'animals/bear.mp4' }), C('Lion', '', { still: 'animals/lion.png', video: 'animals/lion.mp4' }),
@@ -896,6 +896,12 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
       const SOUNDS = { Sheep: 'sounds/sheep.mp3', Snake: 'sounds/snake.mp3', Monkey: 'sounds/monkey.mp3' };
       (B.cells['Animal Noise'] || []).forEach(c => { if (c && SOUNDS[c.label] && !c.sound) c.sound = SOUNDS[c.label]; });
       B.v = 9;
+    }
+    if (B.v < 10) {   // v10: Play and My Apps trade places on Home
+      const home = B.cells[B.pages[0]] || [];
+      const pl = home.findIndex(c => c && c.label === 'Play'), ap = home.findIndex(c => c && c.label === 'My Apps');
+      if (pl >= 0 && ap >= 0 && pl < ap) { const t = home[pl]; home[pl] = home[ap]; home[ap] = t; }
+      B.v = 10;
     }
   } catch (e) {}
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ settings: S, board: B })); } catch (e) {} };
@@ -1260,7 +1266,17 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   };
 
   // ---------- Start ----------
-  addEventListener('resize', () => { if (layer === 'app') render(); });
+  // Redraw after the screen changes size, but never in the middle of a tap: going full screen
+  // on her first tap resizes the screen, and redrawing then would swallow that tap.
+  let lastDown = 0, resizeTimer = 0;
+  addEventListener('pointerdown', () => { lastDown = Date.now(); }, true);
+  addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function later() {
+      if (Date.now() - lastDown < 700) { resizeTimer = setTimeout(later, 300); return; }
+      if (layer === 'app') render();
+    }, 250);
+  });
   applyAccess();
   layer = 'start'; A.setLayer(() => layer);
   render();

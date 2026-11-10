@@ -695,9 +695,11 @@
     </svg>`;
   let tileUnregs = [];
 
-  // ---------- Pictures from the start of each video ----------
-  // A frame from about 3 seconds in (past any black or title frames), saved with the video.
-  const THUMB_VER = 2;   // bump to retake every saved picture
+  // ---------- A picture for each video ----------
+  // Many of her videos open with a title card (white words on black) for a few seconds,
+  // so the app looks at moments across the first part of the video and keeps the most
+  // colourful picture. Saved with the video.
+  const THUMB_VER = 4;   // bump to retake every saved picture
   function makeThumb(blob) {
     return new Promise(resolve => {
       const url = URL.createObjectURL(blob);
@@ -705,13 +707,49 @@
       v.muted = true; v.playsInline = true; v.preload = 'auto';
       let done = false;
       const finish = out => { if (done) return; done = true; clearTimeout(timer); URL.revokeObjectURL(url); v.removeAttribute('src'); v.load(); resolve(out); };
-      const timer = setTimeout(() => finish(null), 15000);
-      v.addEventListener('loadedmetadata', () => {
-        const d = isFinite(v.duration) ? v.duration : 1;
-        v.currentTime = Math.min(3, d / 3);
-      });
-      v.addEventListener('seeked', () => {
+      const timer = setTimeout(() => finish(null), 60000);
+      const seekTo = t => new Promise(r => { const on = () => { v.removeEventListener('seeked', on); r(); }; v.addEventListener('seeked', on); v.currentTime = t; });
+      const W = 192, H = 108;
+      const small = document.createElement('canvas'); small.width = W; small.height = H;
+      const sctx = small.getContext('2d', { willReadFrequently: true });
+      // How much solid colour is in the frame. Words and thin outlines (title cards) are
+      // shaved away first, so only real pictures count.
+      function colourScore() {
+        sctx.drawImage(v, 0, 0, W, H);
+        const px = sctx.getImageData(0, 0, W, H).data;
+        let c = new Uint8Array(W * H);
+        for (let i = 0, j = 0; i < px.length; i += 4, j++) {
+          const r = px[i], g = px[i + 1], b = px[i + 2];
+          const mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+          c[j] = mx > 60 && (mx - mn) / mx > 0.35 ? 1 : 0;   // a coloured (not black, white or grey) pixel
+        }
+        for (let pass = 0; pass < 2; pass++) {               // keep only pixels whose neighbours are coloured too
+          const e = new Uint8Array(W * H);
+          for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
+            const j = y * W + x;
+            e[j] = c[j] & c[j - 1] & c[j + 1] & c[j - W] & c[j + W] & c[j - W - 1] & c[j - W + 1] & c[j + W - 1] & c[j + W + 1];
+          }
+          c = e;
+        }
+        let n = 0; for (let j = 0; j < c.length; j++) n += c[j];
+        return n;
+      }
+      v.addEventListener('loadedmetadata', async () => {
         try {
+          const d = isFinite(v.duration) && v.duration > 0 ? v.duration : 10;
+          const times = new Set();
+          for (let s = 2; s <= Math.min(40, d * 0.6); s += 2) times.add(s);          // every 2 s through the opening
+          [0.1, 0.2, 0.3, 0.4, 0.5].forEach(f => times.add(Math.round(d * f * 10) / 10));
+          if (!times.size) times.add(d / 3);
+          let best = null, bestScore = -1;
+          for (const t of [...times].sort((a, b) => a - b)) {
+            if (t >= d) continue;
+            await seekTo(t);
+            const s = colourScore();
+            if (s > bestScore * 1.15) { bestScore = s; best = t; }   // prefer the earlier of two similar pictures
+          }
+          if (bestScore < 150) best = d / 3;   // mostly black-and-white pictures: a third of the way in
+          await seekTo(best == null ? d / 3 : best);
           const w = v.videoWidth, h = v.videoHeight;
           if (!w || !h) return finish(null);
           const k = Math.min(1, 640 / Math.max(w, h));

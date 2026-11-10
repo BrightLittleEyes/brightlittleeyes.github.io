@@ -627,7 +627,7 @@
   const getSettings = () => tx('settings', 'readonly', s => s.get('main'));
   const putSettings = v => tx('settings', 'readwrite', s => s.put(v, 'main'));
 
-  const SCREEN_DEFAULTS = { picture: 'frame', perPage: 2, showLabels: true, pulse: false, autoBack: true, hideClose: false };
+  const SCREEN_DEFAULTS = { picture: 'frame', perPage: 2, showLabels: false, pulse: false, autoBack: true, hideClose: false };
   const defaults = Object.assign({}, A.DEFAULTS, SCREEN_DEFAULTS);
   let S = { ...defaults };
   let videos = [];
@@ -679,7 +679,8 @@
   let tileUnregs = [];
 
   // ---------- Pictures from the start of each video ----------
-  // A frame from about half a second in (the very first frame is often black), saved with the video.
+  // A frame from about 3 seconds in (past any black or title frames), saved with the video.
+  const THUMB_VER = 2;   // bump to retake every saved picture
   function makeThumb(blob) {
     return new Promise(resolve => {
       const url = URL.createObjectURL(blob);
@@ -690,7 +691,7 @@
       const timer = setTimeout(() => finish(null), 15000);
       v.addEventListener('loadedmetadata', () => {
         const d = isFinite(v.duration) ? v.duration : 1;
-        v.currentTime = Math.min(0.5, d / 3);
+        v.currentTime = Math.min(3, d / 3);
       });
       v.addEventListener('seeked', () => {
         try {
@@ -715,8 +716,9 @@
   }
   async function fillMissingThumbs() {
     for (const v of videos) {
-      if (v.thumb !== undefined) continue;
-      v.thumb = await makeThumb(v.blob);
+      if (v.thumb !== undefined && v.thumbVer === THUMB_VER) continue;
+      v.thumb = await makeThumb(v.blob); v.thumbVer = THUMB_VER;
+      if (thumbURLs.has(v.id)) { URL.revokeObjectURL(thumbURLs.get(v.id)); thumbURLs.delete(v.id); }
       await putVideo(v).catch(() => {});
       if (layer === 'app') render();
     }
@@ -977,7 +979,7 @@
         order: ++maxOrder,
         blob: f,
       };
-      v.thumb = await makeThumb(f);
+      v.thumb = await makeThumb(f); v.thumbVer = THUMB_VER;
       try { await putVideo(v); videos.push(v); added++; }
       catch (err) { status.textContent = `Couldn't save ${f.name}. The device may be out of space.`; console.error(err); }
     }
@@ -993,6 +995,7 @@
       db = await openDB();
       const saved = await getSettings();
       if (saved) S = { ...defaults, ...saved };
+      if (!S.migNoLabels) { S.showLabels = false; S.migNoLabels = true; putSettings(S).catch(() => {}); }   // names off by default now
       videos = await getAllVideos();
     } catch (err) {
       $('empty').textContent = 'This browser blocked saving videos. Try Microsoft Edge, Chrome or Safari.';

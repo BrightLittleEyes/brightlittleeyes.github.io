@@ -940,7 +940,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
 
   // ---------- Layers: which set of targets can be chosen right now ----------
   let layer = 'app';
-  A.setLayer(() => layer);
+  A.setLayer(liveLayer);
   // After the screen changes under her eyes, whatever she's already looking at waits until she looks away.
   let aim = { x: -9999, y: -9999 }, lockedNode = null;
   A.onAim((x, y) => {
@@ -958,7 +958,27 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
       lockedNode = el && el.closest('.tile');
     });
   }
-  function setLayer(l) { layer = l; A.setLayer(() => layer); lockUnderAim(); }
+  // Which set of choices is live is worked out from what is actually on screen each time, so the board
+  // can never get stuck on a screen that is no longer showing (e.g. Edit board pressed before Start).
+  const shown = el => !!el && getComputedStyle(el).display !== 'none' && getComputedStyle(el).visibility !== 'hidden';
+  let liveCache = { t: 0, v: 'app' };
+  function liveLayer() {                       // checked many times a frame, so worked out at most every 50 ms
+    const now = performance.now();
+    if (now - liveCache.t < 50) return liveCache.v;
+    liveCache = { t: now, v: computeLayer() };
+    return liveCache.v;
+  }
+  function computeLayer() {
+    const $q = id => document.getElementById(id);
+    if (shown($q('exitDone'))) return 'none';
+    if ($q('panel') && $q('panel').classList.contains('open')) return 'sheet';
+    if (shown($q('appLayer'))) return 'none';                                   // one of her apps is open on top
+    if ($q('player') && $q('player').classList.contains('open')) return 'player';
+    if (document.querySelector('.dlgScrim.show')) return 'none';               // a grown-up dialog is open
+    if (shown($q('startScreen'))) return 'start';
+    return 'app';
+  }
+  function setLayer(l) { layer = l; liveCache.t = 0; A.setLayer(liveLayer); lockUnderAim(); }
 
   // Register a child's choice with the shared selection system (with its own red fill countdown).
   function childTarget(el, run, l) {
@@ -1085,7 +1105,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     f.style.cssText = 'border:0;width:100%;height:100%;display:block;background:#000';
     appLayer.appendChild(f);
     appLayer.style.display = 'block';
-    layer = 'none'; A.setLayer(() => layer);          // the board waits underneath
+    layer = 'none'; A.setLayer(liveLayer);          // the board waits underneath
     A.configure(Object.assign({}, A.settings(), { showDot: false }));   // the app shows its own dot; hide the board's
     $('gear').style.visibility = 'hidden'; $('exitBtn').style.visibility = 'hidden';
     setTimeout(() => { try { f.focus(); } catch (e) {} }, 300);
@@ -1240,7 +1260,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     try { sessionStorage.removeItem('bleTalkStarted'); } catch (e) {}
     const done = () => {
       try { window.close(); } catch (e) {}
-      setTimeout(() => { layer = 'none'; A.setLayer(() => layer); A.configure(Object.assign({}, A.settings(), { showDot: false })); $('exitDone').style.display = 'flex'; }, 250);
+      setTimeout(() => { layer = 'none'; A.setLayer(liveLayer); A.configure(Object.assign({}, A.settings(), { showDot: false })); $('exitDone').style.display = 'flex'; }, 250);
     };
     if (document.fullscreenElement) document.exitFullscreen().then(done, done); else done();
   }
@@ -1264,7 +1284,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     registerSheetTargets($('panel'));
     ['panel', 'panelArrow', 'panelScrim'].forEach(id => $(id).classList.add('open'));
     A.attachPreview($('camPreview'));
-    layer = 'sheet'; A.setLayer(() => layer);
+    layer = 'sheet'; A.setLayer(liveLayer);
   }
   function closePanel() {
     ['panel', 'panelArrow', 'panelScrim'].forEach(id => $(id).classList.remove('open'));
@@ -1375,7 +1395,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     }, 250);
   });
   applyAccess();
-  layer = 'start'; A.setLayer(() => layer);
+  layer = 'start'; A.setLayer(liveLayer);
   render();
   // Coming back from one of her apps (or anything else in this same tab): skip Start, go to Home.
   let back = /[?&]home\b/.test(location.search);

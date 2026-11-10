@@ -801,14 +801,14 @@
   // ---------- Her board ----------
   const C = (label, sym, extra = {}) => ({ label, sym, ...extra });
   const STARTER = {
-    v: 5,
+    v: 6,
     pages: ['Home', 'Animals', 'More Animals', 'Animal Noise', 'Sing Songs', 'More Songs', 'My Apps'],
     cells: {
       'Home': [
         C('More', '🤲'), C('Go', '🟢'), C('Hello', '🙋‍♀️'), C('Open', '📖'), C('Yes', '✅'),
         C('All Done', '🙌'), C('Stop', '🛑'), C('Goodbye', '👋'), C('Closed', '📕'), C('No', '❌'),
         C('Animals', '🐄', { link: 'Animals' }), C('Animal Noise', '🐷', { link: 'Animal Noise' }), C('Sing Songs', '🎸', { url: SITE + '/my-videos/' }), C('More Songs', '🎺', { link: 'More Songs' }), C('Play', '🎭'),
-        C('I want a Hug', '🤗'), C('Read', '📚'), C('My Apps', '📱', { link: 'My Apps' })],
+        C('I want a Hug', '🤗'), C('Read', '📚', { url: SITE + '/my-books/' }), C('My Apps', '📱', { link: 'My Apps' })],
       'Animals': [
         C('Dog', '', { still: 'animals/dog.png', video: 'animals/dog.mp4' }), C('Cat', '', { still: 'animals/cat.png', video: 'animals/cat.mp4' }), C('Cow', '', { still: 'animals/cow.png', video: 'animals/cow.mp4' }), C('Pig', '', { still: 'animals/pig.png', video: 'animals/pig.mp4' }), C('Horse', '', { still: 'animals/horse.png', video: 'animals/horse.mp4' }),
         C('Chicken', '', { still: 'animals/chicken.png', video: 'animals/chicken.mp4' }), C('Fish', '', { still: 'animals/fish.png', video: 'animals/fish.mp4' }), C('Frog', '', { still: 'animals/frog.png', video: 'animals/frog.mp4' }), C('Bear', '', { still: 'animals/bear.png', video: 'animals/bear.mp4' }), C('Lion', '', { still: 'animals/lion.png', video: 'animals/lion.mp4' }),
@@ -865,6 +865,12 @@
         if (c && c.label === 'Sing Songs' && c.link === 'Sing Songs') { delete c.link; c.url = SITE + '/my-videos/'; }
       });
       B.v = 5;
+    }
+    if (B.v < 6) {   // v6: Read on Home opens I Can Choose My Book (her edits stay)
+      (B.cells[B.pages[0]] || []).forEach(c => {
+        if (c && c.label === 'Read' && !c.link && !c.url && !c.video) c.url = SITE + '/my-books/';
+      });
+      B.v = 6;
     }
   } catch (e) {}
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ settings: S, board: B })); } catch (e) {} };

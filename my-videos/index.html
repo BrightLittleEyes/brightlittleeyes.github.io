@@ -644,7 +644,7 @@
   const getSettings = () => tx('settings', 'readonly', s => s.get('main'));
   const putSettings = v => tx('settings', 'readwrite', s => s.put(v, 'main'));
 
-  const SCREEN_DEFAULTS = { picture: 'frame', perPage: 2, showLabels: false, showTalk: true, fullscreen: true, pulse: false, autoBack: true, hideClose: false };
+  const SCREEN_DEFAULTS = { picture: 'frame', perPage: 6, showLabels: false, showTalk: true, fullscreen: true, pulse: false, autoBack: true, hideClose: false };
   const defaults = Object.assign({}, A.DEFAULTS, SCREEN_DEFAULTS);
   let S = { ...defaults };
   let videos = [];
@@ -782,7 +782,7 @@
     nextBtn.hidden = page >= pages - 1;
     focusIndex = Math.min(focusIndex, Math.max(0, grid.children.length - 1));
   }
-  childTarget($('talkBtn'), () => { location.href = '../talk/'; });
+  childTarget($('talkBtn'), () => { location.href = '../talk/?home'; });
   childTarget(prevBtn, () => { page--; focusIndex = 0; render(); lockUnderAim(); });
   childTarget(nextBtn, () => { page++; focusIndex = 0; render(); lockUnderAim(); });
 
@@ -1023,6 +1023,7 @@
       db = await openDB();
       const saved = await getSettings();
       if (saved) S = { ...defaults, ...saved };
+      if (!S.migPer6) { S.perPage = 6; S.migPer6 = true; putSettings(S).catch(() => {}); }   // 6 on each screen now
       if (!S.migNoLabels) { S.showLabels = false; S.migNoLabels = true; putSettings(S).catch(() => {}); }   // names off by default now
       videos = await getAllVideos();
     } catch (err) {

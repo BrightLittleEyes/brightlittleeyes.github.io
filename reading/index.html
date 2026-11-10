@@ -972,5 +972,22 @@ __r(427);
 __r(2);
 __r(0);</script>
 <script>if ('serviceWorker' in navigator && location.protocol.startsWith('http')) { addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {})); }</script>
+<script>
+/* Bright Little Eyes: go full screen on the first touch, click or key press
+   (browsers only allow it after one). Not for taps in the grown-up settings. */
+(function(){
+  var done=false;
+  function first(e){
+    if(done) return;
+    var t=e.target;
+    if(t && t.closest && t.closest('#panel, #panelScrim, [role="dialog"]')) return;
+    done=true;
+    var el=document.documentElement;
+    if(!document.fullscreenElement && el.requestFullscreen) el.requestFullscreen().catch(function(){});
+  }
+  addEventListener('pointerdown',first,true);
+  addEventListener('keydown',first,true);
+})();
+</script>
 </body>
 </html>

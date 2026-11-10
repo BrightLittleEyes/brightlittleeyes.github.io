@@ -301,6 +301,7 @@
     <div class="seg" id="segPics"><button type="button" data-v="shapes">Simple shapes</button><button type="button" data-v="emoji">Colorful</button></div>
     <span class="alabel">Picture color</span>
     <div class="seg" id="segPicColor"><button type="button" data-v="#ff2b2b">Red</button><button type="button" data-v="#ff7a00">Orange</button><button type="button" data-v="#ffd400">Yellow</button><button type="button" data-v="#2ecc40">Green</button><button type="button" data-v="#1e90ff">Blue</button><button type="button" data-v="#b84dff">Purple</button><button type="button" data-v="#ffffff">White</button></div>
+    <div class="trow" role="switch" tabindex="0" data-toggle="tFull"><span class="alabel">Start in full screen</span><div class="toggle" id="tFull"></div></div>
     <div class="trow" role="switch" tabindex="0" data-toggle="tLabels"><span class="alabel">Show words</span><div class="toggle" id="tLabels"></div></div>
     <div class="trow" role="switch" tabindex="0" data-toggle="tPulse"><span class="alabel">Pulse</span><div class="toggle" id="tPulse"></div></div>
     <div class="trow" role="switch" tabindex="0" data-toggle="tVideos"><span class="alabel">Play her animal videos</span><div class="toggle" id="tVideos"></div></div>
@@ -801,7 +802,8 @@
   // ---------- Her board ----------
   const C = (label, sym, extra = {}) => ({ label, sym, ...extra });
   const STARTER = {
-    v: 6,
+    v: 7,
+    grids: { 'My Apps': '3x2' },
     pages: ['Home', 'Animals', 'More Animals', 'Animal Noise', 'Sing Songs', 'More Songs', 'My Apps'],
     cells: {
       'Home': [
@@ -840,7 +842,7 @@
   // ---------- Settings (stored on this device) ----------
   const KEY = 'ble-talk-v1';
   const TOUCH_DEVICE = matchMedia('(pointer: coarse)').matches && !matchMedia('(pointer: fine)').matches;
-  const SCREEN_DEFAULTS = { grid: '5x4', showLabels: true, pulse: false, wiggle: true, playVideos: true, picStyle: 'shapes', picColor: '#ff2b2b' };
+  const SCREEN_DEFAULTS = { fullscreen: true, grid: '5x4', showLabels: true, pulse: false, wiggle: true, playVideos: true, picStyle: 'shapes', picColor: '#ff2b2b' };
   const defaults = Object.assign({}, A.DEFAULTS, SCREEN_DEFAULTS, { accessMode: TOUCH_DEVICE ? 'tap' : 'dwell', dwellMs: 1500 });
   let S = { ...defaults };
   let B = JSON.parse(JSON.stringify(STARTER));
@@ -871,6 +873,10 @@
         if (c && c.label === 'Read' && !c.link && !c.url && !c.video) c.url = SITE + '/my-books/';
       });
       B.v = 6;
+    }
+    if (B.v < 7) {   // v7: My Apps shows 6 big buttons; Home and the rest keep the board size
+      B.grids = Object.assign({ 'My Apps': '3x2' }, B.grids || {});
+      B.v = 7;
     }
   } catch (e) {}
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ settings: S, board: B })); } catch (e) {} };
@@ -940,7 +946,7 @@
 
   function render() {
     unregs.forEach(f => f()); unregs = [];
-    const [c, r] = S.grid.split('x').map(Number);
+    const [c, r] = ((B.grids && B.grids[cur]) || S.grid).split('x').map(Number);   // a page can have its own size
     const n = c * r;
     document.body.classList.toggle('pulse', !!S.pulse);
     document.body.classList.toggle('nolabels', !S.showLabels);
@@ -1025,9 +1031,22 @@
     try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } catch (e) {}
     startScreen.style.display = 'none';
     if (startUnreg) { startUnreg(); startUnreg = null; }
+    try { sessionStorage.setItem('bleTalkStarted', '1'); } catch (e) {}
     setLayer('app'); render();
   }
   startUnreg = childTarget($('startBtn'), start, 'start');
+
+  // The first touch, click or key press anywhere: let the board talk, and go full screen
+  // (browsers only allow both after one). Not when it lands in the grown-up settings.
+  let unlocked = false;
+  function firstGesture(e) {
+    if (e.target && e.target.closest && e.target.closest('#panel, #panelScrim')) return;
+    if (!unlocked) { unlocked = true; try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } catch (er) {} }
+    const el = document.documentElement;
+    if (S.fullscreen !== false && !document.fullscreenElement && el.requestFullscreen) el.requestFullscreen().catch(() => {});
+  }
+  addEventListener('pointerdown', firstGesture, true);
+  addEventListener('keydown', firstGesture, true);
 
   // ================= Settings sheet (works like I Can Learn To See's) =================
   function seg(id, get, set) {
@@ -1044,7 +1063,7 @@
 
   document.querySelectorAll('.trow[data-toggle]').forEach(row => {
     const el = $(row.dataset.toggle);
-    const key = { tLabels: 'showLabels', tPulse: 'pulse', tWiggle: 'wiggle', tVideos: 'playVideos' }[row.dataset.toggle];
+    const key = { tLabels: 'showLabels', tPulse: 'pulse', tWiggle: 'wiggle', tVideos: 'playVideos', tFull: 'fullscreen' }[row.dataset.toggle];
     const flip = () => { S[key] = !S[key]; el.classList.toggle('on', S[key]); row.setAttribute('aria-checked', S[key]); save(); render(); };
     row.addEventListener('click', flip);
     row.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flip(); } });
@@ -1214,6 +1233,10 @@
   applyAccess();
   layer = 'start'; A.setLayer(() => layer);
   render();
+  // Coming back from one of her apps (or anything else in this same tab): skip Start, go to Home.
+  let back = /[?&]home\b/.test(location.search);
+  try { back = back || sessionStorage.getItem('bleTalkStarted') === '1'; } catch (e) {}
+  if (back) { cur = B.pages[0]; start(); }
 
   if ('serviceWorker' in navigator && location.protocol.startsWith('http') && location.hostname.endsWith('github.io')) {
     navigator.serviceWorker.register('sw.js').catch(() => {});

@@ -75,6 +75,19 @@
     padding: 10vmin; font-size: clamp(20px, 4vmin, 40px); color: #8a8a8a;
   }
 
+  /* ---------- Back to I Can Talk (top left), like the talk board's Home button ---------- */
+  #talkBtn {
+    position: fixed; z-index: 60; overflow: hidden;
+    top: calc(8px + env(safe-area-inset-top)); left: calc(12px + env(safe-area-inset-left));
+    height: 72px; padding: 0 30px; display: flex; align-items: center; gap: 14px;
+    background: #000; color: #fff; font: inherit; font-size: 30px; font-weight: 800; cursor: pointer;
+    border: 6px solid var(--target); border-radius: 20px;
+  }
+  #talkBtn svg { width: 42px; height: 42px; fill: var(--target); }
+  #talkBtn[hidden] { display: none; }
+  #talkBtn > * { position: relative; z-index: 1; }
+  #talkBtn.hover { box-shadow: 0 0 0 6px var(--ring); }
+
   /* ---------- Player (covers the gear while a video plays) ---------- */
   #player { position: fixed; inset: 0; background: #000; display: none; z-index: 65; }
   #player.open { display: block; }
@@ -193,6 +206,8 @@
   </button>
 </div>
 
+<button id="talkBtn" class="fill" aria-label="Back to I Can Talk"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 6l46 40H82v48H58V66H42v28H18V46H4z"/></svg><span>Talk</span></button>
+
 <button id="gear" title="Settings (grown-ups: press and hold)" aria-label="Settings. Grown-ups: press and hold."></button>
 
 <!-- ---------------- Settings ----------------
@@ -225,6 +240,7 @@
     <div class="trow" role="switch" tabindex="0" data-toggle="tLabels"><span class="alabel">Show names</span><div class="toggle" id="tLabels"></div></div>
     <div class="trow" role="switch" tabindex="0" data-toggle="tPulse"><span class="alabel">Pulse</span><div class="toggle" id="tPulse"></div></div>
     <div class="trow" role="switch" tabindex="0" data-toggle="tAutoBack"><span class="alabel">Back to choices when a book ends</span><div class="toggle" id="tAutoBack"></div></div>
+    <div class="trow" role="switch" tabindex="0" data-toggle="tTalk"><span class="alabel">Talk button (back to I Can Talk)</span><div class="toggle" id="tTalk"></div></div>
     <div class="trow" role="switch" tabindex="0" data-toggle="tHideClose"><span class="alabel">Hide the X during a book</span><div class="toggle" id="tHideClose"></div></div>
   </div>
 
@@ -627,7 +643,7 @@
   const getSettings = () => tx('settings', 'readonly', s => s.get('main'));
   const putSettings = v => tx('settings', 'readwrite', s => s.put(v, 'main'));
 
-  const SCREEN_DEFAULTS = { picture: 'frame', perPage: 2, showLabels: false, pulse: false, autoBack: true, hideClose: false };
+  const SCREEN_DEFAULTS = { picture: 'frame', perPage: 2, showLabels: false, showTalk: true, pulse: false, autoBack: true, hideClose: false };
   const defaults = Object.assign({}, A.DEFAULTS, SCREEN_DEFAULTS);
   let S = { ...defaults };
   let videos = [];
@@ -652,7 +668,7 @@
     if (S.accessMode === 'tap') return;
     requestAnimationFrame(() => {
       const el = document.elementFromPoint(aim.x, aim.y);
-      lockedNode = el && el.closest('.tile, .nav, #closeBtn');
+      lockedNode = el && el.closest('.tile, .nav, #closeBtn, #talkBtn');
     });
   }
   function setLayer(l) { layer = l; A.setLayer(() => layer); lockUnderAim(); }
@@ -736,6 +752,7 @@
   function render() {
     videos.sort((a, b) => a.order - b.order);
     document.body.classList.toggle('pulse', !!S.pulse);
+    $('talkBtn').hidden = S.showTalk === false;
     const per = S.perPage;
     const pages = Math.max(1, Math.ceil(videos.length / per));
     page = Math.min(page, pages - 1);
@@ -764,6 +781,7 @@
     nextBtn.hidden = page >= pages - 1;
     focusIndex = Math.min(focusIndex, Math.max(0, grid.children.length - 1));
   }
+  childTarget($('talkBtn'), () => { location.href = '../talk/'; });
   childTarget(prevBtn, () => { page--; focusIndex = 0; render(); lockUnderAim(); });
   childTarget(nextBtn, () => { page++; focusIndex = 0; render(); lockUnderAim(); });
 
@@ -833,7 +851,7 @@
 
   document.querySelectorAll('.trow[data-toggle]').forEach(row => {
     const el = $(row.dataset.toggle);
-    const key = { tLabels: 'showLabels', tPulse: 'pulse', tAutoBack: 'autoBack', tHideClose: 'hideClose' }[row.dataset.toggle];
+    const key = { tLabels: 'showLabels', tPulse: 'pulse', tAutoBack: 'autoBack', tHideClose: 'hideClose', tTalk: 'showTalk' }[row.dataset.toggle];
     const flip = () => { S[key] = !S[key]; el.classList.toggle('on', S[key]); row.setAttribute('aria-checked', S[key]); save(); render(); };
     row.addEventListener('click', flip);
     row.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flip(); } });

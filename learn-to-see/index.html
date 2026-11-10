@@ -1814,6 +1814,7 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   var done=false;
   function first(e){
     if(done) return;
+    try { if (window.top !== window) return; } catch (er) { return; }   /* inside I Can Talk: already full screen */
     var t=e.target;
     if(t && t.closest && t.closest('#panel, #panelScrim, [role="dialog"]')) return;
     done=true;
@@ -1850,7 +1851,10 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   var b = document.createElement('button');
   b.id = 'bleTalkBack'; b.type = 'button'; b.setAttribute('aria-label', 'Back to I Can Talk');
   b.innerHTML = '<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 6l46 40H82v48H58V66H42v28H18V46H4z"/></svg><span>Talk</span>';
-  function go(){ location.href = '/talk/?home'; }
+  function go(){
+    try { if (window.parent !== window && window.parent.bleCloseApp) { window.parent.bleCloseApp(); return; } } catch (e) {}
+    location.href = '/talk/?home';
+  }
   b.addEventListener('click', go);
   document.body.appendChild(b);
   // Look and hold / Look and press, in apps that use the Bright Little Eyes selection system

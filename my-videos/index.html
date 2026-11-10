@@ -867,7 +867,11 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     nextBtn.hidden = page >= pages - 1;
     focusIndex = Math.min(focusIndex, Math.max(0, grid.children.length - 1));
   }
-  childTarget($('talkBtn'), () => { location.href = '../talk/?home'; });
+  // Back to her board: inside I Can Talk, just close this app; on its own, go to the board.
+  childTarget($('talkBtn'), () => {
+    try { if (window.parent !== window && window.parent.bleCloseApp) { window.parent.bleCloseApp(); return; } } catch (e) {}
+    location.href = '../talk/?home';
+  });
   childTarget(prevBtn, () => { page--; focusIndex = 0; render(); lockUnderAim(); });
   childTarget(nextBtn, () => { page++; focusIndex = 0; render(); lockUnderAim(); });
 
@@ -903,7 +907,9 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   addEventListener('pointerdown', autoFull, true);
   addEventListener('keydown', autoFull, true);
 
+  const insideBoard = (() => { try { return window.top !== window; } catch (e) { return true; } })();
   function goFullscreen() {
+    if (insideBoard) return;                       // inside I Can Talk: the board is already full screen
     const el = document.documentElement;
     if (!document.fullscreenElement && el.requestFullscreen) el.requestFullscreen().catch(() => {});
   }

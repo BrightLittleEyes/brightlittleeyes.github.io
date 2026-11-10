@@ -1044,11 +1044,39 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     // On her site the app opens in place (browser Back returns here). Anywhere else it opens in a new tab.
     try {
       const u = new URL(url, location.href);
-      if (u.origin === location.origin) { u.searchParams.set('from', 'talk'); location.href = u.href; return; }   // tells the app she came from her board
+      if (u.origin === location.origin) { u.searchParams.set('from', 'talk'); showApp(u.href); return; }   // tells the app she came from her board
     } catch (e) {}
     const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener';
     document.body.appendChild(a); a.click(); a.remove();
   }
+  // Her apps open on top of the board, inside it, instead of replacing the page: browsers end full screen
+  // whenever the page changes, so this keeps her in full screen while she switches back and forth.
+  // The app's Talk button calls bleCloseApp() to come back to Home.
+  const appLayer = document.createElement('div');
+  appLayer.id = 'appLayer';
+  appLayer.style.cssText = 'position:fixed;inset:0;z-index:90;background:#000;display:none';
+  document.body.appendChild(appLayer);
+  let layerBeforeApp = 'app';
+  function showApp(href) {
+    try { speechSynthesis.cancel(); } catch (e) {}
+    appLayer.innerHTML = '';
+    const f = document.createElement('iframe');
+    f.src = href; f.title = 'App';
+    f.setAttribute('allow', 'autoplay; fullscreen; camera');
+    f.style.cssText = 'border:0;width:100%;height:100%;display:block;background:#000';
+    appLayer.appendChild(f);
+    appLayer.style.display = 'block';
+    layer = 'none'; A.setLayer(() => layer);          // the board waits underneath
+    $('gear').style.visibility = 'hidden';
+    setTimeout(() => { try { f.focus(); } catch (e) {} }, 300);
+  }
+  window.bleCloseApp = function () {
+    appLayer.style.display = 'none';
+    appLayer.innerHTML = '';                            // stops the app (and any video) completely
+    $('gear').style.visibility = '';
+    cur = B.pages[0]; setLayer('app'); render();        // back to her Home board
+  };
+
   // ---------- Her animal videos: full screen with their own sound, then back to the board ----------
   const player = $('player'), video = $('video'), closeBtn = $('closeBtn');
   let videoTimer = 0, nameTimer = 0;

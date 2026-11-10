@@ -245,6 +245,8 @@
   #homeBtn .sym{font-size:30px}
   #homeBtn{gap:12px}
   #grid .tile .ico{width:min(66cqh,66cqw);height:min(66cqh,66cqw)}
+  #grid .tile img{max-width:88%;max-height:64cqh;object-fit:contain;border-radius:0}
+  body.nolabels #grid .tile img{max-height:82cqh}
 </style>
 </head>
 <body>
@@ -260,6 +262,13 @@
 <div id="startScreen">
   <button class="tile fill" id="startBtn"><span class="sym">🗣️</span><span class="label">Start</span></button>
   <p>Tap Start once so the board can talk.</p>
+</div>
+
+<div id="player">
+  <video id="video" playsinline></video>
+  <button id="closeBtn" class="fill" aria-label="Back to the board">
+    <svg viewBox="0 0 100 100"><path d="M20 20 L80 80 M80 20 L20 80" stroke="#ff2b2b" stroke-width="16" stroke-linecap="round"/></svg>
+  </button>
 </div>
 
 <button id="doneEdit" hidden>Done editing</button>
@@ -294,6 +303,7 @@
     <div class="seg" id="segPicColor"><button type="button" data-v="#ff2b2b">Red</button><button type="button" data-v="#ff7a00">Orange</button><button type="button" data-v="#ffd400">Yellow</button><button type="button" data-v="#2ecc40">Green</button><button type="button" data-v="#1e90ff">Blue</button><button type="button" data-v="#b84dff">Purple</button><button type="button" data-v="#ffffff">White</button></div>
     <div class="trow" role="switch" tabindex="0" data-toggle="tLabels"><span class="alabel">Show words</span><div class="toggle" id="tLabels"></div></div>
     <div class="trow" role="switch" tabindex="0" data-toggle="tPulse"><span class="alabel">Pulse</span><div class="toggle" id="tPulse"></div></div>
+    <div class="trow" role="switch" tabindex="0" data-toggle="tVideos"><span class="alabel">Play her animal videos</span><div class="toggle" id="tVideos"></div></div>
     <div class="trow" role="switch" tabindex="0" data-toggle="tWiggle"><span class="alabel">Wiggle when chosen</span><div class="toggle" id="tWiggle"></div></div>
   </div>
 
@@ -789,6 +799,7 @@
   // ---------- Her board ----------
   const C = (label, sym, extra = {}) => ({ label, sym, ...extra });
   const STARTER = {
+    v: 2,
     pages: ['Home', 'Animals', 'Animal Noise', 'Sing Songs', 'More Songs', 'My Apps'],
     cells: {
       'Home': [
@@ -797,13 +808,14 @@
         C('Animals', '🐄', { link: 'Animals' }), C('Animal Noise', '🐷', { link: 'Animal Noise' }), C('Sing Songs', '🎸', { link: 'Sing Songs' }), C('More Songs', '🎺', { link: 'More Songs' }), C('Play', '🎭'),
         C('I want a Hug', '🤗'), C('Read', '📚'), C('My Apps', '📱', { link: 'My Apps' })],
       'Animals': [
-        C('Dog', '🐶'), C('Cat', '🐱'), C('Cow', '🐮'), C('Pig', '🐷'), C('Sheep', '🐑'),
-        C('Horse', '🐴'), C('Duck', '🦆'), C('Chicken', '🐔'), C('Bird', '🐦'), C('Fish', '🐟'),
-        C('Bear', '🐻'), C('Lion', '🦁'), C('Monkey', '🐵'), C('Frog', '🐸'), C('Kangaroo', '🦘')],
+        C('Dog', '', { still: 'animals/dog.png', video: 'animals/dog.mp4' }), C('Cat', '', { still: 'animals/cat.png', video: 'animals/cat.mp4' }), C('Cow', '', { still: 'animals/cow.png', video: 'animals/cow.mp4' }), C('Pig', '', { still: 'animals/pig.png', video: 'animals/pig.mp4' }), C('Horse', '', { still: 'animals/horse.png', video: 'animals/horse.mp4' }),
+        C('Chicken', '', { still: 'animals/chicken.png', video: 'animals/chicken.mp4' }), C('Fish', '', { still: 'animals/fish.png', video: 'animals/fish.mp4' }), C('Frog', '', { still: 'animals/frog.png', video: 'animals/frog.mp4' }), C('Bear', '', { still: 'animals/bear.png', video: 'animals/bear.mp4' }), C('Lion', '', { still: 'animals/lion.png', video: 'animals/lion.mp4' }),
+        C('Elephant', '', { still: 'animals/elephant.png', video: 'animals/elephant.mp4' }), C('Giraffe', '', { still: 'animals/giraffe.png', video: 'animals/giraffe.mp4' }), C('Goat', '', { still: 'animals/goat.png', video: 'animals/goat.mp4' }), C('Rabbit', '', { still: 'animals/rabbit.png', video: 'animals/rabbit.mp4' }), C('Squirrel', '', { still: 'animals/squirrel.png', video: 'animals/squirrel.mp4' }),
+        C('Lizard', '', { still: 'animals/lizard.png', video: 'animals/lizard.mp4' })],
       'Animal Noise': [
-        C('Dog', '🐶', { say: 'Woof woof' }), C('Cat', '🐱', { say: 'Meow' }), C('Cow', '🐮', { say: 'Moo' }), C('Pig', '🐷', { say: 'Oink oink' }), C('Sheep', '🐑', { say: 'Baa' }),
-        C('Horse', '🐴', { say: 'Neigh' }), C('Duck', '🦆', { say: 'Quack quack' }), C('Chicken', '🐔', { say: 'Cluck cluck' }), C('Bird', '🐦', { say: 'Tweet tweet' }), C('Lion', '🦁', { say: 'Roar' }),
-        C('Owl', '🦉', { say: 'Hoo hoo' }), C('Snake', '🐍', { say: 'Hiss' }), C('Monkey', '🐵', { say: 'Ooh ooh ah ah' }), C('Frog', '🐸', { say: 'Ribbit' }), C('Bee', '🐝', { say: 'Buzz' })],
+        C('Dog', '🐶', { still: 'animals/dog.png', say: 'Woof woof' }), C('Cat', '🐱', { still: 'animals/cat.png', say: 'Meow' }), C('Cow', '🐮', { still: 'animals/cow.png', say: 'Moo' }), C('Pig', '🐷', { still: 'animals/pig.png', say: 'Oink oink' }), C('Sheep', '🐑', { say: 'Baa' }),
+        C('Horse', '🐴', { still: 'animals/horse.png', say: 'Neigh' }), C('Duck', '🦆', { say: 'Quack quack' }), C('Chicken', '🐔', { still: 'animals/chicken.png', say: 'Cluck cluck' }), C('Bird', '🐦', { say: 'Tweet tweet' }), C('Lion', '🦁', { still: 'animals/lion.png', say: 'Roar' }),
+        C('Owl', '🦉', { say: 'Hoo hoo' }), C('Snake', '🐍', { say: 'Hiss' }), C('Monkey', '🐵', { say: 'Ooh ooh ah ah' }), C('Frog', '🐸', { still: 'animals/frog.png', say: 'Ribbit' }), C('Bee', '🐝', { say: 'Buzz' })],
       'Sing Songs': [
         C('Twinkle Twinkle', '⭐', { say: 'Sing Twinkle Twinkle Little Star' }), C('Old MacDonald', '🚜', { say: 'Sing Old MacDonald' }), C('Wheels on the Bus', '🚌', { say: 'Sing Wheels on the Bus' }),
         C('Itsy Bitsy Spider', '🕷️', { say: 'Sing Itsy Bitsy Spider' }), C('ABCs', '🔤', { say: 'Sing the ABCs' }), C('Row Your Boat', '🚣', { say: 'Sing Row Row Row Your Boat' }),
@@ -823,13 +835,17 @@
   // ---------- Settings (stored on this device) ----------
   const KEY = 'ble-talk-v1';
   const TOUCH_DEVICE = matchMedia('(pointer: coarse)').matches && !matchMedia('(pointer: fine)').matches;
-  const SCREEN_DEFAULTS = { grid: '5x4', showLabels: true, pulse: false, wiggle: true, picStyle: 'shapes', picColor: '#ff2b2b' };
+  const SCREEN_DEFAULTS = { grid: '5x4', showLabels: true, pulse: false, wiggle: true, playVideos: true, picStyle: 'shapes', picColor: '#ff2b2b' };
   const defaults = Object.assign({}, A.DEFAULTS, SCREEN_DEFAULTS, { accessMode: TOUCH_DEVICE ? 'tap' : 'dwell', dwellMs: 1500 });
   let S = { ...defaults };
   let B = JSON.parse(JSON.stringify(STARTER));
   try {
     const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
     if (saved) { if (saved.settings) S = { ...defaults, ...saved.settings }; if (saved.board && saved.board.pages) B = saved.board; }
+    if ((B.v || 1) < 2) {   // v2: her own animal pictures and videos
+      ['Animals', 'Animal Noise'].forEach(p => { if (B.cells[p]) B.cells[p] = JSON.parse(JSON.stringify(STARTER.cells[p])); });
+      B.v = 2;
+    }
   } catch (e) {}
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ settings: S, board: B })); } catch (e) {} };
   const accessOf = () => { const o = {}; A.KEYS.forEach(k => o[k] = S[k]); return o; };
@@ -903,8 +919,9 @@
       }
       el.className = 'tile fill' + (d.link ? ' link' : '') + (d.url ? ' app' : '');
       const ic = S.picStyle === 'shapes' ? iconOf(d) : null;
-      el.innerHTML = (d.img ? '<img alt="">' : ic ? svgOf(ic) : `<span class="sym">${esc(d.sym || '')}</span>`) + `<span class="label">${esc(d.label || '')}</span>`;
-      if (d.img) el.querySelector('img').src = d.img;
+      const pic = d.img || d.still;
+      el.innerHTML = (pic ? '<img alt="">' : ic ? svgOf(ic) : `<span class="sym">${esc(d.sym || '')}</span>`) + `<span class="label">${esc(d.label || '')}</span>`;
+      if (pic) el.querySelector('img').src = pic;
       el.setAttribute('aria-label', d.label || '');
       grid.appendChild(el);
       if (editing) el.onclick = () => openEdit(i);
@@ -919,6 +936,7 @@
   }
 
   function choose(d, el) {
+    if (d.video && S.playVideos !== false) { playVideo(d); return; }
     speak(d.say || d.label);
     if (S.wiggle && el) { el.classList.remove('wiggle'); void el.offsetWidth; el.classList.add('wiggle'); }
     if (d.link && B.cells[d.link]) { cur = d.link; render(); lockUnderAim(); }
@@ -933,6 +951,26 @@
     const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener';
     document.body.appendChild(a); a.click(); a.remove();
   }
+  // ---------- Her animal videos: full screen with their own sound, then back to the board ----------
+  const player = $('player'), video = $('video'), closeBtn = $('closeBtn');
+  let videoTimer = 0;
+  function playVideo(d) {
+    try { speechSynthesis.cancel(); } catch (e) {}
+    player.classList.add('open'); setLayer('player');
+    video.src = d.video; video.currentTime = 0;
+    video.play().catch(() => speak(d.say || d.label));
+    clearTimeout(videoTimer);
+    videoTimer = setTimeout(stopVideo, (S.videoSecs || 12.4) * 1000);   // one turn of the clip, then back
+  }
+  function stopVideo() {
+    clearTimeout(videoTimer);
+    if (!player.classList.contains('open')) return;
+    video.pause(); video.removeAttribute('src'); video.load();
+    player.classList.remove('open'); setLayer('app');
+  }
+  video.addEventListener('ended', stopVideo);
+  childTarget(closeBtn, stopVideo, 'player');
+
   childTarget(homeBtn, () => { cur = B.pages[0]; render(); lockUnderAim(); });
 
   // ---------- Start (lets the browser speak) ----------
@@ -961,7 +999,7 @@
 
   document.querySelectorAll('.trow[data-toggle]').forEach(row => {
     const el = $(row.dataset.toggle);
-    const key = { tLabels: 'showLabels', tPulse: 'pulse', tWiggle: 'wiggle' }[row.dataset.toggle];
+    const key = { tLabels: 'showLabels', tPulse: 'pulse', tWiggle: 'wiggle', tVideos: 'playVideos' }[row.dataset.toggle];
     const flip = () => { S[key] = !S[key]; el.classList.toggle('on', S[key]); row.setAttribute('aria-checked', S[key]); save(); render(); };
     row.addEventListener('click', flip);
     row.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flip(); } });
@@ -1051,7 +1089,7 @@
     const sh = $('eShape'); sh.innerHTML = '<option value="">Match the word (if there is one)</option><option value="none">No shape</option>' +
       Object.keys(ICONS).sort().map(k => `<option value="${k}">${k}</option>`).join('');
     sh.value = d.icon || ''; showShape();
-    $('eImg').value = ''; $('eImgNote').textContent = d.img ? 'This button has a photo. Choose another to replace it, or type an emoji to use that instead.' : '';
+    $('eImg').value = ''; $('eImgNote').textContent = d.video ? 'This button plays her video. Choosing a photo changes only the picture.' : d.img ? 'This button has a photo. Choose another to replace it, or type an emoji to use that instead.' : '';
     const sel = $('eLink'); sel.innerHTML = '<option value="">Just say it</option><option value="app">Say it, then open an app</option>';
     B.pages.forEach(p => { const o = document.createElement('option'); o.value = 'page:' + p; o.textContent = 'Say it, then open page: ' + p; sel.appendChild(o); });
     sel.value = d.url ? 'app' : d.link ? 'page:' + d.link : '';
@@ -1088,6 +1126,8 @@
     if (v.startsWith('page:')) d.link = v.slice(5);
     if (v === 'app' && $('eUrl').value.trim()) d.url = $('eUrl').value.trim();
     if (pendingImg) d.img = pendingImg; else if (old.img && !d.sym) d.img = old.img;
+    if (!pendingImg && old.still) d.still = old.still;
+    if (old.video) d.video = old.video;
     while (list.length < editIdx) list.push(null);
     list[editIdx] = d; save(); closeEdit(); render();
   };

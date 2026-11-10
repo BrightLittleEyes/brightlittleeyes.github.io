@@ -2,7 +2,7 @@
 // Always fetch fresh from the network when online (bypasses the browser/GitHub
 // cache), and fall back to the saved copy only when offline. So updates show on
 // a normal reload — no hard-refresh needed.
-const CACHE = 'ble-talk-v1';
+const CACHE = 'ble-talk-v2';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -26,6 +26,8 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
+  // Videos stream in pieces (Range requests); let the browser fetch them itself.
+  if (req.headers.has('range') || /\.(mp4|webm|m4v)(\?|$)/i.test(new URL(req.url).pathname)) return;
   e.respondWith(
     fetch(req, { cache: 'no-store' })          // always try the network, no HTTP cache
       .then(res => {

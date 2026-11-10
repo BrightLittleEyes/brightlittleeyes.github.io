@@ -41,6 +41,7 @@
     min-width: 0; min-height: 0; outline: none;
   }
   .tile svg { width: 45%; max-width: 320px; height: auto; max-height: 60%; }
+  .tile img.thumb { width: 92%; flex: 1 1 auto; min-height: 0; object-fit: contain; border-radius: 14px; display: block; }
   .tile .label {
     font-size: clamp(22px, 4.5vmin, 56px); font-weight: 800;
     text-align: center; line-height: 1.15;
@@ -219,6 +220,8 @@
   <div class="psec">
     <span class="alabel" style="margin-top:0">Choices on the screen</span>
     <div class="seg" id="segPer"><button type="button" data-v="1">1</button><button type="button" data-v="2">2</button><button type="button" data-v="3">3</button><button type="button" data-v="4">4</button><button type="button" data-v="6">6</button></div>
+    <span class="alabel">Picture on each choice</span>
+    <div class="seg" id="segPic"><button type="button" data-v="frame">Start of the video</button><button type="button" data-v="icon">Video icon</button></div>
     <div class="trow" role="switch" tabindex="0" data-toggle="tLabels"><span class="alabel">Show names</span><div class="toggle" id="tLabels"></div></div>
     <div class="trow" role="switch" tabindex="0" data-toggle="tPulse"><span class="alabel">Pulse</span><div class="toggle" id="tPulse"></div></div>
     <div class="trow" role="switch" tabindex="0" data-toggle="tAutoBack"><span class="alabel">Back to choices when a video ends</span><div class="toggle" id="tAutoBack"></div></div>
@@ -624,7 +627,7 @@
   const getSettings = () => tx('settings', 'readonly', s => s.get('main'));
   const putSettings = v => tx('settings', 'readwrite', s => s.put(v, 'main'));
 
-  const SCREEN_DEFAULTS = { perPage: 2, showLabels: true, pulse: false, autoBack: true, hideClose: false };
+  const SCREEN_DEFAULTS = { picture: 'frame', perPage: 2, showLabels: true, pulse: false, autoBack: true, hideClose: false };
   const defaults = Object.assign({}, A.DEFAULTS, SCREEN_DEFAULTS);
   let S = { ...defaults };
   let videos = [];
@@ -675,6 +678,50 @@
     </svg>`;
   let tileUnregs = [];
 
+  // ---------- Pictures from the start of each video ----------
+  // A frame from about half a second in (the very first frame is often black), saved with the video.
+  function makeThumb(blob) {
+    return new Promise(resolve => {
+      const url = URL.createObjectURL(blob);
+      const v = document.createElement('video');
+      v.muted = true; v.playsInline = true; v.preload = 'auto';
+      let done = false;
+      const finish = out => { if (done) return; done = true; clearTimeout(timer); URL.revokeObjectURL(url); v.removeAttribute('src'); v.load(); resolve(out); };
+      const timer = setTimeout(() => finish(null), 15000);
+      v.addEventListener('loadedmetadata', () => {
+        const d = isFinite(v.duration) ? v.duration : 1;
+        v.currentTime = Math.min(0.5, d / 3);
+      });
+      v.addEventListener('seeked', () => {
+        try {
+          const w = v.videoWidth, h = v.videoHeight;
+          if (!w || !h) return finish(null);
+          const k = Math.min(1, 640 / Math.max(w, h));
+          const c = document.createElement('canvas');
+          c.width = Math.round(w * k); c.height = Math.round(h * k);
+          c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+          c.toBlob(b => finish(b), 'image/jpeg', 0.85);
+        } catch (e) { finish(null); }
+      });
+      v.addEventListener('error', () => finish(null));
+      v.src = url;
+    });
+  }
+  const thumbURLs = new Map();
+  function thumbURL(v) {
+    if (!v.thumb) return null;
+    if (!thumbURLs.has(v.id)) thumbURLs.set(v.id, URL.createObjectURL(v.thumb));
+    return thumbURLs.get(v.id);
+  }
+  async function fillMissingThumbs() {
+    for (const v of videos) {
+      if (v.thumb !== undefined) continue;
+      v.thumb = await makeThumb(v.blob);
+      await putVideo(v).catch(() => {});
+      if (layer === 'app') render();
+    }
+  }
+
   function layoutFor(n) {
     const wide = innerWidth >= innerHeight;
     if (n <= 1) return [1, 1];
@@ -702,7 +749,9 @@
       const b = document.createElement('button');
       b.className = 'tile fill';
       b.setAttribute('aria-label', v.label || 'Video');
-      b.innerHTML = VIDEO_ICON;
+      const pic = S.picture === 'frame' && thumbURL(v);
+      if (pic) { const img = document.createElement('img'); img.className = 'thumb'; img.alt = ''; img.src = pic; img.draggable = false; b.appendChild(img); }
+      else b.innerHTML = VIDEO_ICON;
       if (S.showLabels && v.label) {
         const l = document.createElement('div'); l.className = 'label'; l.textContent = v.label; b.appendChild(l);
       }
@@ -777,6 +826,7 @@
     return sync;
   }
   const syncers = [];
+  syncers.push(seg('segPic', () => S.picture, v => { S.picture = v; render(); }));
   syncers.push(seg('segPer', () => S.perPage, v => { S.perPage = +v; page = 0; render(); }));
 
   document.querySelectorAll('.trow[data-toggle]').forEach(row => {
@@ -886,6 +936,7 @@
         if (!confirm(`Remove "${v.label || v.name}"?`)) return;
         await delVideo(v.id);
         videos = videos.filter(x => x.id !== v.id);
+        if (thumbURLs.has(v.id)) { URL.revokeObjectURL(thumbURLs.get(v.id)); thumbURLs.delete(v.id); }
         renderList(); registerSheetTargets($('panel')); render();
       });
       del.classList.add('danger');
@@ -926,6 +977,7 @@
         order: ++maxOrder,
         blob: f,
       };
+      v.thumb = await makeThumb(f);
       try { await putVideo(v); videos.push(v); added++; }
       catch (err) { status.textContent = `Couldn't save ${f.name}. The device may be out of space.`; console.error(err); }
     }
@@ -950,6 +1002,7 @@
     }
     applyAccess();
     render();
+    fillMissingThumbs();
   })();
 
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {

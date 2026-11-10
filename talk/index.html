@@ -810,7 +810,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   // ---------- Her board ----------
   const C = (label, sym, extra = {}) => ({ label, sym, ...extra });
   const STARTER = {
-    v: 8,
+    v: 9,
     grids: { 'My Apps': '3x2' },
     pages: ['Home', 'Animals', 'More Animals', 'Animal Noise', 'Sing Songs', 'More Songs', 'My Apps'],
     cells: {
@@ -827,9 +827,9 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
       'More Animals': [
         C('Monkey', '', { still: 'animals/monkey.png', video: 'animals/monkey.mp4', sayName: true }), C('Owl', '', { still: 'animals/owl.png', video: 'animals/owl.mp4', sayName: true }), C('Snake', '', { still: 'animals/snake.png', video: 'animals/snake.mp4', sayName: true })],
       'Animal Noise': [
-        C('Dog', '🐶', { still: 'animals/dog.png', say: 'Woof woof' }), C('Cat', '🐱', { still: 'animals/cat.png', say: 'Meow' }), C('Cow', '🐮', { still: 'animals/cow.png', say: 'Moo' }), C('Pig', '🐷', { still: 'animals/pig.png', say: 'Oink oink' }), C('Sheep', '🐑', { say: 'Baa' }),
+        C('Dog', '🐶', { still: 'animals/dog.png', say: 'Woof woof' }), C('Cat', '🐱', { still: 'animals/cat.png', say: 'Meow' }), C('Cow', '🐮', { still: 'animals/cow.png', say: 'Moo' }), C('Pig', '🐷', { still: 'animals/pig.png', say: 'Oink oink' }), C('Sheep', '🐑', { say: 'Baa', sound: 'sounds/sheep.mp3' }),
         C('Horse', '🐴', { still: 'animals/horse.png', say: 'Neigh' }), C('Duck', '🦆', { still: 'animals/duck.png', say: 'Quack quack' }), C('Chicken', '🐔', { still: 'animals/chicken.png', say: 'Cluck cluck' }), C('Bird', '🐦', { still: 'animals/bird.png', say: 'Tweet tweet' }), C('Lion', '🦁', { still: 'animals/lion.png', say: 'Roar' }),
-        C('Owl', '🦉', { still: 'animals/owl.png', say: 'Hoo hoo' }), C('Snake', '🐍', { still: 'animals/snake.png', say: 'Hiss' }), C('Monkey', '🐵', { still: 'animals/monkey.png', say: 'Ooh ooh ah ah' }), C('Frog', '🐸', { still: 'animals/frog.png', say: 'Ribbit' }), C('Bee', '🐝', { still: 'animals/bee.png', say: 'Buzz' })],
+        C('Owl', '🦉', { still: 'animals/owl.png', say: 'Hoo hoo' }), C('Snake', '🐍', { still: 'animals/snake.png', say: 'Hiss', sound: 'sounds/snake.mp3' }), C('Monkey', '🐵', { still: 'animals/monkey.png', say: 'Ooh ooh ah ah', sound: 'sounds/monkey.mp3' }), C('Frog', '🐸', { still: 'animals/frog.png', say: 'Ribbit' }), C('Bee', '🐝', { still: 'animals/bee.png', say: 'Buzz' })],
       'Sing Songs': [
         C('Twinkle Twinkle', '⭐', { say: 'Sing Twinkle Twinkle Little Star' }), C('Old MacDonald', '🚜', { say: 'Sing Old MacDonald' }), C('Wheels on the Bus', '🚌', { say: 'Sing Wheels on the Bus' }),
         C('Itsy Bitsy Spider', '🕷️', { say: 'Sing Itsy Bitsy Spider' }), C('ABCs', '🔤', { say: 'Sing the ABCs' }), C('Row Your Boat', '🚣', { say: 'Sing Row Row Row Your Boat' }),
@@ -891,6 +891,11 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
       const r = home.findIndex(c => c && c.label === 'Read'), m = home.findIndex(c => c && c.label === 'More Songs');
       if (r >= 0 && m >= 0 && m < r) { const t = home[r]; home[r] = home[m]; home[m] = t; }
       B.v = 8;
+    }
+    if (B.v < 9) {   // v9: Sheep, Snake and Monkey on Animal Noise play real sound clips instead of the voice
+      const SOUNDS = { Sheep: 'sounds/sheep.mp3', Snake: 'sounds/snake.mp3', Monkey: 'sounds/monkey.mp3' };
+      (B.cells['Animal Noise'] || []).forEach(c => { if (c && SOUNDS[c.label] && !c.sound) c.sound = SOUNDS[c.label]; });
+      B.v = 9;
     }
   } catch (e) {}
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ settings: S, board: B })); } catch (e) {} };
@@ -999,9 +1004,21 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     $('doneEdit').hidden = !editing;
   }
 
+  // Sound clips (e.g. the sheep, snake and monkey): fetched once and kept, so they play offline too.
+  const clips = {};
+  function clip(src) {
+    if (!clips[src]) clips[src] = fetch(src).then(r => r.ok ? r.blob() : Promise.reject()).then(b => new Audio(URL.createObjectURL(b))).catch(() => { delete clips[src]; return null; });
+    return clips[src];
+  }
+  Object.values(B.cells).flat().forEach(c => { if (c && c.sound) clip(c.sound); });
+  function playSound(d) {
+    try { speechSynthesis.cancel(); } catch (e) {}
+    clip(d.sound).then(a => { if (!a) return speak(d.say || d.label); a.currentTime = 0; a.play().catch(() => speak(d.say || d.label)); });
+  }
+
   function choose(d, el) {
     if (d.video && S.playVideos !== false) { playVideo(d); return; }
-    speak(d.say || d.label);
+    if (d.sound) playSound(d); else speak(d.say || d.label);
     if (S.wiggle && el) { el.classList.remove('wiggle'); void el.offsetWidth; el.classList.add('wiggle'); }
     if (d.link && B.cells[d.link]) { cur = d.link; render(); lockUnderAim(); }
     else if (d.url) setTimeout(() => openApp(d.url), 1200);   // let her hear the words first

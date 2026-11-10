@@ -786,6 +786,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     eyes: `<ellipse cx="27" cy="50" rx="24" ry="30"/><ellipse cx="73" cy="50" rx="24" ry="30"/><circle cx="32" cy="56" r="11" fill="${K}"/><circle cx="68" cy="56" r="11" fill="${K}"/>`,
     letters: `<text x="50" y="74" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="64">Aa</text>`,
     bubbles: `<g fill="none" stroke="currentColor" stroke-width="8"><circle cx="38" cy="58" r="30"/><circle cx="78" cy="28" r="16"/><circle cx="80" cy="78" r="10"/></g><path d="M22 50c2-10 8-16 16-18" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>`,
+    toys: `<g transform="translate(50 52) scale(1.15) translate(-57 -52)"><g transform="translate(-6 4) scale(.82)"><circle cx="31" cy="20" r="10"/><circle cx="69" cy="20" r="10"/><ellipse cx="50" cy="72" rx="23" ry="23"/><circle cx="26" cy="62" r="10"/><circle cx="74" cy="62" r="10"/><circle cx="35" cy="94" r="10"/><circle cx="65" cy="94" r="10"/><circle cx="50" cy="38" r="21" stroke="#000" stroke-width="3"/><circle cx="31" cy="20" r="4.5" fill="#000"/><circle cx="69" cy="20" r="4.5" fill="#000"/><circle cx="42" cy="34" r="3.4" fill="#000"/><circle cx="58" cy="34" r="3.4" fill="#000"/><ellipse cx="50" cy="44" rx="4.4" ry="3.4" fill="#000"/><path d="M44 49 Q50 54 56 49" stroke="#000" stroke-width="2.6" fill="none" stroke-linecap="round"/><ellipse cx="50" cy="74" rx="11" ry="12" fill="none" stroke="#000" stroke-width="2.6"/></g><g transform="translate(64 60)"><rect x="0" y="0" width="32" height="32" rx="4"/><rect x="4" y="4" width="24" height="24" rx="2" fill="none" stroke="#000" stroke-width="2.4"/><path d="M9 24 L16 8 L23 24 M11.6 18.5 H20.4" stroke="#000" stroke-width="3.2" fill="none" stroke-linejoin="round" stroke-linecap="round"/></g></g>`,
     play: `<path d="M24 10l64 40-64 40z"/>`,
     home: `<path d="M50 6l46 40H82v48H58V66H42v28H18V46H4z"/>`,
     talk: `<path d="M50 8C24 8 4 24 4 44c0 12 7 22 18 29l-6 19 22-13c4 1 8 1 12 1 26 0 46-16 46-36S76 8 50 8z"/><circle cx="30" cy="44" r="6" fill="${K}"/><circle cx="50" cy="44" r="6" fill="${K}"/><circle cx="70" cy="44" r="6" fill="${K}"/>`,
@@ -794,7 +795,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   const LABEL_ICON = {
     'more': 'more', 'go': 'go', 'hello': 'hello', 'open': 'open', 'yes': 'yes', 'all done': 'alldone', 'stop': 'stop',
     'goodbye': 'goodbye', 'closed': 'closed', 'no': 'no', 'animals': 'paw', 'animal noise': 'pawsound', 'sing songs': 'note',
-    'more songs': 'notes', 'play': 'ball', 'i want a hug': 'heart', 'read': 'book', 'my apps': 'tablet',
+    'more songs': 'notes', 'play': 'toys', 'i want a hug': 'heart', 'read': 'book', 'my apps': 'tablet',
     'dog': 'dog', 'cat': 'cat', 'cow': 'cow', 'pig': 'pig', 'sheep': 'sheep', 'horse': 'horse', 'duck': 'duck', 'chicken': 'chicken',
     'bird': 'bird', 'fish': 'fish', 'bear': 'bear', 'lion': 'lion', 'monkey': 'monkey', 'frog': 'frog', 'kangaroo': 'kangaroo',
     'owl': 'owl', 'snake': 'snake', 'bee': 'bee', 'twinkle twinkle': 'star', 'old macdonald': 'tractor', 'wheels on the bus': 'bus',
@@ -810,15 +811,15 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   // ---------- Her board ----------
   const C = (label, sym, extra = {}) => ({ label, sym, ...extra });
   const STARTER = {
-    v: 10,
+    v: 11,
     grids: { 'My Apps': '3x2' },
-    pages: ['Home', 'Animals', 'More Animals', 'Animal Noise', 'Sing Songs', 'More Songs', 'My Apps'],
+    pages: ['Home', 'Animals', 'More Animals', 'Animal Noise', 'Sing Songs', 'My Apps'],
     cells: {
       'Home': [
         C('More', '🤲'), C('Go', '🟢'), C('Hello', '🙋‍♀️'), C('Open', '📖'), C('Yes', '✅'),
         C('All Done', '🙌'), C('Stop', '🛑'), C('Goodbye', '👋'), C('Closed', '📕'), C('No', '❌'),
         C('Animals', '🐄', { link: 'Animals' }), C('Animal Noise', '🐷', { link: 'Animal Noise' }), C('Sing Songs', '🎸', { url: SITE + '/my-videos/' }), C('Read', '📚', { url: SITE + '/my-books/' }), C('My Apps', '📱', { link: 'My Apps' }),
-        C('I want a Hug', '🤗'), C('More Songs', '🎺', { link: 'More Songs' }), C('Play', '🎭')],
+        C('I want a Hug', '🤗'), C('Play', '🧸')],
       'Animals': [
         C('Dog', '', { still: 'animals/dog.png', video: 'animals/dog.mp4' }), C('Cat', '', { still: 'animals/cat.png', video: 'animals/cat.mp4' }), C('Cow', '', { still: 'animals/cow.png', video: 'animals/cow.mp4' }), C('Pig', '', { still: 'animals/pig.png', video: 'animals/pig.mp4' }), C('Horse', '', { still: 'animals/horse.png', video: 'animals/horse.mp4' }),
         C('Chicken', '', { still: 'animals/chicken.png', video: 'animals/chicken.mp4' }), C('Fish', '', { still: 'animals/fish.png', video: 'animals/fish.mp4' }), C('Frog', '', { still: 'animals/frog.png', video: 'animals/frog.mp4' }), C('Bear', '', { still: 'animals/bear.png', video: 'animals/bear.mp4' }), C('Lion', '', { still: 'animals/lion.png', video: 'animals/lion.mp4' }),
@@ -834,10 +835,6 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
         C('Twinkle Twinkle', '⭐', { say: 'Sing Twinkle Twinkle Little Star' }), C('Old MacDonald', '🚜', { say: 'Sing Old MacDonald' }), C('Wheels on the Bus', '🚌', { say: 'Sing Wheels on the Bus' }),
         C('Itsy Bitsy Spider', '🕷️', { say: 'Sing Itsy Bitsy Spider' }), C('ABCs', '🔤', { say: 'Sing the ABCs' }), C('Row Your Boat', '🚣', { say: 'Sing Row Row Row Your Boat' }),
         C("If You're Happy", '😄', { say: "Sing If You're Happy and You Know It" }), C('Sing again', '🔁', { say: 'Sing it again' })],
-      'More Songs': [
-        C('Five Little Monkeys', '🐒', { say: 'Sing Five Little Monkeys' }), C('Head Shoulders', '🙆', { say: 'Sing Head Shoulders Knees and Toes' }), C('Bingo', '🐕', { say: 'Sing Bingo' }),
-        C("Mary's Lamb", '🐑', { say: 'Sing Mary Had a Little Lamb' }), C('You Are My Sunshine', '☀️', { say: 'Sing You Are My Sunshine' }), C('Rain Rain Go Away', '🌧️', { say: 'Sing Rain Rain Go Away' }),
-        C('Happy Birthday', '🎂', { say: 'Sing Happy Birthday' }), C('Sing again', '🔁', { say: 'Sing it again' })],
       'My Apps': [
         C('Xylophone', '🌈', { say: 'I want Xylophone' }),
         C('I Can Learn To See', '👀', { say: 'I want I Can Learn To See', url: SITE + '/learn-to-see/' }),
@@ -904,6 +901,16 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
       const pl = home.findIndex(c => c && c.label === 'Play'), ap = home.findIndex(c => c && c.label === 'My Apps');
       if (pl >= 0 && ap >= 0 && pl < ap) { const t = home[pl]; home[pl] = home[ap]; home[ap] = t; }
       B.v = 10;
+    }
+    if (B.v < 11) {   // v11: More Songs is gone; Play takes its spot on Home
+      const home = B.cells[B.pages[0]] || [];
+      const m = home.findIndex(c => c && c.label === 'More Songs'), pl = home.findIndex(c => c && c.label === 'Play');
+      if (m >= 0) {
+        if (pl > m) { home[m] = home[pl]; home[pl] = null; } else home[m] = null;
+      }
+      const stillUsed = Object.values(B.cells).flat().some(c => c && c.link === 'More Songs');
+      if (!stillUsed) { B.pages = B.pages.filter(p => p !== 'More Songs'); delete B.cells['More Songs']; }
+      B.v = 11;
     }
   } catch (e) {}
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ settings: S, board: B })); } catch (e) {} };

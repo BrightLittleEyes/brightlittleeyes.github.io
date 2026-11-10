@@ -813,7 +813,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   // ---------- Her board ----------
   const C = (label, sym, extra = {}) => ({ label, sym, ...extra });
   const STARTER = {
-    v: 11,
+    v: 12,
     grids: { 'My Apps': '3x2' },
     pages: ['Home', 'Animals', 'More Animals', 'Animal Noise', 'Sing Songs', 'My Apps'],
     cells: {
@@ -828,9 +828,9 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
         C('Elephant', '', { still: 'animals/elephant.png', video: 'animals/elephant.mp4' }), C('Giraffe', '', { still: 'animals/giraffe.png', video: 'animals/giraffe.mp4' }), C('Goat', '', { still: 'animals/goat.png', video: 'animals/goat.mp4' }), C('Rabbit', '', { still: 'animals/rabbit.png', video: 'animals/rabbit.mp4' }), C('Squirrel', '', { still: 'animals/squirrel.png', video: 'animals/squirrel.mp4' }),
         C('Lizard', '', { still: 'animals/lizard.png', video: 'animals/lizard.mp4' }), C('Bee', '', { still: 'animals/bee.png', video: 'animals/bee.mp4', sayName: true }), C('Bird', '', { still: 'animals/bird.png', video: 'animals/bird.mp4', sayName: true }), C('Duck', '', { still: 'animals/duck.png', video: 'animals/duck.mp4', sayName: true }), C('More Animals', '🐾', { link: 'More Animals', icon: 'paw' })],
       'More Animals': [
-        C('Monkey', '', { still: 'animals/monkey.png', video: 'animals/monkey.mp4', sayName: true }), C('Owl', '', { still: 'animals/owl.png', video: 'animals/owl.mp4', sayName: true }), C('Snake', '', { still: 'animals/snake.png', video: 'animals/snake.mp4', sayName: true })],
+        C('Monkey', '', { still: 'animals/monkey.png', video: 'animals/monkey.mp4', sayName: true }), C('Owl', '', { still: 'animals/owl.png', video: 'animals/owl.mp4', sayName: true }), C('Snake', '', { still: 'animals/snake.png', video: 'animals/snake.mp4', sayName: true }), C('Sheep', '', { still: 'animals/sheep.png', video: 'animals/sheep.mp4', sayName: true })],
       'Animal Noise': [
-        C('Dog', '🐶', { still: 'animals/dog.png', say: 'Woof woof' }), C('Cat', '🐱', { still: 'animals/cat.png', say: 'Meow' }), C('Cow', '🐮', { still: 'animals/cow.png', say: 'Moo' }), C('Pig', '🐷', { still: 'animals/pig.png', say: 'Oink oink' }), C('Sheep', '🐑', { say: 'Baa', sound: 'sounds/sheep.mp3' }),
+        C('Dog', '🐶', { still: 'animals/dog.png', say: 'Woof woof' }), C('Cat', '🐱', { still: 'animals/cat.png', say: 'Meow' }), C('Cow', '🐮', { still: 'animals/cow.png', say: 'Moo' }), C('Pig', '🐷', { still: 'animals/pig.png', say: 'Oink oink' }), C('Sheep', '🐑', { still: 'animals/sheep.png', say: 'Baa', sound: 'sounds/sheep.mp3' }),
         C('Horse', '🐴', { still: 'animals/horse.png', say: 'Neigh' }), C('Duck', '🦆', { still: 'animals/duck.png', say: 'Quack quack' }), C('Chicken', '🐔', { still: 'animals/chicken.png', say: 'Cluck cluck' }), C('Bird', '🐦', { still: 'animals/bird.png', say: 'Tweet tweet' }), C('Lion', '🦁', { still: 'animals/lion.png', say: 'Roar' }),
         C('Owl', '🦉', { still: 'animals/owl.png', say: 'Hoo hoo' }), C('Snake', '🐍', { still: 'animals/snake.png', say: 'Hiss', sound: 'sounds/snake.mp3' }), C('Monkey', '🐵', { still: 'animals/monkey.png', say: 'Ooh ooh ah ah', sound: 'sounds/monkey.mp3' }), C('Frog', '🐸', { still: 'animals/frog.png', say: 'Ribbit' }), C('Bee', '🐝', { still: 'animals/bee.png', say: 'Buzz' })],
       'Sing Songs': [
@@ -913,6 +913,15 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
       const stillUsed = Object.values(B.cells).flat().some(c => c && c.link === 'More Songs');
       if (!stillUsed) { B.pages = B.pages.filter(p => p !== 'More Songs'); delete B.cells['More Songs']; }
       B.v = 11;
+    }
+    if (B.v < 12) {   // v12: her sheep picture on Animal Noise, and Sheep (with its video) on More Animals
+      (B.cells['Animal Noise'] || []).forEach(c => { if (c && c.label === 'Sheep' && !c.still && !c.img) c.still = 'animals/sheep.png'; });
+      const more = B.cells['More Animals'];
+      if (more && !more.some(c => c && c.label === 'Sheep')) {
+        const sheep = { label: 'Sheep', sym: '', still: 'animals/sheep.png', video: 'animals/sheep.mp4', sayName: true };
+        const i = more.findIndex(c => !c || (!c.label && !c.sym && !c.img)); if (i >= 0) more[i] = sheep; else more.push(sheep);
+      }
+      B.v = 12;
     }
   } catch (e) {}
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ settings: S, board: B })); } catch (e) {} };

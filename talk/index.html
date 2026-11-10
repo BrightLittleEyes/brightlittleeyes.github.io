@@ -711,12 +711,14 @@
   // Drawn on a 100×100 grid. "currentColor" is her picture color; black (#000) cuts holes.
   const K = '#000';
   const ICONS = {
-    more: `<path d="M38 12h24v26h26v24H62v26H38V62H12V38h26z"/>`,
+    more: `<path d="M14 98 L17 74 C8 66 8 46 22 38 C32 32 42 34 50 41 C46 45 42 48 36 50 C43 52 45 59 39 63 C34 66 31 69 30 76 L30 98 Z"/><path d="M14 98 L17 74 C8 66 8 46 22 38 C32 32 42 34 50 41 C46 45 42 48 36 50 C43 52 45 59 39 63 C34 66 31 69 30 76 L30 98 Z" transform="matrix(-1 0 0 1 100 0)"/><path d="M48 42C42 45 36 48 28 50M52 42C58 45 64 48 72 50" stroke="${K}" stroke-width="3" fill="none"/><path d="M50 26v-14M38 30l-7-10M62 30l7-10" stroke="currentColor" stroke-width="5" stroke-linecap="round" fill="none"/>`,
+    plus: `<path d="M38 12h24v26h26v24H62v26H38V62H12V38h26z"/>`,
     go: `<path d="M10 36h44V14l38 36-38 36V64H10z"/>`,
     hello: `<path d="M30 92c-10-6-16-18-16-30V48c0-5 7-5 8 0v10h4V18c0-6 9-6 9 0v30h4V10c0-6 9-6 9 0v38h4V14c0-6 9-6 9 0v36h4V24c0-6 9-6 9 0v40c0 16-10 28-26 28z"/>`,
     open: `<rect x="14" y="10" width="72" height="84" rx="4"/><rect x="22" y="18" width="56" height="76" fill="${K}"/><path d="M22 18l40 8v74l-40-6z"/><circle cx="54" cy="58" r="5" fill="${K}"/>`,
     yes: `<path d="M8 52l14-14 18 18 40-42 14 14-54 56z"/>`,
-    alldone: `<path d="M8 88c-4-10-4-22 0-30l8-24c2-5 9-3 8 2l-4 16 6 2 6-34c1-6 9-5 9 1l-3 34h4V20c0-6 9-6 9 0v36c0 14-8 26-20 32z"/><path d="M92 88c4-10 4-22 0-30l-8-24c-2-5-9-3-8 2l4 16-6 2-6-34c-1-6-9-5-9 1l3 34h-4V20c0-6-9-6-9 0v36c0 14 8 26 20 32z"/>`,
+    alldone: `<g transform="translate(-4 30) scale(.62) rotate(-18 50 60)"><path d="M30 92c-10-6-16-18-16-30V48c0-5 7-5 8 0v10h4V18c0-6 9-6 9 0v30h4V10c0-6 9-6 9 0v38h4V14c0-6 9-6 9 0v36h4V24c0-6 9-6 9 0v40c0 16-10 28-26 28z" transform="matrix(-1 0 0 1 100 0)"/></g><g transform="translate(42 30) scale(.62) rotate(18 50 60)"><path d="M30 92c-10-6-16-18-16-30V48c0-5 7-5 8 0v10h4V18c0-6 9-6 9 0v30h4V10c0-6 9-6 9 0v38h4V14c0-6 9-6 9 0v36h4V24c0-6 9-6 9 0v40c0 16-10 28-26 28z"/></g><path d="M40 20C30 8 16 8 8 18M60 20C70 8 84 8 92 18" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><path d="M2 12l12 2-6 10zM98 12l-12 2 6 10z"/>`,
+    handsup: `<path d="M8 88c-4-10-4-22 0-30l8-24c2-5 9-3 8 2l-4 16 6 2 6-34c1-6 9-5 9 1l-3 34h4V20c0-6 9-6 9 0v36c0 14-8 26-20 32z"/><path d="M92 88c4-10 4-22 0-30l-8-24c-2-5-9-3-8 2l4 16-6 2-6-34c-1-6-9-5-9 1l3 34h-4V20c0-6-9-6-9 0v36c0 14 8 26 20 32z"/>`,
     stop: `<path d="M32 6h36l26 26v36L68 94H32L6 68V32z"/><rect x="24" y="44" width="52" height="12" rx="3" fill="${K}"/>`,
     goodbye: `<path d="M40 94c-10-6-16-18-16-30V50c0-5 7-5 8 0v10h4V20c0-6 9-6 9 0v30h4V12c0-6 9-6 9 0v38h4V16c0-6 9-6 9 0v36h4V26c0-6 9-6 9 0v40c0 16-10 28-26 28z"/><path d="M10 30c-4 8-4 18 0 26M18 34c-2 5-2 11 0 16M86 8c6 4 9 10 9 16" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>`,
     closed: `<rect x="18" y="8" width="64" height="88" rx="4"/><circle cx="68" cy="54" r="6" fill="${K}"/>`,

@@ -240,6 +240,7 @@
     <div class="trow" role="switch" tabindex="0" data-toggle="tLabels"><span class="alabel">Show names</span><div class="toggle" id="tLabels"></div></div>
     <div class="trow" role="switch" tabindex="0" data-toggle="tPulse"><span class="alabel">Pulse</span><div class="toggle" id="tPulse"></div></div>
     <div class="trow" role="switch" tabindex="0" data-toggle="tAutoBack"><span class="alabel">Back to choices when a video ends</span><div class="toggle" id="tAutoBack"></div></div>
+    <div class="trow" role="switch" tabindex="0" data-toggle="tFull"><span class="alabel">Start in full screen</span><div class="toggle" id="tFull"></div></div>
     <div class="trow" role="switch" tabindex="0" data-toggle="tTalk"><span class="alabel">Talk button (back to I Can Talk)</span><div class="toggle" id="tTalk"></div></div>
     <div class="trow" role="switch" tabindex="0" data-toggle="tHideClose"><span class="alabel">Hide the X during a video</span><div class="toggle" id="tHideClose"></div></div>
   </div>
@@ -643,7 +644,7 @@
   const getSettings = () => tx('settings', 'readonly', s => s.get('main'));
   const putSettings = v => tx('settings', 'readwrite', s => s.put(v, 'main'));
 
-  const SCREEN_DEFAULTS = { picture: 'frame', perPage: 2, showLabels: false, showTalk: true, pulse: false, autoBack: true, hideClose: false };
+  const SCREEN_DEFAULTS = { picture: 'frame', perPage: 2, showLabels: false, showTalk: true, fullscreen: true, pulse: false, autoBack: true, hideClose: false };
   const defaults = Object.assign({}, A.DEFAULTS, SCREEN_DEFAULTS);
   let S = { ...defaults };
   let videos = [];
@@ -808,6 +809,15 @@
   video.addEventListener('ended', () => { if (S.autoBack) stop(); });
   childTarget(closeBtn, stop, 'player');
 
+  // Full screen by default. Browsers only allow it after a touch, click or key press,
+  // so the first one on the page turns it on (an installed app opens full screen by itself).
+  function autoFull() {
+    if (S.fullscreen === false || layer === 'sheet' || document.fullscreenElement) return;
+    goFullscreen();
+  }
+  addEventListener('pointerdown', autoFull, true);
+  addEventListener('keydown', autoFull, true);
+
   function goFullscreen() {
     const el = document.documentElement;
     if (!document.fullscreenElement && el.requestFullscreen) el.requestFullscreen().catch(() => {});
@@ -851,7 +861,7 @@
 
   document.querySelectorAll('.trow[data-toggle]').forEach(row => {
     const el = $(row.dataset.toggle);
-    const key = { tLabels: 'showLabels', tPulse: 'pulse', tAutoBack: 'autoBack', tHideClose: 'hideClose', tTalk: 'showTalk' }[row.dataset.toggle];
+    const key = { tLabels: 'showLabels', tPulse: 'pulse', tAutoBack: 'autoBack', tHideClose: 'hideClose', tTalk: 'showTalk', tFull: 'fullscreen' }[row.dataset.toggle];
     const flip = () => { S[key] = !S[key]; el.classList.toggle('on', S[key]); row.setAttribute('aria-checked', S[key]); save(); render(); };
     row.addEventListener('click', flip);
     row.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flip(); } });

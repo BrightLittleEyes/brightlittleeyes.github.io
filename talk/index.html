@@ -1076,6 +1076,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     appLayer.appendChild(f);
     appLayer.style.display = 'block';
     layer = 'none'; A.setLayer(() => layer);          // the board waits underneath
+    A.configure(Object.assign({}, A.settings(), { showDot: false }));   // the app shows its own dot; hide the board's
     $('gear').style.visibility = 'hidden';
     setTimeout(() => { try { f.focus(); } catch (e) {} }, 300);
   }
@@ -1083,6 +1084,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     appLayer.style.display = 'none';
     appLayer.innerHTML = '';                            // stops the app (and any video) completely
     $('gear').style.visibility = '';
+    applyAccess();                                      // the board's own dot comes back
     cur = B.pages[0]; setLayer('app'); render();        // back to her Home board
   };
 

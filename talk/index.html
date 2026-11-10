@@ -801,7 +801,7 @@
   // ---------- Her board ----------
   const C = (label, sym, extra = {}) => ({ label, sym, ...extra });
   const STARTER = {
-    v: 3,
+    v: 4,
     pages: ['Home', 'Animals', 'More Animals', 'Animal Noise', 'Sing Songs', 'More Songs', 'My Apps'],
     cells: {
       'Home': [
@@ -832,7 +832,8 @@
         C('Xylophone', '🌈', { say: 'I want Xylophone' }),
         C('I Can Learn To See', '👀', { say: 'I want I Can Learn To See', url: SITE + '/learn-to-see/' }),
         C('I Can Learn to Read', '🔤', { say: 'I want I Can Learn to Read', url: SITE + '/reading/' }),
-        C('Bubbles', '🫧', { say: 'I want bubbles' })]
+        C('Bubbles', '🫧', { say: 'I want bubbles' }),
+        C('ABC Plus', '🔠', { say: 'I want ABC Plus', url: SITE + '/abc-plus.html', icon: 'abc' })]
     }
   };
 
@@ -850,6 +851,14 @@
       ['Animals', 'More Animals', 'Animal Noise'].forEach(p => { B.cells[p] = JSON.parse(JSON.stringify(STARTER.cells[p])); });
       if (!B.pages.includes('More Animals')) { const i = B.pages.indexOf('Animals'); B.pages.splice(i < 0 ? B.pages.length : i + 1, 0, 'More Animals'); }
       B.v = 3;
+    }
+    if (B.v < 4) {   // v4: ABC Plus on My Apps, in the first empty spot (her edits stay)
+      const apps = B.cells['My Apps'] || (B.cells['My Apps'] = []);
+      if (!apps.some(c => c && c.url && c.url.includes('abc-plus'))) {
+        let i = apps.findIndex(c => !c || (!c.label && !c.sym && !c.img)); if (i < 0) i = apps.length;
+        apps[i] = { label: 'ABC Plus', sym: '🔠', say: 'I want ABC Plus', url: SITE + '/abc-plus.html', icon: 'abc' };
+      }
+      B.v = 4;
     }
   } catch (e) {}
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ settings: S, board: B })); } catch (e) {} };

@@ -9,6 +9,7 @@
     var c = JSON.parse(localStorage.getItem('bleLookColors') || '{}'), r = document.documentElement.style;
     if (c.dot) r.setProperty('--bleDot', c.dot);
     if (c.outline) r.setProperty('--target', c.outline);
+    if (c.fill) r.setProperty('--bleFill', c.fill);
   } catch (e) {}
 })();
 </script>
@@ -324,6 +325,7 @@
   #segOutline button.sel{color:#fff}
   /* her animal pictures and videos in the picture color */
   body.tintAnimals #grid .tile img.animalPic, body.tintAnimals #video.animalVid { filter: url(#bleTint); }
+  #grid .tile img.animalPic { mix-blend-mode: lighten; }   /* the black around her animals lets the fill show through */
   #segPicColor button[data-v="#ff2b2b"]{color:#ff2b2b} #segPicColor button[data-v="#ff7a00"]{color:#ff7a00}
   #segPicColor button[data-v="#ffd400"]{color:#c9a800} #segPicColor button[data-v="#2ecc40"]{color:#1f9a2e}
   #segPicColor button[data-v="#1e90ff"]{color:#1e90ff} #segPicColor button[data-v="#b84dff"]{color:#b84dff}
@@ -351,7 +353,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     content: ''; position: absolute; inset: 0; border: 10px solid #ffd400; border-radius: inherit;
     z-index: 4; pointer-events: none;
   }
-  .tile.fill::after { z-index: 3; background: rgba(255, 43, 43, .5); }
+  .fill::after { background: var(--bleFill, rgba(255, 43, 43, .45)) !important; }   /* the fill rises BEHIND the pictures, in her fill color */
   /* a bigger X, easier to look at */
   #closeBtn { width: 22vmin; height: 22vmin; max-width: 200px; max-height: 200px; }
   #closeBtn svg { width: 64%; }
@@ -428,6 +430,8 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     <div class="seg" id="segGrid"><button type="button" data-v="2x2">4</button><button type="button" data-v="3x2">6</button><button type="button" data-v="3x3">9</button><button type="button" data-v="4x3">12</button><button type="button" data-v="5x4">20</button></div>
     <span class="alabel">Pictures</span>
     <div class="seg" id="segPics"><button type="button" data-v="shapes">Simple shapes</button><button type="button" data-v="emoji">Colorful</button></div>
+    <span class="alabel">Everything one color</span>
+    <div class="seg" id="segAllColor"><button type="button" data-v="#ff2b2b">Red</button><button type="button" data-v="#ff7a00">Orange</button><button type="button" data-v="#ffd400">Yellow</button><button type="button" data-v="#2ecc40">Green</button><button type="button" data-v="#1e90ff">Blue</button><button type="button" data-v="#b84dff">Purple</button><button type="button" data-v="#ffffff">White</button></div>
     <span class="alabel">Picture color</span>
     <div class="seg" id="segPicColor"><button type="button" data-v="#ff2b2b">Red</button><button type="button" data-v="#ff7a00">Orange</button><button type="button" data-v="#ffd400">Yellow</button><button type="button" data-v="#2ecc40">Green</button><button type="button" data-v="#1e90ff">Blue</button><button type="button" data-v="#b84dff">Purple</button><button type="button" data-v="#ffffff">White</button></div>
     <span class="alabel">Animals</span>
@@ -436,6 +440,8 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     <div class="seg" id="segDotColor"><button type="button" data-v="#ff2b2b">Red</button><button type="button" data-v="#ff7a00">Orange</button><button type="button" data-v="#ffd400">Yellow</button><button type="button" data-v="#2ecc40">Green</button><button type="button" data-v="#1e90ff">Blue</button><button type="button" data-v="#b84dff">Purple</button><button type="button" data-v="#ffffff">White</button></div>
     <span class="alabel">Border color</span>
     <div class="seg" id="segOutline"><button type="button" data-v="#ff2b2b">Red</button><button type="button" data-v="#ff7a00">Orange</button><button type="button" data-v="#ffd400">Yellow</button><button type="button" data-v="#2ecc40">Green</button><button type="button" data-v="#1e90ff">Blue</button><button type="button" data-v="#b84dff">Purple</button><button type="button" data-v="#ffffff">White</button></div>
+    <span class="alabel">Fill color (while she looks)</span>
+    <div class="seg" id="segFillColor"><button type="button" data-v="#ff2b2b">Red</button><button type="button" data-v="#ff7a00">Orange</button><button type="button" data-v="#ffd400">Yellow</button><button type="button" data-v="#2ecc40">Green</button><button type="button" data-v="#1e90ff">Blue</button><button type="button" data-v="#b84dff">Purple</button><button type="button" data-v="#ffffff">White</button></div>
     <div class="trow" role="switch" tabindex="0" data-toggle="tFull"><span class="alabel">Start in full screen</span><div class="toggle" id="tFull"></div></div>
     <div class="trow" role="switch" tabindex="0" data-toggle="tLabels"><span class="alabel">Show words</span><div class="toggle" id="tLabels"></div></div>
     <div class="trow" role="switch" tabindex="0" data-toggle="tPulse"><span class="alabel">Pulse</span><div class="toggle" id="tPulse"></div></div>
@@ -978,7 +984,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   // ---------- Settings (stored on this device) ----------
   const KEY = 'ble-talk-v1';
   const TOUCH_DEVICE = matchMedia('(pointer: coarse)').matches && !matchMedia('(pointer: fine)').matches;
-  const SCREEN_DEFAULTS = { fullscreen: true, grid: '5x4', showLabels: true, pulse: false, wiggle: true, playVideos: true, picStyle: 'shapes', picColor: '#ff2b2b', animalColor: 'pic', dotColor: '#ff2b2b', outline: '#ff2b2b' };
+  const SCREEN_DEFAULTS = { fullscreen: true, grid: '5x4', showLabels: true, pulse: false, wiggle: true, playVideos: true, picStyle: 'shapes', picColor: '#ff2b2b', animalColor: 'pic', dotColor: '#ff2b2b', outline: '#ff2b2b', fillColor: '#ff2b2b' };
   const defaults = Object.assign({}, A.DEFAULTS, SCREEN_DEFAULTS, { accessMode: 'dwell', dwellMs: 1500 });
   let S = { ...defaults };
   let B = JSON.parse(JSON.stringify(STARTER));
@@ -1143,9 +1149,10 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
     const [r, g, b] = hex(S.dotColor || '#ff2b2b');
     const dot = `rgba(${r}, ${g}, ${b}, .45)`, outline = S.outline || '#ff2b2b';
+    const [fr, fg, fb] = hex(S.fillColor || '#ff2b2b'), fill = `rgba(${fr}, ${fg}, ${fb}, .45)`;
     const root = document.documentElement.style;
-    root.setProperty('--bleDot', dot); root.setProperty('--target', outline);
-    try { localStorage.setItem('bleLookColors', JSON.stringify({ dot, outline })); } catch (e) {}
+    root.setProperty('--bleDot', dot); root.setProperty('--target', outline); root.setProperty('--bleFill', fill);
+    try { localStorage.setItem('bleLookColors', JSON.stringify({ dot, outline, fill })); } catch (e) {}
     const [pr, pg, pb] = hex(S.picColor || '#ff2b2b').map(v => (v / 255).toFixed(3));
     const m = document.getElementById('bleTintColor');
     if (m) m.setAttribute('values', `${pr} 0 0 0 0  0 ${pg} 0 0 0  0 0 ${pb} 0 0  0 0 0 1 0`);
@@ -1339,6 +1346,11 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   syncers.push(seg('segAnimalColor', () => S.animalColor || 'pic', v => { S.animalColor = v; render(); }));
   syncers.push(seg('segDotColor', () => S.dotColor || '#ff2b2b', v => { S.dotColor = v; render(); }));
   syncers.push(seg('segOutline', () => S.outline || '#ff2b2b', v => { S.outline = v; render(); }));
+  syncers.push(seg('segFillColor', () => S.fillColor || '#ff2b2b', v => { S.fillColor = v; render(); }));
+  // Everything one color: pictures, animals, circle, border and fill all at once (each can still be changed after)
+  syncers.push(seg('segAllColor',
+    () => { const c = S.picColor; return (S.dotColor === c && S.outline === c && (S.fillColor || '#ff2b2b') === c && (S.animalColor || 'pic') === 'pic') ? c : ''; },
+    v => { S.picColor = S.dotColor = S.outline = S.fillColor = v; S.animalColor = 'pic'; render(); syncControls(); }));
 
   document.querySelectorAll('.trow[data-toggle]').forEach(row => {
     const el = $(row.dataset.toggle);

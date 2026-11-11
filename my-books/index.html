@@ -9,6 +9,7 @@
     var c = JSON.parse(localStorage.getItem('bleLookColors') || '{}'), r = document.documentElement.style;
     if (c.dot) r.setProperty('--bleDot', c.dot);
     if (c.outline) r.setProperty('--target', c.outline);
+    if (c.fill) r.setProperty('--bleFill', c.fill);
   } catch (e) {}
 })();
 </script>
@@ -254,7 +255,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     content: ''; position: absolute; inset: 0; border: 10px solid #ffd400; border-radius: inherit;
     z-index: 4; pointer-events: none;
   }
-  .tile.fill::after { z-index: 3; background: rgba(255, 43, 43, .5); }
+  .fill::after { background: var(--bleFill, rgba(255, 43, 43, .45)) !important; }   /* the fill rises BEHIND the pictures, in her fill color */
   /* a bigger X, easier to look at */
   #closeBtn { width: 22vmin; height: 22vmin; max-width: 200px; max-height: 200px; }
   #closeBtn svg { width: 64%; }

@@ -9,6 +9,7 @@
     var c = JSON.parse(localStorage.getItem('bleLookColors') || '{}'), r = document.documentElement.style;
     if (c.dot) r.setProperty('--bleDot', c.dot);
     if (c.outline) r.setProperty('--target', c.outline);
+    if (c.fill) r.setProperty('--bleFill', c.fill);
   } catch (e) {}
 })();
 </script>

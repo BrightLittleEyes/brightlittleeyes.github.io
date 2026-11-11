@@ -2,6 +2,29 @@
 <html lang="en">
 <head>
 <script>
+/* Bright Little Eyes: the grown-up controls (the gear, the settings menu, Exit, edit boxes) only answer a
+   finger or pen on the screen. Mill Mouse and eye gaze arrive as a mouse, so they can never open or change them. */
+(function(){
+  var SEL = '#gear, #exitBtn, #panel, #panelArrow, .dlg, [role="dialog"], [aria-modal="true"], [aria-label*="Grown-ups: press and hold"]';
+  function guard(e){
+    if (!e.isTrusted) return;
+    var pt = e.pointerType;
+    if (!pt && /^(mouse|click|dblclick|contextmenu|auxclick)/.test(e.type)) {
+      if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;   // the mouse echo of a finger tap
+      if (e.detail === 0 && e.type === 'click') return;                            // keyboard Enter / Space
+      pt = 'mouse';
+    }
+    if (pt !== 'mouse') return;
+    var t = e.target;
+    if (!t || !t.closest || !t.closest(SEL)) return;
+    e.stopImmediatePropagation(); e.preventDefault();
+  }
+  ['pointerdown','pointerup','mousedown','mouseup','click','dblclick','contextmenu','auxclick'].forEach(function(ev){
+    window.addEventListener(ev, guard, true);
+  });
+})();
+</script>
+<script>
 /* Bright Little Eyes: Pointer (Tobii / Mill Mouse) is the way she aims, and the X is always there. Once, set every app's saved
    "Aim with" back to Pointer and "Hide the X" back to off (all her apps share this site, so the first one opened fixes them all).
    Camera is only used again if a grown-up picks it in Settings. */

@@ -1041,7 +1041,9 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
 
   // Register a child's choice with the shared selection system (with its own red fill countdown).
   function childTarget(el, run, l) {
-    el.addEventListener('click', run);                 // Touch mode (and keyboard Enter)
+    // Touch mode (and keyboard Enter). A click that lands on the button she was already looking at when
+    // the page changed (e.g. Mill Mouse clicking just after Start) waits until she looks away, like a look does.
+    el.addEventListener('click', () => { if (el === lockedNode) return; run(); });
     return A.register({
       node: el, run, layer: l || 'app',
       enabled: () => el !== lockedNode && !el.hidden && !editing,

@@ -2,6 +2,17 @@
 <html lang="en">
 <head>
 <script>
+/* Bright Little Eyes: her look colors, chosen in I Can Talk's settings and shared by all her apps
+   (same website): the circle that shows where she looks, and the button outlines. */
+(function(){
+  try {
+    var c = JSON.parse(localStorage.getItem('bleLookColors') || '{}'), r = document.documentElement.style;
+    if (c.dot) r.setProperty('--bleDot', c.dot);
+    if (c.outline) r.setProperty('--target', c.outline);
+  } catch (e) {}
+})();
+</script>
+<script>
 /* Bright Little Eyes: the grown-up controls (the gear, the settings menu, Exit, edit boxes) only answer a
    finger or pen on the screen. Mill Mouse and eye gaze arrive as a mouse, so they can never open or change them. */
 (function(){
@@ -312,7 +323,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
      while the grown-up settings menu is open, or whenever the circle is off). */
   [data-ble-cursor] > div:last-child {
     left: -36px !important; top: -36px !important; width: 72px !important; height: 72px !important;
-    background: rgba(255, 43, 43, .45) !important; border: 4px solid rgba(255, 255, 255, .75) !important;
+    background: var(--bleDot, rgba(255, 43, 43, .45)) !important; border: 4px solid rgba(255, 255, 255, .75) !important;
     box-shadow: none !important;
   }
   [data-ble-cursor] > div:first-child { left: -50px !important; top: -50px !important; width: 100px !important; height: 100px !important; }

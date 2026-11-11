@@ -2,6 +2,17 @@
 <html lang="en">
 <head>
 <script>
+/* Bright Little Eyes: her look colors, chosen in I Can Talk's settings and shared by all her apps
+   (same website): the circle that shows where she looks, and the button outlines. */
+(function(){
+  try {
+    var c = JSON.parse(localStorage.getItem('bleLookColors') || '{}'), r = document.documentElement.style;
+    if (c.dot) r.setProperty('--bleDot', c.dot);
+    if (c.outline) r.setProperty('--target', c.outline);
+  } catch (e) {}
+})();
+</script>
+<script>
 /* Bright Little Eyes: the grown-up controls (the gear, the settings menu, Exit, edit boxes) only answer a
    finger or pen on the screen. Mill Mouse and eye gaze arrive as a mouse, so they can never open or change them. */
 (function(){
@@ -297,6 +308,22 @@
   #eShapePrev{width:80px;height:80px;margin-top:8px;background:#000;border-radius:10px;padding:8px;color:var(--pic,#ff2b2b)}
   #eShapePrev:empty{display:none}
   #eShapePrev svg{width:100%;height:100%}
+  #segDotColor button[data-v="#ff2b2b"]{color:#ff2b2b}
+  #segDotColor button[data-v="#ff7a00"]{color:#ff7a00}
+  #segDotColor button[data-v="#ffd400"]{color:#c9a800}
+  #segDotColor button[data-v="#2ecc40"]{color:#1f9a2e}
+  #segDotColor button[data-v="#1e90ff"]{color:#1e90ff}
+  #segDotColor button[data-v="#b84dff"]{color:#b84dff}
+  #segDotColor button.sel{color:#fff}
+  #segOutline button[data-v="#ff2b2b"]{color:#ff2b2b}
+  #segOutline button[data-v="#ff7a00"]{color:#ff7a00}
+  #segOutline button[data-v="#ffd400"]{color:#c9a800}
+  #segOutline button[data-v="#2ecc40"]{color:#1f9a2e}
+  #segOutline button[data-v="#1e90ff"]{color:#1e90ff}
+  #segOutline button[data-v="#b84dff"]{color:#b84dff}
+  #segOutline button.sel{color:#fff}
+  /* her animal pictures and videos in the picture color */
+  body.tintAnimals #grid .tile img.animalPic, body.tintAnimals #video.animalVid { filter: url(#bleTint); }
   #segPicColor button[data-v="#ff2b2b"]{color:#ff2b2b} #segPicColor button[data-v="#ff7a00"]{color:#ff7a00}
   #segPicColor button[data-v="#ffd400"]{color:#c9a800} #segPicColor button[data-v="#2ecc40"]{color:#1f9a2e}
   #segPicColor button[data-v="#1e90ff"]{color:#1e90ff} #segPicColor button[data-v="#b84dff"]{color:#b84dff}
@@ -334,7 +361,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
      while the grown-up settings menu is open, or whenever the circle is off). */
   [data-ble-cursor] > div:last-child {
     left: -36px !important; top: -36px !important; width: 72px !important; height: 72px !important;
-    background: rgba(255, 43, 43, .45) !important; border: 4px solid rgba(255, 255, 255, .75) !important;
+    background: var(--bleDot, rgba(255, 43, 43, .45)) !important; border: 4px solid rgba(255, 255, 255, .75) !important;
     box-shadow: none !important;
   }
   [data-ble-cursor] > div:first-child { left: -50px !important; top: -50px !important; width: 100px !important; height: 100px !important; }
@@ -344,6 +371,11 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
 </head>
 <body>
 
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="bleTint" color-interpolation-filters="sRGB">
+  <feColorMatrix type="matrix" values="0.3 0.59 0.11 0 0  0.3 0.59 0.11 0 0  0.3 0.59 0.11 0 0  0 0 0 1 0"/>
+  <feComponentTransfer><feFuncR type="linear" slope="5"/><feFuncG type="linear" slope="5"/><feFuncB type="linear" slope="5"/></feComponentTransfer>
+  <feColorMatrix id="bleTintColor" type="matrix" values="1 0 0 0 0  0 0.17 0 0 0  0 0 0.17 0 0  0 0 0 1 0"/>
+</filter></svg>
 <div id="board">
   <div id="topbar">
     <button class="tile fill" id="introBtn" aria-label="Hi, my name is Leah" hidden><span class="label">Hi, my name is Leah</span></button>
@@ -398,6 +430,12 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     <div class="seg" id="segPics"><button type="button" data-v="shapes">Simple shapes</button><button type="button" data-v="emoji">Colorful</button></div>
     <span class="alabel">Picture color</span>
     <div class="seg" id="segPicColor"><button type="button" data-v="#ff2b2b">Red</button><button type="button" data-v="#ff7a00">Orange</button><button type="button" data-v="#ffd400">Yellow</button><button type="button" data-v="#2ecc40">Green</button><button type="button" data-v="#1e90ff">Blue</button><button type="button" data-v="#b84dff">Purple</button><button type="button" data-v="#ffffff">White</button></div>
+    <span class="alabel">Animals</span>
+    <div class="seg" id="segAnimalColor"><button type="button" data-v="pic">Picture color</button><button type="button" data-v="own">Their own colors</button></div>
+    <span class="alabel">Circle color (where she looks)</span>
+    <div class="seg" id="segDotColor"><button type="button" data-v="#ff2b2b">Red</button><button type="button" data-v="#ff7a00">Orange</button><button type="button" data-v="#ffd400">Yellow</button><button type="button" data-v="#2ecc40">Green</button><button type="button" data-v="#1e90ff">Blue</button><button type="button" data-v="#b84dff">Purple</button><button type="button" data-v="#ffffff">White</button></div>
+    <span class="alabel">Border color</span>
+    <div class="seg" id="segOutline"><button type="button" data-v="#ff2b2b">Red</button><button type="button" data-v="#ff7a00">Orange</button><button type="button" data-v="#ffd400">Yellow</button><button type="button" data-v="#2ecc40">Green</button><button type="button" data-v="#1e90ff">Blue</button><button type="button" data-v="#b84dff">Purple</button><button type="button" data-v="#ffffff">White</button></div>
     <div class="trow" role="switch" tabindex="0" data-toggle="tFull"><span class="alabel">Start in full screen</span><div class="toggle" id="tFull"></div></div>
     <div class="trow" role="switch" tabindex="0" data-toggle="tLabels"><span class="alabel">Show words</span><div class="toggle" id="tLabels"></div></div>
     <div class="trow" role="switch" tabindex="0" data-toggle="tPulse"><span class="alabel">Pulse</span><div class="toggle" id="tPulse"></div></div>
@@ -940,7 +978,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   // ---------- Settings (stored on this device) ----------
   const KEY = 'ble-talk-v1';
   const TOUCH_DEVICE = matchMedia('(pointer: coarse)').matches && !matchMedia('(pointer: fine)').matches;
-  const SCREEN_DEFAULTS = { fullscreen: true, grid: '5x4', showLabels: true, pulse: false, wiggle: true, playVideos: true, picStyle: 'shapes', picColor: '#ff2b2b' };
+  const SCREEN_DEFAULTS = { fullscreen: true, grid: '5x4', showLabels: true, pulse: false, wiggle: true, playVideos: true, picStyle: 'shapes', picColor: '#ff2b2b', animalColor: 'pic', dotColor: '#ff2b2b', outline: '#ff2b2b' };
   const defaults = Object.assign({}, A.DEFAULTS, SCREEN_DEFAULTS, { accessMode: 'dwell', dwellMs: 1500 });
   let S = { ...defaults };
   let B = JSON.parse(JSON.stringify(STARTER));
@@ -1099,6 +1137,20 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   }
 
   // ---------- The board ----------
+  // Her look colors: the circle (see-through) and the button outlines, shared with her other apps,
+  // and her animal pictures and videos recolored to the picture color.
+  function applyLookColors() {
+    const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+    const [r, g, b] = hex(S.dotColor || '#ff2b2b');
+    const dot = `rgba(${r}, ${g}, ${b}, .45)`, outline = S.outline || '#ff2b2b';
+    const root = document.documentElement.style;
+    root.setProperty('--bleDot', dot); root.setProperty('--target', outline);
+    try { localStorage.setItem('bleLookColors', JSON.stringify({ dot, outline })); } catch (e) {}
+    const [pr, pg, pb] = hex(S.picColor || '#ff2b2b').map(v => (v / 255).toFixed(3));
+    const m = document.getElementById('bleTintColor');
+    if (m) m.setAttribute('values', `${pr} 0 0 0 0  0 ${pg} 0 0 0  0 0 ${pb} 0 0  0 0 0 1 0`);
+    document.body.classList.toggle('tintAnimals', (S.animalColor || 'pic') === 'pic');
+  }
   const grid = $('grid'), homeBtn = $('homeBtn'), backBtn = $('backBtn'), introBtn = $('introBtn');
   const INTRO = 'Hi, my name is Leah';
   let unregs = [];
@@ -1112,6 +1164,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     document.body.classList.toggle('nolabels', !S.showLabels);
     document.body.classList.toggle('editing', editing);
     document.documentElement.style.setProperty('--pic', S.picColor || '#ff2b2b');
+    applyLookColors();
     document.body.dataset.size = n <= 6 ? 'big' : n <= 12 ? 'mid' : 'small';
     grid.style.gridTemplateColumns = `repeat(${c}, minmax(0, 1fr))`;
     grid.style.gridTemplateRows = `repeat(${r}, minmax(0, 1fr))`;
@@ -1131,7 +1184,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
       const ic = S.picStyle === 'shapes' ? iconOf(d) : null;
       const pic = d.img || d.still;
       el.innerHTML = (pic ? '<img alt="">' : ic ? svgOf(ic) : `<span class="sym">${esc(d.sym || '')}</span>`) + `<span class="label">${esc(d.label || '')}</span>`;
-      if (pic) el.querySelector('img').src = pic;
+      if (pic) { const im = el.querySelector('img'); im.src = pic; if (!d.img && d.still) im.classList.add('animalPic'); }
       el.setAttribute('aria-label', d.label || '');
       grid.appendChild(el);
       if (editing) el.onclick = () => openEdit(i);
@@ -1219,7 +1272,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   function playVideo(d) {
     try { speechSynthesis.cancel(); } catch (e) {}
     player.classList.add('open'); setLayer('player');
-    video.src = d.video; video.currentTime = 0;
+    video.src = d.video; video.currentTime = 0; video.classList.add('animalVid');
     video.muted = false;
     video.play().catch(() => {
       // The browser won't start sound until someone touches the screen (choosing by looking doesn't count).
@@ -1283,6 +1336,9 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   syncers.push(seg('segGrid', () => S.grid, v => { S.grid = v; render(); }));
   syncers.push(seg('segPics', () => S.picStyle, v => { S.picStyle = v; render(); }));
   syncers.push(seg('segPicColor', () => S.picColor, v => { S.picColor = v; render(); }));
+  syncers.push(seg('segAnimalColor', () => S.animalColor || 'pic', v => { S.animalColor = v; render(); }));
+  syncers.push(seg('segDotColor', () => S.dotColor || '#ff2b2b', v => { S.dotColor = v; render(); }));
+  syncers.push(seg('segOutline', () => S.outline || '#ff2b2b', v => { S.outline = v; render(); }));
 
   document.querySelectorAll('.trow[data-toggle]').forEach(row => {
     const el = $(row.dataset.toggle);

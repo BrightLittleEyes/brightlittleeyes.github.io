@@ -204,6 +204,16 @@
   #homeBtn{height:64px;padding:0 28px;border-width:6px;border-radius:20px;flex-direction:row}
   #homeBtn .label{font-size:26px;-webkit-line-clamp:1}
   #homeBtn[hidden]{display:none}
+  #backBtn{height:64px;padding:0 28px;border-width:6px;border-radius:20px;flex-direction:row;gap:12px}
+  #backBtn .label{font-size:26px;-webkit-line-clamp:1}
+  #backBtn[hidden]{display:none}
+  #introBtn{height:64px;padding:0 28px;border-width:6px;border-radius:20px;flex-direction:row;gap:12px}
+  #introBtn .label{font-size:26px;-webkit-line-clamp:1}
+  #introBtn[hidden]{display:none}
+  #introBtn .ico{width:40px;height:40px;color:var(--pic,#ff2b2b)}
+  #introBtn .sym{font-size:30px}
+  #backBtn .ico{width:38px;height:38px;color:var(--pic,#ff2b2b)}
+  #backBtn .sym{font-size:30px}
   #pageName{font-size:clamp(22px,3.6vmin,40px);font-weight:800;color:#fff}
   #grid{flex:1;display:grid;gap:2.5vmin;min-height:0}
   body[data-size="big"]   { --border:12px }
@@ -287,7 +297,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   /* Looking at a choice (any button, picture or not): a thick YELLOW outline drawn just inside the edge,
      so it can never be cut off, and the red fill rising OVER the picture so it always shows. */
   :root { --ring: #ffd400; }
-  .tile.hover::before, .nav.hover::before, #closeBtn.hover::before, #talkBtn.hover::before, #homeBtn.hover::before, #bleTalkBack.hover::before {
+  .tile.hover::before, .nav.hover::before, #closeBtn.hover::before, #talkBtn.hover::before, #homeBtn.hover::before, #backBtn.hover::before, #introBtn.hover::before, #bleTalkBack.hover::before {
     content: ''; position: absolute; inset: 0; border: 10px solid #ffd400; border-radius: inherit;
     z-index: 4; pointer-events: none;
   }
@@ -313,6 +323,8 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
 
 <div id="board">
   <div id="topbar">
+    <button class="tile fill" id="introBtn" aria-label="Hi, my name is Leah" hidden><span class="label">Hi, my name is Leah</span></button>
+    <button class="tile fill" id="backBtn" aria-label="Back" hidden><span class="label">Back</span></button>
     <button class="tile fill" id="homeBtn" aria-label="Back to Home"><span class="label">🏠 Home</span></button>
     <div id="pageName"></div>
   </div>
@@ -845,6 +857,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     bubbles: `<g fill="none" stroke="currentColor" stroke-width="8"><circle cx="38" cy="58" r="30"/><circle cx="78" cy="28" r="16"/><circle cx="80" cy="78" r="10"/></g><path d="M22 50c2-10 8-16 16-18" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>`,
     toys: `<g transform="translate(50 52) scale(1.15) translate(-57 -52)"><g transform="translate(-6 4) scale(.82)"><circle cx="31" cy="20" r="10"/><circle cx="69" cy="20" r="10"/><ellipse cx="50" cy="72" rx="23" ry="23"/><circle cx="26" cy="62" r="10"/><circle cx="74" cy="62" r="10"/><circle cx="35" cy="94" r="10"/><circle cx="65" cy="94" r="10"/><circle cx="50" cy="38" r="21" stroke="#000" stroke-width="3"/><circle cx="31" cy="20" r="4.5" fill="#000"/><circle cx="69" cy="20" r="4.5" fill="#000"/><circle cx="42" cy="34" r="3.4" fill="#000"/><circle cx="58" cy="34" r="3.4" fill="#000"/><ellipse cx="50" cy="44" rx="4.4" ry="3.4" fill="#000"/><path d="M44 49 Q50 54 56 49" stroke="#000" stroke-width="2.6" fill="none" stroke-linecap="round"/><ellipse cx="50" cy="74" rx="11" ry="12" fill="none" stroke="#000" stroke-width="2.6"/></g><g transform="translate(64 60)"><rect x="0" y="0" width="32" height="32" rx="4"/><rect x="4" y="4" width="24" height="24" rx="2" fill="none" stroke="#000" stroke-width="2.4"/><path d="M9 24 L16 8 L23 24 M11.6 18.5 H20.4" stroke="#000" stroke-width="3.2" fill="none" stroke-linejoin="round" stroke-linecap="round"/></g></g>`,
     play: `<path d="M24 10l64 40-64 40z"/>`,
+    back: `<path d="M94 38H48V14L6 50l42 36V62h46z"/>`,
     home: `<path d="M50 6l46 40H82v48H58V66H42v28H18V46H4z"/>`,
     talk: `<path d="M50 8C24 8 4 24 4 44c0 12 7 22 18 29l-6 19 22-13c4 1 8 1 12 1 26 0 46-16 46-36S76 8 50 8z"/><circle cx="30" cy="44" r="6" fill="${K}"/><circle cx="50" cy="44" r="6" fill="${K}"/><circle cx="70" cy="44" r="6" fill="${K}"/>`,
   };
@@ -982,6 +995,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ settings: S, board: B })); } catch (e) {} };
   const accessOf = () => { const o = {}; A.KEYS.forEach(k => o[k] = S[k]); return o; };
   let cur = B.pages[0], editing = false;
+  let trail = [];                      // pages she came through on the way to this one (Home first)
 
   // ---------- Layers: which set of targets can be chosen right now ----------
   let layer = 'app';
@@ -1060,7 +1074,8 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   }
 
   // ---------- The board ----------
-  const grid = $('grid'), homeBtn = $('homeBtn');
+  const grid = $('grid'), homeBtn = $('homeBtn'), backBtn = $('backBtn'), introBtn = $('introBtn');
+  const INTRO = 'Hi, my name is Leah';
   let unregs = [];
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -1101,6 +1116,16 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     $('startBtn').innerHTML = (S.picStyle === 'shapes' ? svgOf('talk') : '<span class="sym">🗣️</span>') + '<span class="label">Start</span>';
     const home = B.pages[0];
     homeBtn.hidden = cur === home;
+    introBtn.hidden = cur !== home;      // on Home: her introduction, where the Home button sits on other pages
+    introBtn.innerHTML = (S.picStyle === 'shapes' ? svgOf('hello') : '<span class="sym">👋</span>') + `<span class="label">${esc(INTRO)}</span>`;
+    // Back: to the page she came from, when that isn't Home (e.g. More Animals -> Animals)
+    if (cur === home) trail = [];
+    const prev = trail[trail.length - 1];
+    backBtn.hidden = !prev || prev === home || !B.cells[prev];
+    if (!backBtn.hidden) {
+      backBtn.innerHTML = (S.picStyle === 'shapes' ? svgOf('back') : '<span class="sym">⬅️</span>') + `<span class="label">${esc(prev)}</span>`;
+      backBtn.setAttribute('aria-label', 'Back to ' + prev);
+    }
     $('pageName').textContent = cur === home ? '' : cur;
     $('doneEdit').hidden = !editing;
   }
@@ -1121,7 +1146,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     if (d.video && S.playVideos !== false) { playVideo(d); return; }
     if (d.sound) playSound(d); else speak(d.say || d.label);
     if (S.wiggle && el) { el.classList.remove('wiggle'); void el.offsetWidth; el.classList.add('wiggle'); }
-    if (d.link && B.cells[d.link]) { cur = d.link; render(); lockUnderAim(); }
+    if (d.link && B.cells[d.link]) { if (d.link !== cur) trail.push(cur); cur = d.link; render(); lockUnderAim(); }
     else if (d.url) setTimeout(() => openApp(d.url), 1200);   // let her hear the words first
   }
   function openApp(url) {
@@ -1192,7 +1217,9 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   video.addEventListener('ended', stopVideo);
   childTarget(closeBtn, stopVideo, 'player');
 
-  childTarget(homeBtn, () => { cur = B.pages[0]; render(); lockUnderAim(); });
+  childTarget(homeBtn, () => { trail = []; cur = B.pages[0]; render(); lockUnderAim(); });
+  childTarget(introBtn, () => speak(INTRO));
+  childTarget(backBtn, () => { cur = trail.pop() || B.pages[0]; render(); lockUnderAim(); });
 
   // ---------- Start (lets the browser speak) ----------
   const startScreen = $('startScreen');

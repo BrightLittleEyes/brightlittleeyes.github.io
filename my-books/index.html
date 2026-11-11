@@ -1,6 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+/* Bright Little Eyes: Pointer (Tobii / Mill Mouse) is the way she aims, and the X is always there. Once, set every app's saved
+   "Aim with" back to Pointer and "Hide the X" back to off (all her apps share this site, so the first one opened fixes them all).
+   Camera is only used again if a grown-up picks it in Settings. */
+(function(){
+  try {
+    if (localStorage.getItem('blePointerDefault1') === '1') return;
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i), v = localStorage.getItem(k);
+      if (!v) continue;
+      var n = v.split('"aimSource":"head"').join('"aimSource":"mouse"')    // aim with Pointer
+               .split('"hideClose":true').join('"hideClose":false');       // and the X shows during videos and books
+      if (n !== v) localStorage.setItem(k, n);
+    }
+    localStorage.setItem('blePointerDefault1', '1');
+  } catch (e) {}
+})();
+</script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
 <title>I Can Choose My Book</title>
@@ -1141,6 +1160,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
       if (saved) S = { ...defaults, ...saved };
       if (!S.migPer6) { S.perPage = 6; S.migPer6 = true; putSettings(S).catch(() => {}); }   // 6 on each screen now
       if (!S.migNoLabels) { S.showLabels = false; S.migNoLabels = true; putSettings(S).catch(() => {}); }   // names off by default now
+      if (!S.migPointerX) { S.aimSource = 'mouse'; S.hideClose = false; S.migPointerX = true; putSettings(S).catch(() => {}); }   // aim with Pointer, and the X shows
       videos = await getAllVideos();
     } catch (err) {
       $('empty').textContent = 'This browser blocked saving videos. Try Microsoft Edge, Chrome or Safari.';

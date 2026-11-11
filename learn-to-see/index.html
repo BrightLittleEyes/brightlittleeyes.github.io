@@ -1,6 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+/* Bright Little Eyes: Pointer (Tobii / Mill Mouse) is the way she aims, and the X is always there. Once, set every app's saved
+   "Aim with" back to Pointer and "Hide the X" back to off (all her apps share this site, so the first one opened fixes them all).
+   Camera is only used again if a grown-up picks it in Settings. */
+(function(){
+  try {
+    if (localStorage.getItem('blePointerDefault1') === '1') return;
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i), v = localStorage.getItem(k);
+      if (!v) continue;
+      var n = v.split('"aimSource":"head"').join('"aimSource":"mouse"')    // aim with Pointer
+               .split('"hideClose":true').join('"hideClose":false');       // and the X shows during videos and books
+      if (n !== v) localStorage.setItem(k, n);
+    }
+    localStorage.setItem('blePointerDefault1', '1');
+  } catch (e) {}
+})();
+</script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>I Can Learn To See — Look &amp; Tap</title>

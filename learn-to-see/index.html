@@ -438,6 +438,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   }
   function nodeOf(t){ return typeof t.node==='function' ? t.node() : t.node; }
   function usable(t){
+    if(t.layer==='sheet' || t.adult) return null;   // the gear and the settings menu: touch only, never by looking
     if(t.layer !== layerFn()) return null;
     var n = nodeOf(t);
     if(!n) return null;

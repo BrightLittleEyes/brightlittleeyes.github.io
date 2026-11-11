@@ -14,21 +14,44 @@
 })();
 </script>
 <script>
-/* Bright Little Eyes: the grown-up controls (the gear, the settings menu, Exit, edit boxes) only answer a
-   finger or pen on the screen. Mill Mouse and eye gaze arrive as a mouse, so they can never open or change them. */
+/* Bright Little Eyes: the grown-up controls (the gear, the settings menu, Exit, edit boxes).
+   A finger or pen: always. A mouse (a grown-up on a computer): only a press-and-hold on the gear or Exit,
+   and then clicks in the menu it opened, until it closes. Mill Mouse's quick clicks never count. */
 (function(){
-  var SEL = '#gear, #exitBtn, #panel, #panelArrow, .dlg, [role="dialog"], [aria-modal="true"], [aria-label*="Grown-ups: press and hold"]';
+  var MENU = '#panel, #panelArrow, .dlg, [role="dialog"], [aria-modal="true"]';
+  var HOLDERS = '#gear, #exitBtn, [aria-label*="Grown-ups: press and hold"]';
+  var mouseHoldStart = 0, mouseMenu = false;
+  function menuOpen(){
+    if (document.getElementById('panel')) return !!document.querySelector('#panel.open, .dlgScrim.show');
+    return !!document.querySelector('[role="dialog"], [aria-modal="true"]');     // the reading app's settings sheet
+  }
+  function kind(e){
+    var pt = e.pointerType;
+    if (pt) return pt;
+    if (/^(mouse|click|dblclick|contextmenu|auxclick)/.test(e.type)) {
+      if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return 'touch';   // the mouse echo of a finger tap
+      if (e.detail === 0 && e.type === 'click') return 'key';                              // keyboard Enter / Space
+      return 'mouse';
+    }
+    return '';
+  }
   function guard(e){
     if (!e.isTrusted) return;
-    var pt = e.pointerType;
-    if (!pt && /^(mouse|click|dblclick|contextmenu|auxclick)/.test(e.type)) {
-      if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;   // the mouse echo of a finger tap
-      if (e.detail === 0 && e.type === 'click') return;                            // keyboard Enter / Space
-      pt = 'mouse';
+    if (!menuOpen()) mouseMenu = false;                       // the menu closed: mouse goes back to being blocked
+    if (kind(e) !== 'mouse') return;
+    var t = e.target; if (!t || !t.closest) return;
+    var holder = t.closest(HOLDERS);
+    if (holder) {
+      // a grown-up holding the mouse button down on the gear / Exit: let the hold through
+      if (e.type === 'pointerdown' || e.type === 'mousedown') { mouseHoldStart = Date.now(); return; }
+      if (e.type === 'pointerup' || e.type === 'mouseup') {
+        if (Date.now() - mouseHoldStart >= 450) mouseMenu = true;   // held long enough: this is a grown-up
+        return;
+      }
+      if (e.type === 'pointermove') return;
     }
-    if (pt !== 'mouse') return;
-    var t = e.target;
-    if (!t || !t.closest || !t.closest(SEL)) return;
+    if (t.closest(MENU) && mouseMenu) return;                  // a grown-up's mouse in the menu they opened
+    if (!holder && !t.closest(MENU)) return;                   // everything else (her board) is untouched
     e.stopImmediatePropagation(); e.preventDefault();
   }
   ['pointerdown','pointerup','mousedown','mouseup','click','dblclick','contextmenu','auxclick'].forEach(function(ev){

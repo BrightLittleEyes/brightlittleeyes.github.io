@@ -14,21 +14,44 @@
 })();
 </script>
 <script>
-/* Bright Little Eyes: the grown-up controls (the gear, the settings menu, Exit, edit boxes) only answer a
-   finger or pen on the screen. Mill Mouse and eye gaze arrive as a mouse, so they can never open or change them. */
+/* Bright Little Eyes: the grown-up controls (the gear, the settings menu, Exit, edit boxes).
+   A finger or pen: always. A mouse (a grown-up on a computer): only a press-and-hold on the gear or Exit,
+   and then clicks in the menu it opened, until it closes. Mill Mouse's quick clicks never count. */
 (function(){
-  var SEL = '#gear, #exitBtn, #panel, #panelArrow, .dlg, [role="dialog"], [aria-modal="true"], [aria-label*="Grown-ups: press and hold"]';
+  var MENU = '#panel, #panelArrow, .dlg, [role="dialog"], [aria-modal="true"]';
+  var HOLDERS = '#gear, #exitBtn, [aria-label*="Grown-ups: press and hold"]';
+  var mouseHoldStart = 0, mouseMenu = false;
+  function menuOpen(){
+    if (document.getElementById('panel')) return !!document.querySelector('#panel.open, .dlgScrim.show');
+    return !!document.querySelector('[role="dialog"], [aria-modal="true"]');     // the reading app's settings sheet
+  }
+  function kind(e){
+    var pt = e.pointerType;
+    if (pt) return pt;
+    if (/^(mouse|click|dblclick|contextmenu|auxclick)/.test(e.type)) {
+      if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return 'touch';   // the mouse echo of a finger tap
+      if (e.detail === 0 && e.type === 'click') return 'key';                              // keyboard Enter / Space
+      return 'mouse';
+    }
+    return '';
+  }
   function guard(e){
     if (!e.isTrusted) return;
-    var pt = e.pointerType;
-    if (!pt && /^(mouse|click|dblclick|contextmenu|auxclick)/.test(e.type)) {
-      if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;   // the mouse echo of a finger tap
-      if (e.detail === 0 && e.type === 'click') return;                            // keyboard Enter / Space
-      pt = 'mouse';
+    if (!menuOpen()) mouseMenu = false;                       // the menu closed: mouse goes back to being blocked
+    if (kind(e) !== 'mouse') return;
+    var t = e.target; if (!t || !t.closest) return;
+    var holder = t.closest(HOLDERS);
+    if (holder) {
+      // a grown-up holding the mouse button down on the gear / Exit: let the hold through
+      if (e.type === 'pointerdown' || e.type === 'mousedown') { mouseHoldStart = Date.now(); return; }
+      if (e.type === 'pointerup' || e.type === 'mouseup') {
+        if (Date.now() - mouseHoldStart >= 450) mouseMenu = true;   // held long enough: this is a grown-up
+        return;
+      }
+      if (e.type === 'pointermove') return;
     }
-    if (pt !== 'mouse') return;
-    var t = e.target;
-    if (!t || !t.closest || !t.closest(SEL)) return;
+    if (t.closest(MENU) && mouseMenu) return;                  // a grown-up's mouse in the menu they opened
+    if (!holder && !t.closest(MENU)) return;                   // everything else (her board) is untouched
     e.stopImmediatePropagation(); e.preventDefault();
   }
   ['pointerdown','pointerup','mousedown','mouseup','click','dblclick','contextmenu','auxclick'].forEach(function(ev){
@@ -679,13 +702,19 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   // ------------------------------------------------------------ adult controls: a half-second hold in every mode
   // A tap does nothing at all; a gaze dwell on one runs 2.6× a child's.
   function adultControl(el, run, layer){
-    var timer=null;
-    function cancel(){ if(timer){ clearTimeout(timer); timer=null; el.classList.remove('holding'); } }
+    // Grown-ups: press and hold. A finger may drift a little and Windows may interrupt a long touch;
+    // only lifting early, or sliding well away, cancels the hold.
+    var timer=null, x0=0, y0=0, pid=null;
+    function cancel(){ if(timer){ clearTimeout(timer); timer=null; el.classList.remove('holding'); } pid=null; }
     el.addEventListener('pointerdown', function(e){
-      e.preventDefault(); cancel(); el.classList.add('holding');
-      timer=setTimeout(function(){ timer=null; el.classList.remove('holding'); run(); }, ADULT_HOLD_MS);
+      e.preventDefault(); cancel(); el.classList.add('holding'); x0=e.clientX; y0=e.clientY; pid=e.pointerId;
+      try { el.setPointerCapture(e.pointerId); } catch(er) {}
+      timer=setTimeout(function(){ timer=null; pid=null; el.classList.remove('holding'); run(); }, ADULT_HOLD_MS);
     });
-    ['pointerup','pointerleave','pointercancel'].forEach(function(ev){ el.addEventListener(ev, cancel); });
+    el.addEventListener('pointermove', function(e){
+      if(timer && e.pointerId===pid && Math.hypot(e.clientX-x0, e.clientY-y0) > 60) cancel();
+    });
+    el.addEventListener('pointerup', function(e){ if(e.pointerId===pid) cancel(); });
     el.addEventListener('click', function(e){ e.preventDefault(); });   // a tap does nothing
     el.addEventListener('contextmenu', function(e){ e.preventDefault(); });
     return register({ node:el, run:run, adult:true, layer:layer||'app' });

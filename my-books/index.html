@@ -193,6 +193,19 @@ input,textarea,[contenteditable="true"]{-webkit-touch-callout:default;-webkit-us
 document.addEventListener('contextmenu',function(e){if(!typing(e.target))e.preventDefault();});
 document.addEventListener('selectstart',function(e){if(!typing(e.target))e.preventDefault();});
 document.addEventListener('dragstart',function(e){e.preventDefault();});})();</script>
+<style id="bleLookHighlight">
+  /* Looking at a choice (any button, picture or not): a thick YELLOW outline drawn just inside the edge,
+     so it can never be cut off, and the red fill rising OVER the picture so it always shows. */
+  :root { --ring: #ffd400; }
+  .tile.hover::before, .nav.hover::before, #closeBtn.hover::before, #talkBtn.hover::before, #homeBtn.hover::before, #bleTalkBack.hover::before {
+    content: ''; position: absolute; inset: 0; border: 10px solid #ffd400; border-radius: inherit;
+    z-index: 4; pointer-events: none;
+  }
+  .tile.fill::after { z-index: 3; background: rgba(255, 43, 43, .5); }
+  /* a bigger X, easier to look at */
+  #closeBtn { width: 22vmin; height: 22vmin; max-width: 200px; max-height: 200px; }
+  #closeBtn svg { width: 64%; }
+</style>
 </head>
 <body>
 

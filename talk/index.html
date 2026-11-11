@@ -977,7 +977,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   // ---------- Her board ----------
   const C = (label, sym, extra = {}) => ({ label, sym, ...extra });
   const STARTER = {
-    v: 12,
+    v: 13,
     grids: { 'My Apps': '3x2' },
     pages: ['Home', 'Animals', 'More Animals', 'Animal Noise', 'Sing Songs', 'My Apps'],
     cells: {
@@ -1002,11 +1002,11 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
         C('Itsy Bitsy Spider', '🕷️', { say: 'Sing Itsy Bitsy Spider' }), C('ABCs', '🔤', { say: 'Sing the ABCs' }), C('Row Your Boat', '🚣', { say: 'Sing Row Row Row Your Boat' }),
         C("If You're Happy", '😄', { say: "Sing If You're Happy and You Know It" }), C('Sing again', '🔁', { say: 'Sing it again' })],
       'My Apps': [
-        C('Xylophone', '🌈', { say: 'I want Xylophone' }),
-        C('I Can Learn To See', '👀', { say: 'I want I Can Learn To See', url: SITE + '/learn-to-see/' }),
-        C('I Can Learn to Read', '🔤', { say: 'I want I Can Learn to Read', url: SITE + '/reading/' }),
-        C('Bubbles', '🫧', { say: 'I want bubbles' }),
-        C('ABC Plus', '🔠', { say: 'I want ABC Plus', url: SITE + '/abc-plus.html', icon: 'abc' })]
+        C('Xylophone', '🌈', { say: 'I want to play Xylophone' }),
+        C('I Can Learn To See', '👀', { say: 'I want to play I Can Learn To See', url: SITE + '/learn-to-see/' }),
+        C('I Can Learn to Read', '🔤', { say: 'I want to play I Can Learn to Read', url: SITE + '/reading/' }),
+        C('Bubbles', '🫧', { say: 'I want to play Bubbles' }),
+        C('ABC Plus', '🔠', { say: 'I want to play ABC Plus', url: SITE + '/abc-plus.html', icon: 'abc' })]
     }
   };
 
@@ -1086,6 +1086,14 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
         const i = more.findIndex(c => !c || (!c.label && !c.sym && !c.img)); if (i >= 0) more[i] = sheep; else more.push(sheep);
       }
       B.v = 12;
+    }
+    if (B.v < 13) {   // v13: her apps say a whole sentence: "I want to play ..." (words she typed herself stay)
+      (B.cells['My Apps'] || []).forEach(c => {
+        if (!c || !c.label) return;
+        const said = (c.say || '').trim();
+        if (!said || /^I want (?!to play)/i.test(said)) c.say = 'I want to play ' + c.label;
+      });
+      B.v = 13;
     }
   } catch (e) {}
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ settings: S, board: B })); } catch (e) {} };

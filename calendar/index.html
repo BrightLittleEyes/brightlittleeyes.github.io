@@ -464,6 +464,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
 
   <div class="psec">
     <div class="trow" role="switch" tabindex="0" data-toggle="tAsk"><span class="alabel">Ask the question out loud</span><div class="toggle" id="tAsk"></div></div>
+    <div class="trow" role="switch" tabindex="0" data-toggle="tMoving"><span class="alabel">Moving day pictures</span><div class="toggle" id="tMoving"></div></div>
     <div class="trow" role="switch" tabindex="0" data-toggle="tLabels"><span class="alabel">Show words</span><div class="toggle" id="tLabels"></div></div>
     <div class="trow" role="switch" tabindex="0" data-toggle="tWiggle"><span class="alabel">Wiggle when chosen</span><div class="toggle" id="tWiggle"></div></div>
     <div class="trow" role="switch" tabindex="0" data-toggle="tFull"><span class="alabel">Start in full screen</span><div class="toggle" id="tFull"></div></div>
@@ -881,16 +882,28 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     snowman: `<circle cx="50" cy="72" r="24"/><circle cx="50" cy="34" r="17"/><rect x="34" y="4" width="32" height="14" rx="2"/><rect x="28" y="16" width="44" height="6" rx="2"/><circle cx="44" cy="32" r="3" fill="${K}"/><circle cx="56" cy="32" r="3" fill="${K}"/><circle cx="50" cy="64" r="3.5" fill="${K}"/><circle cx="50" cy="78" r="3.5" fill="${K}"/>`,
   };
   const svg = inner => `<svg class="ico" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">${inner}</svg>`;
-  // a day: the week as seven boxes, her day filled in (like the strip on her calendar page)
-  function weekStrip(i) {
-    let s = '';
-    for (let d = 0; d < 7; d++) {
-      const x = 2 + d * 14;
-      s += d === i ? `<rect x="${x - 2}" y="22" width="16" height="56" rx="4"/>`
-                   : `<rect x="${x + 1.5}" y="40" width="9" height="20" rx="2" fill="none" stroke="currentColor" stroke-width="2.5"/>`;
-    }
-    return s;
-  }
+  // The days, like her calendar page: Sunday church, Monday school, Tuesday and Thursday the computer arrow,
+  // Wednesday the camel (hump day), Friday a party, Saturday a happy face. Each one moves (a still version too).
+  const SPL = 'calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"';
+  const ARROW = `<g><animateTransform attributeName="transform" type="translate" dur="1.8s" repeatCount="indefinite" keyTimes="0;0.4;0.55;1" values="22 22;0 0;0 0;22 22"/><path d="M30 26v62l15-15 11 26 13-6-11-25h21z" stroke="${K}" stroke-width="3" stroke-linejoin="round"/></g><circle cx="30" cy="26" r="4" fill="none" stroke="currentColor" stroke-width="6" opacity="0"><animate attributeName="r" dur="1.8s" repeatCount="indefinite" keyTimes="0;0.4;0.75;1" values="4;4;24;24"/><animate attributeName="opacity" dur="1.8s" repeatCount="indefinite" keyTimes="0;0.39;0.4;0.75;1" values="0;0;1;0;0"/></circle>`;
+  const DAY_PIC = [
+    // Sunday: church, its bell swinging
+    `<rect x="48.5" y="0" width="3" height="11"/><rect x="44.5" y="3" width="11" height="3"/><rect x="38" y="10" width="24" height="30"/><rect x="42" y="14" width="16" height="18" fill="${K}"/><g><animateTransform attributeName="transform" type="rotate" dur="1.6s" repeatCount="indefinite" values="-24 50 15;24 50 15;-24 50 15" ${SPL}/><path d="M44 28c0-8 2-13 6-13s6 5 6 13z"/><circle cx="50" cy="30" r="2.5"/></g><path d="M12 54L50 30l38 24z"/><rect x="20" y="52" width="60" height="44"/><path d="M42 96V78a8 8 0 0 1 16 0v18z" fill="${K}"/><rect x="26" y="62" width="10" height="12" rx="5" fill="${K}"/><rect x="64" y="62" width="10" height="12" rx="5" fill="${K}"/>`,
+    // Monday: school bus, rolling
+    `<g><animateTransform attributeName="transform" type="translate" dur="1.2s" repeatCount="indefinite" values="-5 0;5 -3;-5 0" ${SPL}/><rect x="6" y="18" width="88" height="58" rx="10"/><rect x="14" y="26" width="20" height="20" rx="3" fill="${K}"/><rect x="40" y="26" width="20" height="20" rx="3" fill="${K}"/><rect x="66" y="26" width="20" height="20" rx="3" fill="${K}"/><rect x="6" y="54" width="88" height="5" fill="${K}"/><circle cx="26" cy="80" r="12" stroke="${K}" stroke-width="3"/><circle cx="74" cy="80" r="12" stroke="${K}" stroke-width="3"/><circle cx="26" cy="80" r="4" fill="${K}"/><circle cx="74" cy="80" r="4" fill="${K}"/></g>`,
+    // Tuesday: the computer arrow, clicking
+    ARROW,
+    // Wednesday: camel (hump day), walking
+    `<g><animateTransform attributeName="transform" type="translate" dur="1.4s" repeatCount="indefinite" values="0 0;0 -3;0 0" ${SPL}/><path d="M14 56C14 20 34 18 37 42C40 18 60 20 62 56z"/><ellipse cx="40" cy="60" rx="28" ry="12"/><path d="M37 42c-2 4-2 8 0 12" fill="none" stroke="${K}" stroke-width="0"/><path d="M62 54c6-6 8-22 12-30 3-5 12-6 16-1 2 2 2 5 0 7l-6 1c-3 1-4 4-5 10-1 9-4 17-11 21z"/><circle cx="84" cy="27" r="2.2" fill="${K}"/><g><animateTransform attributeName="transform" type="rotate" dur="1.4s" repeatCount="indefinite" values="-10 26 64;10 26 64;-10 26 64" ${SPL}/><rect x="20" y="62" width="7" height="32" rx="3"/><rect x="52" y="62" width="7" height="32" rx="3"/></g><g><animateTransform attributeName="transform" type="rotate" dur="1.4s" repeatCount="indefinite" values="10 34 64;-10 34 64;10 34 64" ${SPL}/><rect x="31" y="62" width="7" height="32" rx="3"/><rect x="61" y="62" width="7" height="32" rx="3"/></g></g>`,
+    // Thursday: the computer arrow, clicking
+    ARROW,
+    // Friday: party! arms waving, confetti falling
+    `<g><animateTransform attributeName="transform" type="translate" dur="2s" repeatCount="indefinite" values="0 -30;0 110"/><rect x="10" y="0" width="9" height="9" transform="rotate(20 14 4)"/><circle cx="84" cy="-30" r="5"/><rect x="66" y="-60" width="9" height="9" transform="rotate(-20 70 -56)"/><circle cx="26" cy="-70" r="5"/></g><g><animateTransform attributeName="transform" type="translate" dur="2s" begin="-1s" repeatCount="indefinite" values="0 -30;0 110"/><circle cx="16" cy="-40" r="5"/><rect x="80" y="0" width="9" height="9" transform="rotate(30 84 4)"/><circle cx="70" cy="-10" r="5"/></g><circle cx="50" cy="30" r="12"/><path d="M38 46h24l4 28H58l-2 22h-12l-2-22h-8z"/><g><animateTransform attributeName="transform" type="rotate" dur="0.9s" repeatCount="indefinite" values="10 40 48;-25 40 48;10 40 48" ${SPL}/><rect x="36" y="16" width="8" height="34" rx="4" transform="rotate(-30 40 48)"/></g><g><animateTransform attributeName="transform" type="rotate" dur="0.9s" repeatCount="indefinite" values="-10 60 48;25 60 48;-10 60 48" ${SPL}/><rect x="56" y="16" width="8" height="34" rx="4" transform="rotate(30 60 48)"/></g>`,
+    // Saturday: a happy face, wobbling with joy
+    `<g><animateTransform attributeName="transform" type="rotate" dur="1.6s" repeatCount="indefinite" values="-10 50 92;10 50 92;-10 50 92" ${SPL}/><circle cx="50" cy="50" r="42"/><ellipse cx="35" cy="40" rx="6" ry="8" fill="${K}"><animate attributeName="ry" dur="3.2s" repeatCount="indefinite" keyTimes="0;0.9;0.95;1" values="8;8;1;8"/></ellipse><ellipse cx="65" cy="40" rx="6" ry="8" fill="${K}"><animate attributeName="ry" dur="3.2s" repeatCount="indefinite" keyTimes="0;0.9;0.95;1" values="8;8;1;8"/></ellipse><path d="M26 56c8 24 40 24 48 0z" fill="${K}"/></g>`,
+  ];
+  const still = pic => pic.replace(/<animate(Transform)?\b[^>]*\/>/g, '').replace(/<animate\b[^>]*>/g, '');
+  const dayPic = i => S.moving === false ? still(DAY_PIC[i]) : DAY_PIC[i];
   const numberPic = n => `<text x="50" y="74" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="${n > 9 ? 62 : 74}">${n}</text>`;
 
   // ---------- What she learns ----------
@@ -911,7 +924,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   // Each step: the start of the sentence, the question, its choices (in calendar order) and the answer.
   function buildStep(name, now) {
     const dow = now.getDay();
-    const dayOpts = () => DAYS.map((d, i) => ({ v: i, label: d, pic: weekStrip(i) }));
+    const dayOpts = () => DAYS.map((d, i) => ({ v: i, label: d, pic: dayPic(i) }));
     if (name === 'yesterday') return { lead: 'Yesterday was', ask: 'What day was yesterday?', opts: dayOpts(), ans: (dow + 6) % 7 };
     if (name === 'today') return { lead: 'Today is', ask: 'What day is today?', opts: dayOpts(), ans: dow };
     if (name === 'tomorrow') return { lead: 'Tomorrow is', ask: 'What day is tomorrow?', opts: dayOpts(), ans: (dow + 1) % 7 };
@@ -930,7 +943,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
 
   // ---------- Settings (stored on this device) ----------
   const KEY = 'ble-calendar-v1';
-  const SCREEN_DEFAULTS = { fullscreen: true, choices: '1', weatherMode: 'all', weatherPick: null, showLabels: true, askQuestion: true, wiggle: true,
+  const SCREEN_DEFAULTS = { fullscreen: true, moving: true, choices: '1', weatherMode: 'all', weatherPick: null, showLabels: true, askQuestion: true, wiggle: true,
     steps: { yesterday: true, today: true, tomorrow: true, month: true, date: true, weather: true, season: true } };
   let talkS = {}; try { talkS = (JSON.parse(localStorage.getItem('ble-talk-v1') || '{}').settings) || {}; } catch (e) {}
   const accessFromTalk = {}; A.KEYS.forEach(k => { if (talkS[k] !== undefined) accessFromTalk[k] = talkS[k]; });   // she starts with the same look settings as her talk board
@@ -1172,8 +1185,8 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   });
   document.querySelectorAll('.trow[data-toggle]').forEach(row => {
     const el = $(row.dataset.toggle);
-    const key = { tFull: 'fullscreen', tLabels: 'showLabels', tAsk: 'askQuestion', tWiggle: 'wiggle' }[row.dataset.toggle];
-    const flip = () => { S[key] = !S[key]; save(); syncControls(); applyLook(); };
+    const key = { tFull: 'fullscreen', tLabels: 'showLabels', tAsk: 'askQuestion', tWiggle: 'wiggle', tMoving: 'moving' }[row.dataset.toggle];
+    const flip = () => { S[key] = !S[key]; if (key === 'moving') changed = true; save(); syncControls(); applyLook(); };
     row.addEventListener('click', flip);
     row.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flip(); } });
     syncers.push(() => { el.classList.toggle('on', !!S[key]); row.setAttribute('aria-checked', !!S[key]); });

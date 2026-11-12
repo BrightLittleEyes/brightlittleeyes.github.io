@@ -1459,7 +1459,9 @@ async function saveEditor(){
 
   // roll over to the new day if the page is left open overnight
   S._last=keyOf(new Date());
-  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ const k=keyOf(new Date()); if(S._last!==k && S.date===S._last){ S.date=k; if(S.started) watchDay(); } S._last=k; } });
+  const rollover = ()=>{ const k=keyOf(new Date()); if(S._last!==k && S.date===S._last){ S.date=k; if(S.started){ closePicker(); watchDay(); } } S._last=k; };
+  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) rollover(); });
+  setInterval(rollover, 60000);   // also while the board sits open on screen overnight
 })();
 </script>
 </body>

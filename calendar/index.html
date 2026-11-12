@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+/* Bright Little Eyes: her look colors, chosen in I Can Talk's settings and shared by all her apps
+   (same website): the circle that shows where she looks, and the button outlines. */
+(function(){
+  try {
+    var c = JSON.parse(localStorage.getItem('bleLookColors') || '{}'), r = document.documentElement.style;
+    if (c.dot) r.setProperty('--bleDot', c.dot);
+    if (c.outline) r.setProperty('--target', c.outline);
+    if (c.fill) r.setProperty('--bleFill', c.fill);
+  } catch (e) {}
+})();
+</script>
+<script>
+/* Bright Little Eyes: the grown-up controls (the gear, the settings menu, Exit, edit boxes).
+   A finger or pen: always. A mouse (a grown-up on a computer): only a press-and-hold on the gear or Exit,
+   and then clicks in the menu it opened, until it closes. Mill Mouse's quick clicks never count. */
+(function(){
+  var MENU = '#panel, #panelArrow, .dlg, [role="dialog"], [aria-modal="true"]';
+  var HOLDERS = '#gear, #exitBtn, [aria-label*="Grown-ups: press and hold"]';
+  var mouseHoldStart = 0, mouseMenu = false;
+  function menuOpen(){
+    if (document.getElementById('panel')) return !!document.querySelector('#panel.open, .dlgScrim.show');
+    return !!document.querySelector('[role="dialog"], [aria-modal="true"]');     // the reading app's settings sheet
+  }
+  function kind(e){
+    var pt = e.pointerType;
+    if (pt) return pt;
+    if (/^(mouse|click|dblclick|contextmenu|auxclick)/.test(e.type)) {
+      if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return 'touch';   // the mouse echo of a finger tap
+      if (e.detail === 0 && e.type === 'click') return 'key';                              // keyboard Enter / Space
+      return 'mouse';
+    }
+    return '';
+  }
+  function guard(e){
+    if (!e.isTrusted) return;
+    if (!menuOpen()) mouseMenu = false;                       // the menu closed: mouse goes back to being blocked
+    if (kind(e) !== 'mouse') return;
+    var t = e.target; if (!t || !t.closest) return;
+    var holder = t.closest(HOLDERS);
+    if (holder) {
+      // a grown-up holding the mouse button down on the gear / Exit: let the hold through
+      if (e.type === 'pointerdown' || e.type === 'mousedown') { mouseHoldStart = Date.now(); return; }
+      if (e.type === 'pointerup' || e.type === 'mouseup') {
+        if (Date.now() - mouseHoldStart >= 450) mouseMenu = true;   // held long enough: this is a grown-up
+        return;
+      }
+      if (e.type === 'pointermove') return;
+    }
+    if (t.closest(MENU) && mouseMenu) return;                  // a grown-up's mouse in the menu they opened
+    if (!holder && !t.closest(MENU)) return;                   // everything else (her board) is untouched
+    e.stopImmediatePropagation(); e.preventDefault();
+  }
+  ['pointerdown','pointerup','mousedown','mouseup','click','dblclick','contextmenu','auxclick'].forEach(function(ev){
+    window.addEventListener(ev, guard, true);
+  });
+})();
+</script>
+<script>
+/* Bright Little Eyes: Pointer (Tobii / Mill Mouse) is the way she aims, and the X is always there. Once, set every app's saved
+   "Aim with" back to Pointer and "Hide the X" back to off (all her apps share this site, so the first one opened fixes them all).
+   Camera is only used again if a grown-up picks it in Settings. */
+(function(){
+  try {
+    if (localStorage.getItem('blePointerDefault1') === '1') return;
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i), v = localStorage.getItem(k);
+      if (!v) continue;
+      var n = v.split('"aimSource":"head"').join('"aimSource":"mouse"')    // aim with Pointer
+               .split('"hideClose":true').join('"hideClose":false');       // and the X shows during videos and books
+      if (n !== v) localStorage.setItem(k, n);
+    }
+    localStorage.setItem('blePointerDefault1', '1');
+  } catch (e) {}
+})();
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
+<title>My Calendar</title>
+<meta name="theme-color" content="#000000">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<style>
+  :root {
+    --bg: #000000;
+    --target: #ff2b2b;   /* the same saturated red as I Can Learn To See */
+    --ring: #ffffff;
+    --border: 12px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; height: 100%; overflow: hidden;
+    background: var(--bg); color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-user-select: none; user-select: none;
+    touch-action: manipulation;
+  }
+
+  /* ---------- Choice screen ---------- */
+  #choices {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    padding: calc(88px + env(safe-area-inset-top)) 4vmin 4vmin; gap: 3vmin;   /* room for the gear */
+  }
+  #grid { flex: 1; height: 100%; display: grid; gap: 5vmin; }
+  .tile {
+    position: relative; overflow: hidden;
+    background: #000;
+    border: var(--border) solid var(--target);
+    border-radius: 28px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2vmin; padding: 3vmin;
+    color: #fff; font: inherit; cursor: pointer;
+    min-width: 0; min-height: 0; outline: none;
+  }
+  .tile svg { width: 45%; max-width: 320px; height: auto; max-height: 60%; }
+  .tile .label {
+    font-size: clamp(22px, 4.5vmin, 56px); font-weight: 800;
+    text-align: center; line-height: 1.15;
+    overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+  .tile:focus-visible, .tile.hover, .nav.hover, #closeBtn.hover { box-shadow: 0 0 0 8px var(--ring); }
+  body.pulse .tile { animation: edge 1.6s ease-in-out infinite; }
+  @keyframes edge { 0%,100% { border-color: var(--target); } 50% { border-color: #ff8a8a; } }
+
+  /* the look-and-hold countdown: the choice fills with red from the bottom */
+  .fill::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: 0;
+    height: calc(var(--p, 0) * 100%);
+    background: rgba(255, 43, 43, .45); pointer-events: none;
+  }
+  .tile > *, .nav > *, #closeBtn > * { position: relative; z-index: 1; }
+
+  .nav {
+    position: relative; overflow: hidden;
+    flex: 0 0 auto; width: 12vmin; height: 40vmin;
+    border: var(--border) solid var(--target); border-radius: 28px;
+    background: #000; cursor: pointer; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .nav svg { width: 70%; }
+  .nav[hidden] { display: none; }
+
+  #empty {
+    position: fixed; inset: 0; display: none;
+    align-items: center; justify-content: center; text-align: center;
+    padding: 10vmin; font-size: clamp(20px, 4vmin, 40px); color: #8a8a8a;
+  }
+
+  /* ---------- Player (covers the gear while a video plays) ---------- */
+  #player { position: fixed; inset: 0; background: #000; display: none; z-index: 65; }
+  #player.open { display: block; }
+  #player video { width: 100%; height: 100%; object-fit: contain; background: #000; }
+  #closeBtn {
+    position: absolute; top: 3vmin; right: 3vmin; overflow: hidden;
+    width: 16vmin; height: 16vmin; max-width: 140px; max-height: 140px;
+    border: 10px solid var(--target); border-radius: 24px;
+    background: rgba(0,0,0,.6); cursor: pointer; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #closeBtn svg { width: 60%; }
+
+  /* ===== From here down: the Bright Little Eyes gear and settings sheet, as in I Can Learn To See ===== */
+
+  /* Settings: the Bright Little Eyes grey gear glyph.
+     Grown-ups press and hold it (half a second); a tap does nothing. */
+  /* Exit: grown-ups press and hold, like the gear */
+  #exitBtn{position:fixed;top:calc(12px + env(safe-area-inset-top));right:calc(88px + env(safe-area-inset-right));
+    width:64px;height:64px;padding:0;border:none;border-radius:50%;background:#2a2a2a;cursor:pointer;z-index:60;
+    display:flex;align-items:center;justify-content:center;touch-action:none;-webkit-touch-callout:none;user-select:none;}
+  #exitBtn svg{width:30px;height:30px}
+  #exitDone{position:fixed;inset:0;z-index:300;background:#000;color:#ddd;display:none;flex-direction:column;
+    align-items:center;justify-content:center;gap:18px;text-align:center;padding:8vmin;font:600 24px -apple-system,"Segoe UI",sans-serif}
+  #exitDone button{font:700 24px -apple-system,"Segoe UI",sans-serif;padding:16px 30px;border-radius:16px;border:6px solid #ff2b2b;background:#000;color:#fff;cursor:pointer}
+  #gear{position:fixed;top:calc(12px + env(safe-area-inset-top));
+    right:calc(12px + env(safe-area-inset-right));width:64px;height:64px;padding:0;border:none;border-radius:50%;
+    background:url("data:image/png;base64,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") center/contain no-repeat;
+    cursor:pointer;z-index:60;touch-action:none;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none;
+    }
+
+  /* ---- The settings sheet (Bright Little Eyes / ABC Lite) ----
+     A popover from the gear, on the device's own light or dark look,
+     labels over segmented controls in control-label (20px), notes in caption (14px). */
+  #panel{
+    --sb:#ffffff; --si:#000000; --ss:#3c3c43; --st:rgba(142,142,142,.3); --sg:#ffffff;
+    --sr:rgba(142,142,142,.5); --sl:rgba(60,60,67,.3); --son:#34c759; --soff:rgba(120,120,128,.32); --st:#f2f2f7; --sel:#0060DF;
+  }
+  #panelArrow{--sb:#ffffff;}
+  @media (prefers-color-scheme: dark){
+    #panel{ --sb:#1c1c1e; --si:#ffffff; --ss:#aeaeb2; --sg:#636366; --soff:rgba(120,120,128,.36); --son:#30d158; --st:#2c2c2e; --sl:rgba(142,142,142,.45); --sel:#0A84FF; --danger:#ff453a; }
+    #panelArrow{--sb:#1c1c1e;}
+  }
+  #panelScrim{position:fixed;inset:0;z-index:69;display:none;background:transparent;cursor:default;}
+  #panelScrim.open{display:block;}
+  #panel,#panelArrow{opacity:0;visibility:hidden;transition:opacity .1s ease-in,visibility 0s linear .1s;}
+  #panel.open,#panelArrow.open{opacity:1;visibility:visible;transition:opacity .5s ease-in;}
+  @media (prefers-reduced-motion: reduce){ #panel,#panelArrow,#panel.open,#panelArrow.open{transition:none;} }
+  #panelArrow{position:fixed;z-index:71;right:calc(32px + env(safe-area-inset-right));top:calc(76px + env(safe-area-inset-top));
+    width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;border-bottom:12px solid var(--sb);}
+  #panel{position:fixed;z-index:70;right:calc(16px + env(safe-area-inset-right));top:calc(88px + env(safe-area-inset-top));
+    width:min(480px, calc(100vw - 32px));max-height:calc(100vh - 104px - env(safe-area-inset-top));
+    display:flex;flex-direction:column;background:var(--sb);color:var(--si);border-radius:13px;overflow:hidden;
+    border:.5px solid rgba(0,0,0,.25);box-shadow:0 8px 30px rgba(0,0,0,.35);cursor:default;
+    font-family:-apple-system,"SF Pro Text","Helvetica Neue","Segoe UI",system-ui,sans-serif;
+    -webkit-user-select:text;user-select:text;}
+  .pbar{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:.5px solid var(--sl);flex:none;}
+  .pbody{padding:6px 20px 32px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  .psec{padding:18px 0 24px;border-bottom:.5px solid var(--sl);}
+  .psec:last-child{border-bottom:none;}
+  .phead{font-size:20px;line-height:24px;font-weight:600;margin:0 0 4px;}
+  .alabel{display:block;font-size:20px;line-height:24px;font-weight:600;margin:22px 0 10px;}
+  .caption,.hint{font-size:14px;line-height:18px;color:var(--ss);margin:8px 0 0;}
+  /* text buttons are real buttons: outlined, big enough to hit, never crowding each other */
+  .tbtn{background:none;border:2px solid var(--sl);border-radius:12px;color:var(--si);font:inherit;font-size:20px;line-height:24px;
+    font-weight:600;min-height:50px;padding:11px 18px;cursor:pointer;margin-top:12px;}
+  .pbar .tbtn{margin-top:0;}
+  .tbtn.b{background:var(--sel);border-color:var(--sel);color:#fff;}
+  .tbtn.danger{color:var(--danger,#d70015);border-color:var(--danger,#d70015);}
+  .tbtn:disabled{opacity:.35;cursor:default;}
+  .btnrow{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
+  .btnrow .tbtn{margin-top:12px;}
+  .nameinput{display:block;width:100%;box-sizing:border-box;border-radius:9px;border:1px solid var(--sl);background:var(--st);
+    color:var(--si);font:inherit;font-size:20px;line-height:24px;padding:10px 12px;}
+  .confirm{padding:14px 0;border-bottom:.5px solid var(--sl);}
+  /* choices: a fixed grid of equal buttons, so nothing shifts when one is picked.
+     2 or 4 options sit 2 across, everything else 3 across; the chosen one is solid blue with a check. */
+  .seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;width:100%;}
+  .seg:has(> button:only-child){grid-template-columns:minmax(0,1fr);max-width:220px;}
+  .seg:has(> button:nth-child(2):last-child),.seg:has(> button:nth-child(4):last-child){grid-template-columns:repeat(2,minmax(0,1fr));}
+  .seg button{min-height:56px;padding:8px 8px;border-radius:12px;border:2px solid var(--sl);background:var(--st);
+    color:var(--si);font:inherit;font-size:19px;line-height:23px;font-weight:600;cursor:pointer;text-align:center;
+    overflow-wrap:anywhere;}
+  .seg button.sel{background:var(--sel);border-color:var(--sel);color:#fff;}
+  .seg button.sel::before{content:"\2713\00a0";}
+  .stepper{display:flex;align-items:center;gap:16px;}
+  .stepper button{min-width:64px;height:56px;border-radius:12px;border:2px solid var(--sl);background:var(--st);color:var(--si);
+    font:inherit;font-size:28px;font-weight:600;cursor:pointer;}
+  .stepper .sv{min-width:96px;text-align:center;font-size:20px;line-height:24px;font-weight:600;font-variant-numeric:tabular-nums;}
+  /* a switch row: the whole row toggles */
+  .trow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0;min-height:60px;box-sizing:border-box;cursor:pointer;font-size:20px;line-height:24px;}
+  .trow .alabel{margin:0;}
+  .toggle{position:relative;width:51px;height:31px;border-radius:16px;background:var(--soff);flex:none;transition:background .2s;}
+  .toggle.on{background:var(--son);}
+  .toggle::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;
+    box-shadow:0 2px 4px rgba(0,0,0,.2);transition:left .2s;}
+  .toggle.on::after{left:22px;}
+  #camPreview{margin:4px 0;min-height:20px;}
+
+  /* this app's video list, drawn with the same parts */
+  .vrow{padding:14px 0;border-bottom:.5px solid var(--sl);}
+  .vrow:last-child{border-bottom:none;}
+  .vrow .btnrow .tbtn{min-height:44px;padding:8px 14px;font-size:18px;margin-top:10px;}
+
+  /* ---------- I Can Talk: the board ---------- */
+  #board{position:fixed;inset:0;display:flex;flex-direction:column;gap:2.5vmin;
+    padding:calc(4px + env(safe-area-inset-top)) 3vmin 3vmin}
+  #topbar{height:100px;flex:none;display:flex;align-items:center;gap:3vmin;padding-right:84px}
+  #homeBtn{height:100px;min-width:200px;justify-content:center;padding:0 32px;border-width:6px;border-radius:20px;flex-direction:row}
+  #homeBtn .label{font-size:34px;-webkit-line-clamp:1}
+  #homeBtn[hidden]{display:none}
+  #backBtn{height:100px;min-width:200px;justify-content:center;padding:0 32px;border-width:6px;border-radius:20px;flex-direction:row;gap:12px}
+  #backBtn .label{font-size:34px;-webkit-line-clamp:1}
+  #backBtn[hidden]{display:none}
+  #introBtn{height:100px;padding:0 32px;border-width:6px;border-radius:20px;flex-direction:row;gap:12px}
+  #introBtn .label{font-size:34px;-webkit-line-clamp:1}
+  #introBtn[hidden]{display:none}
+  #introBtn .ico{width:56px;height:56px;color:var(--pic,#ff2b2b)}
+  #introBtn .sym{font-size:30px}
+  #backBtn .ico{width:56px;height:56px;color:var(--pic,#ff2b2b)}
+  #backBtn .sym{font-size:30px}
+  #pageName{font-size:clamp(22px,3.6vmin,40px);font-weight:800;color:#fff}
+  #grid{flex:1;display:grid;gap:2.5vmin;min-height:0}
+  body[data-size="big"]   { --border:12px }
+  body[data-size="mid"]   { --border:9px }
+  body[data-size="small"] { --border:7px }
+  #grid .tile{gap:1vmin;padding:1.2vmin;border-radius:22px}
+  .tile .sym{font-size:min(11vh,8vw);line-height:1}
+  body[data-size="big"] .tile .sym{font-size:min(22vh,16vw)}
+  body[data-size="mid"] .tile .sym{font-size:min(14vh,10vw)}
+  .tile img{max-width:80%;max-height:62%;object-fit:contain;border-radius:12px}
+  #grid .tile .label{font-size:clamp(16px,3.3vmin,40px);line-height:1.3;padding-bottom:.08em}
+  body[data-size="big"] #grid .tile .label{font-size:clamp(22px,5vmin,56px)}
+  body.nolabels #grid .tile .label{display:none}
+  body.nolabels .tile .sym{font-size:min(15vh,11vw)}
+  /* a button that opens a page: a second red outline behind it, like a stack of cards */
+  #grid .tile.link{box-shadow:10px 10px 0 -4px #000, 10px 10px 0 calc(var(--border) - 4px) var(--target);overflow:visible}
+  #grid .tile.link.hover{box-shadow:0 0 0 8px var(--ring), 10px 10px 0 -4px #000, 10px 10px 0 calc(var(--border) - 4px) var(--target)}
+  #grid .tile.link.fill::after{border-radius:inherit}
+  #grid .tile.empty{border:3px solid #161616;cursor:default}
+  .tile.wiggle .sym,.tile.wiggle img{animation:wiggle .7s ease}
+  @keyframes wiggle{0%,100%{transform:none}20%,60%{transform:translateX(-10px) rotate(-7deg)}40%,80%{transform:translateX(10px) rotate(7deg)}}
+  body.editing #grid .tile{border-style:dashed}
+  body.editing #grid .tile.empty{border-color:#555}
+  #doneEdit{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:70;font:inherit;font-size:20px;font-weight:700;
+    padding:12px 28px;border-radius:14px;border:none;background:#0a84ff;color:#fff;cursor:pointer}
+  #doneEdit[hidden]{display:none}
+
+  #startScreen{position:fixed;inset:0;z-index:55;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px}
+  #startBtn{width:min(60vmin,420px);height:min(60vmin,420px)}
+  #startBtn .sym{font-size:min(22vmin,150px)}
+  #startScreen p{color:#888;font-size:18px;margin:0}
+
+  /* grown-up dialogs */
+  .dlgScrim{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center}
+  .dlgScrim.show{display:flex}
+  .dlg{background:#1c1c1e;color:#fff;border-radius:16px;padding:20px;width:min(460px,92vw);max-height:90vh;overflow:auto;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-user-select:text;user-select:text}
+  .dlg h3{margin:0 0 10px}
+  .dlg label{display:block;font-size:13px;color:#aaa;margin:12px 0 4px}
+  .dlg input,.dlg select,.dlg textarea{width:100%;font:inherit;font-size:16px;padding:9px;border-radius:9px;border:1px solid #3a3a3c;background:#2c2c2e;color:#fff}
+  .dlg .row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px}
+  .dlg button{font:inherit;font-size:15px;padding:9px 14px;border-radius:10px;border:none;background:#3a3a3c;color:#fff;cursor:pointer}
+  .dlg button.primary{background:#0a84ff}
+  .dlg .note{font-size:13px;color:#aaa;margin-top:6px}
+  #eUrlRow[hidden]{display:none}
+
+  /* size picture and words to each button, so nothing is cut off */
+  #grid .tile{container-type:size;justify-content:center}
+  #grid .tile .sym{font-size:min(60cqh,62cqw)!important;flex:none}
+  #grid .tile img{max-height:62cqh}
+  #grid .tile .label{font-size:min(14cqh,10cqw)!important;line-height:1.15;padding-bottom:.1em;flex:none;max-width:100%}
+  body.nolabels #grid .tile .sym{font-size:min(70cqh,70cqw)!important}
+
+  /* simple shapes */
+  #grid .tile .ico{width:min(62cqh,64cqw);height:min(62cqh,64cqw);color:var(--pic,#ff2b2b);flex:none}
+  body.nolabels #grid .tile .ico{width:min(78cqh,78cqw);height:min(78cqh,78cqw)}
+  #startBtn .ico{width:50%;height:50%;color:var(--pic,#ff2b2b)}
+  #eShapePrev{width:80px;height:80px;margin-top:8px;background:#000;border-radius:10px;padding:8px;color:var(--pic,#ff2b2b)}
+  #eShapePrev:empty{display:none}
+  #eShapePrev svg{width:100%;height:100%}
+  #segDotColor button[data-v="#ff2b2b"]{color:#ff2b2b}
+  #segDotColor button[data-v="#ff7a00"]{color:#ff7a00}
+  #segDotColor button[data-v="#ffd400"]{color:#c9a800}
+  #segDotColor button[data-v="#2ecc40"]{color:#1f9a2e}
+  #segDotColor button[data-v="#1e90ff"]{color:#1e90ff}
+  #segDotColor button[data-v="#b84dff"]{color:#b84dff}
+  #segDotColor button.sel{color:#fff}
+  #segOutline button[data-v="#ff2b2b"]{color:#ff2b2b}
+  #segOutline button[data-v="#ff7a00"]{color:#ff7a00}
+  #segOutline button[data-v="#ffd400"]{color:#c9a800}
+  #segOutline button[data-v="#2ecc40"]{color:#1f9a2e}
+  #segOutline button[data-v="#1e90ff"]{color:#1e90ff}
+  #segOutline button[data-v="#b84dff"]{color:#b84dff}
+  #segOutline button.sel{color:#fff}
+  /* her animal pictures and videos in the picture color */
+  body.tintAnimals #grid .tile img.animalPic, body.tintAnimals #video.animalVid { filter: url(#bleTint); }
+  #grid .tile img.animalPic { mix-blend-mode: lighten; }   /* the black around her animals lets the fill show through */
+  #segPicColor button[data-v="#ff2b2b"]{color:#ff2b2b} #segPicColor button[data-v="#ff7a00"]{color:#ff7a00}
+  #segPicColor button[data-v="#ffd400"]{color:#c9a800} #segPicColor button[data-v="#2ecc40"]{color:#1f9a2e}
+  #segPicColor button[data-v="#1e90ff"]{color:#1e90ff} #segPicColor button[data-v="#b84dff"]{color:#b84dff}
+  #segPicColor button.sel{color:#fff}
+  #homeBtn .ico{width:56px;height:56px;color:var(--pic,#ff2b2b)}
+  #homeBtn .sym{font-size:30px}
+  #homeBtn{gap:12px}
+  #grid .tile .ico{width:min(66cqh,66cqw);height:min(66cqh,66cqw)}
+  #grid .tile img{max-width:88%;max-height:64cqh;object-fit:contain;border-radius:0}
+  body.nolabels #grid .tile img{max-height:82cqh}
+</style>
+<style>/* Bright Little Eyes: no long-press menus or blue text selection, except where grown-ups type */
+*{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}img{-webkit-user-drag:none}
+input,textarea,[contenteditable="true"]{-webkit-touch-callout:default;-webkit-user-select:text;user-select:text}</style>
+<script>/* a long press or right-click never brings up the browser's menu (the gear hold included), and holding never selects (blue) the page */
+(function(){function typing(t){return t&&t.closest&&t.closest('input,textarea,[contenteditable="true"]');}
+document.addEventListener('contextmenu',function(e){if(!typing(e.target))e.preventDefault();});
+document.addEventListener('selectstart',function(e){if(!typing(e.target))e.preventDefault();});
+document.addEventListener('dragstart',function(e){e.preventDefault();});})();</script>
+<style id="bleLookHighlight">
+  /* Looking at a choice (any button, picture or not): a thick YELLOW outline drawn just inside the edge,
+     so it can never be cut off, and the red fill rising OVER the picture so it always shows. */
+  :root { --ring: #ffd400; }
+  .tile.hover::before, .nav.hover::before, #closeBtn.hover::before, #talkBtn.hover::before, #homeBtn.hover::before, #backBtn.hover::before, #introBtn.hover::before, #bleTalkBack.hover::before {
+    content: ''; position: absolute; inset: 0; border: 10px solid #ffd400; border-radius: inherit;
+    z-index: 4; pointer-events: none;
+  }
+  .fill::after { background: var(--bleFill, rgba(255, 43, 43, .45)) !important; }   /* the fill rises BEHIND the pictures, in her fill color */
+  /* a bigger X, easier to look at */
+  #closeBtn { width: 22vmin; height: 22vmin; max-width: 200px; max-height: 200px; }
+  #closeBtn svg { width: 64%; }
+</style>
+<style id="bleGazeCircle">
+  /* Where she is looking: one big, see-through red circle and no mouse arrow (the arrow comes back
+     while the grown-up settings menu is open, or whenever the circle is off). */
+  [data-ble-cursor] > div:last-child {
+    left: -36px !important; top: -36px !important; width: 72px !important; height: 72px !important;
+    background: var(--bleDot, rgba(255, 43, 43, .45)) !important; border: 4px solid rgba(255, 255, 255, .75) !important;
+    box-shadow: none !important;
+  }
+  [data-ble-cursor] > div:first-child { left: -50px !important; top: -50px !important; width: 100px !important; height: 100px !important; }
+  html:has([data-ble-cursor][style*="display: block"]):not(:has(#panel.open)),
+  html:has([data-ble-cursor][style*="display: block"]):not(:has(#panel.open)) * { cursor: none !important; }
+</style>
+<style>
+  /* ---------- My Calendar ---------- */
+  #board{padding-right:3vmin}
+  #topbar{padding-right:170px}
+  #lead{font-size:clamp(28px,5.4vmin,58px);font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
+  #lead .ans{color:var(--pic,#ff2b2b)}
+  #dots{display:flex;gap:10px;flex:none}
+  #dots span{width:18px;height:18px;border-radius:50%;border:3px solid #555}
+  #dots span.done{background:var(--pic,#ff2b2b);border-color:var(--pic,#ff2b2b)}
+  #dots span.now{border-color:#fff;background:#fff}
+  #grid .tile.num .ico{width:min(86cqh,86cqw);height:min(86cqh,86cqw)}
+  #grid .tile.nope{opacity:.22;border-color:#444}
+  #grid .tile.yes{box-shadow:0 0 0 8px var(--ring)}
+  body.nolabels #grid .tile .label{display:none}
+</style>
+</head>
+<body>
+<div id="board">
+  <div id="topbar">
+    <button class="tile fill" id="homeBtn" aria-label="Back to I Can Talk" hidden></button>
+    <div id="lead"></div>
+    <div id="dots" aria-hidden="true"></div>
+  </div>
+  <div id="grid"></div>
+</div>
+
+<div id="startScreen">
+  <button class="tile fill" id="startBtn" aria-label="Start"></button>
+  <p>Tap Start once so the calendar can talk.</p>
+</div>
+
+<button id="exitBtn" title="Exit (grown-ups: press and hold)" aria-label="Exit My Calendar. Grown-ups: press and hold."><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M22 22 L78 78 M78 22 L22 78" stroke="#9a9a9a" stroke-width="13" stroke-linecap="round"/></svg></button>
+<div id="exitDone"><div>My Calendar is closed.</div><div style="font-size:18px;color:#999">You can close this tab now (the X at the top, or Ctrl + W).</div><button type="button" id="exitReopen">Open My Calendar again</button></div>
+<button id="gear" title="Settings (grown-ups: press and hold)" aria-label="Settings. Grown-ups: press and hold."></button>
+
+<div id="panelScrim"></div>
+<div id="panelArrow"></div>
+<div id="panel" role="dialog" aria-label="Settings">
+  <div class="pbar"><button type="button" class="tbtn" id="btnResetSettings">Reset</button><button type="button" class="tbtn b" id="closePanel">Done</button></div>
+  <div class="pbody">
+  <div class="confirm" id="resetConfirm" hidden>
+    <span class="caption">Reset the calendar settings? Her look settings are kept.</span>
+    <div class="btnrow"><button type="button" class="tbtn" id="btnResetNo">Cancel</button><button type="button" class="tbtn b" id="btnResetYes">Reset</button></div>
+  </div>
+
+  <div class="psec">
+    <div class="phead">Her calendar</div>
+    <p class="caption">She goes through it one step at a time. The days, month, date and season come from this device's clock.</p>
+    <span class="alabel">Choices she sees</span>
+    <div class="seg" id="segChoices"><button type="button" data-v="1">1</button><button type="button" data-v="2">2</button><button type="button" data-v="3">3</button><button type="button" data-v="4">4</button><button type="button" data-v="all">All</button></div>
+    <p class="hint">1: just the right answer. With more, a wrong one says its name and fades back.</p>
+    <span class="alabel">Weather</span>
+    <div class="seg" id="segWeatherMode"><button type="button" data-v="all">She picks from all 6</button><button type="button" data-v="pick">I pick today's weather</button></div>
+    <div id="weatherPickRow">
+      <span class="alabel">Today's weather</span>
+      <div class="seg" id="segWeatherPick"><button type="button" data-v="sunny">Sunny</button><button type="button" data-v="cloudy">Cloudy</button><button type="button" data-v="rainy">Rainy</button><button type="button" data-v="stormy">Stormy</button><button type="button" data-v="snowy">Snowy</button><button type="button" data-v="windy">Windy</button></div>
+      <p class="hint">Pick it each day. Until you do, she picks from all 6.</p>
+    </div>
+    <span class="alabel">Steps</span>
+    <div class="trow" role="switch" tabindex="0" data-step="yesterday"><span class="alabel">Yesterday was</span><div class="toggle"></div></div>
+    <div class="trow" role="switch" tabindex="0" data-step="today"><span class="alabel">Today is</span><div class="toggle"></div></div>
+    <div class="trow" role="switch" tabindex="0" data-step="tomorrow"><span class="alabel">Tomorrow is</span><div class="toggle"></div></div>
+    <div class="trow" role="switch" tabindex="0" data-step="month"><span class="alabel">The month is</span><div class="toggle"></div></div>
+    <div class="trow" role="switch" tabindex="0" data-step="date"><span class="alabel">The date is</span><div class="toggle"></div></div>
+    <div class="trow" role="switch" tabindex="0" data-step="weather"><span class="alabel">The weather is</span><div class="toggle"></div></div>
+    <div class="trow" role="switch" tabindex="0" data-step="season"><span class="alabel">The season is</span><div class="toggle"></div></div>
+    <div class="btnrow"><button type="button" class="tbtn b" id="btnStartOver">Start her calendar over</button></div>
+  </div>
+
+  <div class="psec">
+    <div class="trow" role="switch" tabindex="0" data-toggle="tAsk"><span class="alabel">Ask the question out loud</span><div class="toggle" id="tAsk"></div></div>
+    <div class="trow" role="switch" tabindex="0" data-toggle="tLabels"><span class="alabel">Show words</span><div class="toggle" id="tLabels"></div></div>
+    <div class="trow" role="switch" tabindex="0" data-toggle="tWiggle"><span class="alabel">Wiggle when chosen</span><div class="toggle" id="tWiggle"></div></div>
+    <div class="trow" role="switch" tabindex="0" data-toggle="tFull"><span class="alabel">Start in full screen</span><div class="toggle" id="tFull"></div></div>
+    <div class="btnrow"><button type="button" class="tbtn" id="btnFull">Full screen</button></div>
+    <p class="hint">Her colors come from I Can Talk's settings.</p>
+  </div>
+
+  <!-- Bright Little Eyes' selection system: the same rows, in the same order, in every app -->
+  <div class="psec" id="accessRows">
+    <div class="phead">Choosing without touch</div>
+    <div>
+      <span class="alabel">How to select</span>
+      <div class="seg" id="segMode"><button type="button" data-v="tap">Touch</button><button type="button" data-v="dwell">Look and hold</button><button type="button" data-v="switch">Look and press</button></div>
+      <div id="accessMore">
+        <span class="alabel">Aim with</span>
+        <div class="seg" id="segAim"><button type="button" data-v="mouse">Pointer</button><button type="button" data-v="head">Camera</button></div>
+        <span class="alabel">How long a look</span>
+        <div class="stepper" id="stDwell"><button type="button" data-d="-1" aria-label="How long a look less">−</button><span class="sv"></span><button type="button" data-d="1" aria-label="How long a look more">+</button></div>
+        <span class="alabel">Gap between choices</span>
+        <div class="stepper" id="stCool"><button type="button" data-d="-1" aria-label="Gap between choices less">−</button><span class="sv"></span><button type="button" data-d="1" aria-label="Gap between choices more">+</button></div>
+        <span class="alabel">Show the dot</span>
+        <div class="seg" id="segDot"><button type="button" data-v="on">On</button><button type="button" data-v="off">Off</button></div>
+        <div id="cameraRows">
+          <span class="alabel">Camera</span>
+          <div id="camPreview"></div>
+          <p class="hint" id="camStatus"></p>
+          <span class="alabel">Centre</span>
+          <div class="seg"><button type="button" id="btnCentre">Set centre</button></div>
+          <span class="alabel">Head sensitivity</span>
+          <div class="stepper" id="stGain"><button type="button" data-d="-1" aria-label="Head sensitivity less">−</button><span class="sv"></span><button type="button" data-d="1" aria-label="Head sensitivity more">+</button></div>
+        </div>
+      </div>
+      <p class="hint">Touch: tap to choose. Look and hold: rest the pointer on a choice; it fills with red, then it is chosen. Look and press: point, then press a switch (Space or Enter) or click. Pointer works with Windows Eye Control, Tobii gaze-to-cursor, Mill Mouse or a head-mouse. Camera is a webcam head pointer (Windows). Grown-ups: press and hold the gear to open Settings.</p>
+    </div>
+  </div>
+  </div>
+</div>
+
+
+<script>
+/* ===== Bright Little Eyes' selection system — the same in every Bright Little Eyes app =====
+   How a child who cannot reliably touch the screen aims at something and picks it.
+   Two separate axes:
+     accessMode — how a choice FIRES:          'tap' (Touch) | 'dwell' (Look and hold) | 'switch' (Look and press)
+     aimSource  — where the cursor COMES FROM: 'mouse' (Pointer) | 'head' (Camera)
+   Targets are the real elements on screen, hit-tested with getBoundingClientRect() every time.
+   There is NO "steady gaze" / movement-threshold rule. */
+(function(){
+  "use strict";
+  var DEFAULTS = { accessMode:'tap', aimSource:'mouse', dwellMs:650, cooldownMs:320, gain:18, showDot:true };
+  var STICKY_PAD = 28, SMOOTH = 0.35, ADULT_FACTOR = 2.6, ADULT_HOLD_MS = 500, REPEAT_DWELL_MS = 420;
+
+  var S = Object.assign({}, DEFAULTS);
+  var targets = new Map(), nextId = 1;
+  var layerFn = function(){ return 'app'; };     // which layer is live: 'app' | 'sheet' | 'none'
+  var raw = {x:-9999,y:-9999}, smoothed = {x:-9999,y:-9999}, haveAim = false;
+  var hovered = null, enteredAt = 0, armed = false;
+  var lastFired = new Map(), raf = null, aimListeners = [];
+
+  // ------------------------------------------------------------ registry
+  // t = { node: Element | () => Element, run, dwellMs?: number | () => number, allowRepeat?, adult?, enabled?: () => bool, layer?: 'app'|'sheet' }
+  function register(t){
+    var id = nextId++;
+    targets.set(id, Object.assign({ layer:'app', enabled:function(){ return true; } }, t, { id:id }));
+    return function(){ targets.delete(id); if(hovered && hovered.id===id) hovered=null; };
+  }
+  function nodeOf(t){ return typeof t.node==='function' ? t.node() : t.node; }
+  function usable(t){
+    if(t.layer==='sheet' || t.adult) return null;   // the gear and the settings menu: touch only, never by looking
+    if(t.layer !== layerFn()) return null;
+    var n = nodeOf(t);
+    if(!n) return null;
+    if(!n.isConnected){ if(t.prune !== false && typeof t.node!=='function') targets.delete(t.id); return null; }  // detached
+    if(!t.enabled()) return null;
+    var cs = getComputedStyle(n);
+    if(cs.pointerEvents==='none' || cs.visibility==='hidden' || cs.display==='none') return null;
+    var r = n.getBoundingClientRect();
+    if(r.width<=0 || r.height<=0) return null;
+    // optional margin around a target (this app's "Hold steadiness"); the size used for smallest-wins stays the real one
+    var pad = t.pad==null ? 0 : (typeof t.pad==='function' ? t.pad() : t.pad);
+    if(pad>0) return { left:r.left-pad, right:r.right+pad, top:r.top-pad, bottom:r.bottom+pad, width:r.width, height:r.height };
+    return r;
+  }
+  function contains(r,p,pad){ pad=pad||0; return p.x>=r.left-pad && p.x<=r.right+pad && p.y>=r.top-pad && p.y<=r.bottom+pad; }
+
+  // strict = the SMALLEST target containing the point. Stickiness only defends against a LARGER rival or
+  // empty space, so equal neighbours hand over at once and a small target inside a larger one wins.
+  function hitTest(p){
+    var strict=null, strictArea=Infinity, hoveredRect=null;
+    targets.forEach(function(t){
+      var r=usable(t); if(!r) return;
+      if(hovered && t.id===hovered.id) hoveredRect=r;
+      if(contains(r,p)){ var a=r.width*r.height; if(a<strictArea){ strict=t; strictArea=a; } }
+    });
+    if(hovered && hoveredRect && hovered!==strict){
+      if(contains(hoveredRect,p,STICKY_PAD) && (strict===null || strictArea > hoveredRect.width*hoveredRect.height)) return hovered;
+    }
+    return strict;
+  }
+
+  function fire(t){
+    var now=performance.now();
+    if(now-(lastFired.has(t.id)?lastFired.get(t.id):-Infinity) < S.cooldownMs) return;   // refused inside cooldownMs
+    lastFired.set(t.id, now);
+    if(t._ready){ t._ready=false; if(t.ready) try{ t.ready(false); }catch(e){} }
+    if(typeof t.allowRepeat==='function' ? t.allowRepeat() : t.allowRepeat) enteredAt=now;   // steppers keep counting under a long look
+    else armed=false;                  // a held look does not retrigger; re-arms when the aim moves away and back
+    try{ t.run(); }catch(e){ console.warn(e); }
+  }
+  function needFor(t){
+    var d = t.dwellMs==null ? S.dwellMs : (typeof t.dwellMs==='function' ? t.dwellMs() : t.dwellMs);
+    return d * (t.adult ? ADULT_FACTOR : 1);
+  }
+
+  // ------------------------------------------------------------ the pump
+  function pump(){
+    raf=null;
+    if(S.accessMode==='tap'){ drawCursor(false,0); return; }
+    if(haveAim){
+      smoothed.x += (raw.x-smoothed.x)*SMOOTH;
+      smoothed.y += (raw.y-smoothed.y)*SMOOTH;
+      aimListeners.forEach(function(f){ f(smoothed.x, smoothed.y); });
+      setHovered(hitTest(smoothed));
+      var p=-1;
+      if(S.accessMode==='dwell' && hovered){
+        p = armed ? Math.min(1,(performance.now()-enteredAt)/needFor(hovered)) : 0;
+        var t=hovered;
+        if(p>=1){
+          // a target can ask for a switch to confirm: when the look completes it lights up and waits
+          if(t.confirm && t.confirm()){ if(!t._ready){ t._ready=true; if(t.ready) try{ t.ready(true); }catch(e){} } }
+          else fire(t);
+        }
+        // a target that shows its own countdown (a ring around it, a key filling up) gets it; the dot then
+        // shows no ring of its own, so there is only ever one countdown on screen
+        if(t.progress){ try{ t.progress(t===hovered && armed ? p : 0); }catch(e){} p=-1; }
+      }
+      drawCursor(true,p);
+    }
+    raf=requestAnimationFrame(pump);
+  }
+  function setHovered(h){
+    if(h===hovered) return;
+    if(hovered && hovered.progress){ try{ hovered.progress(0); }catch(e){} }
+    if(hovered && hovered._ready){ hovered._ready=false; if(hovered.ready) try{ hovered.ready(false); }catch(e){} }
+    hovered=h; enteredAt=performance.now(); armed=true;
+  }
+  function kick(){ if(raf===null && S.accessMode!=='tap') raf=requestAnimationFrame(pump); }
+
+  // ------------------------------------------------------------ the cursor
+  // A white dot with a dark keyline, and a conic-gradient countdown ring sweeping around it — drawn AT THE
+  // CURSOR (not at the target), mounted at the root of the document so nothing can clip it.
+  var cursorEl=null, ringEl=null;
+  function ensureCursor(){
+    if(cursorEl) return;
+    cursorEl=document.createElement('div');
+    cursorEl.setAttribute('data-ble-cursor','');
+    cursorEl.style.cssText='position:fixed;left:0;top:0;width:0;height:0;pointer-events:none;z-index:2147483647;display:none';
+    ringEl=document.createElement('div');
+    ringEl.style.cssText='position:absolute;left:-30px;top:-30px;width:60px;height:60px;border-radius:50%;'+
+      '-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 8px),#000 calc(100% - 7px));'+
+      'mask:radial-gradient(farthest-side,transparent calc(100% - 8px),#000 calc(100% - 7px));display:none';
+    var dot=document.createElement('div');
+    dot.style.cssText='position:absolute;left:-11px;top:-11px;width:22px;height:22px;border-radius:50%;'+
+      'background:#ffffff;box-sizing:border-box;border:3px solid #111111;box-shadow:0 0 0 1px rgba(255,255,255,.6)';
+    cursorEl.appendChild(ringEl); cursorEl.appendChild(dot);
+    document.body.appendChild(cursorEl);
+  }
+  function drawCursor(show,p){
+    ensureCursor();
+    var visible = show && S.showDot && haveAim;
+    cursorEl.style.display = visible ? 'block' : 'none';
+    if(!visible) return;
+    cursorEl.style.transform='translate('+smoothed.x+'px,'+smoothed.y+'px)';
+    if(p>0){
+      ringEl.style.display='block';
+      var deg=(p*360).toFixed(1);
+      ringEl.style.background='conic-gradient(#ffffff '+deg+'deg, rgba(0,0,0,.35) '+deg+'deg)';
+    } else ringEl.style.display='none';
+  }
+
+  // ------------------------------------------------------------ configure
+  function configure(next){
+    var was=S;
+    S=Object.assign({}, DEFAULTS, next);
+    if(S.accessMode==='tap'){ setHovered(null); drawCursor(false,0); }
+    var wantCam = S.accessMode!=='tap' && S.aimSource==='head';
+    if(wantCam && !camera.on) startCamera();
+    if(!wantCam && camera.on) stopCamera();
+    if(was.aimSource!==S.aimSource) haveAim=false;
+    kick();
+  }
+
+  // ------------------------------------------------------------ input
+  function setAim(x,y,jump){
+    raw={x:x,y:y};
+    if(!haveAim || jump) smoothed={x:x,y:y};
+    haveAim=true; kick();
+  }
+  // Pointer aim simply follows the system cursor: Windows Eye Control, a Tobii tracker or Mill Mouse
+  // work with nothing extra installed.
+  addEventListener('pointermove', function(e){
+    if(S.accessMode==='tap' || S.aimSource!=='mouse') return;
+    setAim(e.clientX,e.clientY);
+  }, {passive:true});
+  // Electron / native bridges can push gaze points and switch presses too.
+  addEventListener('gaze', function(e){ var g=e.detail; if(g && S.accessMode!=='tap' && S.aimSource==='mouse') setAim(g.x,g.y); });
+  function pressSwitch(){ if(hovered && !hovered.adult && (S.accessMode==='switch' || (S.accessMode==='dwell' && hovered._ready))) fire(hovered); }
+  addEventListener('gaze-switch', pressSwitch);
+
+  // Look-and-press: Space or Enter (what switch interfaces type) fires whatever the cursor is on.
+  addEventListener('keydown', function(e){
+    if(S.accessMode==='dwell' && hovered && hovered._ready && (e.key===' '||e.key==='Enter'||e.code==='Space')){
+      e.preventDefault(); e.stopPropagation(); if(!e.repeat) fire(hovered); return;
+    }
+    if(S.accessMode!=='switch') return;
+    if(e.key!==' ' && e.key!=='Enter' && e.code!=='Space') return;
+    var tag=e.target && e.target.tagName;
+    if(tag==='INPUT' || tag==='TEXTAREA' || tag==='SELECT') return;
+    e.preventDefault(); e.stopPropagation();
+    if(!e.repeat) pressSwitch();      // adult controls stay a hold
+  }, true);
+
+  // A pointer press on a target, in Look-and-press OR Look-and-hold, is that target's choice (a real
+  // click, a switch that clicks, or Mill Mouse's own dwell-click). The browser's own click is swallowed,
+  // so one look never chooses twice. Adult controls are left alone so their hold still works.
+  var swallowUntil=0;
+  function swallow(e){ if(e.isTrusted && performance.now()<swallowUntil){ e.stopPropagation(); e.preventDefault(); } }
+  addEventListener('pointerdown', function(e){
+    if(S.accessMode==='tap') return;
+    var pt = S.aimSource==='mouse' ? {x:e.clientX,y:e.clientY} : smoothed;
+    if(S.aimSource==='mouse') setAim(pt.x,pt.y,true);
+    var t=hitTest(pt);
+    setHovered(t);
+    if(!t || t.adult) return;
+    if(S.accessMode==='switch' || armed) fire(t);
+    swallowUntil=performance.now()+700;
+    e.stopPropagation(); e.preventDefault();
+  }, true);
+  ['pointerup','mousedown','mouseup','touchstart','touchend','click'].forEach(function(ev){ addEventListener(ev, swallow, true); });
+
+  // ------------------------------------------------------------ adult controls: a half-second hold in every mode
+  // A tap does nothing at all; a gaze dwell on one runs 2.6× a child's.
+  function adultControl(el, run, layer){
+    // Grown-ups: press and hold. A finger may drift a little and Windows may interrupt a long touch;
+    // only lifting early, or sliding well away, cancels the hold.
+    var timer=null, x0=0, y0=0, pid=null;
+    function cancel(){ if(timer){ clearTimeout(timer); timer=null; el.classList.remove('holding'); } pid=null; }
+    el.addEventListener('pointerdown', function(e){
+      e.preventDefault(); cancel(); el.classList.add('holding'); x0=e.clientX; y0=e.clientY; pid=e.pointerId;
+      try { el.setPointerCapture(e.pointerId); } catch(er) {}
+      timer=setTimeout(function(){ timer=null; pid=null; el.classList.remove('holding'); run(); }, ADULT_HOLD_MS);
+    });
+    el.addEventListener('pointermove', function(e){
+      if(timer && e.pointerId===pid && Math.hypot(e.clientX-x0, e.clientY-y0) > 60) cancel();
+    });
+    el.addEventListener('pointerup', function(e){ if(e.pointerId===pid) cancel(); });
+    el.addEventListener('click', function(e){ e.preventDefault(); });   // a tap does nothing
+    el.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+    return register({ node:el, run:run, adult:true, layer:layer||'app' });
+  }
+
+  // ================================================================= the camera head pointer
+  // Windows only. No model, no network, no library: the head is the centroid of skin-coloured pixels.
+  var FW=160, FH=120;
+  var camera={ on:false, stream:null, video:null, canvas:null, head:null, centre:null, noFace:false, timer:0 };
+  var banner=null, previewHost=null, camListeners=[];
+  function emit(){ camListeners.forEach(function(f){ try{ f(); }catch(e){} }); }
+  function cameraState(){ return { on:camera.on, noFace:camera.noFace, hasCentre:!!camera.centre }; }
+
+  // The skin test (YCbCr). Returns the centroid in frame pixels, or null if fewer than 120 pixels match.
+  function scanFrame(data,w,h){
+    var n=0, sx=0, sy=0;
+    for(var y=0;y<h;y++) for(var x=0;x<w;x++){
+      var i=(y*w+x)*4, r=data[i], g=data[i+1], b=data[i+2];
+      var Y=0.299*r+0.587*g+0.114*b;
+      var Cb=128-0.168736*r-0.331264*g+0.5*b;
+      var Cr=128+0.5*r-0.418688*g-0.081312*b;
+      if(Y>55 && Cb>=77 && Cb<=130 && Cr>=133 && Cr<=178){ n++; sx+=x; sy+=y; }
+    }
+    return n<120 ? null : { x:sx/n, y:sy/n, n:n };
+  }
+  function showBanner(show){
+    if(!banner){
+      banner=document.createElement('div');
+      banner.textContent='No face found — check the lighting and stay in frame';
+      banner.style.cssText='position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:2147483646;'+
+        'background:#111;color:#fff;font:600 16px -apple-system,Segoe UI,Roboto,sans-serif;padding:10px 16px;'+
+        'border-radius:10px;border:2px solid #ffd400;pointer-events:none;display:none';
+      document.body.appendChild(banner);
+    }
+    banner.style.display = show ? 'block' : 'none';
+  }
+  function startCamera(){
+    if(camera.on || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+    camera.on=true; emit();
+    navigator.mediaDevices.getUserMedia({ video:{ width:320, height:240, facingMode:'user' } }).then(function(stream){
+      if(!camera.on){ stream.getTracks().forEach(function(t){ t.stop(); }); return; }
+      camera.stream=stream;
+      if(!camera.video){
+        // kept in the document for as long as the camera runs (removing it kills the stream)
+        camera.video=document.createElement('video');
+        camera.video.muted=true; camera.video.playsInline=true; camera.video.autoplay=true;
+        camera.video.style.cssText='position:fixed;left:-10000px;top:0;width:2px;height:2px;opacity:0;pointer-events:none';
+        document.body.appendChild(camera.video);
+      }
+      camera.video.srcObject=stream;
+      var p=camera.video.play(); if(p && p.catch) p.catch(function(){});
+      if(!camera.canvas){
+        camera.canvas=document.createElement('canvas');
+        camera.canvas.width=FW; camera.canvas.height=FH;
+        camera.canvas.style.cssText='width:240px;height:180px;border-radius:10px;background:#000;display:block';
+        parkPreview();
+      }
+      loop();
+    }).catch(function(){ camera.on=false; emit(); });
+  }
+  function stopCamera(){
+    camera.on=false; clearTimeout(camera.timer);
+    if(camera.stream) camera.stream.getTracks().forEach(function(t){ t.stop(); });
+    camera.stream=null; camera.head=null; camera.centre=null; camera.noFace=false;
+    showBanner(false); emit();
+  }
+  function loop(){
+    if(!camera.on || !camera.video || !camera.canvas) return;
+    var ctx=camera.canvas.getContext('2d',{ willReadFrequently:true });
+    if(ctx && camera.video.readyState>=2){
+      // mirrored, so moving the head left moves the pointer left
+      ctx.save(); ctx.translate(FW,0); ctx.scale(-1,1); ctx.drawImage(camera.video,0,0,FW,FH); ctx.restore();
+      var found=scanFrame(ctx.getImageData(0,0,FW,FH).data,FW,FH);
+      var noFace=!found;
+      if(noFace!==camera.noFace){ camera.noFace=noFace; emit(); }
+      showBanner(noFace);
+      if(found){
+        camera.head = camera.head
+          ? { x:camera.head.x+(found.x-camera.head.x)*0.4, y:camera.head.y+(found.y-camera.head.y)*0.4 }
+          : { x:found.x, y:found.y };
+        // the first face found is the centre, so the pointer moves as soon as the camera is on
+        if(!camera.centre){ camera.centre={ x:camera.head.x, y:camera.head.y }; emit(); }
+        ctx.strokeStyle='#ffd400'; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.arc(camera.head.x,camera.head.y,7,0,Math.PI*2); ctx.stroke();
+        var W=innerWidth, H=innerHeight;
+        setAim(Math.max(0,Math.min(W, W/2+(camera.head.x-camera.centre.x)*S.gain)),
+               Math.max(0,Math.min(H, H/2+(camera.head.y-camera.centre.y)*S.gain)));
+      }
+    }
+    camera.timer=setTimeout(function(){ requestAnimationFrame(loop); },33);
+  }
+  function setCentre(){ if(camera.head){ camera.centre={ x:camera.head.x, y:camera.head.y }; emit(); } }
+  // The live preview sits in Settings while it's open, and is parked (hidden, still in the document) after.
+  function attachPreview(host){ previewHost=host; if(camera.canvas && host) host.appendChild(camera.canvas); }
+  function detachPreview(){ previewHost=null; parkPreview(); }
+  function parkPreview(){
+    if(!camera.canvas) return;
+    if(previewHost){ previewHost.appendChild(camera.canvas); return; }
+    var park=document.getElementById('ble-preview-park');
+    if(!park){ park=document.createElement('div'); park.id='ble-preview-park';
+      park.style.cssText='position:fixed;left:-10000px;top:0;pointer-events:none'; document.body.appendChild(park); }
+    park.appendChild(camera.canvas);
+  }
+
+  window.BLEAccess = {
+    DEFAULTS:DEFAULTS, KEYS:Object.keys(DEFAULTS), ADULT_HOLD_MS:ADULT_HOLD_MS, REPEAT_DWELL_MS:REPEAT_DWELL_MS,
+    settings:function(){ return S; }, configure:configure, register:register, adultControl:adultControl,
+    setLayer:function(f){ layerFn=f; setHovered(null); }, onAim:function(f){ aimListeners.push(f); },
+    hitTest:hitTest, scanFrame:scanFrame, setCentre:setCentre, cameraState:cameraState,
+    onCameraChange:function(f){ camListeners.push(f); }, attachPreview:attachPreview, detachPreview:detachPreview,
+    hovered:function(){ var n=hovered && nodeOf(hovered); return n ? (n.getAttribute('aria-label')||n.id||n.textContent.trim().slice(0,12)) : null; },
+    addTestTarget:function(el,run){ return register({ node:el, run:run }); }
+  };
+  window.__bleAccess = window.BLEAccess;
+})();
+</script>
+<script>
+(() => {
+  const A = window.BLEAccess;
+  const $ = id => document.getElementById(id);
+  const K = '#000';
+
+  // ---------- Simple shapes for CVI (gross form): one bright color, solid, no small detail ----------
+  const SUN = `<circle cx="50" cy="50" r="24"/><g stroke="currentColor" stroke-width="9" stroke-linecap="round"><path d="M50 4v10M50 86v10M4 50h10M86 50h10M17 17l7 7M76 76l7 7M17 83l7-7M76 24l7-7"/></g>`;
+  const CLOUD_HI = `<path d="M22 56c-12 0-18-8-18-16 0-10 8-16 18-16 2-12 12-20 26-20 12 0 22 8 24 18 12 0 22 8 22 18 0 10-8 16-18 16z"/>`;
+  const FLAKE = (() => { let s = '<g stroke="currentColor" stroke-width="8" stroke-linecap="round" fill="none">';
+    for (let a = 0; a < 360; a += 60) s += `<g transform="rotate(${a} 50 50)"><path d="M50 50V8M38 16l12 12 12-12"/></g>`;
+    return s + '</g>'; })();
+  const FLOWER = (() => { let s = '';
+    for (let a = 0; a < 360; a += 60) s += `<circle cx="${(50 + 22 * Math.cos(a * Math.PI / 180)).toFixed(1)}" cy="${(38 + 22 * Math.sin(a * Math.PI / 180)).toFixed(1)}" r="14"/>`;
+    return s + `<circle cx="50" cy="38" r="11" fill="${K}"/><path d="M50 60v36" stroke="currentColor" stroke-width="8" stroke-linecap="round"/><path d="M50 84c-4-12-16-16-26-12 6 10 16 14 26 12z"/>`; })();
+  const ICONS = {
+    talkhome: `<path d="M50 6l46 40H82v48H58V66H42v28H18V46H4z"/>`,
+    calendar: `<rect x="6" y="14" width="88" height="80" rx="10"/><rect x="14" y="38" width="72" height="48" rx="4" fill="${K}"/><rect x="20" y="44" width="16" height="14" rx="2"/><rect x="42" y="44" width="16" height="14" rx="2"/><rect x="64" y="44" width="16" height="14" rx="2"/><rect x="20" y="64" width="16" height="14" rx="2"/><rect x="42" y="64" width="16" height="14" rx="2"/><rect x="22" y="2" width="12" height="24" rx="6" stroke="${K}" stroke-width="3"/><rect x="66" y="2" width="12" height="24" rx="6" stroke="${K}" stroke-width="3"/>`,
+    again: `<path d="M78 32A34 34 0 1 0 84 62" fill="none" stroke="currentColor" stroke-width="13" stroke-linecap="round"/><path d="M62 30L94 8l2 38z"/>`,
+    speaker: `<path d="M8 36h18l26-22v72L26 64H8z"/><path d="M66 32c8 10 8 26 0 36M78 20c16 18 16 42 0 60" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>`,
+    // months
+    snowflake: FLAKE,
+    heart: `<path d="M50 92L12 52C2 40 4 20 20 14c12-4 22 2 30 12 8-10 18-16 30-12 16 6 18 26 8 38z"/>`,
+    shamrock: `<circle cx="50" cy="28" r="20"/><circle cx="28" cy="54" r="20"/><circle cx="72" cy="54" r="20"/><path d="M50 50c0 18 4 32 14 44" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>`,
+    umbrella: `<path d="M6 52C6 26 26 8 50 8s44 18 44 44c-6-6-16-6-22 0-6-6-16-6-22 0-6-6-16-6-22 0-6-6-16-6-22 0z"/><path d="M50 50v34c0 12 16 12 16 0" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>`,
+    flower: FLOWER,
+    sun: SUN,
+    star: `<path d="M50 4l13 30 33 3-25 22 8 33-29-17-29 17 8-33L4 37l33-3z"/>`,
+    icecream: `<path d="M28 50h44L50 98z"/><circle cx="50" cy="34" r="24"/><path d="M34 62l26 12M66 62L42 74" stroke="${K}" stroke-width="3"/>`,
+    apple: `<path d="M50 30c-12-8-38-6-38 20 0 24 16 44 28 44 5 0 7-3 10-3s5 3 10 3c12 0 28-20 28-44 0-26-26-28-38-20z"/><path d="M50 32c0-12 3-20 8-26" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"/><path d="M56 20c8-10 22-10 28-6-8 9-20 10-28 6z"/>`,
+    pumpkin: `<ellipse cx="32" cy="60" rx="24" ry="32"/><ellipse cx="68" cy="60" rx="24" ry="32"/><ellipse cx="50" cy="60" rx="20" ry="34" stroke="${K}" stroke-width="4"/><rect x="45" y="10" width="10" height="20" rx="3"/>`,
+    turkey: (() => { let s = ''; for (let a = -70; a <= 70; a += 35) s += `<ellipse cx="50" cy="28" rx="11" ry="28" transform="rotate(${a} 50 64)"/>`;
+      return s + `<circle cx="50" cy="64" r="24" stroke="${K}" stroke-width="4"/><circle cx="50" cy="40" r="11" stroke="${K}" stroke-width="3"/><circle cx="46" cy="38" r="2.5" fill="${K}"/><path d="M56 40l10 4-10 4z"/><path d="M42 86l-4 12M58 86l4 12" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>`; })(),
+    tree: `<path d="M50 4L82 42H66L90 74H10L34 42H18z"/><rect x="42" y="72" width="16" height="24"/>`,
+    // weather
+    cloud: `<path d="M24 80c-12 0-20-8-20-19 0-11 9-19 20-18 3-14 14-23 28-23 13 0 24 9 27 22 10 1 17 9 17 19 0 11-8 19-18 19z"/>`,
+    rain: CLOUD_HI + `<path d="M26 68l-6 14M50 68l-6 14M74 68l-6 14M38 84l-4 10M62 84l-4 10" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>`,
+    storm: CLOUD_HI + `<path d="M58 50L36 78h16l-10 20 30-32H54l10-16z" stroke="${K}" stroke-width="3" stroke-linejoin="round"/>`,
+    snow: FLAKE,
+    wind: `<path d="M6 32h56c12 0 16-18 2-20M6 52h76c14 0 18 20 2 22M6 72h40c12 0 14 18 2 18" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round"/>`,
+    // seasons
+    leaf: `<path d="M12 88C8 46 36 12 90 10c0 54-34 82-78 78z"/><path d="M12 88L62 38" stroke="${K}" stroke-width="5" stroke-linecap="round"/>`,
+    snowman: `<circle cx="50" cy="72" r="24"/><circle cx="50" cy="34" r="17"/><rect x="34" y="4" width="32" height="14" rx="2"/><rect x="28" y="16" width="44" height="6" rx="2"/><circle cx="44" cy="32" r="3" fill="${K}"/><circle cx="56" cy="32" r="3" fill="${K}"/><circle cx="50" cy="64" r="3.5" fill="${K}"/><circle cx="50" cy="78" r="3.5" fill="${K}"/>`,
+  };
+  const svg = inner => `<svg class="ico" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">${inner}</svg>`;
+  // a day: the week as seven boxes, her day filled in (like the strip on her calendar page)
+  function weekStrip(i) {
+    let s = '';
+    for (let d = 0; d < 7; d++) {
+      const x = 2 + d * 14;
+      s += d === i ? `<rect x="${x - 2}" y="22" width="16" height="56" rx="4"/>`
+                   : `<rect x="${x + 1.5}" y="40" width="9" height="20" rx="2" fill="none" stroke="currentColor" stroke-width="2.5"/>`;
+    }
+    return s;
+  }
+  const numberPic = n => `<text x="50" y="74" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="${n > 9 ? 62 : 74}">${n}</text>`;
+
+  // ---------- What she learns ----------
+  const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const MONTH_PIC = ['snowflake', 'heart', 'shamrock', 'umbrella', 'flower', 'sun', 'star', 'icecream', 'apple', 'pumpkin', 'turkey', 'tree'];
+  const WEATHER = [['sunny', 'Sunny', 'sun'], ['cloudy', 'Cloudy', 'cloud'], ['rainy', 'Rainy', 'rain'], ['stormy', 'Stormy', 'storm'], ['snowy', 'Snowy', 'snow'], ['windy', 'Windy', 'wind']];
+  const SEASONS = [['fall', 'Fall', 'leaf'], ['winter', 'Winter', 'snowman'], ['spring', 'Spring', 'flower'], ['summer', 'Summer', 'sun']];
+  const ordinal = n => n + (n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th');
+  function seasonOf(d) {            // spring from March 20, summer June 21, fall September 22, winter December 21
+    const md = (d.getMonth() + 1) * 100 + d.getDate();
+    return md >= 1221 || md < 320 ? 'winter' : md < 621 ? 'spring' : md < 922 ? 'summer' : 'fall';
+  }
+  const dayKey = d => d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+  const STEP_NAMES = { yesterday: 'Yesterday', today: 'Today', tomorrow: 'Tomorrow', month: 'Month', date: 'Date', weather: 'Weather', season: 'Season' };
+  const STEP_ORDER = Object.keys(STEP_NAMES);
+
+  // Each step: the start of the sentence, the question, its choices (in calendar order) and the answer.
+  function buildStep(name, now) {
+    const dow = now.getDay();
+    const dayOpts = () => DAYS.map((d, i) => ({ v: i, label: d, pic: weekStrip(i) }));
+    if (name === 'yesterday') return { lead: 'Yesterday was', ask: 'What day was yesterday?', opts: dayOpts(), ans: (dow + 6) % 7 };
+    if (name === 'today') return { lead: 'Today is', ask: 'What day is today?', opts: dayOpts(), ans: dow };
+    if (name === 'tomorrow') return { lead: 'Tomorrow is', ask: 'What day is tomorrow?', opts: dayOpts(), ans: (dow + 1) % 7 };
+    if (name === 'month') return { lead: 'The month is', ask: 'What month is it?', opts: MONTHS.map((m, i) => ({ v: i, label: m, pic: ICONS[MONTH_PIC[i]] })), ans: now.getMonth() };
+    if (name === 'date') {
+      const last = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      return { lead: 'The date is', ask: 'What is the date?', opts: Array.from({ length: last }, (_, i) => ({ v: i + 1, label: String(i + 1), pic: numberPic(i + 1), say: 'the ' + ordinal(i + 1), number: true })), ans: now.getDate() };
+    }
+    if (name === 'weather') {
+      const pick = S.weatherMode === 'pick' && S.weatherPick && S.weatherPick.day === dayKey(now) ? S.weatherPick.v : null;
+      return { lead: 'The weather is', ask: 'What is the weather?', opts: WEATHER.map(([v, l, p]) => ({ v, label: l, pic: ICONS[p], say: l.toLowerCase() })),
+               ans: pick, anyAnswer: pick === null };       // nobody set today's weather: whatever she picks is her answer, from all of them
+    }
+    return { lead: 'The season is', ask: 'What season is it?', opts: SEASONS.map(([v, l, p]) => ({ v, label: l, pic: ICONS[p], say: l.toLowerCase() })), ans: seasonOf(now) };
+  }
+
+  // ---------- Settings (stored on this device) ----------
+  const KEY = 'ble-calendar-v1';
+  const SCREEN_DEFAULTS = { fullscreen: true, choices: '1', weatherMode: 'all', weatherPick: null, showLabels: true, askQuestion: true, wiggle: true,
+    steps: { yesterday: true, today: true, tomorrow: true, month: true, date: true, weather: true, season: true } };
+  let talkS = {}; try { talkS = (JSON.parse(localStorage.getItem('ble-talk-v1') || '{}').settings) || {}; } catch (e) {}
+  const accessFromTalk = {}; A.KEYS.forEach(k => { if (talkS[k] !== undefined) accessFromTalk[k] = talkS[k]; });   // she starts with the same look settings as her talk board
+  const defaults = Object.assign({}, A.DEFAULTS, { accessMode: 'dwell', dwellMs: 1500 }, accessFromTalk, JSON.parse(JSON.stringify(SCREEN_DEFAULTS)));
+  let S = JSON.parse(JSON.stringify(defaults));
+  try { const saved = JSON.parse(localStorage.getItem(KEY) || 'null'); if (saved) { S = Object.assign(S, saved); S.steps = Object.assign({}, SCREEN_DEFAULTS.steps, saved.steps || {}); } } catch (e) {}
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+  const accessOf = () => { const o = {}; A.KEYS.forEach(k => o[k] = S[k]); return o; };
+  const PIC = talkS.picColor || '#ff2b2b';                   // her picture color, from I Can Talk
+  document.documentElement.style.setProperty('--pic', PIC);
+
+  // ---------- Layers: which set of targets can be chosen right now ----------
+  let layer = 'start';
+  const shown = el => !!el && getComputedStyle(el).display !== 'none' && getComputedStyle(el).visibility !== 'hidden';
+  let liveCache = { t: 0, v: 'start' };
+  function liveLayer() {
+    const now = performance.now();
+    if (now - liveCache.t < 50) return liveCache.v;
+    let v = 'app';
+    if (shown($('exitDone'))) v = 'none';
+    else if ($('panel').classList.contains('open')) v = 'sheet';
+    else if (shown($('startScreen'))) v = 'start';
+    liveCache = { t: now, v };
+    return v;
+  }
+  A.setLayer(liveLayer);
+  function setLayer(l) { layer = l; liveCache.t = 0; A.setLayer(liveLayer); lockUnderAim(); }
+  let aim = { x: -9999, y: -9999 }, lockedNode = null;
+  A.onAim((x, y) => {
+    aim = { x, y };
+    if (lockedNode) {
+      const r = lockedNode.getBoundingClientRect();
+      if (!lockedNode.isConnected || x < r.left - 30 || x > r.right + 30 || y < r.top - 30 || y > r.bottom + 30) lockedNode = null;
+    }
+  });
+  function lockUnderAim() {
+    lockedNode = null;
+    if (S.accessMode === 'tap') return;
+    requestAnimationFrame(() => { const el = document.elementFromPoint(aim.x, aim.y); lockedNode = el && el.closest('.tile'); });
+  }
+  let busy = false;                    // while the sentence is being said, before the next step
+  function childTarget(el, run, l) {
+    el.addEventListener('click', () => { if (el === lockedNode || busy) return; run(); });
+    return A.register({
+      node: el, run: () => { if (!busy) run(); }, layer: l || 'app',
+      enabled: () => el !== lockedNode && !el.hidden && !el.classList.contains('nope') && !busy,
+      progress: p => { el.style.setProperty('--p', p); el.classList.toggle('hover', p > 0); },
+    });
+  }
+
+  // ---------- Talking (the same voice as her other apps) ----------
+  // Opened from I Can Talk, the words are said by the board itself, which already has permission to speak.
+  const voiceWin = (() => { try { if (window.parent !== window && window.parent.speechSynthesis) return window.parent; } catch (e) {} return window; })();
+  let chosenVoice = null;
+  function pickVoice() {
+    let vs = []; try { vs = voiceWin.speechSynthesis.getVoices(); } catch (e) {}
+    if (!vs.length) return null;
+    const pref = ['samantha', 'karen', 'tessa', 'victoria', 'moira', 'fiona', 'susan', 'google us english', 'microsoft zira', 'zira', 'ava', 'allison', 'female'];
+    for (const name of pref) { const v = vs.find(v => (v.name || '').toLowerCase().includes(name)); if (v) return v; }
+    return vs.find(v => /^en/i.test(v.lang || '')) || vs[0];
+  }
+  function speak(text) {
+    return new Promise(done => {
+      if (!text || !('speechSynthesis' in voiceWin)) return done();
+      let finished = false; const end = () => { if (!finished) { finished = true; done(); } };
+      try {
+        voiceWin.speechSynthesis.cancel();
+        const u = new voiceWin.SpeechSynthesisUtterance(text);
+        const v = chosenVoice || (chosenVoice = pickVoice()); if (v) u.voice = v;
+        u.rate = 0.9; u.pitch = 1.25;
+        u.onend = end; u.onerror = end;
+        voiceWin.speechSynthesis.speak(u);
+        setTimeout(end, Math.min(12000, 1500 + text.length * 110));
+      } catch (e) { end(); }
+    });
+  }
+  const hush = () => { try { voiceWin.speechSynthesis.cancel(); } catch (e) {} };
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+
+  // ---------- Her calendar, one step at a time ----------
+  const grid = $('grid'), lead = $('lead'), dots = $('dots');
+  let steps = [], idx = 0, answers = {}, unregs = [], runToken = 0;
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const activeSteps = () => STEP_ORDER.filter(n => S.steps[n]);
+  function layoutGrid(n) {
+    let cols = n <= 4 ? n : n <= 12 ? Math.ceil(n / 2) : 8;
+    if (n === 7) cols = 4;
+    const rows = Math.ceil(n / cols);
+    grid.style.gridTemplateColumns = n === 1 ? 'min(46vw, 62vh)' : `repeat(${cols}, minmax(0, 1fr))`;
+    grid.style.gridTemplateRows = `repeat(${rows}, minmax(0, 1fr))`;
+    grid.style.justifyContent = 'center';
+    document.body.dataset.size = n <= 4 ? 'big' : n <= 12 ? 'mid' : 'small';
+  }
+  function tileHTML(o) { return svg(o.pic) + (o.number ? '' : `<span class="label">${esc(o.label)}</span>`); }
+  function clearTiles() { unregs.forEach(f => f()); unregs = []; grid.innerHTML = ''; }
+  function drawDots() {
+    dots.innerHTML = steps.map((s, i) => `<span class="${i < idx ? 'done' : i === idx ? 'now' : ''}"></span>`).join('');
+  }
+  function begin() {
+    steps = activeSteps(); idx = 0; answers = {};
+    if (!steps.length) { S.steps.today = true; save(); steps = ['today']; }
+    showStep();
+  }
+  function showStep() {
+    const token = ++runToken;
+    busy = false; clearTiles(); drawDots();
+    document.body.classList.remove('summary');
+    const name = steps[idx], st = buildStep(name, new Date());
+    lead.innerHTML = `<span>${esc(st.lead)}</span><span class="ans"></span>`;
+    // which choices she sees: all of them, or the answer and a few others (kept in calendar order)
+    let opts = st.opts;
+    const want = S.choices === 'all' ? opts.length : Math.min(opts.length, +S.choices || 1);
+    if (!st.anyAnswer && want < opts.length) {
+      const right = opts.find(o => o.v === st.ans), others = opts.filter(o => o !== right).sort(() => Math.random() - .5).slice(0, want - 1);
+      opts = st.opts.filter(o => o === right || others.includes(o));
+    }
+    layoutGrid(opts.length);
+    opts.forEach(o => {
+      const el = document.createElement('button');
+      el.type = 'button'; el.className = 'tile fill' + (o.number ? ' num' : '');
+      el.innerHTML = tileHTML(o); el.setAttribute('aria-label', o.label);
+      grid.appendChild(el);
+      unregs.push(childTarget(el, () => picked(st, o, el, token)));
+    });
+    lockUnderAim();
+    if (S.askQuestion) speak(st.ask);
+  }
+  async function picked(st, o, el, token) {
+    const right = st.anyAnswer || o.v === st.ans;
+    const word = o.say || o.label;
+    if (S.wiggle) { el.classList.remove('wiggle'); void el.offsetWidth; el.classList.add('wiggle'); }
+    if (!right) {                        // not this one: she hears its name, and it steps back so the others stand out
+      speak(word);
+      el.classList.add('nope');
+      return;
+    }
+    busy = true;
+    answers[steps[idx]] = { st, o };
+    el.classList.add('yes');
+    [...grid.children].forEach(t => { if (t !== el) t.classList.add('nope'); });
+    lead.querySelector('.ans').textContent = ' ' + o.label;
+    await speak(`${st.lead} ${word}.`);
+    await wait(700);
+    if (token !== runToken) return;      // the grown-up started over meanwhile
+    idx++;
+    if (idx < steps.length) showStep(); else showSummary();
+  }
+  // ---------- All done: her whole calendar page, read back ----------
+  function sentenceOf(n) { const a = answers[n]; return a ? `${a.st.lead} ${a.o.say || a.o.label}.` : ''; }
+  function showSummary() {
+    const token = ++runToken;
+    busy = false; clearTiles(); idx = steps.length; drawDots();
+    document.body.classList.add('summary');
+    lead.innerHTML = '<span>My calendar</span>';
+    const done = steps.filter(n => answers[n]);
+    const n = done.length + 2;
+    let cols = n <= 4 ? n : Math.ceil(n / 2); const rows = Math.ceil(n / cols);
+    grid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`; grid.style.gridTemplateRows = `repeat(${rows}, minmax(0, 1fr))`;
+    document.body.dataset.size = n <= 4 ? 'big' : 'mid';
+    done.forEach(name => {
+      const { st, o } = answers[name];
+      const el = document.createElement('button'); el.type = 'button'; el.className = 'tile fill' + (o.number ? ' num' : '');
+      el.innerHTML = svg(o.pic) + `<span class="label">${esc(STEP_NAMES[name] === 'Date' ? 'Date ' + o.label : o.label)}</span>`;
+      el.setAttribute('aria-label', sentenceOf(name));
+      grid.appendChild(el);
+      unregs.push(childTarget(el, () => speak(sentenceOf(name))));
+    });
+    const all = document.createElement('button'); all.type = 'button'; all.className = 'tile fill';
+    all.innerHTML = svg(ICONS.speaker) + '<span class="label">Read it all</span>'; all.setAttribute('aria-label', 'Read it all');
+    grid.appendChild(all); unregs.push(childTarget(all, readAll));
+    const again = document.createElement('button'); again.type = 'button'; again.className = 'tile fill';
+    again.innerHTML = svg(ICONS.again) + '<span class="label">Do it again</span>'; again.setAttribute('aria-label', 'Do it again');
+    grid.appendChild(again); unregs.push(childTarget(again, () => { hush(); begin(); }));
+    lockUnderAim();
+    wait(300).then(() => { if (token === runToken) readAll(); });
+  }
+  function readAll() { speak(steps.filter(n => answers[n]).map(sentenceOf).join(' ')); }
+
+  // ---------- Back to I Can Talk (when she came from her talk board) ----------
+  const FROM_KEY = 'bleFromTalk:' + location.pathname;
+  let fromTalk = false;
+  try {
+    const q = new URLSearchParams(location.search);
+    if (q.get('from') === 'talk') { sessionStorage.setItem(FROM_KEY, '1'); q.delete('from'); history.replaceState(history.state, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash); }
+    fromTalk = sessionStorage.getItem(FROM_KEY) === '1';
+  } catch (e) {}
+  const talkBtn = $('homeBtn');
+  talkBtn.innerHTML = svg(ICONS.talkhome) + '<span class="label">Talk</span>';
+  talkBtn.hidden = !fromTalk;
+  function backToTalk() {
+    hush(); runToken++;
+    try { if (window.parent !== window && window.parent.bleCloseApp) { window.parent.bleCloseApp(); return; } } catch (e) {}
+    location.href = '/talk/?home';
+  }
+  childTarget(talkBtn, backToTalk);
+
+  // ---------- Start (lets the browser speak) ----------
+  const startScreen = $('startScreen');
+  $('startBtn').innerHTML = svg(ICONS.calendar) + '<span class="label">Start</span>';
+  let startUnreg = null;
+  function start() {
+    try { const u = new voiceWin.SpeechSynthesisUtterance(' '); u.volume = 0; voiceWin.speechSynthesis.speak(u); } catch (e) {}
+    startScreen.style.display = 'none';
+    if (startUnreg) { startUnreg(); startUnreg = null; }
+    setLayer('app'); begin();
+  }
+  startUnreg = childTarget($('startBtn'), start, 'start');
+  function firstGesture(e) {
+    if (e.target && e.target.closest && e.target.closest('#panel, #panelScrim')) return;
+    if ($('exitDone').style.display === 'flex') return;
+    try { const u = new voiceWin.SpeechSynthesisUtterance(' '); u.volume = 0; voiceWin.speechSynthesis.speak(u); } catch (er) {}
+    const el = document.documentElement;
+    if (window.parent === window && S.fullscreen !== false && !document.fullscreenElement && el.requestFullscreen) el.requestFullscreen().catch(() => {});
+  }
+  addEventListener('pointerdown', firstGesture, true);
+  addEventListener('keydown', firstGesture, true);
+
+  // ================= Settings sheet =================
+  function seg(id, get, set) {
+    const sync = () => $(id).querySelectorAll('button').forEach(b => {
+      const on = b.dataset.v === String(get()); b.classList.toggle('sel', on); b.setAttribute('aria-pressed', on);
+    });
+    $(id).addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; set(b.dataset.v); syncControls(); save(); });
+    return sync;
+  }
+  const syncers = [];
+  let changed = false;                 // a change to her steps starts the calendar over when the menu closes
+  syncers.push(seg('segChoices', () => S.choices, v => { S.choices = v; changed = true; }));
+  syncers.push(seg('segWeatherMode', () => S.weatherMode, v => { S.weatherMode = v; changed = true; }));
+  syncers.push(seg('segWeatherPick', () => (S.weatherPick && S.weatherPick.day === dayKey(new Date())) ? S.weatherPick.v : '',
+    v => { S.weatherPick = { day: dayKey(new Date()), v }; changed = true; }));
+  syncers.push(() => { $('weatherPickRow').hidden = S.weatherMode !== 'pick'; });
+  document.querySelectorAll('.trow[data-step]').forEach(row => {
+    const key = row.dataset.step, el = row.querySelector('.toggle');
+    const flip = () => { S.steps[key] = !S.steps[key]; if (!activeSteps().length) S.steps[key] = true; changed = true; save(); syncControls(); };
+    row.addEventListener('click', flip);
+    row.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flip(); } });
+    syncers.push(() => { el.classList.toggle('on', !!S.steps[key]); row.setAttribute('aria-checked', !!S.steps[key]); });
+  });
+  document.querySelectorAll('.trow[data-toggle]').forEach(row => {
+    const el = $(row.dataset.toggle);
+    const key = { tFull: 'fullscreen', tLabels: 'showLabels', tAsk: 'askQuestion', tWiggle: 'wiggle' }[row.dataset.toggle];
+    const flip = () => { S[key] = !S[key]; save(); syncControls(); applyLook(); };
+    row.addEventListener('click', flip);
+    row.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flip(); } });
+    syncers.push(() => { el.classList.toggle('on', !!S[key]); row.setAttribute('aria-checked', !!S[key]); });
+  });
+  function applyLook() { document.body.classList.toggle('nolabels', !S.showLabels); }
+  $('btnFull').onclick = () => {
+    const el = document.documentElement;
+    if (document.fullscreenElement) document.exitFullscreen(); else if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+  };
+  $('btnStartOver').onclick = () => { changed = true; closePanel(); };
+  $('btnResetSettings').onclick = () => { $('resetConfirm').hidden = false; $('panel').querySelector('.pbody').scrollTop = 0; };
+  $('btnResetNo').onclick = () => { $('resetConfirm').hidden = true; };
+  $('btnResetYes').onclick = () => {
+    Object.assign(S, JSON.parse(JSON.stringify(SCREEN_DEFAULTS))); $('resetConfirm').hidden = true; changed = true;
+    save(); syncControls(); applyLook();
+  };
+  // ---- Choosing without touch: the same rows and steps as every Bright Little Eyes app ----
+  function applyAccess() { A.configure(accessOf()); syncAccessRows(); }
+  function syncAccessRows() {
+    const mark = (id, v) => $(id).querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === v));
+    mark('segMode', S.accessMode); mark('segAim', S.aimSource); mark('segDot', S.showDot ? 'on' : 'off');
+    $('stDwell').querySelector('.sv').textContent = S.dwellMs + ' ms';
+    $('stCool').querySelector('.sv').textContent = S.cooldownMs + ' ms';
+    $('stGain').querySelector('.sv').textContent = S.gain + '×';
+    $('accessMore').style.display = S.accessMode === 'tap' ? 'none' : 'block';
+    $('cameraRows').style.display = S.aimSource === 'head' ? 'block' : 'none';
+    const c = A.cameraState();
+    $('camStatus').textContent = !c.on ? (S.aimSource === 'head' ? 'Starting the camera… (allow it if the browser asks)' : '')
+      : c.noFace ? 'No face found — check the lighting and stay in frame' : 'The yellow circle shows the face it found.';
+  }
+  A.onCameraChange(syncAccessRows);
+  function setAccess(k, v) { S[k] = v; applyAccess(); save(); }
+  $('segMode').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setAccess('accessMode', b.dataset.v); });
+  $('segAim').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setAccess('aimSource', b.dataset.v); });
+  $('segDot').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setAccess('showDot', b.dataset.v === 'on'); });
+  function stepper(id, key, step, min, max) {
+    $(id).addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return;
+      setAccess(key, Math.max(min, Math.min(max, S[key] + step * (+b.dataset.d)))); });
+  }
+  stepper('stDwell', 'dwellMs', 50, 250, 3000);
+  stepper('stCool', 'cooldownMs', 40, 80, 1200);
+  stepper('stGain', 'gain', 2, 6, 40);
+  $('btnCentre').onclick = () => A.setCentre();
+  function syncControls() { syncers.forEach(f => f()); syncAccessRows(); }
+  A.adultControl($('gear'), openPanel);   // the long hold is the grown-up gate
+  function exitApp() {
+    hush(); runToken++;
+    const done = () => {
+      try { window.close(); } catch (e) {}
+      setTimeout(() => { A.setLayer(() => 'none'); A.configure(Object.assign({}, A.settings(), { showDot: false })); $('exitDone').style.display = 'flex'; }, 250);
+    };
+    if (document.fullscreenElement) document.exitFullscreen().then(done, done); else done();
+  }
+  (() => {
+    const btn = $('exitBtn'); let t = 0;
+    if (fromTalk) { btn.style.display = 'none'; return; }     // inside I Can Talk, her Talk button goes back
+    const cancel = () => { if (t) { clearTimeout(t); t = 0; } btn.style.background = ''; };
+    btn.addEventListener('pointerdown', e => {
+      e.preventDefault(); cancel(); btn.style.background = '#555';
+      t = setTimeout(() => { t = 0; btn.style.background = ''; exitApp(); }, 800);
+    });
+    ['pointerup', 'pointercancel'].forEach(ev => addEventListener(ev, cancel, true));
+    btn.addEventListener('pointerleave', cancel);
+    btn.addEventListener('click', e => e.preventDefault());
+    btn.addEventListener('contextmenu', e => e.preventDefault());
+  })();
+  $('exitReopen').onclick = () => { location.href = location.pathname; };
+  function openPanel() {
+    changed = false;
+    syncControls(); $('resetConfirm').hidden = true;
+    ['panel', 'panelArrow', 'panelScrim'].forEach(id => $(id).classList.add('open'));
+    A.attachPreview($('camPreview'));
+    liveCache.t = 0;
+  }
+  function closePanel() {
+    ['panel', 'panelArrow', 'panelScrim'].forEach(id => $(id).classList.remove('open'));
+    A.detachPreview();
+    liveCache.t = 0;
+    if (changed && startScreen.style.display === 'none') { hush(); begin(); } else lockUnderAim();
+    changed = false;
+  }
+  $('closePanel').onclick = closePanel;
+  $('panelScrim').onclick = closePanel;
+
+  addEventListener('resize', () => {});
+  applyAccess(); applyLook();
+  if (fromTalk) start();                // she already pressed Start on her talk board
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+})();
+</script>
+
+</body>
+</html>

@@ -37,7 +37,7 @@
   }
   function guard(e){
     if (!e.isTrusted) return;
-    if (!menuOpen()) mouseMenu = false;                       // the menu closed: mouse goes back to being blocked
+    if (!menuOpen() && !document.querySelector('body.editing')) mouseMenu = false;   // the menu closed (and no editing): mouse goes back to being blocked
     if (kind(e) !== 'mouse') return;
     var t = e.target; if (!t || !t.closest) return;
     var holder = t.closest(HOLDERS);

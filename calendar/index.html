@@ -37,7 +37,7 @@
   }
   function guard(e){
     if (!e.isTrusted) return;
-    if (!menuOpen()) mouseMenu = false;                       // the menu closed: mouse goes back to being blocked
+    if (!menuOpen() && !document.querySelector('body.editing')) mouseMenu = false;   // the menu closed (and no editing): mouse goes back to being blocked
     if (kind(e) !== 'mouse') return;
     var t = e.target; if (!t || !t.closest) return;
     var holder = t.closest(HOLDERS);
@@ -885,18 +885,19 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   // The days, like her calendar page: Sunday church, Monday school, Tuesday and Thursday the computer arrow,
   // Wednesday the camel (hump day), Friday a party, Saturday a happy face. Each one moves (a still version too).
   const SPL = 'calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"';
-  const ARROW = `<g><animateTransform attributeName="transform" type="translate" dur="1.8s" repeatCount="indefinite" keyTimes="0;0.4;0.55;1" values="22 22;0 0;0 0;22 22"/><path d="M30 26v62l15-15 11 26 13-6-11-25h21z" stroke="${K}" stroke-width="3" stroke-linejoin="round"/></g><circle cx="30" cy="26" r="4" fill="none" stroke="currentColor" stroke-width="6" opacity="0"><animate attributeName="r" dur="1.8s" repeatCount="indefinite" keyTimes="0;0.4;0.75;1" values="4;4;24;24"/><animate attributeName="opacity" dur="1.8s" repeatCount="indefinite" keyTimes="0;0.39;0.4;0.75;1" values="0;0;1;0;0"/></circle>`;
+  // Tuesday and Thursday: a box with a big T, and the computer arrow clicking it
+  const TBOX = `<rect x="8" y="6" width="66" height="66" rx="8" fill="none" stroke="currentColor" stroke-width="8"/><text x="41" y="60" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="54">T</text><g><animateTransform attributeName="transform" type="translate" dur="1.8s" repeatCount="indefinite" keyTimes="0;0.4;0.55;1" values="16 16;0 0;0 0;16 16"/><g transform="translate(56 56) scale(.55) translate(-30 -26)"><path d="M30 26v62l15-15 11 26 13-6-11-25h21z" stroke="${K}" stroke-width="6" stroke-linejoin="round"/></g></g><circle cx="56" cy="56" r="4" fill="none" stroke="currentColor" stroke-width="5" opacity="0"><animate attributeName="r" dur="1.8s" repeatCount="indefinite" keyTimes="0;0.4;0.75;1" values="4;4;20;20"/><animate attributeName="opacity" dur="1.8s" repeatCount="indefinite" keyTimes="0;0.39;0.4;0.75;1" values="0;0;1;0;0"/></circle>`;
   const DAY_PIC = [
     // Sunday: church, its bell swinging
     `<rect x="48.5" y="0" width="3" height="11"/><rect x="44.5" y="3" width="11" height="3"/><rect x="38" y="10" width="24" height="30"/><rect x="42" y="14" width="16" height="18" fill="${K}"/><g><animateTransform attributeName="transform" type="rotate" dur="1.6s" repeatCount="indefinite" values="-24 50 15;24 50 15;-24 50 15" ${SPL}/><path d="M44 28c0-8 2-13 6-13s6 5 6 13z"/><circle cx="50" cy="30" r="2.5"/></g><path d="M12 54L50 30l38 24z"/><rect x="20" y="52" width="60" height="44"/><path d="M42 96V78a8 8 0 0 1 16 0v18z" fill="${K}"/><rect x="26" y="62" width="10" height="12" rx="5" fill="${K}"/><rect x="64" y="62" width="10" height="12" rx="5" fill="${K}"/>`,
     // Monday: school bus, rolling
     `<g><animateTransform attributeName="transform" type="translate" dur="1.2s" repeatCount="indefinite" values="-5 0;5 -3;-5 0" ${SPL}/><rect x="6" y="18" width="88" height="58" rx="10"/><rect x="14" y="26" width="20" height="20" rx="3" fill="${K}"/><rect x="40" y="26" width="20" height="20" rx="3" fill="${K}"/><rect x="66" y="26" width="20" height="20" rx="3" fill="${K}"/><rect x="6" y="54" width="88" height="5" fill="${K}"/><circle cx="26" cy="80" r="12" stroke="${K}" stroke-width="3"/><circle cx="74" cy="80" r="12" stroke="${K}" stroke-width="3"/><circle cx="26" cy="80" r="4" fill="${K}"/><circle cx="74" cy="80" r="4" fill="${K}"/></g>`,
-    // Tuesday: the computer arrow, clicking
-    ARROW,
+    // Tuesday: T in a box, the arrow clicking it
+    TBOX,
     // Wednesday: camel (hump day), walking
     `<g><animateTransform attributeName="transform" type="translate" dur="1.4s" repeatCount="indefinite" values="0 0;0 -3;0 0" ${SPL}/><path d="M14 56C14 20 34 18 37 42C40 18 60 20 62 56z"/><ellipse cx="40" cy="60" rx="28" ry="12"/><path d="M37 42c-2 4-2 8 0 12" fill="none" stroke="${K}" stroke-width="0"/><path d="M62 54c6-6 8-22 12-30 3-5 12-6 16-1 2 2 2 5 0 7l-6 1c-3 1-4 4-5 10-1 9-4 17-11 21z"/><circle cx="84" cy="27" r="2.2" fill="${K}"/><g><animateTransform attributeName="transform" type="rotate" dur="1.4s" repeatCount="indefinite" values="-10 26 64;10 26 64;-10 26 64" ${SPL}/><rect x="20" y="62" width="7" height="32" rx="3"/><rect x="52" y="62" width="7" height="32" rx="3"/></g><g><animateTransform attributeName="transform" type="rotate" dur="1.4s" repeatCount="indefinite" values="10 34 64;-10 34 64;10 34 64" ${SPL}/><rect x="31" y="62" width="7" height="32" rx="3"/><rect x="61" y="62" width="7" height="32" rx="3"/></g></g>`,
-    // Thursday: the computer arrow, clicking
-    ARROW,
+    // Thursday: T in a box, the arrow clicking it
+    TBOX,
     // Friday: party! arms waving, confetti falling
     `<g><animateTransform attributeName="transform" type="translate" dur="2s" repeatCount="indefinite" values="0 -30;0 110"/><rect x="10" y="0" width="9" height="9" transform="rotate(20 14 4)"/><circle cx="84" cy="-30" r="5"/><rect x="66" y="-60" width="9" height="9" transform="rotate(-20 70 -56)"/><circle cx="26" cy="-70" r="5"/></g><g><animateTransform attributeName="transform" type="translate" dur="2s" begin="-1s" repeatCount="indefinite" values="0 -30;0 110"/><circle cx="16" cy="-40" r="5"/><rect x="80" y="0" width="9" height="9" transform="rotate(30 84 4)"/><circle cx="70" cy="-10" r="5"/></g><circle cx="50" cy="30" r="12"/><path d="M38 46h24l4 28H58l-2 22h-12l-2-22h-8z"/><g><animateTransform attributeName="transform" type="rotate" dur="0.9s" repeatCount="indefinite" values="10 40 48;-25 40 48;10 40 48" ${SPL}/><rect x="36" y="16" width="8" height="34" rx="4" transform="rotate(-30 40 48)"/></g><g><animateTransform attributeName="transform" type="rotate" dur="0.9s" repeatCount="indefinite" values="-10 60 48;25 60 48;-10 60 48" ${SPL}/><rect x="56" y="16" width="8" height="34" rx="4" transform="rotate(30 60 48)"/></g>`,
     // Saturday: a happy face, wobbling with joy

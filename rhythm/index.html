@@ -1011,9 +1011,14 @@ function render(){
   const D=S.data;
   const placed = CHG_IDS.filter(id=>D.slots[id] && findTag('flag', D.slots[id]));
   const open = CHG_IDS.find(id=>!placed.includes(id));
-  $('#chgSlot').innerHTML = placed.map(id=>`<button class="slotbtn flag filled" data-slot="${id}">${esc(findTag('flag',D.slots[id]).name)}</button>`).join('')
-    + (open ? `<button class="slotbtn flag" data-slot="${open}">${placed.length?'+ Add another':'+ Put a red tag here'}</button>` : '');
+  const kidView = S.role!=='parent';   // only a parent can add, change or take off red tags
+  $('#chgSlot').innerHTML = placed.map(id=> kidView
+      ? `<span class="slotbtn flag filled" style="display:inline-flex;align-items:center;cursor:default">${esc(findTag('flag',D.slots[id]).name)}</span>`
+      : `<button class="slotbtn flag filled" data-slot="${id}">${esc(findTag('flag',D.slots[id]).name)}</button>`).join('')
+    + (open && !kidView ? `<button class="slotbtn flag" data-slot="${open}">${placed.length?'+ Add another':'+ Put a red tag here'}</button>` : '');
   $('#flags').classList.toggle('active', placed.length>0);
+  $('#flags').hidden = kidView && !placed.length;
+  $('#flags .hint').textContent = kidView ? 'Today won\'t follow the usual rhythm. We\'ll talk it through at breakfast.' : 'If today won\'t follow the usual rhythm, put a red tag here (up to 3) and talk it through at breakfast.';
 
   $('#board').innerHTML = BLOCKS.map(b=>`
     <section class="block">
@@ -1173,7 +1178,7 @@ $('#app').addEventListener('click', e=>{
   const t=e.target.closest('button'); if(!t) return;
   const D=S.data;
   if(t.dataset.check){ const k=t.dataset.check; if(D.checks[k]) delete D.checks[k]; else D.checks[k]=true; save(); render(); return; }
-  if(t.dataset.slot){ openPicker(t.dataset.slot); return; }
+  if(t.dataset.slot){ if(isChg(t.dataset.slot) && S.role!=='parent') return; openPicker(t.dataset.slot); return; }
   if(t.dataset.tact){ const id=t.dataset.tid, a=t.dataset.tact, info=timerInfo(id); if(!info) return;
     if(a==='start'){ S.timers[id]=Date.now()+info.secs*1000; delete S.paused[id]; }
     if(a==='pause'){ S.paused[id]=Math.max(0,S.timers[id]-Date.now()); delete S.timers[id]; }
@@ -1190,7 +1195,7 @@ $('#app').addEventListener('click', e=>{
     case 'copyTags': copyYesterday(); break;
     case 'clearTags':
       if(!Object.keys(D.slots).length){ toast('No tags placed yet today.'); break; }
-      if(confirm('Take all tags off today\'s board?')){ D.slots={}; S.timers={}; S.paused={}; save(); render(); }
+      if(confirm('Take all tags off today\'s board?')){ const keep={}; if(S.role!=='parent') CHG_IDS.forEach(k=>{ if(D.slots[k]) keep[k]=D.slots[k]; }); D.slots=keep; S.timers={}; S.paused={}; save(); render(); }
       break;
     case 'editBtn': if(S.role==='parent') openEditor(); break;
     case 'logout': if(confirm('Log out on this device?')){ setRole(null); S.role=null; S.timers={}; S.paused={}; route(); } break;

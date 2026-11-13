@@ -1037,19 +1037,24 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   const turn = (values, dur) => inner => `<g>${anim('rotate', values, dur)}${inner}</g>`;
   const grow = (cx, cy, to, dur, xOnly) => inner =>
     `<g transform="translate(${cx} ${cy})"><g>${anim('scale', xOnly ? `1 1;${to} 1;1 1` : `1;${to};1`, dur)}<g transform="translate(${-cx} ${-cy})">${inner}</g></g></g>`;
+  const fit = k => inner => `<g transform="translate(50 50) scale(${k}) translate(-50 -50)">${inner}</g>`;   // room to move inside the button
   const MOTION = {
     go: slide('-5 0;7 0;-5 0', 1.4),                         // the arrow pushes forward
     stop: grow(50, 50, 1.1, 1.6),                             // the sign pulses
     closed: grow(50, 52, 1.06, 2),
-    heart: grow(50, 52, 1.16, 1.1),                           // a heartbeat
+    heart: inner => fit(0.9)(grow(50, 52, 1.14, 1.1)(inner)),  // a heartbeat
+    hello: fit(0.84),                                         // her signs: room for the hand to move
+    more: fit(0.86),
+    alldone: fit(0.76),
     toys: slide('0 3;0 -7;0 3', 1.2),                         // the bear bounces
     paw: slide('0 4;0 -6;0 4', 1.3),                          // the paw steps
-    pawsound: grow(44, 56, 1.08, 1.2),
-    note: turn('-12 58 90;12 58 90;-12 58 90', 1.4),          // the note rocks to the music
-    notes: turn('-10 48 90;10 48 90;-10 48 90', 1.4),
-    book: grow(50, 55, 0.72, 1.8, true),                      // the book opens and closes
+    pawsound: inner => fit(0.86)(grow(44, 56, 1.06, 1.2)(inner)),
+    note: inner => fit(0.84)(turn('-10 58 90;10 58 90;-10 58 90', 1.4)(inner)),   // the note rocks to the music
+    notes: inner => fit(0.84)(turn('-8 48 90;8 48 90;-8 48 90', 1.4)(inner)),
+    book: inner => inner +                                    // a page turns, right to left
+      `<g transform="translate(50 0)"><g><animateTransform attributeName="transform" type="scale" dur="2.4s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.15;0.65;1" values="1 1;1 1;-1 1;-1 1" keySplines="0 0 1 1;0.45 0 0.55 1;0 0 1 1"/><g transform="translate(-50 0)"><path d="M96 20c-16-6-32-6-44 4v66c12-8 28-8 44-4z" stroke="#000" stroke-width="4" stroke-linejoin="round"/><path d="M60 36c9-3 18-3 28-1M60 50c9-3 18-3 28-1M60 64c9-3 18-3 28-1" fill="none" stroke="#000" stroke-width="4" stroke-linecap="round"/></g></g></g>`,
     tablet: grow(50, 50, 1.08, 1.6),
-    calendar: turn('-7 50 6;7 50 6;-7 50 6', 1.8),            // the calendar swings on its rings
+    calendar: inner => fit(0.84)(turn('-6 50 8;6 50 8;-6 50 8', 1.8)(inner)),   // the calendar swings on its rings
   };
   const iconArt = name => {
     if (S.moving === false) return ICONS[name + 'still'] || ICONS[name].replace(/<animate(Transform)?\b[^>]*\/>/g, '');   // (Yes and No draw themselves in)

@@ -355,6 +355,19 @@
   /* grown-up dialogs */
   .dlgScrim{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center}
   .dlgScrim.show{display:flex}
+  #pinScrim{z-index:150}
+  .pinDlg{width:min(380px,92vw);text-align:center}
+  #pinDots{display:flex;justify-content:center;gap:16px;margin:10px 0 18px;min-height:40px;font:800 34px -apple-system,"Segoe UI",sans-serif}
+  #pinDots span{width:22px;height:22px;border-radius:50%;border:3px solid #8e8e93;margin-top:8px}
+  #pinDots span.on{background:#fff;border-color:#fff}
+  #pinDots b{width:30px}
+  #pinPad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  #pinPad button{height:68px;border-radius:14px;border:none;background:#2c2c2e;color:#fff;font:700 30px -apple-system,"Segoe UI",sans-serif;cursor:pointer}
+  #pinPad button.pk{font-size:20px;background:#3a3a3c}
+  #pinPad button:active{background:#48484a}
+  #pinMsg{min-height:22px;margin:14px 0 0;color:#ff9f0a;font-size:16px}
+  .pinDlg.shake{animation:pinShake .35s}
+  @keyframes pinShake{0%,100%{transform:none}25%{transform:translateX(-12px)}75%{transform:translateX(12px)}}
   .dlg{background:#1c1c1e;color:#fff;border-radius:16px;padding:20px;width:min(460px,92vw);max-height:90vh;overflow:auto;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-user-select:text;user-select:text}
   .dlg h3{margin:0 0 10px}
@@ -496,6 +509,12 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   </div>
 
   <div class="psec">
+    <div class="phead">Grown-up PIN</div>
+    <p class="caption" id="pinCaption">No PIN: holding the gear opens Settings.</p>
+    <div class="btnrow"><button type="button" class="tbtn b" id="btnPinSet">Set a PIN</button><button type="button" class="tbtn" id="btnPinOff" hidden>Turn off PIN</button></div>
+  </div>
+
+  <div class="psec">
     <div class="phead">Board</div>
     <p class="caption">Her words, pictures and pages are saved on this device.</p>
     <div class="btnrow"><button type="button" class="tbtn b" id="btnEdit">Edit board</button><button type="button" class="tbtn" id="btnBackup">Pages &amp; backup</button></div>
@@ -567,6 +586,20 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
 </div>
 
 <!-- Grown-up dialogs -->
+<div class="dlgScrim" id="pinScrim">
+  <div class="dlg pinDlg" role="dialog" aria-label="Grown-up PIN">
+    <h3 id="pinTitle">Grown-up PIN</h3>
+    <div id="pinDots"></div>
+    <div id="pinPad">
+      <button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button>
+      <button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button>
+      <button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button>
+      <button type="button" data-k="cancel" class="pk">Cancel</button><button type="button" data-k="0">0</button><button type="button" data-k="del" class="pk">⌫</button>
+    </div>
+    <p id="pinMsg"></p>
+  </div>
+</div>
+
 <div class="dlgScrim" id="editScrim">
   <div class="dlg">
     <h3>Edit button</h3>
@@ -1666,7 +1699,62 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     });
   }
 
-  A.adultControl($('gear'), openPanel);   // the long hold is the grown-up gate
+  // ---------- Grown-up PIN: asked once each time I Can Talk opens (finger or mouse only; looking can't type it) ----------
+  const PIN_KEY = 'bleTalkPin';
+  let pinUnlocked = false, pinMode = null, pinDone = null, pinEntry = '';
+  const hasPin = () => { try { return !!localStorage.getItem(PIN_KEY); } catch (e) { return false; } };
+  async function pinHash(d) {
+    const txt = 'ble-talk-pin:' + d;
+    try { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(txt)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join(''); }
+    catch (e) { let h = 0; for (const ch of txt) h = (h * 31 + ch.charCodeAt(0)) | 0; return 'h' + h; }
+  }
+  function pinShow(mode, done) {
+    pinMode = mode; pinDone = done; pinEntry = '';
+    $('pinTitle').textContent = mode === 'set' ? 'Type a new 4-number PIN' : 'Grown-up PIN';
+    $('pinMsg').textContent = '';
+    pinDraw(); $('pinScrim').classList.add('show'); liveCache.t = 0;
+  }
+  function pinHide() { $('pinScrim').classList.remove('show'); pinMode = null; liveCache.t = 0; }
+  function pinDraw() {   // setting it: the numbers show, so you can see what you typed; asking for it: dots
+    $('pinDots').innerHTML = pinMode === 'set'
+      ? [0, 1, 2, 3].map(i => i < pinEntry.length ? `<b>${pinEntry[i]}</b>` : '<span></span>').join('')
+      : [0, 1, 2, 3].map(i => `<span class="${i < pinEntry.length ? 'on' : ''}"></span>`).join('');
+  }
+  $('pinPad').addEventListener('click', async e => {
+    const b = e.target.closest('button'); if (!b || !pinMode) return;
+    const k = b.dataset.k;
+    if (k === 'cancel') { pinHide(); return; }
+    if (k === 'del') { pinEntry = pinEntry.slice(0, -1); pinDraw(); return; }
+    if (pinEntry.length >= 4) return;
+    pinEntry += k; pinDraw();
+    if (pinEntry.length < 4) return;
+    const entered = pinEntry, mode = pinMode, done = pinDone;
+    if (mode === 'set') {
+      try { localStorage.setItem(PIN_KEY, await pinHash(entered)); } catch (er) {}
+      pinUnlocked = true; $('pinMsg').textContent = 'PIN saved: ' + entered;
+      setTimeout(() => { pinHide(); syncPinRow(); done && done(); }, 1100);
+      return;
+    }
+    let ok = false; try { ok = (await pinHash(entered)) === localStorage.getItem(PIN_KEY); } catch (er) {}
+    if (ok) { pinUnlocked = true; pinHide(); done && done(); }
+    else {
+      $('pinMsg').textContent = 'Not that one. Try again.'; pinEntry = '';
+      const d = document.querySelector('.pinDlg'); d.classList.remove('shake'); void d.offsetWidth; d.classList.add('shake');
+      setTimeout(pinDraw, 250);
+    }
+  });
+  function syncPinRow() {
+    const on = hasPin();
+    $('pinCaption').textContent = on ? 'On: the PIN is asked once each time I Can Talk opens.' : 'No PIN: holding the gear opens Settings.';
+    $('btnPinSet').textContent = on ? 'Change PIN' : 'Set a PIN';
+    $('btnPinOff').hidden = !on;
+  }
+  $('btnPinSet').onclick = () => pinShow('set');
+  $('btnPinOff').onclick = () => { try { localStorage.removeItem(PIN_KEY); } catch (e) {} syncPinRow(); };
+  syncPinRow();
+  A.adultControl($('gear'), () => {      // the long hold is the grown-up gate; then the PIN, if one is set
+    if (!hasPin() || pinUnlocked) openPanel(); else pinShow('ask', openPanel);
+  });
   // Pause: a grown-up holds it to turn looking off (and again to turn it back on). Clicks and taps still choose.
   A.adultControl($('pauseBtn'), () => {   // looking off / on; clicks and taps keep working
     const on = !document.body.classList.contains('paused');

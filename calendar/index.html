@@ -898,8 +898,10 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     icecream: `<path d="M28 50h44L50 98z"/><circle cx="50" cy="34" r="24"/><path d="M34 62l26 12M66 62L42 74" stroke="${K}" stroke-width="3"/>`,
     apple: `<path d="M50 30c-12-8-38-6-38 20 0 24 16 44 28 44 5 0 7-3 10-3s5 3 10 3c12 0 28-20 28-44 0-26-26-28-38-20z"/><path d="M50 32c0-12 3-20 8-26" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"/><path d="M56 20c8-10 22-10 28-6-8 9-20 10-28 6z"/>`,
     pumpkin: `<ellipse cx="32" cy="60" rx="24" ry="32"/><ellipse cx="68" cy="60" rx="24" ry="32"/><ellipse cx="50" cy="60" rx="20" ry="34" stroke="${K}" stroke-width="4"/><rect x="45" y="10" width="10" height="20" rx="3"/>`,
-    turkey: (() => { let s = ''; for (let a = -70; a <= 70; a += 35) s += `<ellipse cx="50" cy="28" rx="11" ry="28" transform="rotate(${a} 50 64)"/>`;
-      return s + `<circle cx="50" cy="64" r="24" stroke="${K}" stroke-width="4"/><circle cx="50" cy="40" r="11" stroke="${K}" stroke-width="3"/><circle cx="46" cy="38" r="2.5" fill="${K}"/><path d="M56 40l10 4-10 4z"/><path d="M42 86l-4 12M58 86l4 12" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>`; })(),
+    turkey: (() => {   // drawn smaller so the feathers fit
+      const t = (() => { let s = ''; for (let a = -70; a <= 70; a += 35) s += `<ellipse cx="50" cy="28" rx="11" ry="28" transform="rotate(${a} 50 64)"/>`;
+      return s + `<circle cx="50" cy="64" r="24" stroke="${K}" stroke-width="4"/><circle cx="50" cy="40" r="11" stroke="${K}" stroke-width="3"/><circle cx="46" cy="38" r="2.5" fill="${K}"/><path d="M56 40l10 4-10 4z"/><path d="M42 86l-4 12M58 86l4 12" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>`; })();
+      return `<g transform="translate(50 49) scale(0.76) translate(-50 -49)">${t}</g>`; })(),
     tree: `<path d="M50 4L82 42H66L90 74H10L34 42H18z"/><rect x="42" y="72" width="16" height="24"/>`,
     // weather
     cloud: `<path d="M24 80c-12 0-20-8-20-19 0-11 9-19 20-18 3-14 14-23 28-23 13 0 24 9 27 22 10 1 17 9 17 19 0 11-8 19-18 19z"/>`,
@@ -933,8 +935,10 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     // Saturday: a happy face, wobbling with joy
     `<g><animateTransform attributeName="transform" type="rotate" dur="1.6s" repeatCount="indefinite" values="-10 50 92;10 50 92;-10 50 92" ${SPL}/><circle cx="50" cy="50" r="42"/><ellipse cx="35" cy="40" rx="6" ry="8" fill="${K}"><animate attributeName="ry" dur="3.2s" repeatCount="indefinite" keyTimes="0;0.9;0.95;1" values="8;8;1;8"/></ellipse><ellipse cx="65" cy="40" rx="6" ry="8" fill="${K}"><animate attributeName="ry" dur="3.2s" repeatCount="indefinite" keyTimes="0;0.9;0.95;1" values="8;8;1;8"/></ellipse><path d="M26 56c8 24 40 24 48 0z" fill="${K}"/></g>`,
   ];
+  const fitIn = (pic, cx, cy, k) => `<g transform="translate(${cx} ${cy}) scale(${k}) translate(-50 -50)">${pic}</g>`;   // room to move inside the button
+  const DAY_FIT = { 2: [50, 44, 0.86], 4: [50, 44, 0.86], 6: [50, 55, 0.86] };
   const still = pic => pic.replace(/<animate(Transform)?\b[^>]*\/>/g, '').replace(/<animate\b[^>]*>/g, '');
-  const dayPic = i => S.moving === false ? still(DAY_PIC[i]) : DAY_PIC[i];
+  const dayPic = i => { const pic = S.moving === false ? still(DAY_PIC[i]) : DAY_PIC[i]; const f = DAY_FIT[i]; return f ? fitIn(pic, f[0], f[1], f[2]) : pic; };
   const numberPic = n => `<text x="50" y="74" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="${n > 9 ? 62 : 74}">${n}</text>`;
 
   // ---------- What she learns ----------

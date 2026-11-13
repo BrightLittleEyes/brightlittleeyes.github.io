@@ -2,7 +2,7 @@
 // Pages: always fetched fresh when online (so updates show on a normal reload), saved copy when offline.
 // Her pictures, videos and sounds: all saved on this device ahead of time, so the whole board,
 // animal videos included, works with no internet.
-const CACHE = 'ble-talk-v3';
+const CACHE = 'ble-talk-v4';
 const PAGES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 const MEDIA = [
   "./animals/bear.mp4",

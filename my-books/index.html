@@ -130,7 +130,7 @@
   #choices {
     position: fixed; inset: 0;
     display: flex; align-items: center; justify-content: center;
-    padding: calc(88px + env(safe-area-inset-top)) 4vmin 4vmin; gap: 3vmin;   /* room for the gear */
+    padding: calc(118px + env(safe-area-inset-top)) 4vmin 4vmin; gap: 3vmin;   /* room for the gear and the Talk button */
   }
   #grid { flex: 1; height: 100%; display: grid; gap: 5vmin; }
   .tile {
@@ -182,12 +182,12 @@
   /* ---------- Back to I Can Talk (top left), like the talk board's Home button ---------- */
   #talkBtn {
     position: fixed; z-index: 60; overflow: hidden;
-    top: calc(8px + env(safe-area-inset-top)); left: calc(12px + env(safe-area-inset-left));
-    height: 72px; padding: 0 30px; display: flex; align-items: center; gap: 14px;
-    background: #000; color: #fff; font: inherit; font-size: 30px; font-weight: 800; cursor: pointer;
+    top: calc(6px + env(safe-area-inset-top)); left: calc(12px + env(safe-area-inset-left));
+    height: 100px; min-width: 200px; padding: 0 32px; display: flex; align-items: center; justify-content: center; gap: 16px;
+    background: #000; color: #fff; font: inherit; font-size: 34px; font-weight: 800; cursor: pointer;
     border: 6px solid var(--target); border-radius: 20px;
   }
-  #talkBtn svg { width: 42px; height: 42px; fill: var(--target); }
+  #talkBtn svg { width: 56px; height: 56px; fill: var(--target); }
   #talkBtn[hidden] { display: none; }
   #talkBtn > * { position: relative; z-index: 1; }
   #talkBtn.hover { box-shadow: 0 0 0 6px var(--ring); }

@@ -304,6 +304,7 @@
     font:700 22px -apple-system,"Segoe UI",sans-serif;white-space:nowrap}
   #pauseCover svg{width:26px;height:26px}
   body.appOpen #pauseBtn, body.appOpen #exitBtn, body.appOpen #pauseCover{z-index:95}   /* above her apps */
+  body.appPlaying #pauseBtn, body.appPlaying #exitBtn, body.appPlaying #pauseCover{display:none !important}   /* not over a video or book while it plays */
   body.paused #pauseCover{display:flex}
   body.paused [data-ble-cursor]{display:none !important}
   #homeBtn{height:100px;min-width:200px;justify-content:center;padding:0 32px;border-width:6px;border-radius:20px;flex-direction:row}
@@ -1495,13 +1496,20 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     applyAccess();                                    // the app shows its own dot; hide the board's
     $('gear').style.visibility = 'hidden';            // the app has its own gear; pause and X stay, on top of the app
     f.addEventListener('load', framePause);
+    f.addEventListener('load', () => {             // while a video or book plays in the app, pause and X step out of the way
+      try {
+        const pl = f.contentDocument.getElementById('player'); if (!pl) return;
+        const upd = () => document.body.classList.toggle('appPlaying', pl.classList.contains('open'));
+        new MutationObserver(upd).observe(pl, { attributes: true, attributeFilter: ['class'] }); upd();
+      } catch (e) {}
+    });
     setTimeout(() => { try { f.focus(); } catch (e) {} }, 300);
   }
   window.bleCloseApp = function () {
     appLayer.style.display = 'none';
     appLayer.innerHTML = '';                            // stops the app (and any video) completely
     $('gear').style.visibility = '';
-    document.body.classList.remove('appOpen');
+    document.body.classList.remove('appOpen', 'appPlaying');
     applyAccess();                                      // the board's own dot comes back
     const back = appReturn; appReturn = null;           // back to the page she opened it from
     if (back && B.cells[back.cur]) { cur = back.cur; part = back.part; partPage = cur; trail = back.trail; }

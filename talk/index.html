@@ -1344,7 +1344,11 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     const paged = used > n || (editing && used >= n);
     const per = n;
     const parts = paged ? Math.max(1, Math.ceil((used + (editing ? 1 : 0)) / per)) : 1;
-    if (paged) grid.style.gridTemplateColumns = `repeat(${c}, minmax(0, 1fr)) minmax(0, .7fr)`;
+    // Back: a tall strip on the left (the part before, or the page she came from when that isn't Home)
+    const prevPage = trail[trail.length - 1];
+    const hasBack = part > 0 || (!!prevPage && prevPage !== B.pages[0] && !!B.cells[prevPage]);
+    const lead = hasBack ? 1 : 0;
+    grid.style.gridTemplateColumns = (hasBack ? 'minmax(0, .7fr) ' : '') + `repeat(${c}, minmax(0, 1fr))` + (paged ? ' minmax(0, .7fr)' : '');
     if (part >= parts) part = parts - 1;
     const off = part * per;
     for (let s = 0; s < per; s++) {
@@ -1372,7 +1376,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
       const lastPart = part === parts - 1;
       const el = document.createElement('button');
       el.type = 'button'; el.className = 'tile fill link pager';
-      el.style.gridColumn = String(c + 1); el.style.gridRow = '1 / -1';
+      el.style.gridColumn = String(c + 1 + lead); el.style.gridRow = '1 / -1';
       const word = lastPart ? 'First page' : 'Next';
       el.innerHTML = (S.picStyle === 'shapes' ? svgOf(lastPart ? 'first' : 'next') : `<span class="sym">${lastPart ? '🔁' : '➡️'}</span>`) + `<span class="label">${word}</span>`;
       el.setAttribute('aria-label', word);
@@ -1380,6 +1384,17 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
       const turn = () => { part = lastPart ? 0 : part + 1; render(); lockUnderAim(); };
       if (editing) el.onclick = turn;
       else unregs.push(childTarget(el, () => { if (S.wiggle) { el.classList.remove('wiggle'); void el.offsetWidth; el.classList.add('wiggle'); } turn(); }));
+    }
+    if (hasBack) {
+      const el = document.createElement('button');
+      el.type = 'button'; el.className = 'tile fill link pager';
+      el.style.gridColumn = '1'; el.style.gridRow = '1 / -1';
+      el.innerHTML = (S.picStyle === 'shapes' ? svgOf('back') : '<span class="sym">⬅️</span>') + '<span class="label">Back</span>';
+      el.setAttribute('aria-label', part > 0 ? 'Back' : 'Back to ' + prevPage);
+      grid.insertBefore(el, grid.firstChild);
+      const back = () => { if (part > 0) part--; else { cur = trail.pop() || B.pages[0]; part = partWhenLeft[cur] || 0; partPage = cur; } render(); lockUnderAim(); };
+      if (editing) el.onclick = back;
+      else unregs.push(childTarget(el, () => { if (S.wiggle) { el.classList.remove('wiggle'); void el.offsetWidth; el.classList.add('wiggle'); } back(); }));
     }
     const onHome = cur === B.pages[0];      // on Home's own parts: back to the first; on Animals and the like: Talk, back to the Home page she came from
     homeBtn.innerHTML = (S.picStyle === 'shapes' ? svgOf('home') : '<span class="sym">🏠</span>') + `<span class="label">${onHome ? 'Home' : 'Talk'}</span>`;
@@ -1392,7 +1407,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     // Back: to the page she came from, when that isn't Home (e.g. More Animals -> Animals)
     if (cur === home) trail = [];
     const prev = trail[trail.length - 1];
-    backBtn.hidden = part === 0 && (!prev || prev === home || !B.cells[prev]);
+    backBtn.hidden = true;                  // Back is the tall strip on the left now
     if (!backBtn.hidden) {
       const to = part > 0 ? 'Back' : prev;      // in a page's parts, Back goes to the part before
       backBtn.innerHTML = (S.picStyle === 'shapes' ? svgOf('back') : '<span class="sym">⬅️</span>') + `<span class="label">${esc(to)}</span>`;

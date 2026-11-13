@@ -1444,13 +1444,17 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   // Paused: looking is off in the app on top too (clicks and taps still choose there)
   function framePause() {
     const f = appLayer.querySelector('iframe'); if (!f) return;
-    const on = document.body.classList.contains('paused');
+    const paused = () => document.body.classList.contains('paused');
     try {
       const w = f.contentWindow, A2 = w.BLEAccess;
-      if (w.document.body) w.document.body.classList.toggle('paused', on);
-      if (!A2 || !A2.settings) return;
-      if (on && !w.__blePausedFrom) { w.__blePausedFrom = A2.settings().accessMode || 'dwell'; A2.configure(Object.assign({}, A2.settings(), { accessMode: 'tap' })); }
-      else if (!on && w.__blePausedFrom) { A2.configure(Object.assign({}, A2.settings(), { accessMode: w.__blePausedFrom })); w.__blePausedFrom = null; }
+      if (w.document.body) w.document.body.classList.toggle('paused', paused());
+      if (!A2 || !A2.configure || !A2.settings) return;
+      if (!A2.__bleOrig) {                     // the app may set its look settings again later (when its saved settings load): keep looking off while paused
+        A2.__bleOrig = A2.configure.bind(A2);
+        A2.__bleWant = Object.assign({}, A2.settings());
+        A2.configure = o => { A2.__bleWant = Object.assign({}, o); return A2.__bleOrig(paused() ? Object.assign({}, o, { accessMode: 'tap' }) : o); };
+      }
+      A2.__bleOrig(paused() ? Object.assign({}, A2.__bleWant, { accessMode: 'tap' }) : A2.__bleWant);
     } catch (e) {}
   }
   function showApp(href) {

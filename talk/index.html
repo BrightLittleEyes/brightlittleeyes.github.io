@@ -1381,7 +1381,9 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
       if (editing) el.onclick = turn;
       else unregs.push(childTarget(el, () => { if (S.wiggle) { el.classList.remove('wiggle'); void el.offsetWidth; el.classList.add('wiggle'); } turn(); }));
     }
-    homeBtn.innerHTML = (S.picStyle === 'shapes' ? svgOf('home') : '<span class="sym">🏠</span>') + '<span class="label">Home</span>';
+    const onHome = cur === B.pages[0];      // on Home's own parts: back to the first; on Animals and the like: Talk, back to the Home page she came from
+    homeBtn.innerHTML = (S.picStyle === 'shapes' ? svgOf('home') : '<span class="sym">🏠</span>') + `<span class="label">${onHome ? 'Home' : 'Talk'}</span>`;
+    homeBtn.setAttribute('aria-label', onHome ? 'Home' : 'Talk');
     $('startBtn').innerHTML = (S.picStyle === 'shapes' ? svgOf('talk') : '<span class="sym">🗣️</span>') + '<span class="label">Start</span>';
     const home = B.pages[0];
     homeBtn.hidden = cur === home && part === 0;
@@ -1509,7 +1511,11 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   video.addEventListener('ended', stopVideo);
   childTarget(closeBtn, stopVideo, 'player');
 
-  childTarget(homeBtn, () => { trail = []; cur = B.pages[0]; part = 0; partPage = cur; render(); lockUnderAim(); });
+  childTarget(homeBtn, () => {
+    const home = B.pages[0];
+    part = cur === home ? 0 : (partWhenLeft[home] || 0);   // Talk: the Home page she came from
+    trail = []; cur = home; partPage = cur; render(); lockUnderAim();
+  });
   childTarget(introBtn, () => speak(INTRO));
   childTarget(backBtn, () => { if (part > 0) part--; else { cur = trail.pop() || B.pages[0]; part = partWhenLeft[cur] || 0; partPage = cur; } render(); lockUnderAim(); });
 

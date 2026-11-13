@@ -454,8 +454,8 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
 <div id="board">
   <div id="topbar">
     <button class="tile fill" id="introBtn" aria-label="Hi, my name is Leah" hidden><span class="label">Hi, my name is Leah</span></button>
-    <button class="tile fill" id="backBtn" aria-label="Back" hidden><span class="label">Back</span></button>
     <button class="tile fill" id="homeBtn" aria-label="Back to Home"><span class="label">🏠 Home</span></button>
+    <button class="tile fill" id="backBtn" aria-label="Back" hidden><span class="label">Back</span></button>
     <div id="pageName"></div>
   </div>
   <div id="grid"></div>
@@ -1352,15 +1352,15 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     const paged = used > n || (editing && used >= n);
     const per = n;
     const parts = paged ? Math.max(1, Math.ceil((used + (editing ? 1 : 0)) / per)) : 1;
-    // Back: a tall strip on the left (the part before, or the page she came from when that isn't Home)
+    // Back sits at the top (so her buttons keep the same size on every page); Next is the tall strip on the right
     const prevPage = trail[trail.length - 1];
-    const hasBack = part > 0 || (!!prevPage && prevPage !== B.pages[0] && !!B.cells[prevPage]);
-    const lead = hasBack ? 1 : 0;
-    grid.style.gridTemplateColumns = (hasBack ? 'minmax(0, .7fr) ' : '') + `repeat(${c}, minmax(0, 1fr))` + (paged ? ' minmax(0, .7fr)' : '');
+    const hasBack = false, lead = 0;
+    grid.style.gridTemplateColumns = (hasBack ? 'minmax(0, .7fr) ' : '') + `repeat(${c}, minmax(0, 1fr)) minmax(0, .7fr)`;   // the Next space is kept on every page, so her buttons never change size
     if (part >= parts) part = parts - 1;
     const off = part * per;
     for (let s = 0; s < per; s++) {
       const i = off + s;
+      const cell = { col: (s % c) + 1 + lead, row: Math.floor(s / c) + 1 };
       const d = list[i];
       const el = document.createElement('button');
       el.type = 'button';
@@ -1368,7 +1368,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
         el.className = 'tile empty';
         el.tabIndex = -1;
         if (editing) { el.innerHTML = '<span class="label">+ add</span>'; el.onclick = () => openEdit(i); }
-        grid.appendChild(el); continue;
+        el.style.gridColumn = String(cell.col); el.style.gridRow = String(cell.row); grid.appendChild(el); continue;
       }
       el.className = 'tile fill' + (d.link ? ' link' : '') + (d.url ? ' app' : '');
       const ic = S.picStyle === 'shapes' ? iconOf(d) : null;
@@ -1376,7 +1376,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
       el.innerHTML = (pic ? '<img alt="">' : ic ? svgOf(ic) : `<span class="sym">${esc(d.sym || '')}</span>`) + `<span class="label">${esc(d.label || '')}</span>`;
       if (pic) { const im = el.querySelector('img'); im.src = pic; if (!d.img && d.still) im.classList.add('animalPic'); }
       el.setAttribute('aria-label', d.label || '');
-      grid.appendChild(el);
+      el.style.gridColumn = String(cell.col); el.style.gridRow = String(cell.row); grid.appendChild(el);
       if (editing) el.onclick = () => openEdit(i);
       else unregs.push(childTarget(el, () => choose(d, el)));
     }
@@ -1415,7 +1415,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     // Back: to the page she came from, when that isn't Home (e.g. More Animals -> Animals)
     if (cur === home) trail = [];
     const prev = trail[trail.length - 1];
-    backBtn.hidden = true;                  // Back is the tall strip on the left now
+    backBtn.hidden = !(part > 0 || (!!prev && prev !== home && !!B.cells[prev]));   // the part before, or the page she came from (not Home: that's Talk)
     if (!backBtn.hidden) {
       const to = part > 0 ? 'Back' : prev;      // in a page's parts, Back goes to the part before
       backBtn.innerHTML = (S.picStyle === 'shapes' ? svgOf('back') : '<span class="sym">⬅️</span>') + `<span class="label">${esc(to)}</span>`;

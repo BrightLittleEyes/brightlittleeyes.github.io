@@ -182,17 +182,19 @@
   }
 
   /* ---------- Back to I Can Talk (top left), like the talk board's Home button ---------- */
-  #talkBtn {
-    position: fixed; z-index: 60; overflow: hidden;
-    top: calc(4px + env(safe-area-inset-top)); left: calc(3vmin + env(safe-area-inset-left));
+  #topLeft { position: fixed; z-index: 60; top: calc(4px + env(safe-area-inset-top)); left: calc(3vmin + env(safe-area-inset-left));
+    display: flex; align-items: center; gap: 2.5vmin; }
+  #pageNum { font-size: clamp(22px, 3.4vmin, 36px); font-weight: 800; color: #fff; white-space: nowrap; }
+  #talkBtn, #prevBtn {
+    position: relative; overflow: hidden; flex: none;
     height: 100px; min-width: 200px; padding: 0 32px; display: flex; align-items: center; justify-content: center; gap: 16px;
     background: #000; color: #fff; font: inherit; font-size: 34px; font-weight: 800; cursor: pointer;
     border: 6px solid var(--target); border-radius: 20px;
   }
-  #talkBtn svg { width: 56px; height: 56px; fill: var(--target); }
-  #talkBtn[hidden] { display: none; }
-  #talkBtn > * { position: relative; z-index: 1; }
-  #talkBtn.hover { box-shadow: 0 0 0 6px var(--ring); }
+  #talkBtn svg, #prevBtn svg { width: 56px; height: 56px; fill: var(--target); }
+  #talkBtn[hidden], #prevBtn[hidden] { display: none; }
+  #talkBtn > *, #prevBtn > * { position: relative; z-index: 1; }
+  #talkBtn.hover, #prevBtn.hover { box-shadow: 0 0 0 6px var(--ring); }
 
   /* ---------- Player (covers the gear while a video plays) ---------- */
   #player { position: fixed; inset: 0; background: #000; display: none; z-index: 65; }
@@ -303,7 +305,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   /* Looking at a choice (any button, picture or not): a thick YELLOW outline drawn just inside the edge,
      so it can never be cut off, and the red fill rising OVER the picture so it always shows. */
   :root { --ring: #ffd400; }
-  .tile.hover::before, .nav.hover::before, #closeBtn.hover::before, #talkBtn.hover::before, #homeBtn.hover::before, #bleTalkBack.hover::before {
+  .tile.hover::before, .nav.hover::before, #closeBtn.hover::before, #talkBtn.hover::before, #prevBtn.hover::before, #homeBtn.hover::before, #bleTalkBack.hover::before {
     content: ''; position: absolute; inset: 0; border: 10px solid #ffd400; border-radius: inherit;
     z-index: 4; pointer-events: none;
   }
@@ -328,9 +330,6 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
 <body>
 
 <div id="choices">
-  <button class="nav fill" id="prevBtn" aria-label="Previous books" hidden>
-    <svg viewBox="0 0 100 100" aria-hidden="true"><path d="M94 38H48V14L6 50l42 36V62h46z" fill="var(--target)"/></svg><span>Back</span>
-  </button>
   <div id="grid"></div>
   <button class="nav fill" id="nextBtn" aria-label="More books" hidden>
     <svg viewBox="0 0 100 100" aria-hidden="true"><path d="M6 38h46V14l42 36-42 36V62H6z" fill="var(--target)"/></svg><span>Next</span>
@@ -346,7 +345,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   </button>
 </div>
 
-<button id="talkBtn" class="fill" aria-label="Back to I Can Talk"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 6l46 40H82v48H58V66H42v28H18V46H4z"/></svg><span>Talk</span></button>
+<div id="topLeft"><button id="talkBtn" class="fill" aria-label="Back to I Can Talk"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 6l46 40H82v48H58V66H42v28H18V46H4z"/></svg><span>Talk</span></button><button id="prevBtn" class="fill" aria-label="Back" hidden><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M94 38H48V14L6 50l42 36V62h46z"/></svg><span>Back</span></button><span id="pageNum"></span></div>
 
 <button id="gear" title="Settings (grown-ups: press and hold)" aria-label="Settings. Grown-ups: press and hold."></button>
 
@@ -842,7 +841,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     if (A.settings().accessMode === 'tap') return;
     requestAnimationFrame(() => {
       const el = document.elementFromPoint(aim.x, aim.y);
-      lockedNode = el && el.closest('.tile, .nav, #closeBtn, #talkBtn');
+      lockedNode = el && el.closest('.tile, .nav, #closeBtn, #talkBtn, #prevBtn');
     });
   }
   function setLayer(l) { layer = l; A.setLayer(() => layer); lockUnderAim(); }
@@ -1015,8 +1014,14 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
       grid.appendChild(b);
       tileUnregs.push(childTarget(b, () => play(v)));
     });
-    prevBtn.hidden = page === 0;
-    nextBtn.hidden = page >= pages - 1;
+    prevBtn.hidden = page === 0;                       // like her talk board: Back at the top, Next on the right
+    nextBtn.hidden = pages <= 1;                       // on the last page it turns back to the first
+    const lastPage = page >= pages - 1;
+    nextBtn.innerHTML = (lastPage
+      ? '<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M78 32A34 34 0 1 0 84 62" fill="none" stroke="var(--target)" stroke-width="13" stroke-linecap="round"/><path d="M62 30L94 8l2 38z" fill="var(--target)"/></svg><span>First page</span>'
+      : '<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M6 38h46V14l42 36-42 36V62H6z" fill="var(--target)"/></svg><span>Next</span>');
+    nextBtn.setAttribute('aria-label', lastPage ? 'First page' : 'Next');
+    $('pageNum').textContent = pages > 1 ? `${page + 1} of ${pages}` : '';
     focusIndex = Math.min(focusIndex, Math.max(0, grid.children.length - 1));
   }
   // Back to her board: inside I Can Talk, just close this app; on its own, go to the board.
@@ -1025,7 +1030,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     location.href = '../talk/?home';
   });
   childTarget(prevBtn, () => { page--; focusIndex = 0; render(); lockUnderAim(); });
-  childTarget(nextBtn, () => { page++; focusIndex = 0; render(); lockUnderAim(); });
+  childTarget(nextBtn, () => { page = page >= Math.ceil(videos.length / S.perPage) - 1 ? 0 : page + 1; focusIndex = 0; render(); lockUnderAim(); });
 
   // ---------- Playback ----------
   let currentURL = null;

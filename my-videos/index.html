@@ -617,13 +617,20 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   var swallowUntil=0;
   function swallow(e){ if(e.isTrusted && performance.now()<swallowUntil){ e.stopPropagation(); e.preventDefault(); } }
   addEventListener('pointerdown', function(e){
-    if(S.accessMode==='tap' || e.__bleNoChoose) return;   // Mill Mouse clicks set not to choose
+    if(e.__bleNoChoose) return;                                // Mill Mouse clicks set not to choose
+    try{ dispatchEvent(new Event('ble-press')); }catch(er){}    // a real press: the app lets go of its "look away first" lock
+    if(S.accessMode==='tap') return;
     var pt = S.aimSource==='mouse' ? {x:e.clientX,y:e.clientY} : smoothed;
     if(S.aimSource==='mouse') setAim(pt.x,pt.y,true);
     var t=hitTest(pt);
     setHovered(t);
     if(!t || t.adult) return;
-    if(S.accessMode==='switch' || armed) fire(t);
+    // A press chooses straight away, even on the same spot again; only not when the same choice was just made by looking
+    var prevFire = lastFired.has(t.id) ? lastFired.get(t.id) : -Infinity, byClick = t._clickAt === prevFire;
+    if(S.accessMode==='switch' || armed || byClick || performance.now()-prevFire > 1000){
+      fire(t);
+      if(lastFired.get(t.id) !== prevFire) t._clickAt = lastFired.get(t.id);   // remember this choice came from a press
+    }
     swallowUntil=performance.now()+700;
     e.stopPropagation(); e.preventDefault();
   }, true);
@@ -822,6 +829,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   A.setLayer(() => layer);
   // After the screen changes under her eyes, whatever she's already looking at waits until she looks away.
   let aim = { x: -9999, y: -9999 }, lockedNode = null;
+  addEventListener('ble-press', () => { lockedNode = null; });   // a click or tap never has to look away first
   A.onAim((x, y) => {
     aim = { x, y };
     if (lockedNode) {

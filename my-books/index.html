@@ -372,6 +372,9 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   <div class="psec">
     <span class="alabel" style="margin-top:0">Choices on the screen</span>
     <div class="seg" id="segPer"><button type="button" data-v="1">1</button><button type="button" data-v="2">2</button><button type="button" data-v="3">3</button><button type="button" data-v="4">4</button><button type="button" data-v="6">6</button></div>
+    <span class="alabel">Volume</span>
+    <div class="seg" id="segVolume"><button type="button" data-v="softer">Softer</button><button type="button" data-v="normal">Same as her voice</button><button type="button" data-v="louder">Louder</button><button type="button" data-v="off">As recorded</button></div>
+    <p class="hint">Evens out the sound so no video starts much louder than the others.</p>
     <span class="alabel">Picture on each choice</span>
     <div class="seg" id="segPic"><button type="button" data-v="frame">Start of the book</button><button type="button" data-v="icon">Book icon</button></div>
     <div class="trow" role="switch" tabindex="0" data-toggle="tLabels"><span class="alabel">Show names</span><div class="toggle" id="tLabels"></div></div>
@@ -791,7 +794,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   const getSettings = () => tx('settings', 'readonly', s => s.get('main'));
   const putSettings = v => tx('settings', 'readwrite', s => s.put(v, 'main'));
 
-  const SCREEN_DEFAULTS = { picture: 'frame', perPage: 6, showLabels: false, showTalk: true, fullscreen: true, pulse: false, autoBack: true, hideClose: false };
+  const SCREEN_DEFAULTS = { picture: 'frame', perPage: 6, showLabels: false, showTalk: true, fullscreen: true, pulse: false, autoBack: true, hideClose: false, evenVolume: true, videoLevel: 'normal' };
   const defaults = Object.assign({}, A.DEFAULTS, SCREEN_DEFAULTS);
   let S = { ...defaults };
   let videos = [];
@@ -1023,9 +1026,11 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     closeBtn.style.display = S.hideClose ? 'none' : 'flex';
     player.classList.add('open');
     setLayer('player');
+    levelStart(v.id);
     video.play().catch(() => {});
   }
   function stop() {
+    levelStop();
     video.pause(); video.removeAttribute('src'); video.load();
     if (currentURL) { URL.revokeObjectURL(currentURL); currentURL = null; }
     player.classList.remove('open');
@@ -1034,6 +1039,67 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     if (t && A.settings().accessMode === 'tap') t.focus({ preventScroll: true });
   }
   video.addEventListener('ended', () => { if (S.autoBack) stop(); });
+
+  // ---------- Even volume: every video plays about as loud as the board's voice ----------
+  // The sound goes through a gain that listens as it plays: loud videos are turned down, quiet ones up, and a
+  // limiter catches sudden peaks. The level each video settles at is remembered, so next time it starts right.
+  const LEVEL_KEY = 'bleLevel:' + location.pathname + ':';
+  const TARGET = { softer: 0.05, normal: 0.085, louder: 0.14 };
+  let actx = null, srcNode = null, gainNode = null, analyser = null, abuf = null, levelTimer = 0, levelId = null, est = 0, settled = 0;
+  function audioCtx() {
+    if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
+    if (actx.state === 'suspended') actx.resume().catch(() => {});
+    return actx;
+  }
+  addEventListener('pointerdown', audioCtx, true);
+  addEventListener('keydown', audioCtx, true);
+  function hookUp(ctx) {             // once: the player's sound goes through the leveller
+    if (srcNode) return true;
+    if (ctx.state !== 'running') return false;      // sound isn't allowed to start yet: play as is
+    try {
+      srcNode = ctx.createMediaElementSource(video);
+      gainNode = ctx.createGain();
+      analyser = ctx.createAnalyser(); analyser.fftSize = 2048; abuf = new Float32Array(analyser.fftSize);
+      const lim = ctx.createDynamicsCompressor();
+      lim.threshold.value = -8; lim.knee.value = 6; lim.ratio.value = 12; lim.attack.value = 0.003; lim.release.value = 0.25;
+      srcNode.connect(analyser); srcNode.connect(gainNode); gainNode.connect(lim); lim.connect(ctx.destination);
+      return true;
+    } catch (e) { srcNode = null; return false; }
+  }
+  window.bleLevelGain = () => (gainNode ? gainNode.gain.value : null);   // for checking
+  function savedGain(id) { try { const g = parseFloat(localStorage.getItem(LEVEL_KEY + id)); return g > 0 ? g : 0; } catch (e) { return 0; } }
+  function levelStart(id) {
+    levelStop(); levelId = id;
+    const ctx = audioCtx();
+    if (!ctx) return;
+    const go = () => {
+      if (levelId !== id || !hookUp(ctx)) return;
+      const target = TARGET[S.videoLevel] || TARGET.normal;
+      if (S.evenVolume === false) { gainNode.gain.value = 1; return; }
+      const g0 = savedGain(id) || 0.3;                  // a new video starts gently, then settles in the first second or two
+      gainNode.gain.cancelScheduledValues(ctx.currentTime); gainNode.gain.value = g0;
+      est = Math.pow(target / g0, 2); settled = savedGain(id) ? 1 : 0;
+      levelTimer = setInterval(() => {
+        if (video.paused) return;
+        analyser.getFloatTimeDomainData(abuf);
+        let sum = 0; for (let i = 0; i < abuf.length; i++) sum += abuf[i] * abuf[i];
+        const ms = sum / abuf.length;
+        if (ms < 0.000002) return;                      // near silence: leave the level alone
+        const fast = settled < 15;                      // the first moments find the level quickly
+        est = ms > est ? est + (ms - est) * (fast ? 0.5 : 0.25) : est + (ms - est) * (fast ? 0.3 : 0.03);
+        settled++;
+        const g = Math.max(0.15, Math.min(3, target / Math.sqrt(est)));
+        gainNode.gain.setTargetAtTime(g, ctx.currentTime, 0.25);
+        if (settled % 20 === 0) { try { localStorage.setItem(LEVEL_KEY + id, g.toFixed(3)); } catch (e) {} }
+      }, 100);
+    };
+    if (ctx.state === 'running') go(); else ctx.resume().then(go, () => {});
+  }
+  function levelStop() {
+    clearInterval(levelTimer); levelTimer = 0;
+    if (levelId && gainNode && settled > 10) { try { localStorage.setItem(LEVEL_KEY + levelId, gainNode.gain.value.toFixed(3)); } catch (e) {} }
+    levelId = null;
+  }
   childTarget(closeBtn, stop, 'player');
 
   // Full screen by default. Browsers only allow it after a touch, click or key press,
@@ -1087,6 +1153,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   const syncers = [];
   syncers.push(seg('segPic', () => S.picture, v => { S.picture = v; render(); }));
   syncers.push(seg('segPer', () => S.perPage, v => { S.perPage = +v; page = 0; render(); }));
+  syncers.push(seg('segVolume', () => S.evenVolume === false ? 'off' : (S.videoLevel || 'normal'), v => { if (v === 'off') S.evenVolume = false; else { S.evenVolume = true; S.videoLevel = v; } }));
 
   document.querySelectorAll('.trow[data-toggle]').forEach(row => {
     const el = $(row.dataset.toggle);

@@ -130,9 +130,9 @@
   #choices {
     position: fixed; inset: 0;
     display: flex; align-items: center; justify-content: center;
-    padding: calc(118px + env(safe-area-inset-top)) 4vmin 4vmin; gap: 3vmin;   /* room for the gear and the Talk button */
+    padding: calc(104px + 2.5vmin + env(safe-area-inset-top)) 3vmin 3vmin; gap: 2.5vmin;   /* the same spacing as her talk board */
   }
-  #grid { flex: 1; height: 100%; display: grid; gap: 5vmin; }
+  #grid { flex: 1; height: 100%; display: grid; gap: 2.5vmin; }
   .tile {
     position: relative; overflow: hidden;
     background: #000;
@@ -165,12 +165,14 @@
 
   .nav {
     position: relative; overflow: hidden;
-    flex: 0 0 auto; width: 12vmin; height: 40vmin;
+    flex: 0 0 auto; width: 17vw; height: 100%;          /* a tall strip, like Next on her talk board */
     border: var(--border) solid var(--target); border-radius: 28px;
     background: #000; cursor: pointer; padding: 0;
-    display: flex; align-items: center; justify-content: center;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.5vmin;
+    color: #fff; font: inherit;
   }
-  .nav svg { width: 70%; }
+  .nav svg { width: min(70%, 150px); height: auto; position: relative; z-index: 1; }
+  .nav span { position: relative; z-index: 1; font-size: clamp(20px, 3.2vmin, 34px); font-weight: 800; }
   .nav[hidden] { display: none; }
 
   #empty {
@@ -182,7 +184,7 @@
   /* ---------- Back to I Can Talk (top left), like the talk board's Home button ---------- */
   #talkBtn {
     position: fixed; z-index: 60; overflow: hidden;
-    top: calc(6px + env(safe-area-inset-top)); left: calc(12px + env(safe-area-inset-left));
+    top: calc(4px + env(safe-area-inset-top)); left: calc(3vmin + env(safe-area-inset-left));
     height: 100px; min-width: 200px; padding: 0 32px; display: flex; align-items: center; justify-content: center; gap: 16px;
     background: #000; color: #fff; font: inherit; font-size: 34px; font-weight: 800; cursor: pointer;
     border: 6px solid var(--target); border-radius: 20px;
@@ -326,11 +328,11 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
 
 <div id="choices">
   <button class="nav fill" id="prevBtn" aria-label="Previous books" hidden>
-    <svg viewBox="0 0 100 100"><polygon points="70,10 20,50 70,90" fill="#ff2b2b"/></svg>
+    <svg viewBox="0 0 100 100" aria-hidden="true"><path d="M94 38H48V14L6 50l42 36V62h46z" fill="var(--target)"/></svg><span>Back</span>
   </button>
   <div id="grid"></div>
   <button class="nav fill" id="nextBtn" aria-label="More books" hidden>
-    <svg viewBox="0 0 100 100"><polygon points="30,10 80,50 30,90" fill="#ff2b2b"/></svg>
+    <svg viewBox="0 0 100 100" aria-hidden="true"><path d="M6 38h46V14l42 36-42 36V62H6z" fill="var(--target)"/></svg><span>Next</span>
   </button>
 </div>
 

@@ -21,6 +21,9 @@
   var MENU = '#panel, #panelArrow, .dlg, [role="dialog"], [aria-modal="true"]';
   var HOLDERS = '#gear, #exitBtn, [aria-label*="Grown-ups: press and hold"]';
   var mouseHoldStart = 0, mouseMenu = false;
+  var holdOnHolder = false, ghostUntil = 0, ghostX = 0, ghostY = 0;
+  var START = '#startScreen, #launch';
+  function clicksOff(){ try { return localStorage.getItem('bleMillClicks') === 'off'; } catch (er) { return false; } }
   function menuOpen(){
     if (document.getElementById('panel')) return !!document.querySelector('#panel.open, .dlgScrim.show');
     return !!document.querySelector('[role="dialog"], [aria-modal="true"]');     // the reading app's settings sheet
@@ -38,6 +41,12 @@
   function guard(e){
     if (!e.isTrusted) return;
     if (!menuOpen() && !document.querySelector('body.editing')) mouseMenu = false;   // the menu closed (and no editing): mouse goes back to being blocked
+    // A finger hold on the gear or X opens the menu while the finger is still down. When it lifts, the browser sends a
+    // leftover tap to whatever is now under it (the menu's own background), which would close the menu again: drop it.
+    if (e.type === 'pointerdown') holdOnHolder = !!(e.target && e.target.closest && e.target.closest(HOLDERS)) && e.pointerType !== 'mouse';
+    if (e.type === 'pointerup' && holdOnHolder) { holdOnHolder = false; ghostUntil = Date.now() + 600; ghostX = e.clientX; ghostY = e.clientY; }
+    if ((e.type === 'mousedown' || e.type === 'mouseup' || e.type === 'click') && Date.now() < ghostUntil &&
+        Math.abs(e.clientX - ghostX) < 40 && Math.abs(e.clientY - ghostY) < 40) { e.stopImmediatePropagation(); e.preventDefault(); return; }
     if (kind(e) !== 'mouse') return;
     var t = e.target; if (!t || !t.closest) return;
     var holder = t.closest(HOLDERS);
@@ -51,12 +60,29 @@
       if (e.type === 'pointermove') return;
     }
     if (t.closest(MENU) && mouseMenu) return;                  // a grown-up's mouse in the menu they opened
-    if (!holder && !t.closest(MENU)) return;                   // everything else (her board) is untouched
+    if (!holder && !t.closest(MENU)) {                         // her board
+      // "Mill Mouse clicks: Don't choose": only her look-and-hold chooses. A finger still taps; the Start screen still takes a click.
+      if (clicksOff() && !t.closest(START) && !document.querySelector('body.editing')) {
+        if (e.type === 'pointerdown' || e.type === 'mousedown') { e.__bleNoChoose = true; e.stopPropagation(); e.preventDefault(); return; }
+        e.stopImmediatePropagation(); e.preventDefault();
+      }
+      return;
+    }
     e.stopImmediatePropagation(); e.preventDefault();
   }
   ['pointerdown','pointerup','mousedown','mouseup','click','dblclick','contextmenu','auxclick'].forEach(function(ev){
     window.addEventListener(ev, guard, true);
   });
+  // The menu row (one setting for all her apps on this device)
+  function wireClicks(){
+    var seg = document.getElementById('segClicks'); if (!seg) return;
+    function sync(){ var v = clicksOff() ? 'off' : 'on';
+      [].forEach.call(seg.querySelectorAll('button'), function(b){ b.classList.toggle('sel', b.getAttribute('data-v') === v); b.setAttribute('aria-pressed', b.getAttribute('data-v') === v); }); }
+    seg.addEventListener('click', function(e){ var b = e.target.closest('button'); if (!b) return;
+      try { localStorage.setItem('bleMillClicks', b.getAttribute('data-v')); } catch (er) {} sync(); });
+    sync(); new MutationObserver(sync).observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class'] });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wireClicks); else wireClicks();
 })();
 </script>
 <script>
@@ -258,7 +284,24 @@
   /* ---------- I Can Talk: the board ---------- */
   #board{position:fixed;inset:0;display:flex;flex-direction:column;gap:2.5vmin;
     padding:calc(4px + env(safe-area-inset-top)) 3vmin 3vmin}
-  #topbar{height:100px;flex:none;display:flex;align-items:center;gap:3vmin;padding-right:84px}
+  #topbar{height:100px;flex:none;display:flex;align-items:center;gap:3vmin;padding-right:240px}
+  /* Pause: grown-ups press and hold; looking and clicks stop until they hold it again */
+  #pauseBtn{position:fixed;top:calc(12px + env(safe-area-inset-top));right:calc(164px + env(safe-area-inset-right));
+    width:64px;height:64px;padding:0;border:none;border-radius:50%;background:#2a2a2a;cursor:pointer;z-index:60;
+    display:flex;align-items:center;justify-content:center;touch-action:none;-webkit-touch-callout:none;user-select:none;}
+  #pauseBtn svg{width:30px;height:30px}
+  #pauseBtn .play{display:none}
+  body.paused #pauseBtn{background:#ff2b2b}
+  body.paused #pauseBtn .bars{display:none}
+  body.paused #pauseBtn .play{display:inline}
+  #pauseBtn.holding{background:#555}
+  #pauseCover{position:fixed;inset:0;z-index:58;background:rgba(0,0,0,.78);display:none;align-items:center;justify-content:center;text-align:center;color:#fff}
+  #pauseCover > div{display:flex;flex-direction:column;align-items:center;gap:14px}
+  #pauseCover svg{width:120px;height:120px}
+  #pauseCover b{font:900 56px -apple-system,"Segoe UI",sans-serif}
+  #pauseCover span{font:600 22px/1.4 -apple-system,"Segoe UI",sans-serif;color:#ccc}
+  body.paused #pauseCover{display:flex}
+  body.paused [data-ble-cursor]{display:none !important}
   #homeBtn{height:100px;min-width:200px;justify-content:center;padding:0 32px;border-width:6px;border-radius:20px;flex-direction:row}
   #homeBtn .label{font-size:34px;-webkit-line-clamp:1}
   #homeBtn[hidden]{display:none}
@@ -428,6 +471,8 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
 <button id="exitBtn" title="Exit (grown-ups: press and hold)" aria-label="Exit I Can Talk. Grown-ups: press and hold."><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M22 22 L78 78 M78 22 L22 78" stroke="#9a9a9a" stroke-width="13" stroke-linecap="round"/></svg></button>
 <div id="exitDone"><div>I Can Talk is closed.</div><div style="font-size:18px;color:#999">You can close this tab now (the X at the top, or Ctrl + W).</div><button type="button" id="exitReopen">Open I Can Talk again</button></div>
 <button id="gear" title="Settings (grown-ups: press and hold)" aria-label="Settings. Grown-ups: press and hold."></button>
+<button id="pauseBtn" title="Pause looking (grown-ups: press and hold)" aria-label="Pause looking. Grown-ups: press and hold."><svg viewBox="0 0 100 100" aria-hidden="true"><g class="bars" fill="#9a9a9a"><rect x="24" y="18" width="18" height="64" rx="5"/><rect x="58" y="18" width="18" height="64" rx="5"/></g><path class="play" d="M30 16v68l56-34z" fill="#fff"/></svg></button>
+<div id="pauseCover" aria-hidden="true"><div><svg viewBox="0 0 100 100"><rect x="24" y="18" width="18" height="64" rx="5" fill="#ff2b2b"/><rect x="58" y="18" width="18" height="64" rx="5" fill="#ff2b2b"/></svg><b>Paused</b><span>Looking and clicks are off.<br>Grown-ups: press and hold the button at the top to start again.</span></div></div>
 
 <!-- ---------------- Settings ----------------
      The Bright Little Eyes settings sheet: a popover that drops down from the gear.
@@ -493,6 +538,9 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
         <div class="stepper" id="stCool"><button type="button" data-d="-1" aria-label="Gap between choices less">−</button><span class="sv"></span><button type="button" data-d="1" aria-label="Gap between choices more">+</button></div>
         <span class="alabel">Show the dot</span>
         <div class="seg" id="segDot"><button type="button" data-v="on">On</button><button type="button" data-v="off">Off</button></div>
+        <span class="alabel">Mill Mouse clicks</span>
+        <div class="seg" id="segClicks"><button type="button" data-v="on">Choose</button><button type="button" data-v="off">Don't choose</button></div>
+        <p class="hint">Don't choose: only her look-and-hold chooses, so looking around never picks. A finger tap still works. This is shared by all her apps.</p>
         <div id="cameraRows">
           <span class="alabel">Camera</span>
           <div id="camPreview"></div>
@@ -738,7 +786,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   var swallowUntil=0;
   function swallow(e){ if(e.isTrusted && performance.now()<swallowUntil){ e.stopPropagation(); e.preventDefault(); } }
   addEventListener('pointerdown', function(e){
-    if(S.accessMode==='tap') return;
+    if(S.accessMode==='tap' || e.__bleNoChoose) return;   // Mill Mouse clicks set not to choose
     var pt = S.aimSource==='mouse' ? {x:e.clientX,y:e.clientY} : smoothed;
     if(S.aimSource==='mouse') setAim(pt.x,pt.y,true);
     var t=hitTest(pt);
@@ -954,6 +1002,8 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     toys: `<g transform="translate(50 52) scale(1.15) translate(-57 -52)"><g transform="translate(-6 4) scale(.82)"><circle cx="31" cy="20" r="10"/><circle cx="69" cy="20" r="10"/><ellipse cx="50" cy="72" rx="23" ry="23"/><circle cx="26" cy="62" r="10"/><circle cx="74" cy="62" r="10"/><circle cx="35" cy="94" r="10"/><circle cx="65" cy="94" r="10"/><circle cx="50" cy="38" r="21" stroke="#000" stroke-width="3"/><circle cx="31" cy="20" r="4.5" fill="#000"/><circle cx="69" cy="20" r="4.5" fill="#000"/><circle cx="42" cy="34" r="3.4" fill="#000"/><circle cx="58" cy="34" r="3.4" fill="#000"/><ellipse cx="50" cy="44" rx="4.4" ry="3.4" fill="#000"/><path d="M44 49 Q50 54 56 49" stroke="#000" stroke-width="2.6" fill="none" stroke-linecap="round"/><ellipse cx="50" cy="74" rx="11" ry="12" fill="none" stroke="#000" stroke-width="2.6"/></g><g transform="translate(64 60)"><rect x="0" y="0" width="32" height="32" rx="4"/><rect x="4" y="4" width="24" height="24" rx="2" fill="none" stroke="#000" stroke-width="2.4"/><path d="M9 24 L16 8 L23 24 M11.6 18.5 H20.4" stroke="#000" stroke-width="3.2" fill="none" stroke-linejoin="round" stroke-linecap="round"/></g></g>`,
     play: `<path d="M24 10l64 40-64 40z"/>`,
     back: `<path d="M94 38H48V14L6 50l42 36V62h46z"/>`,
+    next: `<path d="M6 38h46V14l42 36-42 36V62H6z"/>`,
+    first: `<path d="M78 32A34 34 0 1 0 84 62" fill="none" stroke="currentColor" stroke-width="13" stroke-linecap="round"/><path d="M62 30L94 8l2 38z"/>`,
     home: `<path d="M50 6l46 40H82v48H58V66H42v28H18V46H4z"/>`,
     calendar: `<rect x="6" y="14" width="88" height="80" rx="10"/><rect x="14" y="38" width="72" height="48" rx="4" fill="${K}"/><rect x="20" y="44" width="16" height="14" rx="2"/><rect x="42" y="44" width="16" height="14" rx="2"/><rect x="64" y="44" width="16" height="14" rx="2"/><rect x="20" y="64" width="16" height="14" rx="2"/><rect x="42" y="64" width="16" height="14" rx="2"/><rect x="22" y="2" width="12" height="24" rx="6" stroke="${K}" stroke-width="3"/><rect x="66" y="2" width="12" height="24" rx="6" stroke="${K}" stroke-width="3"/>`,
     talk: `<path d="M50 8C24 8 4 24 4 44c0 12 7 22 18 29l-6 19 22-13c4 1 8 1 12 1 26 0 46-16 46-36S76 8 50 8z"/><circle cx="30" cy="44" r="6" fill="${K}"/><circle cx="50" cy="44" r="6" fill="${K}"/><circle cx="70" cy="44" r="6" fill="${K}"/>`,
@@ -1108,6 +1158,8 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ settings: S, board: B })); } catch (e) {} };
   const accessOf = () => { const o = {}; A.KEYS.forEach(k => o[k] = S[k]); return o; };
   let cur = B.pages[0], editing = false;
+  let part = 0, partPage = null;
+  const partWhenLeft = {};            // Back returns to the part of the page she left from      // a page with more buttons than fit is shown in parts, in her order, with a Next button
   let trail = [];                      // pages she came through on the way to this one (Home first)
 
   // ---------- Layers: which set of targets can be chosen right now ----------
@@ -1144,6 +1196,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     const $q = id => document.getElementById(id);
     if (shown($q('exitDone'))) return 'none';
     if ($q('panel') && $q('panel').classList.contains('open')) return 'sheet';
+    if (document.body.classList.contains('paused')) return 'none';             // a grown-up paused looking
     if (shown($q('appLayer'))) return 'none';                                   // one of her apps is open on top
     if ($q('player') && $q('player').classList.contains('open')) return 'player';
     if (document.querySelector('.dlgScrim.show')) return 'none';               // a grown-up dialog is open
@@ -1230,7 +1283,17 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     grid.style.gridTemplateRows = `repeat(${r}, minmax(0, 1fr))`;
     grid.innerHTML = '';
     const list = B.cells[cur] || (B.cells[cur] = []);
-    for (let i = 0; i < n; i++) {
+    // More buttons than fit: show them in parts, keeping her order; the last spot turns the page
+    const isEmpty = d => !d || (!d.label && !d.sym && !d.img);
+    let used = list.length; while (used > 0 && isEmpty(list[used - 1])) used--;
+    if (cur !== partPage) { part = 0; partPage = cur; }
+    const paged = used > n || (editing && used >= n && n > 1);
+    const per = paged ? n - 1 : n;
+    const parts = paged ? Math.max(1, Math.ceil((used + (editing ? 1 : 0)) / per)) : 1;
+    if (part >= parts) part = parts - 1;
+    const off = part * per;
+    for (let s = 0; s < per; s++) {
+      const i = off + s;
       const d = list[i];
       const el = document.createElement('button');
       el.type = 'button';
@@ -1250,21 +1313,34 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
       if (editing) el.onclick = () => openEdit(i);
       else unregs.push(childTarget(el, () => choose(d, el)));
     }
+    if (paged) {                         // Next (or, on the last part, back to the first part)
+      const lastPart = part === parts - 1;
+      const el = document.createElement('button');
+      el.type = 'button'; el.className = 'tile fill link pager';
+      const word = lastPart ? 'First page' : 'Next';
+      el.innerHTML = (S.picStyle === 'shapes' ? svgOf(lastPart ? 'first' : 'next') : `<span class="sym">${lastPart ? '🔁' : '➡️'}</span>`) + `<span class="label">${word}</span>`;
+      el.setAttribute('aria-label', word);
+      grid.appendChild(el);
+      const turn = () => { part = lastPart ? 0 : part + 1; render(); lockUnderAim(); };
+      if (editing) el.onclick = turn;
+      else unregs.push(childTarget(el, () => { if (S.wiggle) { el.classList.remove('wiggle'); void el.offsetWidth; el.classList.add('wiggle'); } turn(); }));
+    }
     homeBtn.innerHTML = (S.picStyle === 'shapes' ? svgOf('home') : '<span class="sym">🏠</span>') + '<span class="label">Home</span>';
     $('startBtn').innerHTML = (S.picStyle === 'shapes' ? svgOf('talk') : '<span class="sym">🗣️</span>') + '<span class="label">Start</span>';
     const home = B.pages[0];
-    homeBtn.hidden = cur === home;
-    introBtn.hidden = cur !== home;      // on Home: her introduction, where the Home button sits on other pages
+    homeBtn.hidden = cur === home && part === 0;
+    introBtn.hidden = cur !== home || part > 0;      // on Home: her introduction, where the Home button sits on other pages
     introBtn.innerHTML = (S.picStyle === 'shapes' ? svgOf('hello') : '<span class="sym">👋</span>') + `<span class="label">${esc(INTRO)}</span>`;
     // Back: to the page she came from, when that isn't Home (e.g. More Animals -> Animals)
     if (cur === home) trail = [];
     const prev = trail[trail.length - 1];
-    backBtn.hidden = !prev || prev === home || !B.cells[prev];
+    backBtn.hidden = part === 0 && (!prev || prev === home || !B.cells[prev]);
     if (!backBtn.hidden) {
-      backBtn.innerHTML = (S.picStyle === 'shapes' ? svgOf('back') : '<span class="sym">⬅️</span>') + `<span class="label">${esc(prev)}</span>`;
-      backBtn.setAttribute('aria-label', 'Back to ' + prev);
+      const to = part > 0 ? 'Back' : prev;      // in a page's parts, Back goes to the part before
+      backBtn.innerHTML = (S.picStyle === 'shapes' ? svgOf('back') : '<span class="sym">⬅️</span>') + `<span class="label">${esc(to)}</span>`;
+      backBtn.setAttribute('aria-label', part > 0 ? 'Back' : 'Back to ' + prev);
     }
-    $('pageName').textContent = cur === home ? '' : cur;
+    $('pageName').textContent = (cur === home ? '' : cur) + (parts > 1 ? `${cur === home ? '' : ' · '}${part + 1} of ${parts}` : '');
     $('doneEdit').hidden = !editing;
   }
 
@@ -1286,7 +1362,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     const token = ++chooseToken;
     const said = d.sound ? (playSound(d), Promise.resolve()) : speak(d.say || d.label);
     if (S.wiggle && el) { el.classList.remove('wiggle'); void el.offsetWidth; el.classList.add('wiggle'); }
-    if (d.link && B.cells[d.link]) { if (d.link !== cur) trail.push(cur); cur = d.link; render(); lockUnderAim(); }
+    if (d.link && B.cells[d.link]) { if (d.link !== cur) { trail.push(cur); partWhenLeft[cur] = part; } cur = d.link; render(); lockUnderAim(); }
     else if (d.url) said.then(() => setTimeout(() => { if (token === chooseToken) openApp(d.url); }, 300));   // the app opens once she has heard the words (unless she chose something else meanwhile)
   }
   function openApp(url) {
@@ -1317,15 +1393,15 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     appLayer.style.display = 'block';
     layer = 'none'; A.setLayer(liveLayer);          // the board waits underneath
     A.configure(Object.assign({}, A.settings(), { showDot: false }));   // the app shows its own dot; hide the board's
-    $('gear').style.visibility = 'hidden'; $('exitBtn').style.visibility = 'hidden';
+    $('gear').style.visibility = 'hidden'; $('exitBtn').style.visibility = 'hidden'; $('pauseBtn').style.visibility = 'hidden';
     setTimeout(() => { try { f.focus(); } catch (e) {} }, 300);
   }
   window.bleCloseApp = function () {
     appLayer.style.display = 'none';
     appLayer.innerHTML = '';                            // stops the app (and any video) completely
-    $('gear').style.visibility = ''; $('exitBtn').style.visibility = '';
+    $('gear').style.visibility = ''; $('exitBtn').style.visibility = ''; $('pauseBtn').style.visibility = '';
     applyAccess();                                      // the board's own dot comes back
-    cur = B.pages[0]; setLayer('app'); render();        // back to her Home board
+    cur = B.pages[0]; part = 0; setLayer('app'); render();        // back to her Home board
   };
 
   // ---------- Her animal videos: full screen with their own sound, then back to the board ----------
@@ -1357,9 +1433,9 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   video.addEventListener('ended', stopVideo);
   childTarget(closeBtn, stopVideo, 'player');
 
-  childTarget(homeBtn, () => { trail = []; cur = B.pages[0]; render(); lockUnderAim(); });
+  childTarget(homeBtn, () => { trail = []; cur = B.pages[0]; part = 0; partPage = cur; render(); lockUnderAim(); });
   childTarget(introBtn, () => speak(INTRO));
-  childTarget(backBtn, () => { cur = trail.pop() || B.pages[0]; render(); lockUnderAim(); });
+  childTarget(backBtn, () => { if (part > 0) part--; else { cur = trail.pop() || B.pages[0]; part = partWhenLeft[cur] || 0; partPage = cur; } render(); lockUnderAim(); });
 
   // ---------- Start (lets the browser speak) ----------
   const startScreen = $('startScreen');
@@ -1471,6 +1547,15 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   }
 
   A.adultControl($('gear'), openPanel);   // the long hold is the grown-up gate
+  // Pause: a grown-up holds it to stop looking and clicks (and again to start). Nothing is chosen while paused.
+  A.adultControl($('pauseBtn'), () => {
+    const on = !document.body.classList.contains('paused');
+    document.body.classList.toggle('paused', on);
+    try { speechSynthesis.cancel(); } catch (e) {}
+    liveCache.t = 0; A.setLayer(liveLayer);
+    if (!on) lockUnderAim();
+    $('pauseBtn').setAttribute('aria-label', on ? 'Start looking again. Grown-ups: press and hold.' : 'Pause looking. Grown-ups: press and hold.');
+  });
 
   // Exit (beside the gear, same half-second hold): leave full screen and close I Can Talk.
   // An installed app window closes; a browser tab may refuse, so then a calm closed screen shows instead.

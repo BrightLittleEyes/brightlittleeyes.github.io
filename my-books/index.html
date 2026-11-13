@@ -21,6 +21,9 @@
   var MENU = '#panel, #panelArrow, .dlg, [role="dialog"], [aria-modal="true"]';
   var HOLDERS = '#gear, #exitBtn, [aria-label*="Grown-ups: press and hold"]';
   var mouseHoldStart = 0, mouseMenu = false;
+  var holdOnHolder = false, ghostUntil = 0, ghostX = 0, ghostY = 0;
+  var START = '#startScreen, #launch';
+  function clicksOff(){ try { return localStorage.getItem('bleMillClicks') === 'off'; } catch (er) { return false; } }
   function menuOpen(){
     if (document.getElementById('panel')) return !!document.querySelector('#panel.open, .dlgScrim.show');
     return !!document.querySelector('[role="dialog"], [aria-modal="true"]');     // the reading app's settings sheet
@@ -38,6 +41,12 @@
   function guard(e){
     if (!e.isTrusted) return;
     if (!menuOpen() && !document.querySelector('body.editing')) mouseMenu = false;   // the menu closed (and no editing): mouse goes back to being blocked
+    // A finger hold on the gear or X opens the menu while the finger is still down. When it lifts, the browser sends a
+    // leftover tap to whatever is now under it (the menu's own background), which would close the menu again: drop it.
+    if (e.type === 'pointerdown') holdOnHolder = !!(e.target && e.target.closest && e.target.closest(HOLDERS)) && e.pointerType !== 'mouse';
+    if (e.type === 'pointerup' && holdOnHolder) { holdOnHolder = false; ghostUntil = Date.now() + 600; ghostX = e.clientX; ghostY = e.clientY; }
+    if ((e.type === 'mousedown' || e.type === 'mouseup' || e.type === 'click') && Date.now() < ghostUntil &&
+        Math.abs(e.clientX - ghostX) < 40 && Math.abs(e.clientY - ghostY) < 40) { e.stopImmediatePropagation(); e.preventDefault(); return; }
     if (kind(e) !== 'mouse') return;
     var t = e.target; if (!t || !t.closest) return;
     var holder = t.closest(HOLDERS);
@@ -51,12 +60,29 @@
       if (e.type === 'pointermove') return;
     }
     if (t.closest(MENU) && mouseMenu) return;                  // a grown-up's mouse in the menu they opened
-    if (!holder && !t.closest(MENU)) return;                   // everything else (her board) is untouched
+    if (!holder && !t.closest(MENU)) {                         // her board
+      // "Mill Mouse clicks: Don't choose": only her look-and-hold chooses. A finger still taps; the Start screen still takes a click.
+      if (clicksOff() && !t.closest(START) && !document.querySelector('body.editing')) {
+        if (e.type === 'pointerdown' || e.type === 'mousedown') { e.__bleNoChoose = true; e.stopPropagation(); e.preventDefault(); return; }
+        e.stopImmediatePropagation(); e.preventDefault();
+      }
+      return;
+    }
     e.stopImmediatePropagation(); e.preventDefault();
   }
   ['pointerdown','pointerup','mousedown','mouseup','click','dblclick','contextmenu','auxclick'].forEach(function(ev){
     window.addEventListener(ev, guard, true);
   });
+  // The menu row (one setting for all her apps on this device)
+  function wireClicks(){
+    var seg = document.getElementById('segClicks'); if (!seg) return;
+    function sync(){ var v = clicksOff() ? 'off' : 'on';
+      [].forEach.call(seg.querySelectorAll('button'), function(b){ b.classList.toggle('sel', b.getAttribute('data-v') === v); b.setAttribute('aria-pressed', b.getAttribute('data-v') === v); }); }
+    seg.addEventListener('click', function(e){ var b = e.target.closest('button'); if (!b) return;
+      try { localStorage.setItem('bleMillClicks', b.getAttribute('data-v')); } catch (er) {} sync(); });
+    sync(); new MutationObserver(sync).observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class'] });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wireClicks); else wireClicks();
 })();
 </script>
 <script>
@@ -377,6 +403,9 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
         <div class="stepper" id="stCool"><button type="button" data-d="-1" aria-label="Gap between choices less">−</button><span class="sv"></span><button type="button" data-d="1" aria-label="Gap between choices more">+</button></div>
         <span class="alabel">Show the dot</span>
         <div class="seg" id="segDot"><button type="button" data-v="on">On</button><button type="button" data-v="off">Off</button></div>
+        <span class="alabel">Mill Mouse clicks</span>
+        <div class="seg" id="segClicks"><button type="button" data-v="on">Choose</button><button type="button" data-v="off">Don't choose</button></div>
+        <p class="hint">Don't choose: only her look-and-hold chooses, so looking around never picks. A finger tap still works. This is shared by all her apps.</p>
         <div id="cameraRows">
           <span class="alabel">Camera</span>
           <div id="camPreview"></div>
@@ -582,7 +611,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   var swallowUntil=0;
   function swallow(e){ if(e.isTrusted && performance.now()<swallowUntil){ e.stopPropagation(); e.preventDefault(); } }
   addEventListener('pointerdown', function(e){
-    if(S.accessMode==='tap') return;
+    if(S.accessMode==='tap' || e.__bleNoChoose) return;   // Mill Mouse clicks set not to choose
     var pt = S.aimSource==='mouse' ? {x:e.clientX,y:e.clientY} : smoothed;
     if(S.aimSource==='mouse') setAim(pt.x,pt.y,true);
     var t=hitTest(pt);

@@ -1029,13 +1029,13 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   // ---------- Her board ----------
   const C = (label, sym, extra = {}) => ({ label, sym, ...extra });
   const STARTER = {
-    v: 15,
+    v: 16,
     grids: { 'My Apps': '3x2' },
     pages: ['Home', 'Animals', 'More Animals', 'Animal Noise', 'Sing Songs', 'My Apps'],
     cells: {
       'Home': [
-        C('More', '🤲'), C('Go', '🟢'), C('Hello', '🙋‍♀️'), C('All Done', '🙌'), C('Stop', '🛑'), C('Goodbye', '👋'),
-        C('Open', '📖'), C('Yes', '✅'), C('I want a Hug', '🤗'), C('Closed', '📕'), C('No', '❌'), C('Play', '🧸'),
+        C('More', '🤲'), C('Yes', '✅'), C('Hello', '🙋‍♀️'), C('All Done', '🙌'), C('No', '❌'), C('Goodbye', '👋'),
+        C('Open', '📖'), C('Go', '🟢'), C('I want a Hug', '🤗'), C('Closed', '📕'), C('Stop', '🛑'), C('Play', '🧸'),
         C('Animals', '🐄', { link: 'Animals' }), C('Animal Noise', '🐷', { link: 'Animal Noise' }), C('Sing Songs', '🎸', { url: SITE + '/my-videos/' }), C('Read', '📚', { url: SITE + '/my-books/' }), C('My Apps', '📱', { link: 'My Apps' }),
         C('Calendar', '📅', { say: 'I want to do my calendar', url: SITE + '/calendar/', icon: 'calendar' })],
       'Animals': [
@@ -1155,9 +1155,9 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
       }
       B.v = 14;
     }
-    if (B.v < 15) {   // v15: Home in pages of 6 (pairs stacked: More over All Done, Open over Closed ...); anything she added stays, after these
+    if (B.v < 16) {   // v15/16: Home in pages of 6 (pairs stacked: More over All Done, Yes over No, Open over Closed ...); anything she added stays, after these
       const home = B.cells[B.pages[0]] || [];
-      const ORDER = ['More', 'Go', 'Hello', 'All Done', 'Stop', 'Goodbye', 'Open', 'Yes', 'I want a Hug', 'Closed', 'No', 'Play',
+      const ORDER = ['More', 'Yes', 'Hello', 'All Done', 'No', 'Goodbye', 'Open', 'Go', 'I want a Hug', 'Closed', 'Stop', 'Play',
                      'Animals', 'Animal Noise', 'Sing Songs', 'Read', 'My Apps', 'Calendar'];
       const isEmpty = c => !c || (!c.label && !c.sym && !c.img);
       const items = home.filter(c => !isEmpty(c)), taken = new Set();
@@ -1165,7 +1165,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
       ORDER.forEach(l => { const c = items.find(x => !taken.has(x) && (x.label || '').toLowerCase() === l.toLowerCase()); if (c) { taken.add(c); sorted.push(c); } });
       items.forEach(c => { if (!taken.has(c)) sorted.push(c); });
       B.cells[B.pages[0]] = sorted;
-      B.v = 15;
+      B.v = 16;
     }
   } catch (e) {}
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ settings: S, board: B })); } catch (e) {} };

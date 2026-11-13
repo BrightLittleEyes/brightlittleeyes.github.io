@@ -286,6 +286,8 @@
     padding:calc(4px + env(safe-area-inset-top)) 3vmin 3vmin}
   #topbar{height:100px;flex:none;display:flex;align-items:center;gap:3vmin;padding-right:240px}
   /* Pause: grown-ups press and hold; looking and clicks stop until they hold it again */
+  #grid .tile.pager .ico{width:min(86%,150px) !important;height:auto !important;aspect-ratio:1}
+  #grid .tile.pager .label{font-size:clamp(20px,3.2vmin,34px) !important;white-space:normal;text-align:center;line-height:1.1}
   #pauseBtn{position:fixed;top:calc(12px + env(safe-area-inset-top));right:calc(164px + env(safe-area-inset-right));
     width:64px;height:64px;padding:0;border:none;border-radius:50%;background:#2a2a2a;cursor:pointer;z-index:60;
     display:flex;align-items:center;justify-content:center;touch-action:none;-webkit-touch-callout:none;user-select:none;}
@@ -1027,15 +1029,15 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   // ---------- Her board ----------
   const C = (label, sym, extra = {}) => ({ label, sym, ...extra });
   const STARTER = {
-    v: 14,
+    v: 15,
     grids: { 'My Apps': '3x2' },
     pages: ['Home', 'Animals', 'More Animals', 'Animal Noise', 'Sing Songs', 'My Apps'],
     cells: {
       'Home': [
-        C('More', '🤲'), C('Go', '🟢'), C('Hello', '🙋‍♀️'), C('Open', '📖'), C('Yes', '✅'),
-        C('All Done', '🙌'), C('Stop', '🛑'), C('Goodbye', '👋'), C('Closed', '📕'), C('No', '❌'),
+        C('More', '🤲'), C('Go', '🟢'), C('Hello', '🙋‍♀️'), C('All Done', '🙌'), C('Stop', '🛑'), C('Goodbye', '👋'),
+        C('Open', '📖'), C('Yes', '✅'), C('I want a Hug', '🤗'), C('Closed', '📕'), C('No', '❌'), C('Play', '🧸'),
         C('Animals', '🐄', { link: 'Animals' }), C('Animal Noise', '🐷', { link: 'Animal Noise' }), C('Sing Songs', '🎸', { url: SITE + '/my-videos/' }), C('Read', '📚', { url: SITE + '/my-books/' }), C('My Apps', '📱', { link: 'My Apps' }),
-        C('I want a Hug', '🤗'), C('Play', '🧸'), C('Calendar', '📅', { say: 'I want to do my calendar', url: SITE + '/calendar/', icon: 'calendar' })],
+        C('Calendar', '📅', { say: 'I want to do my calendar', url: SITE + '/calendar/', icon: 'calendar' })],
       'Animals': [
         C('Dog', '', { still: 'animals/dog.png', video: 'animals/dog.mp4' }), C('Cat', '', { still: 'animals/cat.png', video: 'animals/cat.mp4' }), C('Cow', '', { still: 'animals/cow.png', video: 'animals/cow.mp4' }), C('Pig', '', { still: 'animals/pig.png', video: 'animals/pig.mp4' }), C('Horse', '', { still: 'animals/horse.png', video: 'animals/horse.mp4' }),
         C('Chicken', '', { still: 'animals/chicken.png', video: 'animals/chicken.mp4' }), C('Fish', '', { still: 'animals/fish.png', video: 'animals/fish.mp4' }), C('Frog', '', { still: 'animals/frog.png', video: 'animals/frog.mp4' }), C('Bear', '', { still: 'animals/bear.png', video: 'animals/bear.mp4' }), C('Lion', '', { still: 'animals/lion.png', video: 'animals/lion.mp4' }),
@@ -1152,6 +1154,18 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
         home[i] = { label: 'Calendar', sym: '📅', say: 'I want to do my calendar', url: SITE + '/calendar/', icon: 'calendar' };
       }
       B.v = 14;
+    }
+    if (B.v < 15) {   // v15: Home in pages of 6 (pairs stacked: More over All Done, Open over Closed ...); anything she added stays, after these
+      const home = B.cells[B.pages[0]] || [];
+      const ORDER = ['More', 'Go', 'Hello', 'All Done', 'Stop', 'Goodbye', 'Open', 'Yes', 'I want a Hug', 'Closed', 'No', 'Play',
+                     'Animals', 'Animal Noise', 'Sing Songs', 'Read', 'My Apps', 'Calendar'];
+      const isEmpty = c => !c || (!c.label && !c.sym && !c.img);
+      const items = home.filter(c => !isEmpty(c)), taken = new Set();
+      const sorted = [];
+      ORDER.forEach(l => { const c = items.find(x => !taken.has(x) && (x.label || '').toLowerCase() === l.toLowerCase()); if (c) { taken.add(c); sorted.push(c); } });
+      items.forEach(c => { if (!taken.has(c)) sorted.push(c); });
+      B.cells[B.pages[0]] = sorted;
+      B.v = 15;
     }
   } catch (e) {}
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ settings: S, board: B })); } catch (e) {} };
@@ -1281,13 +1295,14 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     grid.style.gridTemplateRows = `repeat(${r}, minmax(0, 1fr))`;
     grid.innerHTML = '';
     const list = B.cells[cur] || (B.cells[cur] = []);
-    // More buttons than fit: show them in parts, keeping her order; the last spot turns the page
+    // More buttons than fit: show them in parts of a full page each, keeping her order; a tall Next strip on the right turns the page
     const isEmpty = d => !d || (!d.label && !d.sym && !d.img);
     let used = list.length; while (used > 0 && isEmpty(list[used - 1])) used--;
     if (cur !== partPage) { part = 0; partPage = cur; }
-    const paged = used > n || (editing && used >= n && n > 1);
-    const per = paged ? n - 1 : n;
+    const paged = used > n || (editing && used >= n);
+    const per = n;
     const parts = paged ? Math.max(1, Math.ceil((used + (editing ? 1 : 0)) / per)) : 1;
+    if (paged) grid.style.gridTemplateColumns = `repeat(${c}, minmax(0, 1fr)) minmax(0, .7fr)`;
     if (part >= parts) part = parts - 1;
     const off = part * per;
     for (let s = 0; s < per; s++) {
@@ -1315,6 +1330,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
       const lastPart = part === parts - 1;
       const el = document.createElement('button');
       el.type = 'button'; el.className = 'tile fill link pager';
+      el.style.gridColumn = String(c + 1); el.style.gridRow = '1 / -1';
       const word = lastPart ? 'First page' : 'Next';
       el.innerHTML = (S.picStyle === 'shapes' ? svgOf(lastPart ? 'first' : 'next') : `<span class="sym">${lastPart ? '🔁' : '➡️'}</span>`) + `<span class="label">${word}</span>`;
       el.setAttribute('aria-label', word);

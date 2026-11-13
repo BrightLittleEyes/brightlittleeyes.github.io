@@ -392,7 +392,10 @@
   #segOutline button.sel{color:#fff}
   /* her animal pictures and videos in the picture color */
   body.tintAnimals #grid .tile img.animalPic, body.tintAnimals #video.animalVid { filter: url(#bleTint); }
-  #grid .tile img.animalPic { mix-blend-mode: lighten; }   /* the black around her animals lets the fill show through */
+  #grid .tile img.animalPic { mix-blend-mode: lighten; }
+  @keyframes bleBob { 0%,100% { transform: translateY(3%) } 50% { transform: translateY(-4%) } }
+  body.moving #grid .tile img.animalPic { animation: bleBob 1.6s ease-in-out infinite; }
+  body.moving #grid .tile:nth-child(2n) img.animalPic { animation-delay: -.8s; }   /* the black around her animals lets the fill show through */
   #segPicColor button[data-v="#ff2b2b"]{color:#ff2b2b} #segPicColor button[data-v="#ff7a00"]{color:#ff7a00}
   #segPicColor button[data-v="#ffd400"]{color:#c9a800} #segPicColor button[data-v="#2ecc40"]{color:#1f9a2e}
   #segPicColor button[data-v="#1e90ff"]{color:#1e90ff} #segPicColor button[data-v="#b84dff"]{color:#b84dff}
@@ -513,6 +516,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     <div class="seg" id="segFillColor"><button type="button" data-v="#ff2b2b">Red</button><button type="button" data-v="#ff7a00">Orange</button><button type="button" data-v="#ffd400">Yellow</button><button type="button" data-v="#2ecc40">Green</button><button type="button" data-v="#1e90ff">Blue</button><button type="button" data-v="#b84dff">Purple</button><button type="button" data-v="#ffffff">White</button></div>
     <div class="trow" role="switch" tabindex="0" data-toggle="tFull"><span class="alabel">Start in full screen</span><div class="toggle" id="tFull"></div></div>
     <div class="trow" role="switch" tabindex="0" data-toggle="tLabels"><span class="alabel">Show words</span><div class="toggle" id="tLabels"></div></div>
+    <div class="trow" role="switch" tabindex="0" data-toggle="tMoving"><span class="alabel">Moving pictures</span><div class="toggle" id="tMoving"></div></div>
     <div class="trow" role="switch" tabindex="0" data-toggle="tPulse"><span class="alabel">Pulse</span><div class="toggle" id="tPulse"></div></div>
     <div class="trow" role="switch" tabindex="0" data-toggle="tVideos"><span class="alabel">Play her animal videos</span><div class="toggle" id="tVideos"></div></div>
     <div class="trow" role="switch" tabindex="0" data-toggle="tWiggle"><span class="alabel">Wiggle when chosen</span><div class="toggle" id="tWiggle"></div></div>
@@ -1023,7 +1027,37 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     'i can learn to read': 'letters', 'bubbles': 'bubbles', 'hug': 'heart', 'calendar': 'calendar', 'my calendar': 'calendar',
   };
   const iconOf = d => d.icon === 'none' ? null : (d.icon && ICONS[d.icon] ? d.icon : LABEL_ICON[(d.label || '').trim().toLowerCase()] || null);
-  const svgOf = name => `<svg class="ico" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">${ICONS[name]}</svg>`;
+  // Her pictures move gently to catch her eye (Hello, Goodbye, More and All Done have their own signs); off in Settings.
+  const SPL = 'calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"';
+  const anim = (type, values, dur) => `<animateTransform attributeName="transform" type="${type}" dur="${dur}s" repeatCount="indefinite" ${SPL} values="${values}"/>`;
+  const slide = (values, dur) => inner => `<g>${anim('translate', values, dur)}${inner}</g>`;
+  const turn = (values, dur) => inner => `<g>${anim('rotate', values, dur)}${inner}</g>`;
+  const grow = (cx, cy, to, dur, xOnly) => inner =>
+    `<g transform="translate(${cx} ${cy})"><g>${anim('scale', xOnly ? `1 1;${to} 1;1 1` : `1;${to};1`, dur)}<g transform="translate(${-cx} ${-cy})">${inner}</g></g></g>`;
+  const MOTION = {
+    go: slide('-5 0;7 0;-5 0', 1.4),                         // the arrow pushes forward
+    yes: slide('0 -5;0 6;0 -5', 1.1),                         // a nod
+    no: slide('-7 0;7 0;-7 0', 0.9),                          // a head shake
+    stop: grow(50, 50, 1.1, 1.6),                             // the sign pulses
+    closed: grow(50, 52, 1.06, 2),
+    heart: grow(50, 52, 1.16, 1.1),                           // a heartbeat
+    toys: slide('0 3;0 -7;0 3', 1.2),                         // the bear bounces
+    paw: slide('0 4;0 -6;0 4', 1.3),                          // the paw steps
+    pawsound: grow(44, 56, 1.08, 1.2),
+    note: turn('-12 58 90;12 58 90;-12 58 90', 1.4),          // the note rocks to the music
+    notes: turn('-10 48 90;10 48 90;-10 48 90', 1.4),
+    book: grow(50, 55, 0.72, 1.8, true),                      // the book opens and closes
+    tablet: grow(50, 50, 1.08, 1.6),
+    calendar: turn('-7 50 6;7 50 6;-7 50 6', 1.8),            // the calendar swings on its rings
+  };
+  const iconArt = name => {
+    if (S.moving === false) return ICONS[name + 'still'] || ICONS[name].replace(/<animate(Transform)?\b[^>]*\/>/g, '');
+    if (name === 'open')                                     // the door swings open on its hinge
+      return ICONS.open.replace('<path d="M22 18l40 8v74l-40-6z"/>',
+        `<g transform="translate(22 0)"><g>${anim('scale', '1 1;0.35 1;1 1', 2)}<g transform="translate(-22 0)"><path d="M22 18l40 8v74l-40-6z"/></g></g></g>`);
+    return MOTION[name] ? MOTION[name](ICONS[name]) : ICONS[name];
+  };
+  const svgOf = name => `<svg class="ico" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">${iconArt(name)}</svg>`;
 
 
   // ---------- Her board ----------
@@ -1065,7 +1099,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   // ---------- Settings (stored on this device) ----------
   const KEY = 'ble-talk-v1';
   const TOUCH_DEVICE = matchMedia('(pointer: coarse)').matches && !matchMedia('(pointer: fine)').matches;
-  const SCREEN_DEFAULTS = { fullscreen: true, grid: '5x4', showLabels: true, pulse: false, wiggle: true, playVideos: true, picStyle: 'shapes', picColor: '#ff2b2b', animalColor: 'pic', dotColor: '#ff2b2b', outline: '#ff2b2b', fillColor: '#ff2b2b' };
+  const SCREEN_DEFAULTS = { fullscreen: true, grid: '5x4', showLabels: true, pulse: false, wiggle: true, playVideos: true, moving: true, picStyle: 'shapes', picColor: '#ff2b2b', animalColor: 'pic', dotColor: '#ff2b2b', outline: '#ff2b2b', fillColor: '#ff2b2b' };
   const defaults = Object.assign({}, A.DEFAULTS, SCREEN_DEFAULTS, { accessMode: 'dwell', dwellMs: 1500 });
   let S = { ...defaults };
   let B = JSON.parse(JSON.stringify(STARTER));
@@ -1286,6 +1320,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     const [c, r] = ((B.grids && B.grids[cur]) || S.grid).split('x').map(Number);   // a page can have its own size
     const n = c * r;
     document.body.classList.toggle('pulse', !!S.pulse);
+    document.body.classList.toggle('moving', S.moving !== false);
     document.body.classList.toggle('nolabels', !S.showLabels);
     document.body.classList.toggle('editing', editing);
     document.documentElement.style.setProperty('--pic', S.picColor || '#ff2b2b');
@@ -1499,7 +1534,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
 
   document.querySelectorAll('.trow[data-toggle]').forEach(row => {
     const el = $(row.dataset.toggle);
-    const key = { tLabels: 'showLabels', tPulse: 'pulse', tWiggle: 'wiggle', tVideos: 'playVideos', tFull: 'fullscreen' }[row.dataset.toggle];
+    const key = { tLabels: 'showLabels', tPulse: 'pulse', tWiggle: 'wiggle', tVideos: 'playVideos', tFull: 'fullscreen', tMoving: 'moving' }[row.dataset.toggle];
     const flip = () => { S[key] = !S[key]; el.classList.toggle('on', S[key]); row.setAttribute('aria-checked', S[key]); save(); render(); };
     row.addEventListener('click', flip);
     row.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flip(); } });

@@ -1401,8 +1401,8 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     homeBtn.setAttribute('aria-label', onHome ? 'Home' : 'Talk');
     $('startBtn').innerHTML = (S.picStyle === 'shapes' ? svgOf('talk') : '<span class="sym">🗣️</span>') + '<span class="label">Start</span>';
     const home = B.pages[0];
-    homeBtn.hidden = cur === home && part === 0;
-    introBtn.hidden = cur !== home || part > 0;      // on Home: her introduction, where the Home button sits on other pages
+    homeBtn.hidden = cur === home;              // on her Home pages, the Back strip goes back; Talk shows on the other pages
+    introBtn.hidden = cur !== home;             // her introduction on all of her Home pages      // on Home: her introduction, where the Home button sits on other pages
     introBtn.innerHTML = (S.picStyle === 'shapes' ? svgOf('hello') : '<span class="sym">👋</span>') + `<span class="label">${esc(INTRO)}</span>`;
     // Back: to the page she came from, when that isn't Home (e.g. More Animals -> Animals)
     if (cur === home) trail = [];

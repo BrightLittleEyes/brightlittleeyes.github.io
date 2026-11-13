@@ -1355,7 +1355,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     // Back sits at the top (so her buttons keep the same size on every page); Next is the tall strip on the right
     const prevPage = trail[trail.length - 1];
     const hasBack = false, lead = 0;
-    grid.style.gridTemplateColumns = (hasBack ? 'minmax(0, .7fr) ' : '') + `repeat(${c}, minmax(0, 1fr)) minmax(0, .7fr)`;   // the Next space is kept on every page, so her buttons never change size
+    grid.style.gridTemplateColumns = (hasBack ? 'minmax(0, .7fr) ' : '') + `repeat(${c}, minmax(0, 1fr))` + (paged ? ' minmax(0, .7fr)' : '');   // pages without Next use the full width
     if (part >= parts) part = parts - 1;
     const off = part * per;
     for (let s = 0; s < per; s++) {

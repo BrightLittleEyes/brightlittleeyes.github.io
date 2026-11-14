@@ -381,6 +381,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   html:has([data-ble-cursor][style*="display: block"]):not(:has(#panel.open)),
   html:has([data-ble-cursor][style*="display: block"]):not(:has(#panel.open)) * { cursor: none !important; }
 </style>
+<script>/* the intro can be skipped by a finger tap only, not by looking or a Mill Mouse click */ window.__bleTouchAt=0; addEventListener('pointerdown',function(e){ if(e.pointerType==='touch'||e.pointerType==='pen') window.__bleTouchAt=Date.now(); },true);</script>
 </head>
 <body>
 <div id="stage">
@@ -1918,7 +1919,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
     if(p && p.catch) p.catch(()=>{ v.muted=true; needTap=true; $('launchTap').style.display='block'; v.play().catch(()=>{}); });
     el.addEventListener('click',()=>{
       if(needTap){ needTap=false; $('launchTap').style.display='none'; v.currentTime=0; v.muted=false; v.play().catch(()=>{}); hold(); return; }
-      finish();
+      if(Date.now()-(window.__bleTouchAt||0) < 1500) finish();   // only a finger skips it: not her looking or a Mill Mouse click
     });
     hold();
   }

@@ -919,19 +919,36 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   }
   addEventListener('pointerdown', audio, true);
   addEventListener('keydown', audio, true);
+  // A real "pop": a sharp snap, a quick rising "p-op" ring, and a puff of air. Short and loud, like a popping bubble.
+  function makePop(ctx, t, pitch, out) {
+    const noise = (sec, shape) => {
+      const b = ctx.createBuffer(1, Math.max(1, Math.floor(ctx.sampleRate * sec)), ctx.sampleRate), d = b.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, shape);
+      const n = ctx.createBufferSource(); n.buffer = b; return n;
+    };
+    const snap = noise(0.012, 2), hp = ctx.createBiquadFilter(), sg = ctx.createGain();    // the snap
+    hp.type = 'highpass'; hp.frequency.value = 1800; sg.gain.value = 1.4;
+    snap.connect(hp); hp.connect(sg); sg.connect(out); snap.start(t);
+    const o = ctx.createOscillator(), og = ctx.createGain();                               // the "op": its pitch jumps up, like a cork
+    o.type = 'sine';
+    o.frequency.setValueAtTime(380 * pitch, t); o.frequency.exponentialRampToValueAtTime(1150 * pitch, t + 0.03);
+    og.gain.setValueAtTime(0.0001, t); og.gain.exponentialRampToValueAtTime(1, t + 0.002); og.gain.exponentialRampToValueAtTime(0.0001, t + 0.075);
+    o.connect(og); og.connect(out); o.start(t); o.stop(t + 0.09);
+    const air = noise(0.06, 3), bp = ctx.createBiquadFilter(), ag = ctx.createGain();      // the puff of air
+    bp.type = 'bandpass'; bp.frequency.value = 1400 * pitch; bp.Q.value = 2.5; ag.gain.value = 1.6;
+    air.connect(bp); bp.connect(ag); ag.connect(out); air.start(t + 0.004);
+  }
+  let popOut = null;
   function popSound(pitch) {
     if (!S.sounds) return;
     const ctx = audio(); if (!ctx || ctx.state !== 'running') return;
-    const t = ctx.currentTime;
-    const o = ctx.createOscillator(), g = ctx.createGain();
-    o.type = 'sine';
-    o.frequency.setValueAtTime(700 * pitch, t); o.frequency.exponentialRampToValueAtTime(140 * pitch, t + 0.12);
-    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.7, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
-    o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + 0.18);
-    const n = ctx.createBufferSource(), b = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.04), ctx.sampleRate), d = b.getChannelData(0);   // the "p" of the pop
-    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3);
-    const ng = ctx.createGain(); ng.gain.value = 0.35; n.buffer = b; n.connect(ng); ng.connect(ctx.destination); n.start(t);
+    if (!popOut) {                         // a limiter keeps it loud and clear without crackling
+      const c = ctx.createDynamicsCompressor(); c.threshold.value = -10; c.knee.value = 4; c.ratio.value = 8; c.attack.value = 0.001; c.release.value = 0.08;
+      const g = ctx.createGain(); g.gain.value = 1.0; g.connect(c); c.connect(ctx.destination); popOut = g;
+    }
+    makePop(ctx, ctx.currentTime + 0.005, pitch, popOut);
   }
+  window.__makePop = makePop;
   const voiceWin = (() => { try { if (window.parent !== window && window.parent.speechSynthesis) return window.parent; } catch (e) {} return window; })();
   let chosenVoice = null;
   function pickVoice() {

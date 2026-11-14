@@ -1111,7 +1111,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   // ---------- Her board ----------
   const C = (label, sym, extra = {}) => ({ label, sym, ...extra });
   const STARTER = {
-    v: 16,
+    v: 17,
     grids: { 'My Apps': '3x2' },
     pages: ['Home', 'Animals', 'More Animals', 'Animal Noise', 'Sing Songs', 'My Apps'],
     cells: {
@@ -1139,7 +1139,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
         C('Xylophone', '🌈', { say: 'I want to play Xylophone' }),
         C('I Can Learn To See', '👀', { say: 'I want to play I Can Learn To See', url: SITE + '/learn-to-see/' }),
         C('I Can Learn to Read', '🔤', { say: 'I want to play I Can Learn to Read', url: SITE + '/reading/' }),
-        C('Bubbles', '🫧', { say: 'I want to play Bubbles' }),
+        C('Bubbles', '🫧', { say: 'I want to play Bubbles', url: SITE + '/bubbles/' }),
         C('ABC Plus', '🔠', { say: 'I want to play ABC Plus', url: SITE + '/abc-plus.html', icon: 'abc' })]
     }
   };
@@ -1248,6 +1248,10 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
       items.forEach(c => { if (!taken.has(c)) sorted.push(c); });
       B.cells[B.pages[0]] = sorted;
       B.v = 16;
+    }
+    if (B.v < 17) {   // v17: her Bubbles game opens from My Apps (words or a link she set herself stay)
+      Object.values(B.cells).flat().forEach(c => { if (c && /^bubbles$/i.test(c.label || '') && !c.url && !c.link) c.url = SITE + '/bubbles/'; });
+      B.v = 17;
     }
   } catch (e) {}
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ settings: S, board: B })); } catch (e) {} };
@@ -1919,6 +1923,7 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   if ('serviceWorker' in navigator && location.protocol.startsWith('http') && location.hostname.endsWith('github.io')) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
     navigator.serviceWorker.register('/calendar/sw.js', { scope: '/calendar/' }).catch(() => {});   // her calendar is saved for offline too
+    navigator.serviceWorker.register('/bubbles/sw.js', { scope: '/bubbles/' }).catch(() => {});     // and her bubbles
   }
 })();
 </script>

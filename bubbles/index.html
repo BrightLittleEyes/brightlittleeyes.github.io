@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+/* Bright Little Eyes: her look colors, chosen in I Can Talk's settings and shared by all her apps
+   (same website): the circle that shows where she looks, and the button outlines. */
+(function(){
+  try {
+    var c = JSON.parse(localStorage.getItem('bleLookColors') || '{}'), r = document.documentElement.style;
+    if (c.dot) r.setProperty('--bleDot', c.dot);
+    if (c.outline) r.setProperty('--target', c.outline);
+    if (c.fill) r.setProperty('--bleFill', c.fill);
+  } catch (e) {}
+})();
+</script>
+<script>
+/* Bright Little Eyes: the grown-up controls (the gear, the settings menu, Exit, edit boxes).
+   A finger or pen: always. A mouse (a grown-up on a computer): only a press-and-hold on the gear or Exit,
+   and then clicks in the menu it opened, until it closes. Mill Mouse's quick clicks never count. */
+(function(){
+  var MENU = '#panel, #panelArrow, .dlg, [role="dialog"], [aria-modal="true"]';
+  var HOLDERS = '#gear, #exitBtn, [aria-label*="Grown-ups: press and hold"]';
+  var mouseHoldStart = 0, mouseMenu = false;
+  var holdOnHolder = false, ghostUntil = 0, ghostX = 0, ghostY = 0;
+  var START = '#startScreen, #launch';
+  function clicksOff(){ try { return localStorage.getItem('bleMillClicks') === 'off'; } catch (er) { return false; } }
+  function menuOpen(){
+    if (document.getElementById('panel')) return !!document.querySelector('#panel.open, .dlgScrim.show');
+    return !!document.querySelector('[role="dialog"], [aria-modal="true"]');     // the reading app's settings sheet
+  }
+  function kind(e){
+    var pt = e.pointerType;
+    if (pt) return pt;
+    if (/^(mouse|click|dblclick|contextmenu|auxclick)/.test(e.type)) {
+      if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return 'touch';   // the mouse echo of a finger tap
+      if (e.detail === 0 && e.type === 'click') return 'key';                              // keyboard Enter / Space
+      return 'mouse';
+    }
+    return '';
+  }
+  function guard(e){
+    if (!e.isTrusted) return;
+    if (!menuOpen() && !document.querySelector('body.editing')) mouseMenu = false;   // the menu closed (and no editing): mouse goes back to being blocked
+    // A finger hold on the gear or X opens the menu while the finger is still down. When it lifts, the browser sends a
+    // leftover tap to whatever is now under it (the menu's own background), which would close the menu again: drop it.
+    if (e.type === 'pointerdown') holdOnHolder = !!(e.target && e.target.closest && e.target.closest(HOLDERS)) && e.pointerType !== 'mouse';
+    if (e.type === 'pointerup' && holdOnHolder) { holdOnHolder = false; ghostUntil = Date.now() + 600; ghostX = e.clientX; ghostY = e.clientY; }
+    if ((e.type === 'mousedown' || e.type === 'mouseup' || e.type === 'click') && Date.now() < ghostUntil &&
+        Math.abs(e.clientX - ghostX) < 40 && Math.abs(e.clientY - ghostY) < 40) { e.stopImmediatePropagation(); e.preventDefault(); return; }
+    if (kind(e) !== 'mouse') return;
+    var t = e.target; if (!t || !t.closest) return;
+    var holder = t.closest(HOLDERS);
+    if (holder) {
+      // a grown-up holding the mouse button down on the gear / Exit: let the hold through
+      if (e.type === 'pointerdown' || e.type === 'mousedown') { mouseHoldStart = Date.now(); return; }
+      if (e.type === 'pointerup' || e.type === 'mouseup') {
+        if (Date.now() - mouseHoldStart >= 450) mouseMenu = true;   // held long enough: this is a grown-up
+        return;
+      }
+      if (e.type === 'pointermove') return;
+    }
+    if (t.closest(MENU) && mouseMenu) return;                  // a grown-up's mouse in the menu they opened
+    if (!holder && !t.closest(MENU)) {                         // her board
+      // "Mill Mouse clicks: Don't choose": only her look-and-hold chooses. A finger still taps; the Start screen still takes a click.
+      if (clicksOff() && !t.closest(START) && !document.querySelector('body.editing')) {
+        if (e.type === 'pointerdown' || e.type === 'mousedown') { e.__bleNoChoose = true; e.stopPropagation(); e.preventDefault(); return; }
+        e.stopImmediatePropagation(); e.preventDefault();
+      }
+      return;
+    }
+    e.stopImmediatePropagation(); e.preventDefault();
+  }
+  ['pointerdown','pointerup','mousedown','mouseup','click','dblclick','contextmenu','auxclick'].forEach(function(ev){
+    window.addEventListener(ev, guard, true);
+  });
+  // The menu row (one setting for all her apps on this device)
+  function wireClicks(){
+    var seg = document.getElementById('segClicks'); if (!seg) return;
+    function sync(){ var v = clicksOff() ? 'off' : 'on';
+      [].forEach.call(seg.querySelectorAll('button'), function(b){ b.classList.toggle('sel', b.getAttribute('data-v') === v); b.setAttribute('aria-pressed', b.getAttribute('data-v') === v); }); }
+    seg.addEventListener('click', function(e){ var b = e.target.closest('button'); if (!b) return;
+      try { localStorage.setItem('bleMillClicks', b.getAttribute('data-v')); } catch (er) {} sync(); });
+    sync(); new MutationObserver(sync).observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class'] });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wireClicks); else wireClicks();
+})();
+</script>
+<script>
+/* Bright Little Eyes: Pointer (Tobii / Mill Mouse) is the way she aims, and the X is always there. Once, set every app's saved
+   "Aim with" back to Pointer and "Hide the X" back to off (all her apps share this site, so the first one opened fixes them all).
+   Camera is only used again if a grown-up picks it in Settings. */
+(function(){
+  try {
+    if (localStorage.getItem('blePointerDefault1') === '1') return;
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i), v = localStorage.getItem(k);
+      if (!v) continue;
+      var n = v.split('"aimSource":"head"').join('"aimSource":"mouse"')    // aim with Pointer
+               .split('"hideClose":true').join('"hideClose":false');       // and the X shows during videos and books
+      if (n !== v) localStorage.setItem(k, n);
+    }
+    localStorage.setItem('blePointerDefault1', '1');
+  } catch (e) {}
+})();
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Bubbles</title>
+<meta name="theme-color" content="#000000">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<style>
+  :root {
+    --bg: #000000;
+    --target: #ff2b2b;   /* the same saturated red as I Can Learn To See */
+    --ring: #ffffff;
+    --border: 12px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; height: 100%; overflow: hidden;
+    background: var(--bg); color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-user-select: none; user-select: none;
+    touch-action: manipulation;
+  }
+
+  /* ---------- Choice screen ---------- */
+  #choices {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    padding: calc(88px + env(safe-area-inset-top)) 4vmin 4vmin; gap: 3vmin;   /* room for the gear */
+  }
+  #grid { flex: 1; height: 100%; display: grid; gap: 5vmin; }
+  .tile {
+    position: relative; overflow: hidden;
+    background: #000;
+    border: var(--border) solid var(--target);
+    border-radius: 28px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2vmin; padding: 3vmin;
+    color: #fff; font: inherit; cursor: pointer;
+    min-width: 0; min-height: 0; outline: none;
+  }
+  .tile svg { width: 45%; max-width: 320px; height: auto; max-height: 60%; }
+  .tile .label {
+    font-size: clamp(22px, 4.5vmin, 56px); font-weight: 800;
+    text-align: center; line-height: 1.15;
+    overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+  .tile:focus-visible, .tile.hover, .nav.hover, #closeBtn.hover { box-shadow: 0 0 0 8px var(--ring); }
+  body.pulse .tile { animation: edge 1.6s ease-in-out infinite; }
+  @keyframes edge { 0%,100% { border-color: var(--target); } 50% { border-color: #ff8a8a; } }
+
+  /* the look-and-hold countdown: the choice fills with red from the bottom */
+  .fill::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: 0;
+    height: calc(var(--p, 0) * 100%);
+    background: rgba(255, 43, 43, .45); pointer-events: none;
+  }
+  .tile > *, .nav > *, #closeBtn > * { position: relative; z-index: 1; }
+
+  .nav {
+    position: relative; overflow: hidden;
+    flex: 0 0 auto; width: 12vmin; height: 40vmin;
+    border: var(--border) solid var(--target); border-radius: 28px;
+    background: #000; cursor: pointer; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .nav svg { width: 70%; }
+  .nav[hidden] { display: none; }
+
+  #empty {
+    position: fixed; inset: 0; display: none;
+    align-items: center; justify-content: center; text-align: center;
+    padding: 10vmin; font-size: clamp(20px, 4vmin, 40px); color: #8a8a8a;
+  }
+
+  /* ---------- Player (covers the gear while a video plays) ---------- */
+  #player { position: fixed; inset: 0; background: #000; display: none; z-index: 65; }
+  #player.open { display: block; }
+  #player video { width: 100%; height: 100%; object-fit: contain; background: #000; }
+  #closeBtn {
+    position: absolute; top: 3vmin; right: 3vmin; overflow: hidden;
+    width: 16vmin; height: 16vmin; max-width: 140px; max-height: 140px;
+    border: 10px solid var(--target); border-radius: 24px;
+    background: rgba(0,0,0,.6); cursor: pointer; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #closeBtn svg { width: 60%; }
+
+  /* ===== From here down: the Bright Little Eyes gear and settings sheet, as in I Can Learn To See ===== */
+
+  /* Settings: the Bright Little Eyes grey gear glyph.
+     Grown-ups press and hold it (half a second); a tap does nothing. */
+  /* Exit: grown-ups press and hold, like the gear */
+  #exitBtn{position:fixed;top:calc(12px + env(safe-area-inset-top));right:calc(88px + env(safe-area-inset-right));
+    width:64px;height:64px;padding:0;border:none;border-radius:50%;background:#2a2a2a;cursor:pointer;z-index:60;
+    display:flex;align-items:center;justify-content:center;touch-action:none;-webkit-touch-callout:none;user-select:none;}
+  #exitBtn svg{width:30px;height:30px}
+  #exitDone{position:fixed;inset:0;z-index:300;background:#000;color:#ddd;display:none;flex-direction:column;
+    align-items:center;justify-content:center;gap:18px;text-align:center;padding:8vmin;font:600 24px -apple-system,"Segoe UI",sans-serif}
+  #exitDone button{font:700 24px -apple-system,"Segoe UI",sans-serif;padding:16px 30px;border-radius:16px;border:6px solid #ff2b2b;background:#000;color:#fff;cursor:pointer}
+  #gear{position:fixed;top:calc(12px + env(safe-area-inset-top));
+    right:calc(12px + env(safe-area-inset-right));width:64px;height:64px;padding:0;border:none;border-radius:50%;
+    background:#2a2a2a url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Cg%20fill%3D%22%239a9a9a%22%3E%3Crect%20x%3D%2243%22%20y%3D%228%22%20width%3D%2214%22%20height%3D%2218%22%20rx%3D%223%22%20transform%3D%22rotate%280%2050%2050%29%22%2F%3E%3Crect%20x%3D%2243%22%20y%3D%228%22%20width%3D%2214%22%20height%3D%2218%22%20rx%3D%223%22%20transform%3D%22rotate%2845%2050%2050%29%22%2F%3E%3Crect%20x%3D%2243%22%20y%3D%228%22%20width%3D%2214%22%20height%3D%2218%22%20rx%3D%223%22%20transform%3D%22rotate%2890%2050%2050%29%22%2F%3E%3Crect%20x%3D%2243%22%20y%3D%228%22%20width%3D%2214%22%20height%3D%2218%22%20rx%3D%223%22%20transform%3D%22rotate%28135%2050%2050%29%22%2F%3E%3Crect%20x%3D%2243%22%20y%3D%228%22%20width%3D%2214%22%20height%3D%2218%22%20rx%3D%223%22%20transform%3D%22rotate%28180%2050%2050%29%22%2F%3E%3Crect%20x%3D%2243%22%20y%3D%228%22%20width%3D%2214%22%20height%3D%2218%22%20rx%3D%223%22%20transform%3D%22rotate%28225%2050%2050%29%22%2F%3E%3Crect%20x%3D%2243%22%20y%3D%228%22%20width%3D%2214%22%20height%3D%2218%22%20rx%3D%223%22%20transform%3D%22rotate%28270%2050%2050%29%22%2F%3E%3Crect%20x%3D%2243%22%20y%3D%228%22%20width%3D%2214%22%20height%3D%2218%22%20rx%3D%223%22%20transform%3D%22rotate%28315%2050%2050%29%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2230%22%2F%3E%3C%2Fg%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2212%22%20fill%3D%22%232a2a2a%22%2F%3E%3C%2Fsvg%3E") center/30px 30px no-repeat;
+    cursor:pointer;z-index:60;touch-action:none;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none;
+    }
+
+  /* ---- The settings sheet (Bright Little Eyes / ABC Lite) ----
+     A popover from the gear, on the device's own light or dark look,
+     labels over segmented controls in control-label (20px), notes in caption (14px). */
+  #panel{
+    --sb:#ffffff; --si:#000000; --ss:#3c3c43; --st:rgba(142,142,142,.3); --sg:#ffffff;
+    --sr:rgba(142,142,142,.5); --sl:rgba(60,60,67,.3); --son:#34c759; --soff:rgba(120,120,128,.32); --st:#f2f2f7; --sel:#0060DF;
+  }
+  #panelArrow{--sb:#ffffff;}
+  @media (prefers-color-scheme: dark){
+    #panel{ --sb:#1c1c1e; --si:#ffffff; --ss:#aeaeb2; --sg:#636366; --soff:rgba(120,120,128,.36); --son:#30d158; --st:#2c2c2e; --sl:rgba(142,142,142,.45); --sel:#0A84FF; --danger:#ff453a; }
+    #panelArrow{--sb:#1c1c1e;}
+  }
+  #panelScrim{position:fixed;inset:0;z-index:69;display:none;background:transparent;cursor:default;}
+  #panelScrim.open{display:block;}
+  #panel,#panelArrow{opacity:0;visibility:hidden;transition:opacity .1s ease-in,visibility 0s linear .1s;}
+  #panel.open,#panelArrow.open{opacity:1;visibility:visible;transition:opacity .5s ease-in;}
+  @media (prefers-reduced-motion: reduce){ #panel,#panelArrow,#panel.open,#panelArrow.open{transition:none;} }
+  #panelArrow{position:fixed;z-index:71;right:calc(32px + env(safe-area-inset-right));top:calc(76px + env(safe-area-inset-top));
+    width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;border-bottom:12px solid var(--sb);}
+  #panel{position:fixed;z-index:70;right:calc(16px + env(safe-area-inset-right));top:calc(88px + env(safe-area-inset-top));
+    width:min(480px, calc(100vw - 32px));max-height:calc(100vh - 104px - env(safe-area-inset-top));
+    display:flex;flex-direction:column;background:var(--sb);color:var(--si);border-radius:13px;overflow:hidden;
+    border:.5px solid rgba(0,0,0,.25);box-shadow:0 8px 30px rgba(0,0,0,.35);cursor:default;
+    font-family:-apple-system,"SF Pro Text","Helvetica Neue","Segoe UI",system-ui,sans-serif;
+    -webkit-user-select:text;user-select:text;}
+  .pbar{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:.5px solid var(--sl);flex:none;}
+  .pbody{padding:6px 20px 32px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  .psec{padding:18px 0 24px;border-bottom:.5px solid var(--sl);}
+  .psec:last-child{border-bottom:none;}
+  .phead{font-size:20px;line-height:24px;font-weight:600;margin:0 0 4px;}
+  .alabel{display:block;font-size:20px;line-height:24px;font-weight:600;margin:22px 0 10px;}
+  .caption,.hint{font-size:14px;line-height:18px;color:var(--ss);margin:8px 0 0;}
+  /* text buttons are real buttons: outlined, big enough to hit, never crowding each other */
+  .tbtn{background:none;border:2px solid var(--sl);border-radius:12px;color:var(--si);font:inherit;font-size:20px;line-height:24px;
+    font-weight:600;min-height:50px;padding:11px 18px;cursor:pointer;margin-top:12px;}
+  .pbar .tbtn{margin-top:0;}
+  .tbtn.b{background:var(--sel);border-color:var(--sel);color:#fff;}
+  .tbtn.danger{color:var(--danger,#d70015);border-color:var(--danger,#d70015);}
+  .tbtn:disabled{opacity:.35;cursor:default;}
+  .btnrow{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
+  .btnrow .tbtn{margin-top:12px;}
+  .nameinput{display:block;width:100%;box-sizing:border-box;border-radius:9px;border:1px solid var(--sl);background:var(--st);
+    color:var(--si);font:inherit;font-size:20px;line-height:24px;padding:10px 12px;}
+  .confirm{padding:14px 0;border-bottom:.5px solid var(--sl);}
+  /* choices: a fixed grid of equal buttons, so nothing shifts when one is picked.
+     2 or 4 options sit 2 across, everything else 3 across; the chosen one is solid blue with a check. */
+  .seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;width:100%;}
+  .seg:has(> button:only-child){grid-template-columns:minmax(0,1fr);max-width:220px;}
+  .seg:has(> button:nth-child(2):last-child),.seg:has(> button:nth-child(4):last-child){grid-template-columns:repeat(2,minmax(0,1fr));}
+  .seg button{min-height:56px;padding:8px 8px;border-radius:12px;border:2px solid var(--sl);background:var(--st);
+    color:var(--si);font:inherit;font-size:19px;line-height:23px;font-weight:600;cursor:pointer;text-align:center;
+    overflow-wrap:anywhere;}
+  .seg button.sel{background:var(--sel);border-color:var(--sel);color:#fff;}
+  .seg button.sel::before{content:"\2713\00a0";}
+  .stepper{display:flex;align-items:center;gap:16px;}
+  .stepper button{min-width:64px;height:56px;border-radius:12px;border:2px solid var(--sl);background:var(--st);color:var(--si);
+    font:inherit;font-size:28px;font-weight:600;cursor:pointer;}
+  .stepper .sv{min-width:96px;text-align:center;font-size:20px;line-height:24px;font-weight:600;font-variant-numeric:tabular-nums;}
+  /* a switch row: the whole row toggles */
+  .trow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0;min-height:60px;box-sizing:border-box;cursor:pointer;font-size:20px;line-height:24px;}
+  .trow .alabel{margin:0;}
+  .toggle{position:relative;width:51px;height:31px;border-radius:16px;background:var(--soff);flex:none;transition:background .2s;}
+  .toggle.on{background:var(--son);}
+  .toggle::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;
+    box-shadow:0 2px 4px rgba(0,0,0,.2);transition:left .2s;}
+  .toggle.on::after{left:22px;}
+  #camPreview{margin:4px 0;min-height:20px;}
+
+  /* this app's video list, drawn with the same parts */
+  .vrow{padding:14px 0;border-bottom:.5px solid var(--sl);}
+  .vrow:last-child{border-bottom:none;}
+  .vrow .btnrow .tbtn{min-height:44px;padding:8px 14px;font-size:18px;margin-top:10px;}
+
+  /* ---------- I Can Talk: the board ---------- */
+  #board{position:fixed;inset:0;display:flex;flex-direction:column;gap:2.5vmin;
+    padding:calc(4px + env(safe-area-inset-top)) 3vmin 3vmin}
+  #topbar{height:100px;flex:none;display:flex;align-items:center;gap:3vmin;padding-right:84px}
+  #homeBtn{height:100px;min-width:200px;justify-content:center;padding:0 32px;border-width:6px;border-radius:20px;flex-direction:row}
+  #homeBtn .label{font-size:34px;-webkit-line-clamp:1}
+  #homeBtn[hidden]{display:none}
+  #backBtn{height:100px;min-width:200px;justify-content:center;padding:0 32px;border-width:6px;border-radius:20px;flex-direction:row;gap:12px}
+  #backBtn .label{font-size:34px;-webkit-line-clamp:1}
+  #backBtn[hidden]{display:none}
+  #introBtn{height:100px;padding:0 32px;border-width:6px;border-radius:20px;flex-direction:row;gap:12px}
+  #introBtn .label{font-size:34px;-webkit-line-clamp:1}
+  #introBtn[hidden]{display:none}
+  #introBtn .ico{width:56px;height:56px;color:var(--pic,#ff2b2b)}
+  #introBtn .sym{font-size:30px}
+  #backBtn .ico{width:56px;height:56px;color:var(--pic,#ff2b2b)}
+  #backBtn .sym{font-size:30px}
+  #pageName{font-size:clamp(22px,3.6vmin,40px);font-weight:800;color:#fff}
+  #grid{flex:1;display:grid;gap:2.5vmin;min-height:0}
+  body[data-size="big"]   { --border:12px }
+  body[data-size="mid"]   { --border:9px }
+  body[data-size="small"] { --border:7px }
+  #grid .tile{gap:1vmin;padding:1.2vmin;border-radius:22px}
+  .tile .sym{font-size:min(11vh,8vw);line-height:1}
+  body[data-size="big"] .tile .sym{font-size:min(22vh,16vw)}
+  body[data-size="mid"] .tile .sym{font-size:min(14vh,10vw)}
+  .tile img{max-width:80%;max-height:62%;object-fit:contain;border-radius:12px}
+  #grid .tile .label{font-size:clamp(16px,3.3vmin,40px);line-height:1.3;padding-bottom:.08em}
+  body[data-size="big"] #grid .tile .label{font-size:clamp(22px,5vmin,56px)}
+  body.nolabels #grid .tile .label{display:none}
+  body.nolabels .tile .sym{font-size:min(15vh,11vw)}
+  /* a button that opens a page: a second red outline behind it, like a stack of cards */
+  #grid .tile.link{box-shadow:10px 10px 0 -4px #000, 10px 10px 0 calc(var(--border) - 4px) var(--target);overflow:visible}
+  #grid .tile.link.hover{box-shadow:0 0 0 8px var(--ring), 10px 10px 0 -4px #000, 10px 10px 0 calc(var(--border) - 4px) var(--target)}
+  #grid .tile.link.fill::after{border-radius:inherit}
+  #grid .tile.empty{border:3px solid #161616;cursor:default}
+  .tile.wiggle .sym,.tile.wiggle img{animation:wiggle .7s ease}
+  @keyframes wiggle{0%,100%{transform:none}20%,60%{transform:translateX(-10px) rotate(-7deg)}40%,80%{transform:translateX(10px) rotate(7deg)}}
+  body.editing #grid .tile{border-style:dashed}
+  body.editing #grid .tile.empty{border-color:#555}
+  #doneEdit{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:70;font:inherit;font-size:20px;font-weight:700;
+    padding:12px 28px;border-radius:14px;border:none;background:#0a84ff;color:#fff;cursor:pointer}
+  #doneEdit[hidden]{display:none}
+
+  #startScreen{position:fixed;inset:0;z-index:55;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px}
+  #startBtn{width:min(60vmin,420px);height:min(60vmin,420px)}
+  #startBtn .sym{font-size:min(22vmin,150px)}
+  #startScreen p{color:#888;font-size:18px;margin:0}
+
+  /* grown-up dialogs */
+  .dlgScrim{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center}
+  .dlgScrim.show{display:flex}
+  .dlg{background:#1c1c1e;color:#fff;border-radius:16px;padding:20px;width:min(460px,92vw);max-height:90vh;overflow:auto;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-user-select:text;user-select:text}
+  .dlg h3{margin:0 0 10px}
+  .dlg label{display:block;font-size:13px;color:#aaa;margin:12px 0 4px}
+  .dlg input,.dlg select,.dlg textarea{width:100%;font:inherit;font-size:16px;padding:9px;border-radius:9px;border:1px solid #3a3a3c;background:#2c2c2e;color:#fff}
+  .dlg .row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px}
+  .dlg button{font:inherit;font-size:15px;padding:9px 14px;border-radius:10px;border:none;background:#3a3a3c;color:#fff;cursor:pointer}
+  .dlg button.primary{background:#0a84ff}
+  .dlg .note{font-size:13px;color:#aaa;margin-top:6px}
+  #eUrlRow[hidden]{display:none}
+
+  /* size picture and words to each button, so nothing is cut off */
+  #grid .tile{container-type:size;justify-content:center}
+  #grid .tile .sym{font-size:min(60cqh,62cqw)!important;flex:none}
+  #grid .tile img{max-height:62cqh}
+  #grid .tile .label{font-size:min(14cqh,10cqw)!important;line-height:1.15;padding-bottom:.1em;flex:none;max-width:100%}
+  body.nolabels #grid .tile .sym{font-size:min(70cqh,70cqw)!important}
+
+  /* simple shapes */
+  #grid .tile .ico{width:min(62cqh,64cqw);height:min(62cqh,64cqw);color:var(--pic,#ff2b2b);flex:none}
+  body.nolabels #grid .tile .ico{width:min(78cqh,78cqw);height:min(78cqh,78cqw)}
+  #startBtn .ico{width:50%;height:50%;color:var(--pic,#ff2b2b)}
+  #eShapePrev{width:80px;height:80px;margin-top:8px;background:#000;border-radius:10px;padding:8px;color:var(--pic,#ff2b2b)}
+  #eShapePrev:empty{display:none}
+  #eShapePrev svg{width:100%;height:100%}
+  #segDotColor button[data-v="#ff2b2b"]{color:#ff2b2b}
+  #segDotColor button[data-v="#ff7a00"]{color:#ff7a00}
+  #segDotColor button[data-v="#ffd400"]{color:#c9a800}
+  #segDotColor button[data-v="#2ecc40"]{color:#1f9a2e}
+  #segDotColor button[data-v="#1e90ff"]{color:#1e90ff}
+  #segDotColor button[data-v="#b84dff"]{color:#b84dff}
+  #segDotColor button.sel{color:#fff}
+  #segOutline button[data-v="#ff2b2b"]{color:#ff2b2b}
+  #segOutline button[data-v="#ff7a00"]{color:#ff7a00}
+  #segOutline button[data-v="#ffd400"]{color:#c9a800}
+  #segOutline button[data-v="#2ecc40"]{color:#1f9a2e}
+  #segOutline button[data-v="#1e90ff"]{color:#1e90ff}
+  #segOutline button[data-v="#b84dff"]{color:#b84dff}
+  #segOutline button.sel{color:#fff}
+  /* her animal pictures and videos in the picture color */
+  body.tintAnimals #grid .tile img.animalPic, body.tintAnimals #video.animalVid { filter: url(#bleTint); }
+  #grid .tile img.animalPic { mix-blend-mode: lighten; }   /* the black around her animals lets the fill show through */
+  #segPicColor button[data-v="#ff2b2b"]{color:#ff2b2b} #segPicColor button[data-v="#ff7a00"]{color:#ff7a00}
+  #segPicColor button[data-v="#ffd400"]{color:#c9a800} #segPicColor button[data-v="#2ecc40"]{color:#1f9a2e}
+  #segPicColor button[data-v="#1e90ff"]{color:#1e90ff} #segPicColor button[data-v="#b84dff"]{color:#b84dff}
+  #segPicColor button.sel{color:#fff}
+  #homeBtn .ico{width:56px;height:56px;color:var(--pic,#ff2b2b)}
+  #homeBtn .sym{font-size:30px}
+  #homeBtn{gap:12px}
+  #grid .tile .ico{width:min(66cqh,66cqw);height:min(66cqh,66cqw)}
+  #grid .tile img{max-width:88%;max-height:64cqh;object-fit:contain;border-radius:0}
+  body.nolabels #grid .tile img{max-height:82cqh}
+  #gear.holding{background-color:#555}
+</style>
+<style>/* Bright Little Eyes: no long-press menus or blue text selection, except where grown-ups type */
+*{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}img{-webkit-user-drag:none}
+input,textarea,[contenteditable="true"]{-webkit-touch-callout:default;-webkit-user-select:text;user-select:text}</style>
+<script>/* a long press or right-click never brings up the browser's menu (the gear hold included), and holding never selects (blue) the page */
+(function(){function typing(t){return t&&t.closest&&t.closest('input,textarea,[contenteditable="true"]');}
+document.addEventListener('contextmenu',function(e){if(!typing(e.target))e.preventDefault();});
+document.addEventListener('selectstart',function(e){if(!typing(e.target))e.preventDefault();});
+document.addEventListener('dragstart',function(e){e.preventDefault();});})();</script>
+<style id="bleLookHighlight">
+  /* Looking at a choice (any button, picture or not): a thick YELLOW outline drawn just inside the edge,
+     so it can never be cut off, and the red fill rising OVER the picture so it always shows. */
+  :root { --ring: #ffd400; }
+  .tile.hover::before, .nav.hover::before, #closeBtn.hover::before, #talkBtn.hover::before, #homeBtn.hover::before, #backBtn.hover::before, #introBtn.hover::before, #bleTalkBack.hover::before {
+    content: ''; position: absolute; inset: 0; border: 10px solid #ffd400; border-radius: inherit;
+    z-index: 4; pointer-events: none;
+  }
+  .fill::after { background: var(--bleFill, rgba(255, 43, 43, .45)) !important; }   /* the fill rises BEHIND the pictures, in her fill color */
+  /* a bigger X, easier to look at */
+  #closeBtn { width: 22vmin; height: 22vmin; max-width: 200px; max-height: 200px; }
+  #closeBtn svg { width: 64%; }
+</style>
+<style id="bleGazeCircle">
+  /* Where she is looking: one big, see-through red circle and no mouse arrow (the arrow comes back
+     while the grown-up settings menu is open, or whenever the circle is off). */
+  [data-ble-cursor] > div:last-child {
+    left: -36px !important; top: -36px !important; width: 72px !important; height: 72px !important;
+    background: var(--bleDot, rgba(255, 43, 43, .45)) !important; border: 4px solid rgba(255, 255, 255, .75) !important;
+    box-shadow: none !important;
+  }
+  [data-ble-cursor] > div:first-child { left: -50px !important; top: -50px !important; width: 100px !important; height: 100px !important; }
+  html:has([data-ble-cursor][style*="display: block"]):not(:has(#panel.open)),
+  html:has([data-ble-cursor][style*="display: block"]):not(:has(#panel.open)) * { cursor: none !important; }
+</style>
+<style>
+  /* ---------- Bubbles ---------- */
+  #board{padding:0;gap:0}
+  #topbar{position:absolute;left:3vmin;top:calc(4px + env(safe-area-inset-top));z-index:5;padding-right:0}
+  #stage{position:absolute;inset:0;overflow:hidden;cursor:pointer;touch-action:none}
+  body.fromtalk #stage{top:calc(112px + env(safe-area-inset-top))}
+  #bubbles{display:block}
+</style>
+</head>
+<body>
+<div id="board">
+  <div id="stage"><canvas id="bubbles"></canvas></div>
+  <div id="topbar">
+    <button class="tile fill" id="homeBtn" aria-label="Back to I Can Talk" hidden></button>
+  </div>
+</div>
+
+<div id="startScreen">
+  <button class="tile fill" id="startBtn" aria-label="Start"></button>
+  <p>Tap Start once so the bubbles can pop out loud.</p>
+</div>
+<button id="exitBtn" title="Exit (grown-ups: press and hold)" aria-label="Exit Bubbles. Grown-ups: press and hold."><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M22 22 L78 78 M78 22 L22 78" stroke="#9a9a9a" stroke-width="13" stroke-linecap="round"/></svg></button>
+<div id="exitDone"><div>Bubbles is closed.</div><div style="font-size:18px;color:#999">You can close this tab now (the X at the top, or Ctrl + W).</div><button type="button" id="exitReopen">Open Bubbles again</button></div>
+<button id="gear" title="Settings (grown-ups: press and hold)" aria-label="Settings. Grown-ups: press and hold."></button>
+
+<div id="panelScrim"></div>
+<div id="panelArrow"></div>
+<div id="panel" role="dialog" aria-label="Settings">
+  <div class="pbar"><button type="button" class="tbtn" id="btnResetSettings">Reset</button><button type="button" class="tbtn b" id="closePanel">Done</button></div>
+  <div class="pbody">
+  <div class="confirm" id="resetConfirm" hidden>
+    <span class="caption">Reset the bubble settings? Her look settings are kept.</span>
+    <div class="btnrow"><button type="button" class="tbtn" id="btnResetNo">Cancel</button><button type="button" class="tbtn b" id="btnResetYes">Reset</button></div>
+  </div>
+
+  <div class="psec">
+    <div class="phead">Her bubbles</div>
+    <p class="caption">She looks at a bubble and it pops. A tap pops one too.</p>
+    <span class="alabel">How many bubbles</span>
+    <div class="seg" id="segCount"><button type="button" data-v="1">1</button><button type="button" data-v="2">2</button><button type="button" data-v="3">3</button><button type="button" data-v="4">4</button><button type="button" data-v="5">5</button></div>
+    <span class="alabel">How big</span>
+    <div class="seg" id="segSize"><button type="button" data-v="medium">Medium</button><button type="button" data-v="big">Big</button><button type="button" data-v="huge">Huge</button></div>
+    <span class="alabel">How they move</span>
+    <div class="seg" id="segSpeed"><button type="button" data-v="still">Stay still</button><button type="button" data-v="slow">Float slowly</button><button type="button" data-v="medium">Float faster</button></div>
+    <span class="alabel">How long a look pops one</span>
+    <div class="seg" id="segPop"><button type="button" data-v="400">Quick</button><button type="button" data-v="800">Medium</button><button type="button" data-v="1300">Long</button><button type="button" data-v="2000">Longer</button></div>
+    <p class="hint">While she looks, the bubble swells and a white ring fills around it. Then it pops.</p>
+    <span class="alabel">Colors</span>
+    <div class="seg" id="segColors"><button type="button" data-v="rainbow">Rainbow</button><button type="button" data-v="one">Her picture color</button></div>
+  </div>
+
+  <div class="psec">
+    <div class="trow" role="switch" tabindex="0" data-toggle="tSounds"><span class="alabel">Pop sound</span><div class="toggle" id="tSounds"></div></div>
+    <div class="trow" role="switch" tabindex="0" data-toggle="tSay"><span class="alabel">Say "Pop!"</span><div class="toggle" id="tSay"></div></div>
+    <div class="trow" role="switch" tabindex="0" data-toggle="tFull"><span class="alabel">Start in full screen</span><div class="toggle" id="tFull"></div></div>
+    <div class="btnrow"><button type="button" class="tbtn" id="btnFull">Full screen</button></div>
+    <p class="hint">Her colors come from I Can Talk's settings.</p>
+  </div>
+
+  <!-- Bright Little Eyes' selection system: the same rows, in the same order, in every app -->
+  <div class="psec" id="accessRows">
+    <div class="phead">Choosing without touch</div>
+    <div>
+      <span class="alabel">How to select</span>
+      <div class="seg" id="segMode"><button type="button" data-v="tap">Touch</button><button type="button" data-v="dwell">Look and hold</button><button type="button" data-v="switch">Look and press</button></div>
+      <div id="accessMore">
+        <span class="alabel">Aim with</span>
+        <div class="seg" id="segAim"><button type="button" data-v="mouse">Pointer</button><button type="button" data-v="head">Camera</button></div>
+        <span class="alabel">How long a look</span>
+        <div class="stepper" id="stDwell"><button type="button" data-d="-1" aria-label="How long a look less">−</button><span class="sv"></span><button type="button" data-d="1" aria-label="How long a look more">+</button></div>
+        <span class="alabel">Gap between choices</span>
+        <div class="stepper" id="stCool"><button type="button" data-d="-1" aria-label="Gap between choices less">−</button><span class="sv"></span><button type="button" data-d="1" aria-label="Gap between choices more">+</button></div>
+        <span class="alabel">Show the dot</span>
+        <div class="seg" id="segDot"><button type="button" data-v="on">On</button><button type="button" data-v="off">Off</button></div>
+        <span class="alabel">Mill Mouse clicks</span>
+        <div class="seg" id="segClicks"><button type="button" data-v="on">Choose</button><button type="button" data-v="off">Don't choose</button></div>
+        <p class="hint">Don't choose: only her look-and-hold chooses, so looking around never picks. A finger tap still works. This is shared by all her apps.</p>
+        <div id="cameraRows">
+          <span class="alabel">Camera</span>
+          <div id="camPreview"></div>
+          <p class="hint" id="camStatus"></p>
+          <span class="alabel">Centre</span>
+          <div class="seg"><button type="button" id="btnCentre">Set centre</button></div>
+          <span class="alabel">Head sensitivity</span>
+          <div class="stepper" id="stGain"><button type="button" data-d="-1" aria-label="Head sensitivity less">−</button><span class="sv"></span><button type="button" data-d="1" aria-label="Head sensitivity more">+</button></div>
+        </div>
+      </div>
+      <p class="hint">Touch: tap to choose. Look and hold: rest the pointer on a choice; it fills with red, then it is chosen. Look and press: point, then press a switch (Space or Enter) or click. Pointer works with Windows Eye Control, Tobii gaze-to-cursor, Mill Mouse or a head-mouse. Camera is a webcam head pointer (Windows). Grown-ups: press and hold the gear to open Settings.</p>
+    </div>
+  </div>
+  </div>
+</div>
+
+
+<script>
+/* ===== Bright Little Eyes' selection system — the same in every Bright Little Eyes app =====
+   How a child who cannot reliably touch the screen aims at something and picks it.
+   Two separate axes:
+     accessMode — how a choice FIRES:          'tap' (Touch) | 'dwell' (Look and hold) | 'switch' (Look and press)
+     aimSource  — where the cursor COMES FROM: 'mouse' (Pointer) | 'head' (Camera)
+   Targets are the real elements on screen, hit-tested with getBoundingClientRect() every time.
+   There is NO "steady gaze" / movement-threshold rule. */
+(function(){
+  "use strict";
+  var DEFAULTS = { accessMode:'tap', aimSource:'mouse', dwellMs:650, cooldownMs:320, gain:18, showDot:true };
+  var STICKY_PAD = 28, SMOOTH = 0.35, ADULT_FACTOR = 2.6, ADULT_HOLD_MS = 500, REPEAT_DWELL_MS = 420;
+
+  var S = Object.assign({}, DEFAULTS);
+  var targets = new Map(), nextId = 1;
+  var layerFn = function(){ return 'app'; };     // which layer is live: 'app' | 'sheet' | 'none'
+  var raw = {x:-9999,y:-9999}, smoothed = {x:-9999,y:-9999}, haveAim = false;
+  var hovered = null, enteredAt = 0, armed = false;
+  var lastFired = new Map(), raf = null, aimListeners = [];
+
+  // ------------------------------------------------------------ registry
+  // t = { node: Element | () => Element, run, dwellMs?: number | () => number, allowRepeat?, adult?, enabled?: () => bool, layer?: 'app'|'sheet' }
+  function register(t){
+    var id = nextId++;
+    targets.set(id, Object.assign({ layer:'app', enabled:function(){ return true; } }, t, { id:id }));
+    return function(){ targets.delete(id); if(hovered && hovered.id===id) hovered=null; };
+  }
+  function nodeOf(t){ return typeof t.node==='function' ? t.node() : t.node; }
+  function usable(t){
+    if(t.layer==='sheet' || t.adult) return null;   // the gear and the settings menu: touch only, never by looking
+    if(t.layer !== layerFn()) return null;
+    var n = nodeOf(t);
+    if(!n) return null;
+    if(!n.isConnected){ if(t.prune !== false && typeof t.node!=='function') targets.delete(t.id); return null; }  // detached
+    if(!t.enabled()) return null;
+    var cs = getComputedStyle(n);
+    if(cs.pointerEvents==='none' || cs.visibility==='hidden' || cs.display==='none') return null;
+    var r = n.getBoundingClientRect();
+    if(r.width<=0 || r.height<=0) return null;
+    // optional margin around a target (this app's "Hold steadiness"); the size used for smallest-wins stays the real one
+    var pad = t.pad==null ? 0 : (typeof t.pad==='function' ? t.pad() : t.pad);
+    if(pad>0) return { left:r.left-pad, right:r.right+pad, top:r.top-pad, bottom:r.bottom+pad, width:r.width, height:r.height };
+    return r;
+  }
+  function contains(r,p,pad){ pad=pad||0; return p.x>=r.left-pad && p.x<=r.right+pad && p.y>=r.top-pad && p.y<=r.bottom+pad; }
+
+  // strict = the SMALLEST target containing the point. Stickiness only defends against a LARGER rival or
+  // empty space, so equal neighbours hand over at once and a small target inside a larger one wins.
+  function hitTest(p){
+    var strict=null, strictArea=Infinity, hoveredRect=null;
+    targets.forEach(function(t){
+      var r=usable(t); if(!r) return;
+      if(hovered && t.id===hovered.id) hoveredRect=r;
+      if(contains(r,p)){ var a=r.width*r.height; if(a<strictArea){ strict=t; strictArea=a; } }
+    });
+    if(hovered && hoveredRect && hovered!==strict){
+      if(contains(hoveredRect,p,STICKY_PAD) && (strict===null || strictArea > hoveredRect.width*hoveredRect.height)) return hovered;
+    }
+    return strict;
+  }
+
+  function fire(t){
+    var now=performance.now();
+    if(now-(lastFired.has(t.id)?lastFired.get(t.id):-Infinity) < S.cooldownMs) return;   // refused inside cooldownMs
+    lastFired.set(t.id, now);
+    if(t._ready){ t._ready=false; if(t.ready) try{ t.ready(false); }catch(e){} }
+    if(typeof t.allowRepeat==='function' ? t.allowRepeat() : t.allowRepeat) enteredAt=now;   // steppers keep counting under a long look
+    else armed=false;                  // a held look does not retrigger; re-arms when the aim moves away and back
+    try{ t.run(); }catch(e){ console.warn(e); }
+  }
+  function needFor(t){
+    var d = t.dwellMs==null ? S.dwellMs : (typeof t.dwellMs==='function' ? t.dwellMs() : t.dwellMs);
+    return d * (t.adult ? ADULT_FACTOR : 1);
+  }
+
+  // ------------------------------------------------------------ the pump
+  function pump(){
+    raf=null;
+    if(S.accessMode==='tap'){ drawCursor(false,0); return; }
+    if(haveAim){
+      smoothed.x += (raw.x-smoothed.x)*SMOOTH;
+      smoothed.y += (raw.y-smoothed.y)*SMOOTH;
+      aimListeners.forEach(function(f){ f(smoothed.x, smoothed.y); });
+      setHovered(hitTest(smoothed));
+      var p=-1;
+      if(S.accessMode==='dwell' && hovered){
+        p = armed ? Math.min(1,(performance.now()-enteredAt)/needFor(hovered)) : 0;
+        var t=hovered;
+        if(p>=1){
+          // a target can ask for a switch to confirm: when the look completes it lights up and waits
+          if(t.confirm && t.confirm()){ if(!t._ready){ t._ready=true; if(t.ready) try{ t.ready(true); }catch(e){} } }
+          else fire(t);
+        }
+        // a target that shows its own countdown (a ring around it, a key filling up) gets it; the dot then
+        // shows no ring of its own, so there is only ever one countdown on screen
+        if(t.progress){ try{ t.progress(t===hovered && armed ? p : 0); }catch(e){} p=-1; }
+      }
+      drawCursor(true,p);
+    }
+    raf=requestAnimationFrame(pump);
+  }
+  function setHovered(h){
+    if(h===hovered) return;
+    if(hovered && hovered.progress){ try{ hovered.progress(0); }catch(e){} }
+    if(hovered && hovered._ready){ hovered._ready=false; if(hovered.ready) try{ hovered.ready(false); }catch(e){} }
+    hovered=h; enteredAt=performance.now(); armed=true;
+  }
+  function kick(){ if(raf===null && S.accessMode!=='tap') raf=requestAnimationFrame(pump); }
+
+  // ------------------------------------------------------------ the cursor
+  // A white dot with a dark keyline, and a conic-gradient countdown ring sweeping around it — drawn AT THE
+  // CURSOR (not at the target), mounted at the root of the document so nothing can clip it.
+  var cursorEl=null, ringEl=null;
+  function ensureCursor(){
+    if(cursorEl) return;
+    cursorEl=document.createElement('div');
+    cursorEl.setAttribute('data-ble-cursor','');
+    cursorEl.style.cssText='position:fixed;left:0;top:0;width:0;height:0;pointer-events:none;z-index:2147483647;display:none';
+    ringEl=document.createElement('div');
+    ringEl.style.cssText='position:absolute;left:-30px;top:-30px;width:60px;height:60px;border-radius:50%;'+
+      '-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 8px),#000 calc(100% - 7px));'+
+      'mask:radial-gradient(farthest-side,transparent calc(100% - 8px),#000 calc(100% - 7px));display:none';
+    var dot=document.createElement('div');
+    dot.style.cssText='position:absolute;left:-11px;top:-11px;width:22px;height:22px;border-radius:50%;'+
+      'background:#ffffff;box-sizing:border-box;border:3px solid #111111;box-shadow:0 0 0 1px rgba(255,255,255,.6)';
+    cursorEl.appendChild(ringEl); cursorEl.appendChild(dot);
+    document.body.appendChild(cursorEl);
+  }
+  function drawCursor(show,p){
+    ensureCursor();
+    var visible = show && S.showDot && haveAim;
+    cursorEl.style.display = visible ? 'block' : 'none';
+    if(!visible) return;
+    cursorEl.style.transform='translate('+smoothed.x+'px,'+smoothed.y+'px)';
+    if(p>0){
+      ringEl.style.display='block';
+      var deg=(p*360).toFixed(1);
+      ringEl.style.background='conic-gradient(#ffffff '+deg+'deg, rgba(0,0,0,.35) '+deg+'deg)';
+    } else ringEl.style.display='none';
+  }
+
+  // ------------------------------------------------------------ configure
+  function configure(next){
+    var was=S;
+    S=Object.assign({}, DEFAULTS, next);
+    if(S.accessMode==='tap'){ setHovered(null); drawCursor(false,0); }
+    var wantCam = S.accessMode!=='tap' && S.aimSource==='head';
+    if(wantCam && !camera.on) startCamera();
+    if(!wantCam && camera.on) stopCamera();
+    if(was.aimSource!==S.aimSource) haveAim=false;
+    kick();
+  }
+
+  // ------------------------------------------------------------ input
+  function setAim(x,y,jump){
+    raw={x:x,y:y};
+    if(!haveAim || jump) smoothed={x:x,y:y};
+    haveAim=true; kick();
+  }
+  // Pointer aim simply follows the system cursor: Windows Eye Control, a Tobii tracker or Mill Mouse
+  // work with nothing extra installed.
+  addEventListener('pointermove', function(e){
+    if(S.accessMode==='tap' || S.aimSource!=='mouse') return;
+    setAim(e.clientX,e.clientY);
+  }, {passive:true});
+  // Electron / native bridges can push gaze points and switch presses too.
+  addEventListener('gaze', function(e){ var g=e.detail; if(g && S.accessMode!=='tap' && S.aimSource==='mouse') setAim(g.x,g.y); });
+  function pressSwitch(){ if(hovered && !hovered.adult && (S.accessMode==='switch' || (S.accessMode==='dwell' && hovered._ready))) fire(hovered); }
+  addEventListener('gaze-switch', pressSwitch);
+
+  // Look-and-press: Space or Enter (what switch interfaces type) fires whatever the cursor is on.
+  addEventListener('keydown', function(e){
+    if(S.accessMode==='dwell' && hovered && hovered._ready && (e.key===' '||e.key==='Enter'||e.code==='Space')){
+      e.preventDefault(); e.stopPropagation(); if(!e.repeat) fire(hovered); return;
+    }
+    if(S.accessMode!=='switch') return;
+    if(e.key!==' ' && e.key!=='Enter' && e.code!=='Space') return;
+    var tag=e.target && e.target.tagName;
+    if(tag==='INPUT' || tag==='TEXTAREA' || tag==='SELECT') return;
+    e.preventDefault(); e.stopPropagation();
+    if(!e.repeat) pressSwitch();      // adult controls stay a hold
+  }, true);
+
+  // A pointer press on a target, in Look-and-press OR Look-and-hold, is that target's choice (a real
+  // click, a switch that clicks, or Mill Mouse's own dwell-click). The browser's own click is swallowed,
+  // so one look never chooses twice. Adult controls are left alone so their hold still works.
+  var swallowUntil=0;
+  function swallow(e){ if(e.isTrusted && performance.now()<swallowUntil){ e.stopPropagation(); e.preventDefault(); } }
+  addEventListener('pointerdown', function(e){
+    if(e.__bleNoChoose) return;                                // Mill Mouse clicks set not to choose
+    try{ dispatchEvent(new Event('ble-press')); }catch(er){}    // a real press: the app lets go of its "look away first" lock
+    if(S.accessMode==='tap') return;
+    var pt = S.aimSource==='mouse' ? {x:e.clientX,y:e.clientY} : smoothed;
+    if(S.aimSource==='mouse') setAim(pt.x,pt.y,true);
+    var t=hitTest(pt);
+    setHovered(t);
+    if(!t || t.adult) return;
+    // A press chooses straight away, even on the same spot again; only not when the same choice was just made by looking
+    var prevFire = lastFired.has(t.id) ? lastFired.get(t.id) : -Infinity, byClick = t._clickAt === prevFire;
+    if(S.accessMode==='switch' || armed || byClick || performance.now()-prevFire > 1000){
+      fire(t);
+      if(lastFired.get(t.id) !== prevFire) t._clickAt = lastFired.get(t.id);   // remember this choice came from a press
+    }
+    swallowUntil=performance.now()+700;
+    e.stopPropagation(); e.preventDefault();
+  }, true);
+  ['pointerup','mousedown','mouseup','touchstart','touchend','click'].forEach(function(ev){ addEventListener(ev, swallow, true); });
+
+  // ------------------------------------------------------------ adult controls: a half-second hold in every mode
+  // A tap does nothing at all; a gaze dwell on one runs 2.6× a child's.
+  function adultControl(el, run, layer){
+    // Grown-ups: press and hold. A finger may drift a little and Windows may interrupt a long touch;
+    // only lifting early, or sliding well away, cancels the hold.
+    var timer=null, x0=0, y0=0, pid=null;
+    function cancel(){ if(timer){ clearTimeout(timer); timer=null; el.classList.remove('holding'); } pid=null; }
+    el.addEventListener('pointerdown', function(e){
+      e.preventDefault(); cancel(); el.classList.add('holding'); x0=e.clientX; y0=e.clientY; pid=e.pointerId;
+      try { el.setPointerCapture(e.pointerId); } catch(er) {}
+      timer=setTimeout(function(){ timer=null; pid=null; el.classList.remove('holding'); run(); }, ADULT_HOLD_MS);
+    });
+    el.addEventListener('pointermove', function(e){
+      if(timer && e.pointerId===pid && Math.hypot(e.clientX-x0, e.clientY-y0) > 60) cancel();
+    });
+    el.addEventListener('pointerup', function(e){ if(e.pointerId===pid) cancel(); });
+    el.addEventListener('click', function(e){ e.preventDefault(); });   // a tap does nothing
+    el.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+    return register({ node:el, run:run, adult:true, layer:layer||'app' });
+  }
+
+  // ================================================================= the camera head pointer
+  // Windows only. No model, no network, no library: the head is the centroid of skin-coloured pixels.
+  var FW=160, FH=120;
+  var camera={ on:false, stream:null, video:null, canvas:null, head:null, centre:null, noFace:false, timer:0 };
+  var banner=null, previewHost=null, camListeners=[];
+  function emit(){ camListeners.forEach(function(f){ try{ f(); }catch(e){} }); }
+  function cameraState(){ return { on:camera.on, noFace:camera.noFace, hasCentre:!!camera.centre }; }
+
+  // The skin test (YCbCr). Returns the centroid in frame pixels, or null if fewer than 120 pixels match.
+  function scanFrame(data,w,h){
+    var n=0, sx=0, sy=0;
+    for(var y=0;y<h;y++) for(var x=0;x<w;x++){
+      var i=(y*w+x)*4, r=data[i], g=data[i+1], b=data[i+2];
+      var Y=0.299*r+0.587*g+0.114*b;
+      var Cb=128-0.168736*r-0.331264*g+0.5*b;
+      var Cr=128+0.5*r-0.418688*g-0.081312*b;
+      if(Y>55 && Cb>=77 && Cb<=130 && Cr>=133 && Cr<=178){ n++; sx+=x; sy+=y; }
+    }
+    return n<120 ? null : { x:sx/n, y:sy/n, n:n };
+  }
+  function showBanner(show){
+    if(!banner){
+      banner=document.createElement('div');
+      banner.textContent='No face found — check the lighting and stay in frame';
+      banner.style.cssText='position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:2147483646;'+
+        'background:#111;color:#fff;font:600 16px -apple-system,Segoe UI,Roboto,sans-serif;padding:10px 16px;'+
+        'border-radius:10px;border:2px solid #ffd400;pointer-events:none;display:none';
+      document.body.appendChild(banner);
+    }
+    banner.style.display = show ? 'block' : 'none';
+  }
+  function startCamera(){
+    if(camera.on || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+    camera.on=true; emit();
+    navigator.mediaDevices.getUserMedia({ video:{ width:320, height:240, facingMode:'user' } }).then(function(stream){
+      if(!camera.on){ stream.getTracks().forEach(function(t){ t.stop(); }); return; }
+      camera.stream=stream;
+      if(!camera.video){
+        // kept in the document for as long as the camera runs (removing it kills the stream)
+        camera.video=document.createElement('video');
+        camera.video.muted=true; camera.video.playsInline=true; camera.video.autoplay=true;
+        camera.video.style.cssText='position:fixed;left:-10000px;top:0;width:2px;height:2px;opacity:0;pointer-events:none';
+        document.body.appendChild(camera.video);
+      }
+      camera.video.srcObject=stream;
+      var p=camera.video.play(); if(p && p.catch) p.catch(function(){});
+      if(!camera.canvas){
+        camera.canvas=document.createElement('canvas');
+        camera.canvas.width=FW; camera.canvas.height=FH;
+        camera.canvas.style.cssText='width:240px;height:180px;border-radius:10px;background:#000;display:block';
+        parkPreview();
+      }
+      loop();
+    }).catch(function(){ camera.on=false; emit(); });
+  }
+  function stopCamera(){
+    camera.on=false; clearTimeout(camera.timer);
+    if(camera.stream) camera.stream.getTracks().forEach(function(t){ t.stop(); });
+    camera.stream=null; camera.head=null; camera.centre=null; camera.noFace=false;
+    showBanner(false); emit();
+  }
+  function loop(){
+    if(!camera.on || !camera.video || !camera.canvas) return;
+    var ctx=camera.canvas.getContext('2d',{ willReadFrequently:true });
+    if(ctx && camera.video.readyState>=2){
+      // mirrored, so moving the head left moves the pointer left
+      ctx.save(); ctx.translate(FW,0); ctx.scale(-1,1); ctx.drawImage(camera.video,0,0,FW,FH); ctx.restore();
+      var found=scanFrame(ctx.getImageData(0,0,FW,FH).data,FW,FH);
+      var noFace=!found;
+      if(noFace!==camera.noFace){ camera.noFace=noFace; emit(); }
+      showBanner(noFace);
+      if(found){
+        camera.head = camera.head
+          ? { x:camera.head.x+(found.x-camera.head.x)*0.4, y:camera.head.y+(found.y-camera.head.y)*0.4 }
+          : { x:found.x, y:found.y };
+        // the first face found is the centre, so the pointer moves as soon as the camera is on
+        if(!camera.centre){ camera.centre={ x:camera.head.x, y:camera.head.y }; emit(); }
+        ctx.strokeStyle='#ffd400'; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.arc(camera.head.x,camera.head.y,7,0,Math.PI*2); ctx.stroke();
+        var W=innerWidth, H=innerHeight;
+        setAim(Math.max(0,Math.min(W, W/2+(camera.head.x-camera.centre.x)*S.gain)),
+               Math.max(0,Math.min(H, H/2+(camera.head.y-camera.centre.y)*S.gain)));
+      }
+    }
+    camera.timer=setTimeout(function(){ requestAnimationFrame(loop); },33);
+  }
+  function setCentre(){ if(camera.head){ camera.centre={ x:camera.head.x, y:camera.head.y }; emit(); } }
+  // The live preview sits in Settings while it's open, and is parked (hidden, still in the document) after.
+  function attachPreview(host){ previewHost=host; if(camera.canvas && host) host.appendChild(camera.canvas); }
+  function detachPreview(){ previewHost=null; parkPreview(); }
+  function parkPreview(){
+    if(!camera.canvas) return;
+    if(previewHost){ previewHost.appendChild(camera.canvas); return; }
+    var park=document.getElementById('ble-preview-park');
+    if(!park){ park=document.createElement('div'); park.id='ble-preview-park';
+      park.style.cssText='position:fixed;left:-10000px;top:0;pointer-events:none'; document.body.appendChild(park); }
+    park.appendChild(camera.canvas);
+  }
+
+  window.BLEAccess = {
+    DEFAULTS:DEFAULTS, KEYS:Object.keys(DEFAULTS), ADULT_HOLD_MS:ADULT_HOLD_MS, REPEAT_DWELL_MS:REPEAT_DWELL_MS,
+    settings:function(){ return S; }, configure:configure, register:register, adultControl:adultControl,
+    setLayer:function(f){ layerFn=f; setHovered(null); }, onAim:function(f){ aimListeners.push(f); },
+    hitTest:hitTest, scanFrame:scanFrame, setCentre:setCentre, cameraState:cameraState,
+    onCameraChange:function(f){ camListeners.push(f); }, attachPreview:attachPreview, detachPreview:detachPreview,
+    hovered:function(){ var n=hovered && nodeOf(hovered); return n ? (n.getAttribute('aria-label')||n.id||n.textContent.trim().slice(0,12)) : null; },
+    addTestTarget:function(el,run){ return register({ node:el, run:run }); }
+  };
+  window.__bleAccess = window.BLEAccess;
+})();
+</script>
+<script>
+(() => {
+  const A = window.BLEAccess;
+  const $ = id => document.getElementById(id);
+
+  // ---------- Settings (stored on this device) ----------
+  const KEY = 'ble-bubbles-v1';
+  const SCREEN_DEFAULTS = { fullscreen: true, count: '3', size: 'big', speed: 'slow', popMs: 800, colors: 'rainbow', sounds: true, sayPop: false };
+  let talkS = {}; try { talkS = (JSON.parse(localStorage.getItem('ble-talk-v1') || '{}').settings) || {}; } catch (e) {}
+  const accessFromTalk = {}; A.KEYS.forEach(k => { if (talkS[k] !== undefined) accessFromTalk[k] = talkS[k]; });   // the same look settings as her talk board
+  const defaults = Object.assign({}, A.DEFAULTS, { accessMode: 'dwell', dwellMs: 1500 }, accessFromTalk, SCREEN_DEFAULTS);
+  let S = Object.assign({}, defaults);
+  try { const saved = JSON.parse(localStorage.getItem(KEY) || 'null'); if (saved) S = Object.assign(S, saved); } catch (e) {}
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+  const accessOf = () => { const o = {}; A.KEYS.forEach(k => o[k] = S[k]); return o; };
+  const PIC = talkS.picColor || '#ff2b2b';                   // her picture color, from I Can Talk
+  document.documentElement.style.setProperty('--pic', PIC);
+  const RAINBOW = ['#ff2b2b', '#ffd400', '#2bd94a', '#2b8cff', '#ff8a00', '#c04bff', '#ff4fb0'];
+
+  // ---------- Layers: which set of targets can be chosen right now ----------
+  const shown = el => !!el && getComputedStyle(el).display !== 'none' && getComputedStyle(el).visibility !== 'hidden';
+  let liveCache = { t: 0, v: 'start' };
+  function liveLayer() {
+    const now = performance.now();
+    if (now - liveCache.t < 50) return liveCache.v;
+    let v = 'app';
+    if (shown($('exitDone'))) v = 'none';
+    else if ($('panel').classList.contains('open')) v = 'sheet';
+    else if (shown($('startScreen'))) v = 'start';
+    liveCache = { t: now, v };
+    return v;
+  }
+  A.setLayer(liveLayer);
+  let aim = { x: -9999, y: -9999 }, lockedNode = null;
+  addEventListener('ble-press', () => { lockedNode = null; });
+  A.onAim((x, y) => {
+    aim = { x, y };
+    if (lockedNode) {
+      const r = lockedNode.getBoundingClientRect();
+      if (!lockedNode.isConnected || x < r.left - 30 || x > r.right + 30 || y < r.top - 30 || y > r.bottom + 30) lockedNode = null;
+    }
+  });
+  function lockUnderAim() {
+    lockedNode = null;
+    if (S.accessMode === 'tap') return;
+    requestAnimationFrame(() => { const el = document.elementFromPoint(aim.x, aim.y); lockedNode = el && el.closest('.tile'); });
+  }
+  function childTarget(el, run, l) {
+    el.addEventListener('click', () => { if (el === lockedNode) return; run(); });
+    return A.register({
+      node: el, run, layer: l || 'app',
+      enabled: () => el !== lockedNode && !el.hidden,
+      progress: p => { el.style.setProperty('--p', p); el.classList.toggle('hover', p > 0); },
+    });
+  }
+
+  // ---------- Sound: a soft "pop" made right here (works offline), and the board's voice ----------
+  let actx = null;
+  function audio() {
+    if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
+    if (actx.state === 'suspended') actx.resume().catch(() => {});
+    return actx;
+  }
+  addEventListener('pointerdown', audio, true);
+  addEventListener('keydown', audio, true);
+  function popSound(pitch) {
+    if (!S.sounds) return;
+    const ctx = audio(); if (!ctx || ctx.state !== 'running') return;
+    const t = ctx.currentTime;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(700 * pitch, t); o.frequency.exponentialRampToValueAtTime(140 * pitch, t + 0.12);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.7, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+    o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + 0.18);
+    const n = ctx.createBufferSource(), b = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.04), ctx.sampleRate), d = b.getChannelData(0);   // the "p" of the pop
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3);
+    const ng = ctx.createGain(); ng.gain.value = 0.35; n.buffer = b; n.connect(ng); ng.connect(ctx.destination); n.start(t);
+  }
+  const voiceWin = (() => { try { if (window.parent !== window && window.parent.speechSynthesis) return window.parent; } catch (e) {} return window; })();
+  let chosenVoice = null;
+  function pickVoice() {
+    let vs = []; try { vs = voiceWin.speechSynthesis.getVoices(); } catch (e) {}
+    if (!vs.length) return null;
+    const pref = ['samantha', 'karen', 'tessa', 'victoria', 'moira', 'fiona', 'susan', 'google us english', 'microsoft zira', 'zira', 'ava', 'allison', 'female'];
+    for (const name of pref) { const v = vs.find(v => (v.name || '').toLowerCase().includes(name)); if (v) return v; }
+    return vs.find(v => /^en/i.test(v.lang || '')) || vs[0];
+  }
+  function speak(text) {
+    try {
+      voiceWin.speechSynthesis.cancel();
+      const u = new voiceWin.SpeechSynthesisUtterance(text);
+      const v = chosenVoice || (chosenVoice = pickVoice()); if (v) u.voice = v;
+      u.rate = 0.9; u.pitch = 1.25; voiceWin.speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+  const hush = () => { try { voiceWin.speechSynthesis.cancel(); } catch (e) {} };
+
+  // ================= The bubbles =================
+  const stage = $('stage'), cv = $('bubbles'), cx2 = cv.getContext('2d');
+  let W = 0, H = 0, R = 0, dpr = 1, bubbles = [], bursts = [], running = false, last = 0, colorTurn = 0;
+  const SIZE = { medium: 0.10, big: 0.14, huge: 0.19 };
+  const SPEED = { still: 0, slow: 0.045, medium: 0.09 };
+  function fit() {
+    const r = stage.getBoundingClientRect();
+    dpr = window.devicePixelRatio || 1;
+    W = r.width; H = r.height;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    cv.style.width = W + 'px'; cv.style.height = H + 'px';
+    R = Math.min(W, H) * (SIZE[S.size] || SIZE.big);
+    const n = +S.count || 3;
+    R = Math.min(R, Math.sqrt(W * H * 0.42 / n) / 2.2);   // room for all of them without touching
+  }
+  const aimLocal = () => { const r = stage.getBoundingClientRect(); return { x: aim.x - r.left, y: aim.y - r.top }; };
+  function nextColor() { if (S.colors === 'one') return PIC; colorTurn = (colorTurn + 1) % RAINBOW.length; return RAINBOW[colorTurn]; }
+  function place(b, fromBottom) {       // somewhere free: not on top of another bubble, and not right where she is looking
+    const a = aimLocal();
+    for (let tries = 0; tries < 40; tries++) {
+      const x = R + Math.random() * Math.max(1, W - 2 * R);
+      const y = fromBottom && S.speed !== 'still' ? H + R + Math.random() * H * 0.25 : R + Math.random() * Math.max(1, H - 2 * R);
+      const clear = bubbles.every(o => o === b || o.popped || Math.hypot(o.x - x, o.y - y) > (o.r + R) * 1.05);
+      const away = Math.hypot(a.x - x, a.y - y) > R * 2.2;
+      if ((clear && away) || tries === 39) { b.x = x; b.y = y; return; }
+    }
+  }
+  function makeBubble(fromBottom) {
+    const b = { x: 0, y: 0, r: R, phase: Math.random() * 6.28, color: nextColor(), look: 0, popped: false, born: performance.now() };
+    place(b, fromBottom);
+    return b;
+  }
+  function reset() {
+    fit(); bubbles = []; bursts = [];
+    const n = +S.count || 3;
+    for (let i = 0; i < n; i++) bubbles.push(makeBubble(false));
+  }
+  function pop(b) {
+    if (b.popped) return;
+    b.popped = true;
+    const drops = [];
+    for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2 + Math.random() * 0.3; drops.push({ a, s: 0.9 + Math.random() * 0.5 }); }
+    bursts.push({ x: b.x, y: b.y, r: b.r, color: b.color, t: 0, drops });
+    popSound(0.85 + Math.random() * 0.3);
+    if (S.sayPop) setTimeout(() => speak('Pop!'), 120);
+    setTimeout(() => {                  // a new bubble comes
+      const i = bubbles.indexOf(b); if (i < 0) return;
+      bubbles[i] = makeBubble(true);
+    }, S.speed === 'still' ? 900 : 500);
+  }
+  const lookOn = () => { const st = A.settings(); return st.accessMode !== 'tap' && liveLayer() === 'app'; };
+  function frame(now) {
+    if (!running) return;
+    const dt = Math.min(0.05, (now - (last || now)) / 1000); last = now;
+    const speed = (SPEED[S.speed] || 0) * H;
+    const a = aimLocal();
+    const looking = lookOn();
+    let target = null;
+    for (const b of bubbles) {
+      if (b.popped) continue;
+      b.r = R;
+      if (speed) {
+        b.y -= speed * dt;
+        b.x += Math.sin(now / 1100 + b.phase) * R * 0.25 * dt;
+        b.x = Math.max(b.r, Math.min(W - b.r, b.x));
+        if (b.y < -b.r) { place(b, true); b.color = nextColor(); b.look = 0; }
+      }
+      if (looking && Math.hypot(a.x - b.x, a.y - b.y) < b.r * 1.08) target = b;
+    }
+    for (const b of bubbles) {
+      if (b.popped) continue;
+      if (b === target) { b.look += dt * 1000; if (b.look >= (+S.popMs || 800)) pop(b); }
+      else b.look = Math.max(0, b.look - dt * 2000);
+    }
+    draw(now, dt);
+    requestAnimationFrame(frame);
+  }
+  function draw(now, dt) {
+    const c = cx2;
+    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    c.clearRect(0, 0, W, H);
+    for (const b of bubbles) {
+      if (b.popped) continue;
+      const p = Math.min(1, b.look / (+S.popMs || 800));
+      const breathe = S.speed === 'still' ? 1 + Math.sin(now / 600 + b.phase) * 0.03 : 1;
+      const r = b.r * breathe * (1 + 0.14 * p);              // she is looking: it swells, ready to pop
+      c.beginPath(); c.arc(b.x, b.y, r, 0, Math.PI * 2);
+      c.fillStyle = b.color; c.fill();
+      c.lineWidth = Math.max(4, r * 0.06); c.strokeStyle = 'rgba(255,255,255,.55)'; c.stroke();
+      c.beginPath(); c.ellipse(b.x - r * 0.35, b.y - r * 0.4, r * 0.28, r * 0.17, -0.6, 0, Math.PI * 2);   // the shine
+      c.fillStyle = 'rgba(255,255,255,.75)'; c.fill();
+      c.beginPath(); c.arc(b.x + r * 0.42, b.y - r * 0.08, r * 0.07, 0, Math.PI * 2); c.fill();
+      if (p > 0) {                                         // and a white ring fills around it
+        c.beginPath(); c.arc(b.x, b.y, r + Math.max(8, r * 0.09), -Math.PI / 2, -Math.PI / 2 + p * Math.PI * 2);
+        c.lineWidth = Math.max(8, r * 0.08); c.lineCap = 'round'; c.strokeStyle = '#fff'; c.stroke();
+      }
+    }
+    for (let i = bursts.length - 1; i >= 0; i--) {           // the pop: a ring and drops flying out
+      const s = bursts[i]; s.t += dt;
+      const k = s.t / 0.55; if (k >= 1) { bursts.splice(i, 1); continue; }
+      const ease = 1 - Math.pow(1 - k, 2);
+      c.globalAlpha = 1 - k;
+      c.beginPath(); c.arc(s.x, s.y, s.r * (1 + 0.6 * ease), 0, Math.PI * 2);
+      c.lineWidth = Math.max(6, s.r * 0.12) * (1 - k); c.strokeStyle = s.color; c.stroke();
+      c.fillStyle = s.color;
+      for (const d of s.drops) {
+        const dist = s.r * (0.6 + 1.1 * ease * d.s);
+        c.beginPath(); c.arc(s.x + Math.cos(d.a) * dist, s.y + Math.sin(d.a) * dist, Math.max(5, s.r * 0.12) * (1 - k * 0.6), 0, Math.PI * 2); c.fill();
+      }
+      c.globalAlpha = 1;
+    }
+  }
+  // a tap or click pops the bubble under it (Mill Mouse clicks too, unless they are set not to choose)
+  stage.addEventListener('pointerdown', e => {
+    if (liveLayer() !== 'app') return;
+    const r = stage.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+    let best = null, bd = 1e9;
+    for (const b of bubbles) { if (b.popped) continue; const d = Math.hypot(x - b.x, y - b.y); if (d < b.r * 1.15 && d < bd) { best = b; bd = d; } }
+    if (best) pop(best);
+  });
+  addEventListener('resize', () => { const oldR = R; fit(); if (oldR) bubbles.forEach(b => { b.x = Math.min(Math.max(b.x, R), W - R); b.y = Math.min(b.y, H + R); }); });
+  window.__bubbles = () => bubbles;   // for checking
+  function begin() { reset(); if (!running) { running = true; last = 0; requestAnimationFrame(frame); } }
+
+  // ---------- Back to I Can Talk (when she came from her talk board) ----------
+  const svg = inner => `<svg class="ico" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">${inner}</svg>`;
+  const FROM_KEY = 'bleFromTalk:' + location.pathname;
+  let fromTalk = false;
+  try {
+    const q = new URLSearchParams(location.search);
+    if (q.get('from') === 'talk') { sessionStorage.setItem(FROM_KEY, '1'); q.delete('from'); history.replaceState(history.state, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash); }
+    fromTalk = sessionStorage.getItem(FROM_KEY) === '1';
+  } catch (e) {}
+  const talkBtn = $('homeBtn');
+  talkBtn.innerHTML = svg('<path d="M50 6l46 40H82v48H58V66H42v28H18V46H4z"/>') + '<span class="label">Talk</span>';
+  talkBtn.hidden = !fromTalk;
+  document.body.classList.toggle('fromtalk', fromTalk);
+  function backToTalk() {
+    hush(); running = false;
+    try { if (window.parent !== window && window.parent.bleCloseApp) { window.parent.bleCloseApp(); return; } } catch (e) {}
+    location.href = '/talk/?home';
+  }
+  childTarget(talkBtn, backToTalk);
+
+  // ---------- Start (lets the browser play sound) ----------
+  const startScreen = $('startScreen');
+  $('startBtn').innerHTML = svg('<circle cx="50" cy="52" r="40"/><ellipse cx="36" cy="36" rx="11" ry="7" transform="rotate(-35 36 36)" fill="#000" opacity=".55"/>') + '<span class="label">Start</span>';
+  let startUnreg = null;
+  function start() {
+    audio();
+    startScreen.style.display = 'none';
+    if (startUnreg) { startUnreg(); startUnreg = null; }
+    liveCache.t = 0; lockUnderAim(); begin();
+  }
+  startUnreg = childTarget($('startBtn'), start, 'start');
+  function firstGesture(e) {
+    if (e.target && e.target.closest && e.target.closest('#panel, #panelScrim')) return;
+    if ($('exitDone').style.display === 'flex') return;
+    audio();
+    const el = document.documentElement;
+    if (window.parent === window && S.fullscreen !== false && !document.fullscreenElement && el.requestFullscreen) el.requestFullscreen().catch(() => {});
+  }
+  addEventListener('pointerdown', firstGesture, true);
+  addEventListener('keydown', firstGesture, true);
+
+  // ================= Settings sheet =================
+  function seg(id, get, set) {
+    const sync = () => $(id).querySelectorAll('button').forEach(b => {
+      const on = b.dataset.v === String(get()); b.classList.toggle('sel', on); b.setAttribute('aria-pressed', on);
+    });
+    $(id).addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; set(b.dataset.v); syncControls(); save(); });
+    return sync;
+  }
+  const syncers = [];
+  let changed = false;
+  syncers.push(seg('segCount', () => S.count, v => { S.count = v; changed = true; }));
+  syncers.push(seg('segSize', () => S.size, v => { S.size = v; changed = true; }));
+  syncers.push(seg('segSpeed', () => S.speed, v => { S.speed = v; changed = true; }));
+  syncers.push(seg('segPop', () => String(S.popMs), v => { S.popMs = +v; }));
+  syncers.push(seg('segColors', () => S.colors, v => { S.colors = v; changed = true; }));
+  document.querySelectorAll('.trow[data-toggle]').forEach(row => {
+    const el = $(row.dataset.toggle);
+    const key = { tFull: 'fullscreen', tSounds: 'sounds', tSay: 'sayPop' }[row.dataset.toggle];
+    const flip = () => { S[key] = !S[key]; save(); syncControls(); };
+    row.addEventListener('click', flip);
+    row.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flip(); } });
+    syncers.push(() => { el.classList.toggle('on', !!S[key]); row.setAttribute('aria-checked', !!S[key]); });
+  });
+  $('btnFull').onclick = () => {
+    const el = document.documentElement;
+    if (document.fullscreenElement) document.exitFullscreen(); else if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+  };
+  $('btnResetSettings').onclick = () => { $('resetConfirm').hidden = false; $('panel').querySelector('.pbody').scrollTop = 0; };
+  $('btnResetNo').onclick = () => { $('resetConfirm').hidden = true; };
+  $('btnResetYes').onclick = () => { Object.assign(S, SCREEN_DEFAULTS); $('resetConfirm').hidden = true; changed = true; save(); syncControls(); };
+  // ---- Choosing without touch: the same rows and steps as every Bright Little Eyes app ----
+  function applyAccess() { A.configure(accessOf()); syncAccessRows(); }
+  function syncAccessRows() {
+    const mark = (id, v) => $(id).querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.v === v));
+    mark('segMode', S.accessMode); mark('segAim', S.aimSource); mark('segDot', S.showDot ? 'on' : 'off');
+    $('stDwell').querySelector('.sv').textContent = S.dwellMs + ' ms';
+    $('stCool').querySelector('.sv').textContent = S.cooldownMs + ' ms';
+    $('stGain').querySelector('.sv').textContent = S.gain + '×';
+    $('accessMore').style.display = S.accessMode === 'tap' ? 'none' : 'block';
+    $('cameraRows').style.display = S.aimSource === 'head' ? 'block' : 'none';
+    const c = A.cameraState();
+    $('camStatus').textContent = !c.on ? (S.aimSource === 'head' ? 'Starting the camera… (allow it if the browser asks)' : '')
+      : c.noFace ? 'No face found — check the lighting and stay in frame' : 'The yellow circle shows the face it found.';
+  }
+  A.onCameraChange(syncAccessRows);
+  function setAccess(k, v) { S[k] = v; applyAccess(); save(); }
+  $('segMode').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setAccess('accessMode', b.dataset.v); });
+  $('segAim').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setAccess('aimSource', b.dataset.v); });
+  $('segDot').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setAccess('showDot', b.dataset.v === 'on'); });
+  function stepper(id, key, step, min, max) {
+    $(id).addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return;
+      setAccess(key, Math.max(min, Math.min(max, S[key] + step * (+b.dataset.d)))); });
+  }
+  stepper('stDwell', 'dwellMs', 50, 250, 3000);
+  stepper('stCool', 'cooldownMs', 40, 80, 1200);
+  stepper('stGain', 'gain', 2, 6, 40);
+  $('btnCentre').onclick = () => A.setCentre();
+  function syncControls() { syncers.forEach(f => f()); syncAccessRows(); }
+  A.adultControl($('gear'), openPanel);   // the long hold is the grown-up gate
+  function exitApp() {
+    hush(); running = false;
+    const done = () => {
+      try { window.close(); } catch (e) {}
+      setTimeout(() => { A.setLayer(() => 'none'); A.configure(Object.assign({}, A.settings(), { showDot: false })); $('exitDone').style.display = 'flex'; }, 250);
+    };
+    if (document.fullscreenElement) document.exitFullscreen().then(done, done); else done();
+  }
+  (() => {
+    const btn = $('exitBtn'); let t = 0;
+    if (fromTalk) { btn.style.display = 'none'; return; }     // inside I Can Talk, its own X is at the top
+    const cancel = () => { if (t) { clearTimeout(t); t = 0; } btn.style.background = ''; };
+    btn.addEventListener('pointerdown', e => {
+      e.preventDefault(); cancel(); btn.style.background = '#555';
+      t = setTimeout(() => { t = 0; btn.style.background = ''; exitApp(); }, 800);
+    });
+    ['pointerup', 'pointercancel'].forEach(ev => addEventListener(ev, cancel, true));
+    btn.addEventListener('pointerleave', cancel);
+    btn.addEventListener('click', e => e.preventDefault());
+    btn.addEventListener('contextmenu', e => e.preventDefault());
+  })();
+  $('exitReopen').onclick = () => { location.href = location.pathname; };
+  function openPanel() {
+    changed = false;
+    syncControls(); $('resetConfirm').hidden = true;
+    ['panel', 'panelArrow', 'panelScrim'].forEach(id => $(id).classList.add('open'));
+    A.attachPreview($('camPreview'));
+    liveCache.t = 0;
+  }
+  function closePanel() {
+    ['panel', 'panelArrow', 'panelScrim'].forEach(id => $(id).classList.remove('open'));
+    A.detachPreview();
+    liveCache.t = 0;
+    if (changed && running) reset();
+    changed = false; lockUnderAim();
+  }
+  $('closePanel').onclick = closePanel;
+  $('panelScrim').onclick = closePanel;
+
+  applyAccess();
+  if (fromTalk) start();                // she already pressed Start on her talk board
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
+})();
+</script>
+</body>
+</html>

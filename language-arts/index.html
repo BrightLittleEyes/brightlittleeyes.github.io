@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#4E8A5C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Language Arts">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Wildflower Language Arts 3</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1516,6 +1522,7 @@ function renderParent(){
 }
 
 /* ================= start ================= */
+if('serviceWorker' in navigator && /github\.io$/.test(location.hostname)){ addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
 if(!roster.includes(student)) student="";
 go(student?"home":"pick");
 (async()=>{ const saved=await IDB.get(); if(!saved){ IDB.put(snapshot()); return; }

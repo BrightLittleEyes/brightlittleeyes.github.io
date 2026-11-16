@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Science Explorers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky:#e9f6ff; --ink:#1f2a44; --soft:#5b6785;
+    --sun:#ffc93c; --leaf:#4cc38a; --berry:#ff6b8b; --ocean:#3aa0ff; --grape:#8b6cff;
+    --card:#ffffff; --radius:22px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:"Fredoka",system-ui,sans-serif; color:var(--ink);
+    background:linear-gradient(180deg,#d9f0ff 0%,#f4fbff 60%,#fff7e3 100%);
+    min-height:100vh;
+  }
+  button{font-family:inherit;cursor:pointer;border:none}
+  .wrap{max-width:980px;margin:0 auto;padding:20px 18px 60px}
+
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:clamp(22px,4vw,30px)}
+  .logo .flask{font-size:1.4em;display:inline-block;animation:bob 2.6s ease-in-out infinite}
+  @keyframes bob{50%{transform:translateY(-4px) rotate(-6deg)}}
+  .stars{background:#fff;border-radius:999px;padding:8px 16px;font-weight:600;box-shadow:0 4px 0 #cfe3f5;font-size:18px}
+  .back{background:#fff;border-radius:999px;padding:10px 18px;font-size:17px;font-weight:600;box-shadow:0 4px 0 #cfe3f5}
+  .back:active{transform:translateY(3px);box-shadow:0 1px 0 #cfe3f5}
+
+  h1{font-size:clamp(26px,5vw,40px);margin:4px 0 6px}
+  .lead{color:var(--soft);font-size:clamp(17px,2.4vw,20px);margin:0 0 22px}
+
+  /* Home grid */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px}
+  .tile{
+    border-radius:var(--radius);padding:22px 18px;text-align:left;color:#fff;
+    min-height:170px;display:flex;flex-direction:column;justify-content:space-between;
+    box-shadow:0 7px 0 rgba(0,0,0,.14);transition:transform .15s;
+  }
+  .tile:hover{transform:translateY(-3px) rotate(-.6deg)}
+  .tile:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.14)}
+  .tile .ic{font-size:52px;line-height:1}
+  .tile b{font-size:24px;display:block;margin-top:10px}
+  .tile span{font-size:16px;opacity:.95}
+  .t-space{background:linear-gradient(135deg,#4a3fbf,#8b6cff)}
+  .t-matter{background:linear-gradient(135deg,#1d8cf0,#5fd0ff)}
+  .t-habitat{background:linear-gradient(135deg,#21a56a,#7ee0a4)}
+  .t-plant{background:linear-gradient(135deg,#e2892b,#ffc93c)}
+  .t-quiz{background:linear-gradient(135deg,#e2456a,#ff8fa6)}
+
+  .panel{background:var(--card);border-radius:var(--radius);padding:22px;box-shadow:0 8px 0 #d7e8f6}
+  .screen{display:none}
+  .screen.on{display:block;animation:pop .35s ease}
+  @keyframes pop{from{opacity:0;transform:scale(.97)}}
+
+  .btn{
+    background:var(--ocean);color:#fff;font-size:19px;font-weight:600;border-radius:16px;
+    padding:12px 22px;box-shadow:0 5px 0 #1f6fc0;
+  }
+  .btn:active{transform:translateY(4px);box-shadow:0 1px 0 #1f6fc0}
+  .btn.green{background:var(--leaf);box-shadow:0 5px 0 #2a8d5f}
+  .btn.pink{background:var(--berry);box-shadow:0 5px 0 #c94564}
+
+  /* Space */
+  .space{background:radial-gradient(ellipse at 20% 40%,#2b2470 0%,#0f1035 70%);border-radius:var(--radius);padding:18px;position:relative;overflow:hidden}
+  .space::before{content:"";position:absolute;inset:0;background-image:
+    radial-gradient(2px 2px at 10% 20%,#fff,transparent),radial-gradient(1.5px 1.5px at 30% 80%,#fff,transparent),
+    radial-gradient(2px 2px at 55% 15%,#fff,transparent),radial-gradient(1.5px 1.5px at 75% 60%,#fff,transparent),
+    radial-gradient(2px 2px at 90% 30%,#fff,transparent),radial-gradient(1px 1px at 45% 50%,#fff,transparent),
+    radial-gradient(1.5px 1.5px at 85% 90%,#fff,transparent),radial-gradient(1px 1px at 5% 70%,#fff,transparent);opacity:.8}
+  .orbit{position:relative;display:flex;align-items:center;gap:clamp(6px,1.6vw,16px);overflow-x:auto;padding:16px 6px 10px;scrollbar-width:thin}
+  .sun{flex:0 0 auto;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff3a8,#ffb300 55%,#ff7a00);box-shadow:0 0 40px #ffb30099;cursor:pointer}
+  .planet{flex:0 0 auto;border-radius:50%;cursor:pointer;transition:transform .2s;position:relative;background:none;padding:0}
+  .planet:hover,.planet.sel{transform:scale(1.18)}
+  .planet.sel{outline:3px solid #fff;outline-offset:4px}
+  .ring{position:absolute;left:50%;top:50%;width:180%;height:34%;border:3px solid #e8d49a;border-radius:50%;transform:translate(-50%,-50%) rotate(-18deg);pointer-events:none}
+  .fact{margin-top:14px;background:#fff;border-radius:18px;padding:16px 18px;min-height:120px}
+  .fact h3{margin:0 0 6px;font-size:24px}
+  .fact p{margin:6px 0;font-size:18px;line-height:1.4}
+  .chip{display:inline-block;background:#eef3ff;color:#3d4aa8;border-radius:999px;padding:4px 12px;margin:4px 6px 0 0;font-size:15px;font-weight:500}
+
+  /* Matter */
+  .matter{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:center}
+  @media (max-width:680px){.matter{grid-template-columns:1fr}}
+  .beaker{position:relative;height:280px;border-radius:0 0 40px 40px;border:6px solid #9cc7e8;border-top:none;background:#f5fbff;overflow:hidden}
+  canvas{display:block;width:100%;height:100%}
+  .thermo{display:flex;align-items:center;gap:12px;margin:16px 0 6px;font-size:18px}
+  input[type=range]{flex:1;accent-color:#ff6b3c;height:28px}
+  .state-name{font-size:34px;font-weight:700;margin:0}
+  .state-desc{font-size:19px;line-height:1.45;color:var(--soft)}
+  .temp{font-weight:700;font-size:22px;min-width:76px;text-align:right}
+
+  /* Habitats */
+  .animals{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:16px;min-height:72px}
+  .animal{font-size:42px;background:#fff7e0;border-radius:18px;width:72px;height:72px;box-shadow:0 4px 0 #f0dca8;transition:transform .15s}
+  .animal.sel{transform:scale(1.15);background:var(--sun);box-shadow:0 4px 0 #d9a514}
+  .homes{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+  .home{border-radius:18px;padding:12px;min-height:150px;color:#fff;text-align:left;box-shadow:0 5px 0 rgba(0,0,0,.15)}
+  .home h4{margin:0 0 4px;font-size:21px}
+  .home small{font-size:14px;opacity:.95;display:block;margin-bottom:6px}
+  .home .got{font-size:30px;letter-spacing:4px}
+  .h-ocean{background:linear-gradient(160deg,#1c7be0,#4fc3f7)}
+  .h-desert{background:linear-gradient(160deg,#d9822b,#f5c76a)}
+  .h-arctic{background:linear-gradient(160deg,#5b8fb9,#bfe3f7)}
+  .h-forest{background:linear-gradient(160deg,#1f7a4c,#62c48a)}
+  .home.shake{animation:shake .4s}
+  @keyframes shake{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+  .msg{text-align:center;font-size:20px;min-height:30px;margin:12px 0 0;font-weight:500}
+
+  /* Plant */
+  .plant-wrap{display:grid;grid-template-columns:1.1fr 1fr;gap:18px;align-items:center}
+  @media (max-width:680px){.plant-wrap{grid-template-columns:1fr}}
+  .pot-scene{height:300px;border-radius:18px;background:linear-gradient(180deg,#bfe6ff,#e8f7ff);position:relative;overflow:hidden}
+  .needs{display:flex;flex-direction:column;gap:12px}
+  .need{display:flex;align-items:center;gap:12px;background:#f6f9ff;border-radius:16px;padding:10px 12px}
+  .need .em{font-size:32px}
+  .need .bar{flex:1;height:16px;background:#e3eaf5;border-radius:999px;overflow:hidden}
+  .need .fill{height:100%;width:0;border-radius:999px;transition:width .3s}
+  .need button{font-size:16px;padding:8px 14px;border-radius:12px;background:#fff;box-shadow:0 3px 0 #cfdcee;font-weight:600}
+
+  /* Quiz */
+  .q{font-size:clamp(21px,3.4vw,27px);font-weight:600;margin:6px 0 16px}
+  .opts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:560px){.opts{grid-template-columns:1fr}}
+  .opt{background:#f2f6ff;border-radius:16px;padding:16px;font-size:19px;text-align:left;box-shadow:0 4px 0 #d7e0f2;font-weight:500}
+  .opt.right{background:#c9f5dc;box-shadow:0 4px 0 #7fd3a3}
+  .opt.wrong{background:#ffd6de;box-shadow:0 4px 0 #f59aae}
+  .opt:disabled{cursor:default}
+  .progress{height:12px;background:#e6eef9;border-radius:999px;overflow:hidden;margin-bottom:14px}
+  .progress div{height:100%;background:linear-gradient(90deg,var(--leaf),var(--ocean));transition:width .3s}
+  .why{background:#fff8e0;border-radius:14px;padding:12px 14px;font-size:18px;margin-top:14px;display:none}
+  .center{text-align:center}
+  .big-emoji{font-size:80px}
+
+  /* Students, stars, parent */
+  .who{background:#fff;border-radius:999px;padding:8px 14px;font-size:16px;font-weight:600;box-shadow:0 4px 0 #cfe3f5}
+  .starbar{height:16px;background:#fff;border-radius:999px;overflow:hidden;box-shadow:inset 0 0 0 2px #cfe3f5;margin:-8px 0 22px;max-width:520px}
+  .starbar i{display:block;height:100%;background:linear-gradient(90deg,#ffc93c,#ff9f1c);border-radius:999px;transition:width .4s}
+  .tile .done{display:inline-block;margin-top:8px;background:rgba(255,255,255,.28);border-radius:999px;padding:3px 10px;font-size:14px;font-weight:600}
+  .names{display:flex;flex-wrap:wrap;gap:12px;margin:8px 0 20px}
+  .name-btn{background:#fff;border-radius:18px;padding:16px 22px;font-size:22px;font-weight:600;box-shadow:0 5px 0 #cfe3f5;min-width:140px}
+  .name-btn small{display:block;font-size:15px;color:var(--soft);font-weight:500}
+  .add-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .add-row input,.pinbox input,.panel textarea,.panel input[type=text],.panel input[type=password]{font-family:inherit;font-size:20px;padding:12px 14px;border-radius:14px;border:3px solid #cfe3f5;outline:none}
+  .add-row input:focus,.pinbox input:focus{border-color:var(--ocean)}
+  .err{color:#c9304f;font-weight:500;min-height:24px;margin:8px 0 0}
+  .badges{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:10px}
+  .badge{background:#f6f9ff;border-radius:16px;padding:12px;text-align:center;font-size:15px}
+  .badge b{display:block;font-size:16px;margin-top:4px}
+  .badge .bi{font-size:34px}
+  .badge.locked{opacity:.4;filter:grayscale(1)}
+  .foot{text-align:center;margin-top:34px}
+  .link{background:none;color:var(--soft);font-size:16px;text-decoration:underline}
+  .pinbox{max-width:380px;margin:0 auto;text-align:center}
+  .pinbox input{width:160px;text-align:center;letter-spacing:10px;font-size:28px}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .tabs button{background:#eef3ff;border-radius:999px;padding:8px 16px;font-size:16px;font-weight:600;color:#3d4aa8}
+  .tabs button[aria-pressed=true]{background:var(--ocean);color:#fff}
+  .act-row{display:grid;grid-template-columns:150px 1fr 70px;gap:10px;align-items:center;margin:8px 0;font-size:17px}
+  .act-row .bar{height:14px;background:#e3eaf5;border-radius:999px;overflow:hidden}
+  .act-row .bar i{display:block;height:100%;background:var(--sun);border-radius:999px}
+  table.hist{width:100%;border-collapse:collapse;font-size:16px;margin-top:8px}
+  table.hist th,table.hist td{text-align:left;padding:8px 6px;border-bottom:1px solid #e6eef9}
+  .note{color:var(--soft);font-size:15px}
+  .panel h3{margin:22px 0 6px;font-size:20px}
+  .panel textarea{width:100%;font-size:14px;font-family:ui-monospace,monospace}
+  .btn.small{font-size:16px;padding:9px 16px;box-shadow:0 4px 0 #1f6fc0}
+  .btn.ghost{background:#fff;color:var(--ink);box-shadow:0 4px 0 #cfdcee}
+  .btn.danger{background:#fff;color:#c9304f;box-shadow:0 4px 0 #f2c3cd}
+  .ctrl{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px}
+
+  .confetti{position:fixed;top:-20px;font-size:26px;pointer-events:none;animation:fall 1.8s linear forwards;z-index:9}
+  @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.6}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo"><span class="flask">🧪</span> Science Explorers</div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button class="back" id="backBtn" style="display:none" onclick="go('home')">🏠 Home</button>
+      <button class="who" id="whoBtn" style="display:none" onclick="go('pick')"></button>
+      <div class="stars" id="starPill" style="display:none">⭐ <span id="starCount">0</span></div>
+    </div>
+  </header>
+
+  <!-- PICK STUDENT -->
+  <section class="screen" id="pick">
+    <h1>Who's exploring today? 🔬</h1>
+    <p class="lead">Tap your name. New here? Add your name below.</p>
+    <div class="names" id="names"></div>
+    <form class="add-row" id="addForm">
+      <input id="newName" maxlength="20" placeholder="Your first name" autocomplete="off" aria-label="Your first name">
+      <button class="btn green" type="submit">➕ Add me</button>
+    </form>
+    <p class="err" id="addErr"></p>
+    <div class="foot"><button class="link" onclick="go('parent')">👪 Parent area</button></div>
+  </section>
+
+  <!-- PARENT -->
+  <section class="screen" id="parent">
+    <div class="panel" id="parentBox"></div>
+  </section>
+
+  <!-- HOME -->
+  <section class="screen" id="home">
+    <h1 id="hello">Hi, Scientist! 👋</h1>
+    <p class="lead" id="helloSub">Pick an adventure. Earn stars as you explore!</p>
+    <div class="starbar" aria-hidden="true"><i id="starFill" style="width:0"></i></div>
+    <div class="grid" id="tiles">
+      <button class="tile t-space" onclick="go('space')"><div class="ic">🪐</div><div><b>Solar System</b><span>Tap planets to learn cool facts</span></div></button>
+      <button class="tile t-matter" onclick="go('matter')"><div class="ic">🧊</div><div><b>Ice, Water, Steam</b><span>Heat it up and watch the tiny particles</span></div></button>
+      <button class="tile t-habitat" onclick="go('habitat')"><div class="ic">🐧</div><div><b>Animal Homes</b><span>Help each animal find its habitat</span></div></button>
+      <button class="tile t-plant" onclick="go('plant')"><div class="ic">🌱</div><div><b>Grow a Plant</b><span>Give it what it needs to grow</span></div></button>
+      <button class="tile t-quiz" onclick="go('quiz')"><div class="ic">🏆</div><div><b>Big Quiz</b><span>Show what you know!</span></div></button>
+    </div>
+    <h2 style="margin:30px 0 4px">My badges 🏅</h2>
+    <div class="badges" id="myBadges"></div>
+    <div class="foot"><button class="link" onclick="go('parent')">👪 Parent area</button></div>
+  </section>
+
+  <!-- SPACE -->
+  <section class="screen" id="space">
+    <h1>Our Solar System 🚀</h1>
+    <p class="lead">Tap the Sun or any planet. Visit all 9 to earn stars!</p>
+    <div class="space">
+      <div class="orbit" id="orbit"></div>
+    </div>
+    <div class="fact" id="fact"><h3>👆 Tap something in space!</h3><p>The planets go in order from closest to the Sun to farthest.</p></div>
+  </section>
+
+  <!-- MATTER -->
+  <section class="screen" id="matter">
+    <h1>Ice, Water, Steam 💧</h1>
+    <p class="lead">Everything is made of tiny particles. Slide the heat and watch them move!</p>
+    <div class="panel">
+      <div class="matter">
+        <div class="beaker"><canvas id="cv"></canvas></div>
+        <div>
+          <p class="state-name" id="stName">Solid</p>
+          <p class="state-desc" id="stDesc"></p>
+        </div>
+      </div>
+      <div class="thermo">❄️ <input type="range" id="heat" min="-20" max="120" value="-10"> 🔥 <span class="temp" id="tempLbl">-10°C</span></div>
+    </div>
+  </section>
+
+  <!-- HABITAT -->
+  <section class="screen" id="habitat">
+    <h1>Animal Homes 🌍</h1>
+    <p class="lead">Tap an animal, then tap the home where it lives.</p>
+    <div class="animals" id="animals"></div>
+    <div class="homes" id="homes"></div>
+    <p class="msg" id="habMsg"></p>
+    <div class="center" style="margin-top:10px"><button class="btn green" onclick="resetHabitats()">🔄 Play again</button></div>
+  </section>
+
+  <!-- PLANT -->
+  <section class="screen" id="plant">
+    <h1>Grow a Plant 🌻</h1>
+    <p class="lead">Plants need sunlight, water, and air. Fill each one to help your seed grow!</p>
+    <div class="panel">
+      <div class="plant-wrap">
+        <div class="pot-scene"><svg id="plantSvg" viewBox="0 0 300 300" width="100%" height="100%"></svg></div>
+        <div>
+          <div class="needs" id="needs"></div>
+          <p class="msg" id="plantMsg" style="text-align:left"></p>
+          <button class="btn green" onclick="resetPlant()">🌰 Plant a new seed</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUIZ -->
+  <section class="screen" id="quiz">
+    <h1>Big Science Quiz 🏆</h1>
+    <div class="panel" id="quizBox"></div>
+  </section>
+</div>
+
+<script>
+/* ---------- saving (same approach as Grade 6 Science Home) ---------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const LS = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } }
+};
+/* Extra safety: mirror everything into IndexedDB and ask the browser to keep it */
+const IDB = {
+  open(){ return new Promise((res,rej)=>{ try{ const r = indexedDB.open("g3science",1); r.onupgradeneeded = () => r.result.createObjectStore("kv"); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }catch(e){ rej(e); } }); },
+  async put(v){ try{ const db = await IDB.open(); await new Promise((res,rej)=>{ const tx = db.transaction("kv","readwrite"); tx.objectStore("kv").put(v,"state"); tx.oncomplete = res; tx.onerror = () => rej(tx.error); }); }catch(e){} },
+  async get(){ try{ const db = await IDB.open(); return await new Promise((res,rej)=>{ const r = db.transaction("kv").objectStore("kv").get("state"); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }catch(e){ return null; } }
+};
+function snapshot(){ const o = {}; try{ for (let i=0;i<localStorage.length;i++){ const k = localStorage.key(i); if (k && k.startsWith("g3-")) o[k] = localStorage.getItem(k); } }catch(e){} return o; }
+let _mirrorT = null;
+const _lsSet = LS.set;
+LS.set = (k,v) => { const ok = _lsSet(k,v); clearTimeout(_mirrorT); _mirrorT = setTimeout(() => IDB.put(snapshot()), 250); return ok; };
+try{ navigator.storage && navigator.storage.persist && navigator.storage.persist(); }catch(e){}
+
+let roster  = LS.get("g3-roster", []);     // ["Ava","Ben"]
+let student = LS.get("g3-student", "");
+let prog    = LS.get("g3-prog", {});       // {name:{earned:{key:time}, last:time}}
+let results = LS.get("g3-results", []);    // [{student, kind:"quiz", right, total, at}]
+let pin     = LS.get("g3-pin", "");
+let parentOK = false;
+const saveAll = () => { LS.set("g3-roster",roster); LS.set("g3-student",student); LS.set("g3-prog",prog); LS.set("g3-results",results); };
+
+/* ---------- stars ---------- */
+// Every star has a name, so each one can be earned once per child.
+const ACTS = [
+  {id:'space',   name:'Solar System',     icon:'🪐', max:12},  // 9 bodies + 3 for all
+  {id:'matter',  name:'Ice, Water, Steam',icon:'🧊', max:3},   // solid, liquid, gas
+  {id:'hab',     name:'Animal Homes',     icon:'🐧', max:11},  // 8 animals + 3 for all
+  {id:'plant',   name:'Grow a Plant',     icon:'🌱', max:3},   // bloom
+  {id:'quiz',    name:'Big Quiz',         icon:'🏆', max:13}   // 10 questions + 3 for perfect
+];
+const STAR_MAX = ACTS.reduce((a,x)=>a+x.max,0);
+const STAR_VALUE = {'space-all':3,'hab-all':3,'plant-bloom':3,'quiz-perfect':3};
+const P = (s=student) => { if(!prog[s]) prog[s] = {earned:{},last:null}; return prog[s]; };
+function starsFor(s, act){
+  return Object.keys(P(s).earned).filter(k=>!act || k.startsWith(act+'-')).reduce((a,k)=>a+(STAR_VALUE[k]||1),0);
+}
+function addStar(key){
+  if(!student || P().earned[key]) return;
+  P().earned[key] = Date.now(); P().last = Date.now();
+  saveAll(); updateStars(); confetti(6);
+}
+function updateStars(){
+  const n = student ? starsFor(student) : 0;
+  $('starCount').textContent = n;
+  $('starFill').style.width = (n/STAR_MAX*100)+'%';
+}
+const BADGES = [
+  {i:'🌟',n:'First Star',d:'Earn your first star',ok:s=>starsFor(s)>=1},
+  {i:'🚀',n:'Space Explorer',d:'Visit the whole solar system',ok:s=>!!P(s).earned['space-all']},
+  {i:'🔬',n:'Particle Pro',d:'See all 3 states of matter',ok:s=>starsFor(s,'matter')===3},
+  {i:'🐾',n:'Animal Helper',d:'Get every animal home',ok:s=>!!P(s).earned['hab-all']},
+  {i:'🌻',n:'Green Thumb',d:'Grow a sunflower',ok:s=>!!P(s).earned['plant-bloom']},
+  {i:'🧠',n:'Quiz Whiz',d:'Get 7 or more on the Big Quiz',ok:s=>results.some(r=>r.student===s&&r.right>=7)},
+  {i:'💯',n:'Perfect Score',d:'Get all 10 on the Big Quiz',ok:s=>!!P(s).earned['quiz-perfect']},
+  {i:'🏅',n:'Super Scientist',d:`Earn all ${STAR_MAX} stars`,ok:s=>starsFor(s)>=STAR_MAX}
+];
+const badgeHTML = s => BADGES.map(b=>`<div class="badge ${b.ok(s)?'':'locked'}"><div class="bi">${b.i}</div><b>${b.n}</b>${b.d}</div>`).join('');
+
+function renderHome(){
+  $('hello').textContent = `Hi, ${student}! 👋`;
+  const n = starsFor(student);
+  $('helloSub').textContent = n>=STAR_MAX ? `You earned all ${STAR_MAX} stars! Amazing!` : `You have ${n} of ${STAR_MAX} stars. Pick an adventure!`;
+  const ids = ['space','matter','hab','plant','quiz'];
+  document.querySelectorAll('#tiles .tile').forEach((t,i)=>{
+    const a = ACTS.find(x=>x.id===ids[i]), got = starsFor(student,a.id);
+    let chip = t.querySelector('.done'); if(!chip){ chip=document.createElement('span'); chip.className='done'; t.lastElementChild.appendChild(chip); }
+    chip.textContent = got>=a.max ? `✅ All ${a.max} stars` : `⭐ ${got} of ${a.max}`;
+  });
+  $('myBadges').innerHTML = badgeHTML(student);
+  updateStars();
+}
+
+/* ---------- picking a student ---------- */
+function renderPick(){
+  $('names').innerHTML = roster.length
+    ? roster.map(n=>`<button class="name-btn" data-n="${esc(n)}">${esc(n)}<small>⭐ ${starsFor(n)} stars</small></button>`).join('')
+    : '<p class="note" style="font-size:18px">No explorers yet. Add your name to start!</p>';
+  $('names').querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>chooseStudent(b.dataset.n));
+  $('addErr').textContent='';
+}
+function chooseStudent(n){
+  student = n; P().last = Date.now(); saveAll();
+  resetActivities(); go('home');
+}
+$('addForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  const n = $('newName').value.trim().replace(/\s+/g,' ');
+  if(!n){ $('addErr').textContent='Type your name first.'; return; }
+  if(roster.some(x=>x.toLowerCase()===n.toLowerCase())){ $('addErr').textContent=`${n} is already here. Tap your name above!`; return; }
+  roster.push(n); $('newName').value=''; chooseStudent(n);
+});
+function resetActivities(){
+  visited.clear(); $('fact').innerHTML='<h3>👆 Tap something in space!</h3><p>The planets go in order from closest to the Sun to farthest.</p>';
+  document.querySelectorAll('.orbit .sel').forEach(e=>e.classList.remove('sel'));
+  shownState=''; resetHabitats(); resetPlant(); quizStarted=false;
+}
+function confetti(n=14){
+  const bits=['⭐','✨','🎉','🌟'];
+  for(let i=0;i<n;i++){
+    const s=document.createElement('div');
+    s.className='confetti'; s.textContent=bits[i%bits.length];
+    s.style.left=Math.random()*100+'vw'; s.style.animationDelay=(Math.random()*.4)+'s';
+    document.body.appendChild(s); setTimeout(()=>s.remove(),2400);
+  }
+}
+function go(id){
+  if(!student && id!=='parent') id='pick';
+  if(id!=='parent') parentOK=false;              // the parent area locks again when you leave it
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  $(id).classList.add('on');
+  $('backBtn').style.display = (id==='home'||id==='pick') ? 'none' : 'inline-block';
+  $('whoBtn').style.display = student && id!=='pick' && id!=='parent' ? 'inline-block' : 'none';
+  $('whoBtn').textContent = '👤 ' + student;
+  $('whoBtn').title = 'Switch explorer';
+  $('starPill').style.display = student && id!=='pick' && id!=='parent' ? 'inline-block' : 'none';
+  if(id==='pick') renderPick();
+  if(id==='home') renderHome();
+  if(id==='parent') renderParent();
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(id==='matter') startMatter(); else stopMatter();
+  if(id==='quiz' && !quizStarted) startQuiz();
+}
+
+/* ---------- SPACE ---------- */
+const bodies = [
+  {n:'Sun',sun:true,f:'The Sun is a star! It is a giant ball of hot, glowing gas.',x:['About 1 million Earths could fit inside!','It gives us light and heat.']},
+  {n:'Mercury',c:'#b5a69a',s:22,f:'Mercury is the closest planet to the Sun and the smallest planet.',x:['A year there is only 88 days','No moons']},
+  {n:'Venus',c:'#e8c27a',s:32,f:'Venus is the hottest planet. Its thick clouds trap heat like a blanket.',x:['Hotter than an oven!','Spins backwards']},
+  {n:'Earth',c:'linear',s:34,f:'Earth is our home! It is the only planet we know that has living things.',x:['1 moon','Mostly covered in water']},
+  {n:'Mars',c:'#d8613c',s:26,f:'Mars is called the Red Planet because its dirt has rust in it.',x:['2 tiny moons','Has the tallest volcano']},
+  {n:'Jupiter',c:'#d9a76a',s:70,f:'Jupiter is the biggest planet. It has a giant storm called the Great Red Spot.',x:['Over 90 moons','Made mostly of gas']},
+  {n:'Saturn',c:'#e9d08c',s:58,ring:true,f:'Saturn has beautiful rings made of ice and rock.',x:['Lots of moons','Could float in a giant bathtub!']},
+  {n:'Uranus',c:'#9fe3ea',s:44,f:'Uranus spins on its side, like a rolling ball.',x:['Very cold','Blue-green color']},
+  {n:'Neptune',c:'#4a7bea',s:42,f:'Neptune is the farthest planet from the Sun. It has the fastest winds.',x:['Very windy','Takes 165 years to go around the Sun']}
+];
+const visited = new Set();
+(function buildSpace(){
+  const o=document.getElementById('orbit');
+  bodies.forEach((b,i)=>{
+    const el=document.createElement('button');
+    if(b.sun){el.className='sun';}
+    else{
+      el.className='planet';
+      el.style.width=el.style.height=b.s+'px';
+      el.style.background = b.c==='linear'
+        ? 'radial-gradient(circle at 35% 35%,#7fd0ff,#2f7de0 55%,#2aa86b 56%,#2f7de0 70%)'
+        : `radial-gradient(circle at 35% 35%,#fff8 0%,${b.c} 45%,${b.c})`;
+      if(b.ring){const r=document.createElement('div');r.className='ring';el.appendChild(r);}
+    }
+    el.setAttribute('aria-label',b.n);
+    el.onclick=()=>{
+      document.querySelectorAll('.orbit .sel').forEach(e=>e.classList.remove('sel'));
+      el.classList.add('sel');
+      visited.add(b.n);
+      const left = bodies.length-visited.size;
+      document.getElementById('fact').innerHTML =
+        `<h3>${b.n}${i>0?` <small style="color:#8a93ad;font-size:16px">planet #${i} from the Sun</small>`:''}</h3>
+         <p>${b.f}</p>${b.x.map(t=>`<span class="chip">${t}</span>`).join('')}
+         <p style="color:#8a93ad;font-size:15px;margin-top:10px">${left? `Visited ${visited.size} of 9 — ${left} to go!`:'🎉 You visited the whole solar system!'}</p>`;
+      addStar('space-'+b.n);
+      if(!left) addStar('space-all');
+    };
+    o.appendChild(el);
+  });
+})();
+
+/* ---------- MATTER ---------- */
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+let parts=[], raf=null, T=-10;
+const states={
+  solid:{n:'Solid 🧊',d:'Ice is a <b>solid</b>. The particles are packed tight and just wiggle in place. A solid keeps its own shape.'},
+  liquid:{n:'Liquid 💧',d:'Water is a <b>liquid</b>. The particles slide past each other. A liquid takes the shape of its container.'},
+  gas:{n:'Gas ☁️',d:'Steam is a <b>gas</b>. The particles zoom around and spread out to fill all the space they can!'}
+};
+function stateOf(t){return t<0?'solid':t<100?'liquid':'gas';}
+function sizeCanvas(){const r=cv.getBoundingClientRect();cv.width=r.width*devicePixelRatio;cv.height=r.height*devicePixelRatio;}
+function initParts(){
+  sizeCanvas(); parts=[];
+  const W=cv.width,H=cv.height,R=11*devicePixelRatio, cols=8, rows=5, gap=R*2.3;
+  const x0=(W-cols*gap)/2+gap/2, y0=H-rows*gap-R;
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
+    const hx=x0+c*gap, hy=y0+r*gap;
+    parts.push({hx,hy,x:hx,y:hy,vx:(Math.random()-.5),vy:(Math.random()-.5),R});
+  }
+}
+let shownState='';
+function updateLabels(){
+  const s=stateOf(T);
+  document.getElementById('tempLbl').textContent=T+'°C';
+  if(s!==shownState){
+    shownState=s;
+    document.getElementById('stName').innerHTML=states[s].n;
+    document.getElementById('stDesc').innerHTML=states[s].d;
+    addStar('matter-'+s);
+  }
+}
+function tick(){
+  const W=cv.width,H=cv.height,s=stateOf(T);
+  ctx.clearRect(0,0,W,H);
+  const speed = s==='solid'? .6 : s==='liquid'? 1.6+ (T/100)*1.2 : 4+(T-100)/10;
+  const waterTop = H*0.45;
+  parts.forEach(p=>{
+    if(s==='solid'){
+      p.x += (p.hx-p.x)*.15 + (Math.random()-.5)*speed;
+      p.y += (p.hy-p.y)*.15 + (Math.random()-.5)*speed;
+    } else {
+      p.vx += (Math.random()-.5)*.4*speed; p.vy += (Math.random()-.5)*.4*speed;
+      if(s==='liquid') p.vy += .25;
+      const max=speed*1.6, m=Math.hypot(p.vx,p.vy); if(m>max){p.vx*=max/m;p.vy*=max/m;}
+      p.x+=p.vx; p.y+=p.vy;
+      const top = s==='liquid'? waterTop : p.R;
+      if(p.x<p.R){p.x=p.R;p.vx*=-1} if(p.x>W-p.R){p.x=W-p.R;p.vx*=-1}
+      if(p.y<top){p.y=top;p.vy=Math.abs(p.vy)} if(p.y>H-p.R){p.y=H-p.R;p.vy*=-1}
+    }
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.R,0,Math.PI*2);
+    ctx.fillStyle = s==='solid'?'#7cc6f2': s==='liquid'?'#2f8df0':'#b9c6d6';
+    ctx.fill();
+    ctx.beginPath(); ctx.arc(p.x-p.R*.3,p.y-p.R*.3,p.R*.3,0,Math.PI*2); ctx.fillStyle='#ffffff99'; ctx.fill();
+  });
+  raf=requestAnimationFrame(tick);
+}
+function startMatter(){ if(!parts.length||cv.width===0) initParts(); updateLabels(); if(!raf) tick(); }
+function stopMatter(){ if(raf){cancelAnimationFrame(raf);raf=null;} }
+document.getElementById('heat').addEventListener('input',e=>{T=+e.target.value;updateLabels();});
+window.addEventListener('resize',()=>{ if(raf){ initParts(); } });
+
+/* ---------- HABITATS ---------- */
+const homes=[
+  {k:'ocean',n:'Ocean 🌊',d:'Salty water, lots of fish',cls:'h-ocean'},
+  {k:'desert',n:'Desert 🏜️',d:'Hot, dry, and sandy',cls:'h-desert'},
+  {k:'arctic',n:'Arctic ❄️',d:'Icy, snowy, and very cold',cls:'h-arctic'},
+  {k:'forest',n:'Forest 🌲',d:'Lots of trees and shade',cls:'h-forest'}
+];
+const critters=[
+  {e:'🐙',n:'octopus',h:'ocean',why:'Octopuses breathe water through gills.'},
+  {e:'🐬',n:'dolphin',h:'ocean',why:'Dolphins swim fast in the sea.'},
+  {e:'🐪',n:'camel',h:'desert',why:'Camels can go a long time without drinking water.'},
+  {e:'🦂',n:'scorpion',h:'desert',why:'Scorpions hide under rocks to stay cool.'},
+  {e:'🐻‍❄️',n:'polar bear',h:'arctic',why:'Thick fur and fat keep polar bears warm.'},
+  {e:'🐧',n:'penguin',h:'arctic',why:'Penguins huddle together to stay warm in the cold.'},
+  {e:'🦉',n:'owl',h:'forest',why:'Owls nest in trees and hunt at night.'},
+  {e:'🦌',n:'deer',h:'forest',why:'Deer eat leaves and hide among trees.'}
+];
+let picked=null, placed={};
+function resetHabitats(){
+  picked=null; placed={}; homes.forEach(h=>placed[h.k]=[]);
+  const a=document.getElementById('animals'); a.innerHTML='';
+  [...critters].sort(()=>Math.random()-.5).forEach(c=>{
+    const b=document.createElement('button'); b.className='animal'; b.textContent=c.e; b.setAttribute('aria-label',c.n);
+    b.onclick=()=>{document.querySelectorAll('.animal').forEach(x=>x.classList.remove('sel')); b.classList.add('sel'); picked={c,b};
+      document.getElementById('habMsg').textContent=`Where does the ${c.n} live?`;};
+    a.appendChild(b);
+  });
+  const H=document.getElementById('homes'); H.innerHTML='';
+  homes.forEach(h=>{
+    const d=document.createElement('button'); d.className='home '+h.cls; d.id='home-'+h.k;
+    d.innerHTML=`<h4>${h.n}</h4><small>${h.d}</small><div class="got"></div>`;
+    d.onclick=()=>dropIn(h,d); H.appendChild(d);
+  });
+  document.getElementById('habMsg').textContent='👆 Pick an animal first!';
+}
+function dropIn(h,d){
+  const m=document.getElementById('habMsg');
+  if(!picked){m.textContent='👆 Pick an animal first!';return;}
+  if(picked.c.h===h.k){
+    placed[h.k].push(picked.c.e); d.querySelector('.got').textContent=placed[h.k].join(' ');
+    picked.b.remove(); m.innerHTML=`✅ Yes! ${picked.c.why}`; addStar('hab-'+picked.c.n); picked=null;
+    if(!document.querySelector('.animal')){ m.innerHTML='🎉 Every animal is home! Great job!'; addStar('hab-all'); confetti(24); }
+  } else {
+    d.classList.remove('shake'); void d.offsetWidth; d.classList.add('shake');
+    m.textContent=`Hmm, not quite. Could a ${picked.c.n} live somewhere ${h.d.toLowerCase()}? Try again!`;
+  }
+}
+resetHabitats();
+
+/* ---------- PLANT ---------- */
+const needs=[{k:'sun',em:'☀️',n:'Sunlight',col:'#ffc93c'},{k:'water',em:'💧',n:'Water',col:'#3aa0ff'},{k:'air',em:'🌬️',n:'Air',col:'#9adbc5'}];
+let lv={};
+function resetPlant(){
+  needs.forEach(n=>lv[n.k]=0);
+  const box=document.getElementById('needs'); box.innerHTML='';
+  needs.forEach(n=>{
+    const row=document.createElement('div'); row.className='need';
+    row.innerHTML=`<span class="em">${n.em}</span><div style="flex:1"><div style="font-weight:600">${n.n}</div><div class="bar"><div class="fill" id="f-${n.k}" style="background:${n.col}"></div></div></div><button>Give ${n.em}</button>`;
+    row.querySelector('button').onclick=()=>{lv[n.k]=Math.min(4,lv[n.k]+1);drawPlant();};
+    box.appendChild(row);
+  });
+  drawPlant();
+}
+function drawPlant(){
+  needs.forEach(n=>document.getElementById('f-'+n.k).style.width=(lv[n.k]/4*100)+'%');
+  const stage=Math.min(lv.sun,lv.water,lv.air); // grows only as fast as the smallest need
+  const svg=document.getElementById('plantSvg');
+  const sunGlow = lv.sun? `<circle cx="250" cy="45" r="${18+lv.sun*5}" fill="#ffd54a" opacity=".9"/>`:'';
+  const drops = lv.water? Array.from({length:lv.water},(_,i)=>`<text x="${40+i*22}" y="60" font-size="20">💧</text>`).join(''):'';
+  const stemH=[0,40,80,115,145][stage];
+  let plant='';
+  if(stage===0) plant=`<ellipse cx="150" cy="232" rx="9" ry="6" fill="#8a5a2b"/>`;
+  else{
+    plant+=`<path d="M150 238 Q${146} ${238-stemH/2} 150 ${238-stemH}" stroke="#3b9e4f" stroke-width="7" fill="none" stroke-linecap="round"/>`;
+    for(let i=1;i<=Math.min(stage,3);i++){
+      const y=238-stemH*(i/(stage+0.6));
+      plant+=`<ellipse cx="${150-22}" cy="${y}" rx="20" ry="9" fill="#4cc38a" transform="rotate(-25 ${128} ${y})"/>
+              <ellipse cx="${150+22}" cy="${y-6}" rx="20" ry="9" fill="#4cc38a" transform="rotate(25 ${172} ${y-6})"/>`;
+    }
+    if(stage===4){
+      const cy=238-stemH;
+      for(let a=0;a<360;a+=30){const r=a*Math.PI/180;plant+=`<ellipse cx="${150+Math.cos(r)*20}" cy="${cy+Math.sin(r)*20}" rx="13" ry="7" fill="#ffc93c" transform="rotate(${a} ${150+Math.cos(r)*20} ${cy+Math.sin(r)*20})"/>`;}
+      plant+=`<circle cx="150" cy="${cy}" r="13" fill="#7a4a1f"/>`;
+    }
+  }
+  svg.innerHTML=`${sunGlow}${drops}
+    <rect x="0" y="250" width="300" height="50" fill="#9bd27a"/>
+    ${plant}
+    <path d="M110 236 L190 236 L180 290 L120 290 Z" fill="#d9774a"/><rect x="104" y="228" width="92" height="14" rx="4" fill="#c4643a"/>`;
+  const msg=document.getElementById('plantMsg');
+  const words=['A seed is waiting… 🌰','It sprouted! 🌱','Growing taller! 🌿','Almost there! 🪴','It bloomed into a sunflower! 🌻'];
+  let tip='';
+  if(stage<4){
+    const low=needs.reduce((a,b)=>lv[a.k]<=lv[b.k]?a:b);
+    if(Object.values(lv).some(v=>v>0)) tip=` It needs more <b>${low.n.toLowerCase()}</b> to keep growing.`;
+  }
+  msg.innerHTML=words[stage]+tip;
+  if(stage===4){addStar('plant-bloom');}
+}
+resetPlant();
+
+/* ---------- QUIZ ---------- */
+const Q=[
+  {q:'Which planet is closest to the Sun?',o:['Mars','Mercury','Earth','Neptune'],a:1,w:'Mercury is planet #1 from the Sun.'},
+  {q:'What happens when ice gets warm?',o:['It turns to rock','It melts into water','It gets bigger','Nothing'],a:1,w:'Heat makes ice melt into liquid water.'},
+  {q:'Which animal lives in the Arctic?',o:['Camel','Dolphin','Polar bear','Scorpion'],a:2,w:'Polar bears have thick fur to stay warm in the icy Arctic.'},
+  {q:'What do plants need to grow?',o:['Candy and juice','Sunlight, water, and air','Only dirt','Darkness'],a:1,w:'Plants use sunlight, water, and air to make their own food.'},
+  {q:'Which state of matter fills up all the space it can?',o:['Solid','Liquid','Gas','Ice'],a:2,w:'Gas particles zoom apart to fill the whole space.'},
+  {q:'What is the Sun?',o:['A planet','A star','A moon','A comet'],a:1,w:'The Sun is a star — the closest one to Earth!'},
+  {q:'Which planet has big, beautiful rings?',o:['Saturn','Venus','Mars','Mercury'],a:0,w:'Saturn’s rings are made of ice and rock.'},
+  {q:'Water boils and turns to steam at…',o:['0°C','50°C','100°C','10°C'],a:2,w:'Water boils at 100 degrees Celsius.'},
+  {q:'A camel is best suited for which habitat?',o:['Ocean','Desert','Arctic','Pond'],a:1,w:'Camels can live a long time without water in the hot desert.'},
+  {q:'Which part of a plant takes in water from the soil?',o:['Flower','Leaves','Roots','Petals'],a:2,w:'Roots soak up water and hold the plant in the ground.'}
+];
+let qi=0, score=0, quizStarted=false, order=[], missed=[];
+function startQuiz(){quizStarted=true;qi=0;score=0;missed=[];order=[...Q].sort(()=>Math.random()-.5);showQ();}
+function showQ(){
+  const box=document.getElementById('quizBox');
+  if(qi>=order.length){
+    if(student && !order.saved){
+      order.saved = true;
+      results.push({student, kind:'quiz', right:score, total:order.length, missed:missed.slice(), at:new Date().toISOString()});
+      if(score===order.length) P().earned['quiz-perfect'] = Date.now();
+      P().last = Date.now(); saveAll(); updateStars();
+    }
+    const msg = score===order.length?'Perfect score! You are a super scientist! 🧑‍🔬':score>=7?'Awesome work, scientist! 🌟':score>=4?'Nice job! Keep exploring! 🔍':'Good try! Explore the activities and try again! 💪';
+    box.innerHTML=`<div class="center"><div class="big-emoji">${score>=7?'🏆':'🎈'}</div>
+      <p class="q">You got ${score} out of ${order.length}!</p><p class="lead">${msg}</p>
+      <button class="btn pink" onclick="startQuiz()">Play again</button></div>`;
+    if(score>=7) confetti(30);
+    return;
+  }
+  const it=order[qi];
+  box.innerHTML=`<div class="progress"><div style="width:${qi/order.length*100}%"></div></div>
+    <div style="color:#8a93ad;font-size:16px">Question ${qi+1} of ${order.length}</div>
+    <p class="q">${it.q}</p>
+    <div class="opts">${it.o.map((t,i)=>`<button class="opt" data-i="${i}">${t}</button>`).join('')}</div>
+    <div class="why" id="why"></div>
+    <div class="center" style="margin-top:14px"><button class="btn" id="next" style="display:none">Next ➜</button></div>`;
+  box.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.i;
+    box.querySelectorAll('.opt').forEach(x=>{x.disabled=true; if(+x.dataset.i===it.a) x.classList.add('right');});
+    const why=document.getElementById('why');
+    if(i===it.a){score++; why.innerHTML='✅ <b>Correct!</b> '+it.w; addStar('quiz-q'+Q.indexOf(it));}
+    else {b.classList.add('wrong'); missed.push(it.q); why.innerHTML='💡 <b>Good try!</b> '+it.w;}
+    why.style.display='block';
+    const n=document.getElementById('next'); n.style.display='inline-block'; n.onclick=()=>{qi++;showQ();};
+  });
+}
+
+/* ---------- PARENT AREA ---------- */
+let pview = {tab:'progress', who:''};
+const fmtDate = t => { try{ return new Date(t).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); }catch(e){ return ''; } };
+function renderParent(){
+  const box = $('parentBox');
+  if(!parentOK){
+    const creating = !pin;
+    box.innerHTML = `<div class="pinbox">
+      <div class="big-emoji" style="font-size:56px">👪</div>
+      <h1 style="font-size:30px">${creating ? 'Create a parent PIN' : 'Enter your parent PIN'}</h1>
+      <p class="note" style="font-size:17px">${creating ? "Pick 4 numbers. You'll need this PIN to see progress and change settings." : 'Progress and settings are behind this PIN.'}</p>
+      <form id="pinform"><input id="pinin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="PIN"><br><br>
+      <button class="btn" type="submit">${creating ? 'Save PIN' : 'Unlock'}</button></form>
+      <p class="err" id="pinerr"></p></div>`;
+    $('pinin').focus();
+    $('pinform').onsubmit = e => { e.preventDefault(); const v = $('pinin').value.trim();
+      if(!/^\d{4}$/.test(v)){ $('pinerr').textContent='Use exactly 4 numbers.'; return; }
+      if(creating){ pin=v; LS.set('g3-pin',pin); parentOK=true; renderParent(); }
+      else if(v===pin){ parentOK=true; renderParent(); }
+      else { $('pinerr').textContent="That PIN doesn't match. Try again."; $('pinin').value=''; } };
+    return;
+  }
+  const who = roster.includes(pview.who) ? pview.who : (roster.includes(student) ? student : roster[0] || '');
+  pview.who = who;
+  const tabs = [['progress','📊 Progress'],['quiz','📝 Quiz history'],['settings','⚙️ Backup & settings']];
+  let body = '';
+  const kidChips = roster.length ? `<div class="tabs">${roster.map(n=>`<button data-who="${esc(n)}" aria-pressed="${n===who}">${esc(n)}</button>`).join('')}</div>` : '<p class="note">No students yet. A child adds their name on the start screen.</p>';
+
+  if(pview.tab==='progress' && who){
+    const p = P(who), st = starsFor(who), mine = results.filter(r=>r.student===who);
+    const best = mine.reduce((a,r)=>Math.max(a,r.right),-1);
+    body = kidChips + `
+      <p style="font-size:19px;margin:4px 0"><b>${esc(who)}</b>: ⭐ ${st} of ${STAR_MAX} stars · ${BADGES.filter(b=>b.ok(who)).length} of ${BADGES.length} badges</p>
+      <p class="note" style="margin-top:0">Last active: ${p.last ? fmtDate(p.last) : 'not yet'} · Quizzes taken: ${mine.length}${best>=0?` · Best quiz score: ${best}/10`:''}</p>
+      <h3>Activities</h3>
+      ${ACTS.map(a=>{ const g=starsFor(who,a.id); return `<div class="act-row"><span>${a.icon} ${a.name}</span><div class="bar"><i style="width:${g/a.max*100}%"></i></div><span>${g}/${a.max}</span></div>`; }).join('')}
+      <h3>Badges</h3><div class="badges">${badgeHTML(who)}</div>`;
+  } else if(pview.tab==='quiz' && who){
+    const mine = results.filter(r=>r.student===who).sort((a,b)=>b.at.localeCompare(a.at));
+    body = kidChips + (mine.length ? `<table class="hist"><tr><th>When</th><th>Score</th><th>Missed</th></tr>${mine.map(r=>`<tr><td>${fmtDate(r.at)}</td><td><b>${r.right}/${r.total}</b></td><td>${r.missed&&r.missed.length?r.missed.map(esc).join('<br>'):'None 🎉'}</td></tr>`).join('')}</table>` : `<p class="note">${esc(who)} hasn't finished a quiz yet.</p>`);
+  } else if(pview.tab==='settings'){
+    let code=''; try{ code = btoa(unescape(encodeURIComponent(JSON.stringify({app:'g3science',roster,prog,results})))); }catch(e){}
+    body = `
+      <h3 style="margin-top:4px">Back up all stars and progress</h3>
+      <p class="note">Progress is saved in this browser on this device. If the browser's data gets cleared, it's erased. Copy this code into a note or a text to yourself, and you can restore it here later.</p>
+      <textarea id="bk" readonly rows="4">${code}</textarea>
+      <div class="ctrl"><button class="btn small" id="bkcopy">Copy backup code</button><span class="note" id="bkmsg"></span></div>
+      <h3>Restore from a backup code</h3>
+      <textarea id="rs" rows="3" placeholder="Paste a backup code here"></textarea>
+      <div class="ctrl"><button class="btn small ghost" id="rsgo">Restore</button><span class="note" id="rsmsg"></span></div>
+      <h3>Change PIN</h3>
+      <div class="ctrl"><input id="newpin" type="password" inputmode="numeric" maxlength="4" placeholder="New PIN" style="width:150px"><button class="btn small ghost" id="pinsave">Save</button><span class="note" id="pinmsg"></span></div>
+      <h3>Students</h3>
+      ${roster.length ? roster.map(n=>`<div class="ctrl"><span style="min-width:120px;font-size:18px"><b>${esc(n)}</b> ⭐ ${starsFor(n)}</span>
+        <button class="btn small danger" data-reset="${esc(n)}">Reset stars</button>
+        <button class="btn small danger" data-remove="${esc(n)}">Remove</button></div>`).join('') : '<p class="note">No students yet.</p>'}
+      <p class="note" id="stumsg"></p>`;
+  } else body = kidChips;
+
+  box.innerHTML = `<h1 style="margin-top:0">Parent area 👪</h1>
+    <div class="tabs">${tabs.map(([k,l])=>`<button data-tab="${k}" aria-pressed="${pview.tab===k}">${l}</button>`).join('')}</div>${body}
+    <div class="ctrl" style="margin-top:24px"><button class="btn small ghost" id="lockBtn">🔒 Lock</button></div>`;
+
+  box.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{pview.tab=b.dataset.tab;renderParent();});
+  box.querySelectorAll('[data-who]').forEach(b=>b.onclick=()=>{pview.who=b.dataset.who;renderParent();});
+  $('lockBtn').onclick = ()=>{ parentOK=false; go(student?'home':'pick'); };
+
+  if(pview.tab==='settings'){
+    $('bkcopy').onclick = () => { const ta=$('bk');
+      try{ navigator.clipboard.writeText(ta.value).then(()=>{$('bkmsg').textContent='Copied.';},()=>{ta.select();$('bkmsg').textContent='Selected. Press copy.';}); }
+      catch(e){ ta.select(); $('bkmsg').textContent='Selected. Press copy.'; } };
+    let armed=false;
+    $('rsgo').onclick = () => {
+      let d; try{ d = JSON.parse(decodeURIComponent(escape(atob($('rs').value.trim())))); }catch(e){ $('rsmsg').textContent="That code isn't a valid backup."; return; }
+      if(!d || d.app!=='g3science' || !Array.isArray(d.roster)){ $('rsmsg').textContent="That code isn't a valid backup for this app."; return; }
+      if(!armed){ armed=true; $('rsgo').textContent='Yes, replace everything'; $('rsmsg').textContent='This replaces all stars on this device.'; return; }
+      roster=d.roster; prog=d.prog||{}; results=d.results||[]; if(!roster.includes(student)) student='';
+      saveAll(); renderParent(); $('rsmsg') && ($('rsmsg').textContent='Restored.');
+    };
+    $('pinsave').onclick = () => { const v=$('newpin').value.trim(); if(!/^\d{4}$/.test(v)){ $('pinmsg').textContent='Use exactly 4 numbers.'; return; } pin=v; LS.set('g3-pin',pin); $('pinmsg').textContent='PIN changed.'; $('newpin').value=''; };
+    const twoTap = (b, label, act) => b.onclick = () => {
+      if(b.dataset.armed){ act(); return; }
+      b.dataset.armed='1'; b.textContent=label; setTimeout(()=>{ if(b.isConnected){ delete b.dataset.armed; b.textContent=b.dataset.reset?'Reset stars':'Remove'; } },4000);
+    };
+    box.querySelectorAll('[data-reset]').forEach(b=>twoTap(b,'Tap again to reset',()=>{ const n=b.dataset.reset; prog[n]={earned:{},last:null}; results=results.filter(r=>r.student!==n); saveAll(); renderParent(); $('stumsg').textContent=`${n}'s stars and quiz history were reset.`; }));
+    box.querySelectorAll('[data-remove]').forEach(b=>twoTap(b,'Tap again to remove',()=>{ const n=b.dataset.remove; roster=roster.filter(x=>x!==n); delete prog[n]; results=results.filter(r=>r.student!==n); if(student===n) student=''; saveAll(); renderParent(); $('stumsg').textContent=`${n} was removed.`; }));
+  }
+}
+
+/* ---------- start up ---------- */
+if(!roster.includes(student)) student='';
+go(student ? 'home' : 'pick');
+(async () => {
+  const saved = await IDB.get();
+  if(!saved){ IDB.put(snapshot()); return; }
+  const g = (k,d) => { try{ return saved[k] ? JSON.parse(saved[k]) : d; }catch(e){ return d; } };
+  const count = p => Object.values(p||{}).reduce((a,x)=>a+Object.keys((x&&x.earned)||{}).length,0);
+  // If the browser lost its main copy but the backup copy has more, bring the backup back.
+  if(count(g('g3-prog',{})) > count(prog) || g('g3-results',[]).length > results.length || (!roster.length && g('g3-roster',[]).length)){
+    try{ Object.entries(saved).forEach(([k,v]) => localStorage.setItem(k,v)); }catch(e){}
+    roster=g('g3-roster',[]); prog=g('g3-prog',{}); results=g('g3-results',[]); pin=g('g3-pin',''); student=g('g3-student','');
+    if(!roster.includes(student)) student='';
+    const cur = document.querySelector('.screen.on');
+    if(cur && (cur.id==='pick'||cur.id==='home')) go(student?'home':'pick');
+  } else IDB.put(snapshot());
+})();
+</script>
+</body>
+</html>

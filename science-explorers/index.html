@@ -3,293 +3,426 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Science Explorers">
 <title>Science Explorers</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --sky:#e9f6ff; --ink:#1f2a44; --soft:#5b6785;
-    --sun:#ffc93c; --leaf:#4cc38a; --berry:#ff6b8b; --ocean:#3aa0ff; --grape:#8b6cff;
-    --card:#ffffff; --radius:22px;
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0}
-  body{
-    font-family:"Fredoka",system-ui,sans-serif; color:var(--ink);
-    background:linear-gradient(180deg,#d9f0ff 0%,#f4fbff 60%,#fff7e3 100%);
-    min-height:100vh;
-  }
-  button{font-family:inherit;cursor:pointer;border:none}
-  .wrap{max-width:980px;margin:0 auto;padding:20px 18px 60px}
+:root{--ink:#1f2a44;--soft:#5b6785;--sun:#ffc93c;--leaf:#4cc38a;--berry:#ff6b8b;--ocean:#3aa0ff;--radius:22px;--c:#3aa0ff}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:"Fredoka",system-ui,sans-serif;color:var(--ink);background:linear-gradient(180deg,#d9f0ff 0%,#f4fbff 60%,#fff7e3 100%);min-height:100vh}
+button{font-family:inherit;cursor:pointer;border:none;color:inherit}
+button:disabled{cursor:default}
+.wrap{max-width:1000px;margin:0 auto;padding:18px 16px 60px}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:clamp(21px,4vw,28px);background:none;padding:0}
+.logo .flask{font-size:1.35em;display:inline-block;animation:bob 2.6s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-4px) rotate(-6deg)}}
+.hbtns{display:flex;gap:8px;align-items:center}
+.pill{background:#fff;border-radius:999px;padding:8px 14px;font-weight:600;box-shadow:0 4px 0 #cfe3f5;font-size:16px}
+button.pill:active{transform:translateY(3px);box-shadow:0 1px 0 #cfe3f5}
+h1{font-size:clamp(25px,4.6vw,38px);margin:4px 0 6px}
+h2{font-size:clamp(21px,3.4vw,26px);margin:26px 0 10px}
+.lead{color:var(--soft);font-size:clamp(17px,2.3vw,20px);margin:0 0 18px}
+.note{color:var(--soft);font-size:15px}
+.screen{animation:pop .3s ease}
+@keyframes pop{from{opacity:0;transform:translateY(6px)}}
+.panel{background:#fff;border-radius:var(--radius);padding:20px;box-shadow:0 8px 0 #d7e8f6}
+.crumbs{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:16px;margin-bottom:6px}
+.crumbs button{background:none;color:var(--soft);text-decoration:underline;font-size:16px;padding:0}
 
-  header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
-  .logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:clamp(22px,4vw,30px)}
-  .logo .flask{font-size:1.4em;display:inline-block;animation:bob 2.6s ease-in-out infinite}
-  @keyframes bob{50%{transform:translateY(-4px) rotate(-6deg)}}
-  .stars{background:#fff;border-radius:999px;padding:8px 16px;font-weight:600;box-shadow:0 4px 0 #cfe3f5;font-size:18px}
-  .back{background:#fff;border-radius:999px;padding:10px 18px;font-size:17px;font-weight:600;box-shadow:0 4px 0 #cfe3f5}
-  .back:active{transform:translateY(3px);box-shadow:0 1px 0 #cfe3f5}
+.btn{background:var(--c);color:#fff;font-size:19px;font-weight:600;border-radius:16px;padding:12px 22px;box-shadow:0 5px 0 rgba(0,0,0,.2)}
+.btn:active:not(:disabled){transform:translateY(4px);box-shadow:0 1px 0 rgba(0,0,0,.2)}
+.btn.small{font-size:16px;padding:9px 16px;border-radius:13px}
+.btn.ghost{background:#fff;color:var(--ink);box-shadow:0 4px 0 #cfdcee}
+.btn.green{background:#2fa864}
+.btn.danger{background:#fff;color:#c9304f;box-shadow:0 4px 0 #f2c3cd}
+.btn:disabled{opacity:.45}
+.ctrl{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.center{text-align:center}
+.err{color:#c9304f;font-weight:500;min-height:24px;margin:8px 0 0}
+.msg{font-size:19px;min-height:28px;margin:12px 0 0;font-weight:500}
 
-  h1{font-size:clamp(26px,5vw,40px);margin:4px 0 6px}
-  .lead{color:var(--soft);font-size:clamp(17px,2.4vw,20px);margin:0 0 22px}
+/* home */
+.starbar{height:16px;background:#fff;border-radius:999px;overflow:hidden;box-shadow:inset 0 0 0 2px #cfe3f5;margin:-6px 0 20px;max-width:520px}
+.starbar i{display:block;height:100%;background:linear-gradient(90deg,#ffc93c,#ff9f1c);border-radius:999px;transition:width .4s}
+.units{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:16px}
+.utile{border-radius:var(--radius);padding:18px;text-align:left;color:#fff;min-height:175px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 7px 0 rgba(0,0,0,.16);transition:transform .15s;background:linear-gradient(140deg,var(--c),color-mix(in srgb,var(--c) 55%,#fff))}
+.utile:hover{transform:translateY(-3px) rotate(-.5deg)}
+.utile:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.16)}
+.utile .ic{font-size:50px;line-height:1}
+.utile .un{font-size:14px;opacity:.9;font-weight:500}
+.utile b{font-size:23px;display:block;margin-top:2px}
+.ubar{height:10px;background:rgba(255,255,255,.35);border-radius:999px;overflow:hidden;margin-top:10px}
+.ubar i{display:block;height:100%;background:#fff;border-radius:999px}
+.utile .done{font-size:14px;font-weight:600;margin-top:6px}
 
-  /* Home grid */
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px}
-  .tile{
-    border-radius:var(--radius);padding:22px 18px;text-align:left;color:#fff;
-    min-height:170px;display:flex;flex-direction:column;justify-content:space-between;
-    box-shadow:0 7px 0 rgba(0,0,0,.14);transition:transform .15s;
-  }
-  .tile:hover{transform:translateY(-3px) rotate(-.6deg)}
-  .tile:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.14)}
-  .tile .ic{font-size:52px;line-height:1}
-  .tile b{font-size:24px;display:block;margin-top:10px}
-  .tile span{font-size:16px;opacity:.95}
-  .t-space{background:linear-gradient(135deg,#4a3fbf,#8b6cff)}
-  .t-matter{background:linear-gradient(135deg,#1d8cf0,#5fd0ff)}
-  .t-habitat{background:linear-gradient(135deg,#21a56a,#7ee0a4)}
-  .t-plant{background:linear-gradient(135deg,#e2892b,#ffc93c)}
-  .t-quiz{background:linear-gradient(135deg,#e2456a,#ff8fa6)}
+/* unit page */
+.uhead{border-radius:var(--radius);padding:20px;color:#fff;background:linear-gradient(140deg,var(--c),color-mix(in srgb,var(--c) 55%,#fff));box-shadow:0 7px 0 rgba(0,0,0,.14);display:flex;gap:16px;align-items:center}
+.uhead .ic{font-size:64px}
+.uhead h1{margin:0}
+.uhead p{margin:4px 0 0;font-size:18px;opacity:.95}
+.path{display:grid;grid-template-columns:repeat(auto-fit,minmax(235px,1fr));gap:12px}
+.step{background:#fff;border-radius:18px;padding:14px 16px;text-align:left;box-shadow:0 5px 0 #d7e8f6;display:flex;gap:12px;align-items:center;border:3px solid transparent;min-height:84px}
+.step:hover{border-color:var(--c)}
+.step .si{font-size:36px;flex:0 0 auto}
+.step b{display:block;font-size:18px}
+.step small{color:var(--soft);font-size:14px}
+.step .st{margin-left:auto;font-size:18px;white-space:nowrap;color:#e3a008;letter-spacing:1px}
+.step.isdone{background:#f1fbf5}
 
-  .panel{background:var(--card);border-radius:var(--radius);padding:22px;box-shadow:0 8px 0 #d7e8f6}
-  .screen{display:none}
-  .screen.on{display:block;animation:pop .35s ease}
-  @keyframes pop{from{opacity:0;transform:scale(.97)}}
+/* lesson */
+.lesson-grid{display:grid;grid-template-columns:1fr;gap:16px}
+.read{font-size:clamp(18px,2.4vw,21px);line-height:1.5}
+.read p{margin:0 0 10px}
+.read b{color:var(--c)}
+.words{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+.wcard{background:#f4f7ff;border-radius:14px;padding:10px 14px;font-size:17px;text-align:left;box-shadow:0 3px 0 #dde5f5;min-width:140px;max-width:300px;border-left:6px solid var(--c)}
+.wcard b{display:block;font-size:19px}
+.wcard span{color:var(--soft);font-size:15px}
+.wcard.flip span{color:var(--ink);font-size:16px}
+.seeit{border:4px solid var(--c);border-radius:var(--radius);padding:16px;background:#fff}
+.goal{display:flex;gap:10px;align-items:flex-start;font-size:19px;font-weight:600;margin:0 0 12px}
+.goal .tag{background:var(--c);color:#fff;border-radius:999px;padding:3px 12px;font-size:14px;white-space:nowrap;margin-top:2px}
+.donebar{display:none;margin-top:14px;background:#e9fbf0;border-radius:16px;padding:14px;align-items:center;gap:12px;flex-wrap:wrap;font-size:19px;font-weight:600}
+.donebar.on{display:flex}
+.home-try{background:#fff8e0;border-radius:18px;padding:14px 16px;font-size:18px}
+.home-try b{display:block;margin-bottom:2px}
+.sec-t{font-size:15px;font-weight:600;color:var(--soft);text-transform:uppercase;letter-spacing:.06em;margin:0 0 6px}
 
-  .btn{
-    background:var(--ocean);color:#fff;font-size:19px;font-weight:600;border-radius:16px;
-    padding:12px 22px;box-shadow:0 5px 0 #1f6fc0;
-  }
-  .btn:active{transform:translateY(4px);box-shadow:0 1px 0 #1f6fc0}
-  .btn.green{background:var(--leaf);box-shadow:0 5px 0 #2a8d5f}
-  .btn.pink{background:var(--berry);box-shadow:0 5px 0 #c94564}
+/* shared activity bits */
+.act{position:relative}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:#eef3ff;color:#3d4aa8;border-radius:999px;padding:6px 14px;font-size:16px;font-weight:600}
+.chip.on{background:#2fa864;color:#fff}
+.tbtn{background:#fff;border-radius:16px;padding:10px 14px;font-size:18px;font-weight:600;box-shadow:0 4px 0 #d3dcec;border:3px solid #e3e9f5}
+.tbtn.sel{border-color:var(--c);background:color-mix(in srgb,var(--c) 12%,#fff)}
+.tbtn.good{background:#d8f6e4;border-color:#2fa864}
+.tbtn.bad{animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.big{font-size:64px;line-height:1}
+.stage{border-radius:18px;background:#f4f9ff;overflow:hidden;position:relative}
+svg text{font-family:"Fredoka",system-ui,sans-serif}
+input[type=range]{width:100%;accent-color:var(--c);height:30px}
+.slider-row{display:flex;align-items:center;gap:12px;font-size:18px;margin-top:10px}
+.slider-row input{flex:1}
+.out{font-weight:700;min-width:70px;text-align:right}
 
-  /* Space */
-  .space{background:radial-gradient(ellipse at 20% 40%,#2b2470 0%,#0f1035 70%);border-radius:var(--radius);padding:18px;position:relative;overflow:hidden}
-  .space::before{content:"";position:absolute;inset:0;background-image:
-    radial-gradient(2px 2px at 10% 20%,#fff,transparent),radial-gradient(1.5px 1.5px at 30% 80%,#fff,transparent),
-    radial-gradient(2px 2px at 55% 15%,#fff,transparent),radial-gradient(1.5px 1.5px at 75% 60%,#fff,transparent),
-    radial-gradient(2px 2px at 90% 30%,#fff,transparent),radial-gradient(1px 1px at 45% 50%,#fff,transparent),
-    radial-gradient(1.5px 1.5px at 85% 90%,#fff,transparent),radial-gradient(1px 1px at 5% 70%,#fff,transparent);opacity:.8}
-  .orbit{position:relative;display:flex;align-items:center;gap:clamp(6px,1.6vw,16px);overflow-x:auto;padding:16px 6px 10px;scrollbar-width:thin}
-  .sun{flex:0 0 auto;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff3a8,#ffb300 55%,#ff7a00);box-shadow:0 0 40px #ffb30099;cursor:pointer}
-  .planet{flex:0 0 auto;border-radius:50%;cursor:pointer;transition:transform .2s;position:relative;background:none;padding:0}
-  .planet:hover,.planet.sel{transform:scale(1.18)}
-  .planet.sel{outline:3px solid #fff;outline-offset:4px}
-  .ring{position:absolute;left:50%;top:50%;width:180%;height:34%;border:3px solid #e8d49a;border-radius:50%;transform:translate(-50%,-50%) rotate(-18deg);pointer-events:none}
-  .fact{margin-top:14px;background:#fff;border-radius:18px;padding:16px 18px;min-height:120px}
-  .fact h3{margin:0 0 6px;font-size:24px}
-  .fact p{margin:6px 0;font-size:18px;line-height:1.4}
-  .chip{display:inline-block;background:#eef3ff;color:#3d4aa8;border-radius:999px;padding:4px 12px;margin:4px 6px 0 0;font-size:15px;font-weight:500}
+/* order game */
+.slots{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:14px}
+.slot{min-height:92px;border:3px dashed #c9d6ea;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px;text-align:center;font-size:15px;color:var(--soft)}
+.slot.filled{border-style:solid;border-color:#2fa864;background:#effbf4;color:var(--ink);font-weight:600}
+.slot .e{font-size:34px}
+.pool{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.pool .tbtn{display:flex;flex-direction:column;align-items:center;min-width:110px}
+.pool .tbtn .e{font-size:34px}
 
-  /* Matter */
-  .matter{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:center}
-  @media (max-width:680px){.matter{grid-template-columns:1fr}}
-  .beaker{position:relative;height:280px;border-radius:0 0 40px 40px;border:6px solid #9cc7e8;border-top:none;background:#f5fbff;overflow:hidden}
-  canvas{display:block;width:100%;height:100%}
-  .thermo{display:flex;align-items:center;gap:12px;margin:16px 0 6px;font-size:18px}
-  input[type=range]{flex:1;accent-color:#ff6b3c;height:28px}
-  .state-name{font-size:34px;font-weight:700;margin:0}
-  .state-desc{font-size:19px;line-height:1.45;color:var(--soft)}
-  .temp{font-weight:700;font-size:22px;min-width:76px;text-align:right}
+/* games */
+.ghead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.gkind{background:var(--c);color:#fff;border-radius:999px;padding:5px 14px;font-weight:600;font-size:15px}
+.howto{color:var(--soft);font-size:17px;margin:0 0 14px}
+.board{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.colw{display:flex;flex-direction:column;gap:10px}
+.tcard{background:#f4f7ff;border-radius:14px;padding:12px 14px;font-size:17px;text-align:left;box-shadow:0 4px 0 #d7e0f2;border:3px solid transparent;min-height:56px}
+.tcard.word{font-weight:700;font-size:19px}
+.tcard.sel{border-color:var(--c);background:#fff}
+.tcard.done{background:#d8f6e4;box-shadow:0 4px 0 #9fe0b9;opacity:.75}
+.tcard.badflash{background:#ffd6de;animation:shake .4s}
+.sortcard{font-size:clamp(26px,5vw,38px);font-weight:600;text-align:center;background:#f6f9ff;border-radius:20px;padding:26px 10px;margin-bottom:14px;min-height:110px;display:flex;align-items:center;justify-content:center}
+.bins{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.bins .tbtn{min-height:70px;font-size:19px}
+.climbwrap{display:grid;grid-template-columns:minmax(150px,240px) 1fr;gap:16px;align-items:center}
+@media (max-width:640px){.climbwrap{grid-template-columns:1fr}.board{grid-template-columns:1fr}}
+.qcard{background:#f6f9ff;border-radius:20px;padding:20px}
+.qtext{font-size:clamp(21px,3.4vw,26px);font-weight:600;margin:0 0 14px}
+.tf{display:flex;gap:12px;flex-wrap:wrap}
+.tf .btn{flex:1;min-width:140px;font-size:21px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:560px){.opts{grid-template-columns:1fr}}
+.opt{background:#f2f6ff;border-radius:16px;padding:16px;font-size:19px;text-align:left;box-shadow:0 4px 0 #d7e0f2;font-weight:500;border:3px solid transparent}
+.opt.right{background:#c9f5dc;box-shadow:0 4px 0 #7fd3a3}
+.opt.wrong{background:#ffd6de;box-shadow:0 4px 0 #f59aae}
+.why{background:#fff8e0;border-radius:14px;padding:12px 14px;font-size:18px;margin-top:14px}
+.progress{height:12px;background:#e6eef9;border-radius:999px;overflow:hidden;margin-bottom:14px}
+.progress div{height:100%;background:var(--c);transition:width .3s}
+.result{text-align:center;padding:10px}
+.result .stars3{font-size:54px;letter-spacing:6px;margin:6px 0}
 
-  /* Habitats */
-  .animals{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:16px;min-height:72px}
-  .animal{font-size:42px;background:#fff7e0;border-radius:18px;width:72px;height:72px;box-shadow:0 4px 0 #f0dca8;transition:transform .15s}
-  .animal.sel{transform:scale(1.15);background:var(--sun);box-shadow:0 4px 0 #d9a514}
-  .homes{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
-  .home{border-radius:18px;padding:12px;min-height:150px;color:#fff;text-align:left;box-shadow:0 5px 0 rgba(0,0,0,.15)}
-  .home h4{margin:0 0 4px;font-size:21px}
-  .home small{font-size:14px;opacity:.95;display:block;margin-bottom:6px}
-  .home .got{font-size:30px;letter-spacing:4px}
-  .h-ocean{background:linear-gradient(160deg,#1c7be0,#4fc3f7)}
-  .h-desert{background:linear-gradient(160deg,#d9822b,#f5c76a)}
-  .h-arctic{background:linear-gradient(160deg,#5b8fb9,#bfe3f7)}
-  .h-forest{background:linear-gradient(160deg,#1f7a4c,#62c48a)}
-  .home.shake{animation:shake .4s}
-  @keyframes shake{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
-  .msg{text-align:center;font-size:20px;min-height:30px;margin:12px 0 0;font-weight:500}
-
-  /* Plant */
-  .plant-wrap{display:grid;grid-template-columns:1.1fr 1fr;gap:18px;align-items:center}
-  @media (max-width:680px){.plant-wrap{grid-template-columns:1fr}}
-  .pot-scene{height:300px;border-radius:18px;background:linear-gradient(180deg,#bfe6ff,#e8f7ff);position:relative;overflow:hidden}
-  .needs{display:flex;flex-direction:column;gap:12px}
-  .need{display:flex;align-items:center;gap:12px;background:#f6f9ff;border-radius:16px;padding:10px 12px}
-  .need .em{font-size:32px}
-  .need .bar{flex:1;height:16px;background:#e3eaf5;border-radius:999px;overflow:hidden}
-  .need .fill{height:100%;width:0;border-radius:999px;transition:width .3s}
-  .need button{font-size:16px;padding:8px 14px;border-radius:12px;background:#fff;box-shadow:0 3px 0 #cfdcee;font-weight:600}
-
-  /* Quiz */
-  .q{font-size:clamp(21px,3.4vw,27px);font-weight:600;margin:6px 0 16px}
-  .opts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  @media (max-width:560px){.opts{grid-template-columns:1fr}}
-  .opt{background:#f2f6ff;border-radius:16px;padding:16px;font-size:19px;text-align:left;box-shadow:0 4px 0 #d7e0f2;font-weight:500}
-  .opt.right{background:#c9f5dc;box-shadow:0 4px 0 #7fd3a3}
-  .opt.wrong{background:#ffd6de;box-shadow:0 4px 0 #f59aae}
-  .opt:disabled{cursor:default}
-  .progress{height:12px;background:#e6eef9;border-radius:999px;overflow:hidden;margin-bottom:14px}
-  .progress div{height:100%;background:linear-gradient(90deg,var(--leaf),var(--ocean));transition:width .3s}
-  .why{background:#fff8e0;border-radius:14px;padding:12px 14px;font-size:18px;margin-top:14px;display:none}
-  .center{text-align:center}
-  .big-emoji{font-size:80px}
-
-  /* Students, stars, parent */
-  .who{background:#fff;border-radius:999px;padding:8px 14px;font-size:16px;font-weight:600;box-shadow:0 4px 0 #cfe3f5}
-  .starbar{height:16px;background:#fff;border-radius:999px;overflow:hidden;box-shadow:inset 0 0 0 2px #cfe3f5;margin:-8px 0 22px;max-width:520px}
-  .starbar i{display:block;height:100%;background:linear-gradient(90deg,#ffc93c,#ff9f1c);border-radius:999px;transition:width .4s}
-  .tile .done{display:inline-block;margin-top:8px;background:rgba(255,255,255,.28);border-radius:999px;padding:3px 10px;font-size:14px;font-weight:600}
-  .names{display:flex;flex-wrap:wrap;gap:12px;margin:8px 0 20px}
-  .name-btn{background:#fff;border-radius:18px;padding:16px 22px;font-size:22px;font-weight:600;box-shadow:0 5px 0 #cfe3f5;min-width:140px}
-  .name-btn small{display:block;font-size:15px;color:var(--soft);font-weight:500}
-  .add-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-  .add-row input,.pinbox input,.panel textarea,.panel input[type=text],.panel input[type=password]{font-family:inherit;font-size:20px;padding:12px 14px;border-radius:14px;border:3px solid #cfe3f5;outline:none}
-  .add-row input:focus,.pinbox input:focus{border-color:var(--ocean)}
-  .err{color:#c9304f;font-weight:500;min-height:24px;margin:8px 0 0}
-  .badges{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:10px}
-  .badge{background:#f6f9ff;border-radius:16px;padding:12px;text-align:center;font-size:15px}
-  .badge b{display:block;font-size:16px;margin-top:4px}
-  .badge .bi{font-size:34px}
-  .badge.locked{opacity:.4;filter:grayscale(1)}
-  .foot{text-align:center;margin-top:34px}
-  .link{background:none;color:var(--soft);font-size:16px;text-decoration:underline}
-  .pinbox{max-width:380px;margin:0 auto;text-align:center}
-  .pinbox input{width:160px;text-align:center;letter-spacing:10px;font-size:28px}
-  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
-  .tabs button{background:#eef3ff;border-radius:999px;padding:8px 16px;font-size:16px;font-weight:600;color:#3d4aa8}
-  .tabs button[aria-pressed=true]{background:var(--ocean);color:#fff}
-  .act-row{display:grid;grid-template-columns:150px 1fr 70px;gap:10px;align-items:center;margin:8px 0;font-size:17px}
-  .act-row .bar{height:14px;background:#e3eaf5;border-radius:999px;overflow:hidden}
-  .act-row .bar i{display:block;height:100%;background:var(--sun);border-radius:999px}
-  table.hist{width:100%;border-collapse:collapse;font-size:16px;margin-top:8px}
-  table.hist th,table.hist td{text-align:left;padding:8px 6px;border-bottom:1px solid #e6eef9}
-  .note{color:var(--soft);font-size:15px}
-  .panel h3{margin:22px 0 6px;font-size:20px}
-  .panel textarea{width:100%;font-size:14px;font-family:ui-monospace,monospace}
-  .btn.small{font-size:16px;padding:9px 16px;box-shadow:0 4px 0 #1f6fc0}
-  .btn.ghost{background:#fff;color:var(--ink);box-shadow:0 4px 0 #cfdcee}
-  .btn.danger{background:#fff;color:#c9304f;box-shadow:0 4px 0 #f2c3cd}
-  .ctrl{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px}
-
-  .confetti{position:fixed;top:-20px;font-size:26px;pointer-events:none;animation:fall 1.8s linear forwards;z-index:9}
-  @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.6}}
+/* names & parent */
+.names{display:flex;flex-wrap:wrap;gap:12px;margin:8px 0 20px}
+.name-btn{background:#fff;border-radius:18px;padding:16px 22px;font-size:22px;font-weight:600;box-shadow:0 5px 0 #cfe3f5;min-width:140px}
+.name-btn small{display:block;font-size:15px;color:var(--soft);font-weight:500}
+.add-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+input.txt,.pinbox input,textarea{font-family:inherit;font-size:20px;padding:12px 14px;border-radius:14px;border:3px solid #cfe3f5;outline:none}
+input.txt:focus,.pinbox input:focus{border-color:var(--ocean)}
+.badges{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.badge{background:#fff;border-radius:16px;padding:12px;text-align:center;font-size:14px;box-shadow:0 4px 0 #e2ebf7}
+.badge b{display:block;font-size:16px;margin-top:4px}
+.badge .bi{font-size:34px}
+.badge.locked{opacity:.4;filter:grayscale(1)}
+.foot{text-align:center;margin-top:34px}
+.link{background:none;color:var(--soft);font-size:16px;text-decoration:underline}
+.pinbox{max-width:380px;margin:0 auto;text-align:center}
+.pinbox input{width:160px;text-align:center;letter-spacing:10px;font-size:28px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.tabs button{background:#eef3ff;border-radius:999px;padding:8px 16px;font-size:16px;font-weight:600;color:#3d4aa8}
+.tabs button[aria-pressed=true]{background:var(--ocean);color:#fff}
+table.hist{width:100%;border-collapse:collapse;font-size:16px;margin-top:8px}
+table.hist th,table.hist td{text-align:left;padding:8px 6px;border-bottom:1px solid #e6eef9;vertical-align:top}
+textarea{width:100%;font-size:14px;font-family:ui-monospace,monospace}
+.panel h3{margin:22px 0 6px;font-size:20px}
+.confetti{position:fixed;top:-20px;font-size:26px;pointer-events:none;animation:fall 1.8s linear forwards;z-index:9}
+@keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.6}}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#1f2a44;color:#fff;padding:10px 18px;border-radius:999px;font-size:17px;font-weight:600;z-index:10;animation:pop .3s}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <div class="logo"><span class="flask">🧪</span> Science Explorers</div>
-    <div style="display:flex;gap:10px;align-items:center">
-      <button class="back" id="backBtn" style="display:none" onclick="go('home')">🏠 Home</button>
-      <button class="who" id="whoBtn" style="display:none" onclick="go('pick')"></button>
-      <div class="stars" id="starPill" style="display:none">⭐ <span id="starCount">0</span></div>
+    <button class="logo" id="brand"><span class="flask">🧪</span> Science Explorers</button>
+    <div class="hbtns">
+      <button class="pill" id="whoBtn" style="display:none"></button>
+      <span class="pill" id="starPill" style="display:none">⭐ <span id="starCount">0</span></span>
     </div>
   </header>
-
-  <!-- PICK STUDENT -->
-  <section class="screen" id="pick">
-    <h1>Who's exploring today? 🔬</h1>
-    <p class="lead">Tap your name. New here? Add your name below.</p>
-    <div class="names" id="names"></div>
-    <form class="add-row" id="addForm">
-      <input id="newName" maxlength="20" placeholder="Your first name" autocomplete="off" aria-label="Your first name">
-      <button class="btn green" type="submit">➕ Add me</button>
-    </form>
-    <p class="err" id="addErr"></p>
-    <div class="foot"><button class="link" onclick="go('parent')">👪 Parent area</button></div>
-  </section>
-
-  <!-- PARENT -->
-  <section class="screen" id="parent">
-    <div class="panel" id="parentBox"></div>
-  </section>
-
-  <!-- HOME -->
-  <section class="screen" id="home">
-    <h1 id="hello">Hi, Scientist! 👋</h1>
-    <p class="lead" id="helloSub">Pick an adventure. Earn stars as you explore!</p>
-    <div class="starbar" aria-hidden="true"><i id="starFill" style="width:0"></i></div>
-    <div class="grid" id="tiles">
-      <button class="tile t-space" onclick="go('space')"><div class="ic">🪐</div><div><b>Solar System</b><span>Tap planets to learn cool facts</span></div></button>
-      <button class="tile t-matter" onclick="go('matter')"><div class="ic">🧊</div><div><b>Ice, Water, Steam</b><span>Heat it up and watch the tiny particles</span></div></button>
-      <button class="tile t-habitat" onclick="go('habitat')"><div class="ic">🐧</div><div><b>Animal Homes</b><span>Help each animal find its habitat</span></div></button>
-      <button class="tile t-plant" onclick="go('plant')"><div class="ic">🌱</div><div><b>Grow a Plant</b><span>Give it what it needs to grow</span></div></button>
-      <button class="tile t-quiz" onclick="go('quiz')"><div class="ic">🏆</div><div><b>Big Quiz</b><span>Show what you know!</span></div></button>
-    </div>
-    <h2 style="margin:30px 0 4px">My badges 🏅</h2>
-    <div class="badges" id="myBadges"></div>
-    <div class="foot"><button class="link" onclick="go('parent')">👪 Parent area</button></div>
-  </section>
-
-  <!-- SPACE -->
-  <section class="screen" id="space">
-    <h1>Our Solar System 🚀</h1>
-    <p class="lead">Tap the Sun or any planet. Visit all 9 to earn stars!</p>
-    <div class="space">
-      <div class="orbit" id="orbit"></div>
-    </div>
-    <div class="fact" id="fact"><h3>👆 Tap something in space!</h3><p>The planets go in order from closest to the Sun to farthest.</p></div>
-  </section>
-
-  <!-- MATTER -->
-  <section class="screen" id="matter">
-    <h1>Ice, Water, Steam 💧</h1>
-    <p class="lead">Everything is made of tiny particles. Slide the heat and watch them move!</p>
-    <div class="panel">
-      <div class="matter">
-        <div class="beaker"><canvas id="cv"></canvas></div>
-        <div>
-          <p class="state-name" id="stName">Solid</p>
-          <p class="state-desc" id="stDesc"></p>
-        </div>
-      </div>
-      <div class="thermo">❄️ <input type="range" id="heat" min="-20" max="120" value="-10"> 🔥 <span class="temp" id="tempLbl">-10°C</span></div>
-    </div>
-  </section>
-
-  <!-- HABITAT -->
-  <section class="screen" id="habitat">
-    <h1>Animal Homes 🌍</h1>
-    <p class="lead">Tap an animal, then tap the home where it lives.</p>
-    <div class="animals" id="animals"></div>
-    <div class="homes" id="homes"></div>
-    <p class="msg" id="habMsg"></p>
-    <div class="center" style="margin-top:10px"><button class="btn green" onclick="resetHabitats()">🔄 Play again</button></div>
-  </section>
-
-  <!-- PLANT -->
-  <section class="screen" id="plant">
-    <h1>Grow a Plant 🌻</h1>
-    <p class="lead">Plants need sunlight, water, and air. Fill each one to help your seed grow!</p>
-    <div class="panel">
-      <div class="plant-wrap">
-        <div class="pot-scene"><svg id="plantSvg" viewBox="0 0 300 300" width="100%" height="100%"></svg></div>
-        <div>
-          <div class="needs" id="needs"></div>
-          <p class="msg" id="plantMsg" style="text-align:left"></p>
-          <button class="btn green" onclick="resetPlant()">🌰 Plant a new seed</button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- QUIZ -->
-  <section class="screen" id="quiz">
-    <h1>Big Science Quiz 🏆</h1>
-    <div class="panel" id="quizBox"></div>
-  </section>
+  <main id="app"></main>
 </div>
-
 <script>
-/* ---------- saving (same approach as Grade 6 Science Home) ---------- */
-const $ = id => document.getElementById(id);
+/* ============ CONTENT: 7 units, 3 lessons each ============ */
+const UNITS = [
+{
+  id:'create', name:"God's Created World", icon:'🌎', color:'#7c5cf0',
+  blurb:'How God made everything in six days, the variety He put in each kind, and what fossils tell us about the Flood.',
+  lessons:[
+    { t:'Six Days of Creation', icon:'✨', act:'days',
+      read:`<p>In the beginning, God <b>created</b> the heavens and the earth. He made everything in <b>six days</b>, and on the seventh day He rested.</p><p>When God finished, He looked at everything He had made, and it was <b>very good</b>!</p>`,
+      words:[['Create','To make something new'],['Creator','God, who made everything']],
+      goal:'Put the six days of creation in order.',
+      home:'Draw a picture of your favorite day of creation. Tell someone what God made that day.' },
+    { t:'Created Kinds', icon:'🐕', act:'dog',
+      read:`<p>God made animals to have babies <b>after their kind</b>. A dog's puppies are always dogs!</p><p>But God put lots of <b>variety</b> inside each kind. That is why there are big dogs, tiny dogs, fluffy dogs, and spotted dogs. They are all still dogs.</p>`,
+      words:[['Kind','A family of animals that can have babies together'],['Variety','Differences inside one kind'],['Trait','Something about how a living thing looks or acts']],
+      goal:'Change the dog\'s traits. Try 4 different buttons. Is it still a dog?',
+      home:'Look at pictures of 5 dog breeds. What traits are different? What stays the same?' },
+    { t:'Fossils and the Flood', icon:'🦴', act:'dig',
+      read:`<p>A <b>fossil</b> is what is left of a plant or animal that lived long ago, turned into stone. Most fossils form when a living thing is buried <b>quickly</b> in mud.</p><p>The Bible tells about a worldwide <b>Flood</b> in Noah's day. Its rushing water and mud buried huge numbers of plants and animals all at once. That made many of the fossils we find in rock <b>layers</b> today.</p>`,
+      words:[['Fossil','What is left of a living thing, turned into stone'],['Layer','A flat band of rock or mud'],['Flood','When water covers land that is usually dry']],
+      goal:'Dig through the rock layers. Find all 4 hidden fossils!',
+      home:'Press a shell or a leaf into play dough. Lift it off. You made a model fossil!' }
+  ],
+  match:[['Create','To make something new'],['Creator','God, who made everything'],['Kind','An animal family that has babies together'],['Variety','Differences inside one kind'],['Fossil','A living thing from long ago, turned to stone'],['Layer','A flat band of rock or mud']],
+  sort:{ bins:['Days 1–3','Days 4–6'], items:[['💡 Light',0],['🌊 Sky and seas',0],['⛰️ Dry land',0],['🌳 Plants and trees',0],['☀️ Sun and moon',1],['⭐ Stars',1],['🐟 Fish',1],['🐦 Birds',1],['🐘 Land animals',1],['🧑 People',1]] },
+  facts:[['God made everything in six days.',true],['On the seventh day, God rested.',true],['God made people on Day 1.',false,'God made people on Day 6.'],['God made plants on Day 3.',true],['A dog can have kittens.',false,'Animals have babies after their kind. Dogs have puppies.'],['There is lots of variety inside one kind.',true],['A fossil is made of plastic.',false,'A fossil is a living thing from long ago, turned into stone.'],['Most fossils form when things are buried quickly.',true],['God made the sun, moon, and stars on Day 4.',true],['God said what He made was very good.',true]],
+  quiz:[['On which day did God make people?',['Day 1','Day 3','Day 6','Day 7'],2,'God made land animals and people on Day 6.'],
+        ['What did God do on the seventh day?',['Made fish','Rested','Made light','Made plants'],1,'God rested on Day 7.'],
+        ['A poodle and a wolf belong to which kind?',['Cat kind','Dog kind','Horse kind','Bear kind'],1,'Poodles and wolves are both part of the dog kind.'],
+        ['What is a fossil?',['A kind of candy','A living thing from long ago, turned to stone','A baby dinosaur','A toy from the store'],1,'Fossils are the stony remains of plants and animals.'],
+        ['Most fossils formed when living things were…',['Left in the sun','Buried quickly in mud','Kept in a freezer','Eaten by birds'],1,'Things must be buried fast, before they rot, to become fossils.'],
+        ['What did God make on Day 4?',['Sun, moon, and stars','Fish and birds','Plants','People'],0,'On Day 4 God made lights in the sky: the sun, moon, and stars.']]
+},
+{
+  id:'plants', name:'Plants', icon:'🌱', color:'#2fa864',
+  blurb:'The parts of a plant and their jobs, what plants need to grow, and the plant life cycle.',
+  lessons:[
+    { t:'Parts of a Plant', icon:'🌷', act:'plantparts',
+      read:`<p>On Day 3, God made plants. Every part of a plant has a job.</p><p><b>Roots</b> soak up water and hold the plant in the ground. The <b>stem</b> holds the plant up and carries water. <b>Leaves</b> use sunlight to make food. <b>Flowers</b> make seeds to grow new plants.</p>`,
+      words:[['Roots','Soak up water and hold the plant in the ground'],['Stem','Holds the plant up and carries water'],['Leaves','Use sunlight to make food'],['Flower','Makes seeds']],
+      goal:'Find each part of the plant when it asks you.',
+      home:'Carefully pull up a weed. Can you find its roots, stem, and leaves?' },
+    { t:'What Plants Need', icon:'💧', act:'grow',
+      read:`<p>Plants need <b>sunlight</b>, <b>water</b>, and <b>air</b> to grow. They also need good <b>soil</b> and room to grow.</p><p>Here is something amazing: a plant uses sunlight, water, and air to make its very own food!</p>`,
+      words:[['Sunlight','Light from the sun that plants use to make food'],['Soil','The dirt plants grow in']],
+      goal:'Give your seed sunlight, water, and air until it blooms.',
+      home:'Plant a bean seed in a cup of soil. Put it by a window, water it, and check it every day!' },
+    { t:"A Plant's Life Cycle", icon:'🔄', act:'plantcycle',
+      read:`<p>A <b>life cycle</b> is how a living thing grows and changes. A plant starts as a <b>seed</b>. The seed <b>sprouts</b> and grows into a young plant.</p><p>The grown plant makes flowers. The flowers make <b>fruit</b> with new seeds inside, and the cycle starts all over again!</p>`,
+      words:[['Life cycle','How a living thing grows and changes'],['Seed','A tiny plant waiting to grow'],['Sprout','When a seed starts to grow']],
+      goal:'Put the plant\'s life cycle in order.',
+      home:'Cut open an apple with a grown-up. Count the seeds. Each one could grow a new tree!' }
+  ],
+  match:[['Roots','Soak up water and hold the plant down'],['Stem','Carries water up the plant'],['Leaves','Use sunlight to make food'],['Flower','Makes seeds'],['Seed','A tiny plant waiting to grow'],['Life cycle','How a living thing grows and changes']],
+  sort:{ bins:['Plants need it','Plants don\'t need it'], items:[['☀️ Sunlight',0],['💧 Water',0],['🌬️ Air',0],['🟫 Soil',0],['📏 Room to grow',0],['🍬 Candy',1],['📺 TV',1],['👟 Shoes',1],['🧸 Toys',1],['🎵 Music',1]] },
+  facts:[['Roots hold a plant in the ground.',true],['Leaves make food using sunlight.',true],['A plant can grow in a dark closet forever.',false,'Plants need sunlight to make food.'],['Seeds can grow into new plants.',true],['The stem carries water up the plant.',true],['God made plants on Day 6.',false,'God made plants on Day 3.'],['Fruit often has seeds inside.',true],['Plants need air.',true],['Flowers soak up water from the soil.',false,'Roots soak up water from the soil.'],['A sprout is a seed that has started to grow.',true]],
+  quiz:[['Which part soaks up water from the soil?',['Leaves','Flower','Roots','Fruit'],2,'Roots soak up water and hold the plant in place.'],
+        ['What do leaves use to make food?',['Sunlight','Moonlight','Candy','Rocks'],0,'Leaves use sunlight, water, and air to make food.'],
+        ['Which is NOT something plants need?',['Water','Air','Sunlight','Toys'],3,'Plants need sunlight, water, air, and soil. Not toys!'],
+        ["What comes first in a plant's life cycle?",['Flower','Seed','Fruit','Big plant'],1,'Most plants start as a seed.'],
+        ['Which part of a plant makes seeds?',['Roots','Stem','Flower','Bark'],2,'Flowers make the seeds.'],
+        ['What does the stem do?',['Holds the plant up and carries water','Makes seeds','Eats bugs','Sleeps at night'],0,'The stem is like a straw and a backbone.']]
+},
+{
+  id:'animals', name:'Animals', icon:'🐸', color:'#ec7a1c',
+  blurb:'Animal groups, amazing life cycles, and how God designed animals for their homes.',
+  lessons:[
+    { t:'Animal Groups', icon:'🐾', act:'groups',
+      read:`<p>Scientists sort animals into groups by how they are alike.</p><p><b>Mammals</b> have hair or fur and feed their babies milk. <b>Birds</b> have feathers and lay eggs. <b>Reptiles</b> have dry scales. <b>Amphibians</b> start life in water and have smooth, wet skin. <b>Fish</b> live in water and breathe with <b>gills</b>.</p>`,
+      words:[['Mammal','Has hair or fur and feeds babies milk'],['Reptile','Has dry, scaly skin'],['Amphibian','Starts life in water and has smooth, wet skin'],['Gills','Body parts fish use to breathe in water']],
+      goal:'Tap each of the 5 animal groups to meet it.',
+      home:'Go outside. How many birds, mammals, and bugs can you spot in 10 minutes?' },
+    { t:'Animal Life Cycles', icon:'🦋', act:'cycles',
+      read:`<p>Some animals change a LOT as they grow! A frog starts as an egg. It hatches into a <b>tadpole</b> with a tail, then grows legs and becomes a frog.</p><p>A butterfly changes from an egg to a <b>caterpillar</b> to a <b>chrysalis</b> to a butterfly. A big change like this is called <b>metamorphosis</b>.</p>`,
+      words:[['Tadpole','A baby frog that lives in water and has a tail'],['Caterpillar','A baby butterfly that eats leaves'],['Chrysalis','The hard case where a caterpillar changes'],['Metamorphosis','A big change in body shape as an animal grows']],
+      goal:'Watch both life cycles all the way to the end.',
+      home:'In spring, look for tadpoles in a pond or caterpillars on leaves. Look, but don\'t touch!' },
+    { t:'Designed for Their Homes', icon:'🏡', act:'habitat',
+      read:`<p>A <b>habitat</b> is the place where an animal lives. God designed each animal with special features to live in its home.</p><p>Polar bears have thick fur for the cold. Camels can go days without water in the desert. Special features like these are called <b>adaptations</b>.</p>`,
+      words:[['Habitat','The place where an animal lives'],['Adaptation','A special feature that helps an animal live in its home']],
+      goal:'Help every animal find its home.',
+      home:'Pick a pet or wild animal. What features help it live where it lives?' }
+  ],
+  match:[['Mammal','Has fur and feeds babies milk'],['Bird','Has feathers and lays eggs'],['Reptile','Has dry, scaly skin'],['Amphibian','Starts in water, has smooth wet skin'],['Habitat','The place where an animal lives'],['Metamorphosis','A big change as an animal grows']],
+  sort:{ bins:['🐻 Mammal','🐦 Bird','🦎 Reptile','🐸 Amphibian','🐟 Fish'], items:[['🐕 Dog',0],['🐋 Whale',0],['🦅 Eagle',1],['🐧 Penguin',1],['🐍 Snake',2],['🐢 Turtle',2],['🐸 Frog',3],['🦎 Salamander',3],['🦈 Shark',4],['🐠 Clownfish',4]] },
+  facts:[['A whale is a mammal.',true,'Whales breathe air and feed their babies milk.'],['Birds have feathers.',true],['A frog starts life as a tadpole.',true],['A butterfly hatches from its egg with wings.',false,'First it is a caterpillar, then a chrysalis.'],['Fish breathe with gills.',true],['Snakes have fur.',false,'Snakes are reptiles with dry scales.'],['A habitat is where an animal lives.',true],['Camels are designed for the desert.',true],['Penguins are fish.',false,'Penguins are birds that cannot fly.'],['Polar bears have thick fur for the cold.',true]],
+  quiz:[['Which animal is a mammal?',['Shark','Dolphin','Lizard','Frog'],1,'Dolphins breathe air and feed their babies milk.'],
+        ['What does a tadpole grow into?',['A fish','A frog','A butterfly','A snake'],1,'Tadpoles grow legs and become frogs.'],
+        ['What comes right before a butterfly?',['Egg','Tadpole','Chrysalis','Seed'],2,'The butterfly comes out of the chrysalis.'],
+        ["What covers a bird's body?",['Fur','Scales','Feathers','Slime'],2,'Only birds have feathers.'],
+        ['What is a habitat?',["An animal's food",'Where an animal lives','A baby animal','A kind of tree'],1,'A habitat is an animal\'s home.'],
+        ['Why do polar bears have thick fur?',['To swim faster','To stay warm in the cold','To hide in the desert','To fly'],1,'God designed polar bears to stay warm in the icy Arctic.']]
+},
+{
+  id:'matter', name:'Matter', icon:'🧊', color:'#2f80e8',
+  blurb:'Solids, liquids, and gases, how heating and cooling change them, and testing what sinks or floats.',
+  lessons:[
+    { t:'Solids, Liquids, and Gases', icon:'💧', act:'particles',
+      read:`<p><b>Matter</b> is anything that takes up space. Everything around you is made of tiny <b>particles</b>, too small to see.</p><p>In a <b>solid</b>, the particles are packed tight. In a <b>liquid</b>, they slide around. In a <b>gas</b>, they zoom far apart!</p>`,
+      words:[['Matter','Anything that takes up space'],['Particle','A tiny bit of matter, too small to see'],['Solid','Keeps its own shape'],['Liquid','Takes the shape of its container'],['Gas','Spreads out to fill any space']],
+      goal:'Slide the heat to see all three states.',
+      home:'Find 3 solids, 3 liquids, and 1 gas in your kitchen.' },
+    { t:'Heating and Cooling', icon:'🔥', act:'heatcool',
+      read:`<p>Heating and cooling can change matter from one state to another.</p><p>When ice gets warm, it <b>melts</b> into water. When water gets hot, it <b>evaporates</b> into water vapor. When vapor cools, it <b>condenses</b> into drops. When water gets very cold, it <b>freezes</b>.</p>`,
+      words:[['Melt','A solid turns into a liquid'],['Freeze','A liquid turns into a solid'],['Evaporate','A liquid turns into a gas'],['Condense','A gas turns into a liquid']],
+      goal:'Heat and cool the water to see all 4 changes.',
+      home:'Put one ice cube in the sun and one in the shade. Which melts first?' },
+    { t:'Sink or Float?', icon:'🛁', act:'float',
+      read:`<p>Matter has <b>properties</b>, like color, size, shape, and how heavy it is for its size. One property is whether something <b>sinks</b> or <b>floats</b> in water.</p><p>Scientists make a guess, called a <b>prediction</b>, before they test. Then they check!</p>`,
+      words:[['Property','Something you can observe about matter'],['Prediction','A guess about what will happen'],['Float','Stays on top of the water'],['Sink','Goes down to the bottom']],
+      goal:'Make a prediction, then test all 8 objects.',
+      home:'Fill a tub with water. Predict, then test 5 things from around the house.' }
+  ],
+  match:[['Solid','Keeps its own shape'],['Liquid','Takes the shape of its container'],['Gas','Spreads out to fill any space'],['Melt','A solid turns into a liquid'],['Freeze','A liquid turns into a solid'],['Evaporate','A liquid turns into a gas']],
+  sort:{ bins:['Solid','Liquid','Gas'], items:[['🪨 Rock',0],['🧊 Ice cube',0],['📕 Book',0],['✏️ Pencil',0],['🥛 Milk',1],['🧃 Juice',1],['🍯 Honey',1],['🌧️ Rain',1],['♨️ Steam',2],['🎈 Air in a balloon',2]] },
+  facts:[['Ice is a solid.',true],['Water vapor is a gas.',true],['A liquid keeps its own shape.',false,'A liquid takes the shape of its container.'],['Melting changes a solid into a liquid.',true],['Water freezes when it gets hot.',false,'Water freezes when it gets very cold.'],['The air in a balloon is a gas.',true],['Particles in a solid zoom far apart.',false,'In a solid they are packed tight and wiggle in place.'],['A prediction is a guess before you test.',true],['Drops on a cold glass come from condensation.',true],['A rock floats in water.',false,'A rock is heavy for its size, so it sinks.']],
+  quiz:[['Which one is a liquid?',['Rock','Milk','Steam','Ice'],1,'Milk takes the shape of its cup.'],
+        ['What happens when ice gets warm?',['It freezes','It melts','It condenses','It turns to rock'],1,'Warm ice melts into liquid water.'],
+        ['Drops on the outside of a cold glass come from…',['Condensation','Melting','Freezing','A leak'],0,'Water vapor in the air cools and condenses on the glass.'],
+        ['Which keeps its own shape?',['Juice','Air','A wooden block','Steam'],2,'Solids keep their own shape.'],
+        ['A guess before you test is called a…',['Property','Prediction','Particle','Gas'],1,'Scientists predict, then test.'],
+        ['Gas particles are…',['Packed tight','Far apart and zooming','Frozen','Glued together'],1,'Gas particles spread out to fill any space.']]
+},
+{
+  id:'forces', name:'Forces & Magnets', icon:'🧲', color:'#e0405c',
+  blurb:'Pushes and pulls, the friction that slows things down, and how magnets attract and repel.',
+  lessons:[
+    { t:'Pushes and Pulls', icon:'⚽', act:'kick',
+      read:`<p>A <b>force</b> is a <b>push</b> or a <b>pull</b>. Forces make things start, stop, speed up, slow down, or change direction.</p><p>A bigger push makes a ball go farther and faster. <b>Gravity</b> is a pull that brings things down to the ground.</p>`,
+      words:[['Force','A push or a pull'],['Push','Moves something away from you'],['Pull','Moves something toward you'],['Gravity','A pull that brings things down to the ground']],
+      goal:'Kick the ball soft, medium, and hard.',
+      home:'Roll a ball gently, then harder. Count your steps to see how far it goes each time.' },
+    { t:'Friction', icon:'🚗', act:'friction',
+      read:`<p><b>Friction</b> is a force that slows things down when two <b>surfaces</b> rub together.</p><p>Rough surfaces like carpet and sand have lots of friction. Smooth surfaces like ice have very little. That's why it's so easy to slip on ice!</p>`,
+      words:[['Friction','A force that slows things when surfaces rub'],['Surface','The outside or top of something']],
+      goal:'Race the car on all 4 surfaces.',
+      home:'Slide a toy car across a rug and then a wood floor. Which way does it go farther?' },
+    { t:'Magnets', icon:'🧲', act:'magnet',
+      read:`<p>A <b>magnet</b> pulls on things made of iron or steel. That pull is called <b>attract</b>.</p><p>Every magnet has a <b>north pole</b> and a <b>south pole</b>. Opposite poles attract. The same poles push apart, or <b>repel</b>.</p>`,
+      words:[['Magnet','Pulls on things made of iron or steel'],['Attract','Pull together'],['Repel','Push apart'],['Pole','An end of a magnet, north or south']],
+      goal:'Test all 8 objects. Then flip a magnet to see it repel.',
+      home:'Use a fridge magnet to test 10 things around the house. Make a list of what sticks.' }
+  ],
+  match:[['Force','A push or a pull'],['Gravity','Pulls things down to the ground'],['Friction','Slows things when surfaces rub'],['Magnet','Pulls on iron and steel'],['Attract','Pull together'],['Repel','Push apart']],
+  sort:{ bins:['A magnet sticks','A magnet doesn\'t stick'], items:[['📎 Paper clip',0],['🔩 Iron nail',0],['✂️ Steel scissors',0],['🚪 Fridge door',0],['✏️ Pencil',1],['🧽 Sponge',1],['🥤 Plastic cup',1],['🪵 Wooden block',1],['📄 Paper',1],['🧸 Teddy bear',1]] },
+  facts:[['A force is a push or a pull.',true],['Gravity pulls things up into the sky.',false,'Gravity pulls things down to the ground.'],['A harder kick makes a ball go farther.',true],['Ice has lots of friction.',false,'Ice is smooth, so it has very little friction.'],['Friction slows things down.',true],['Magnets attract paper clips.',true],['Magnets attract wood.',false,'Magnets pull on iron and steel, not wood.'],['Two north poles repel.',true],['A north pole and a south pole attract.',true],['A pull can make something move toward you.',true]],
+  quiz:[['A force is a…',['Push or pull','Kind of rock','Color','Sound'],0,'Every force is a push or a pull.'],
+        ['Which surface has the LEAST friction?',['Carpet','Sand','Ice','Grass'],2,'Ice is very smooth, so things slide far.'],
+        ['What pulls things down to the ground?',['Friction','Gravity','Magnets','Wind'],1,'Gravity pulls everything toward the ground.'],
+        ['Which will a magnet pick up?',['Paper','A paper clip','A crayon','A leaf'],1,'Paper clips are made of steel.'],
+        ['Two north poles will…',['Attract','Repel','Melt','Glow'],1,'The same poles push apart.'],
+        ['A harder push makes a ball…',['Stop','Go farther','Go backward','Shrink'],1,'More force means more motion.']]
+},
+{
+  id:'weather', name:'Weather & Seasons', icon:'🌦️', color:'#14a6b8',
+  blurb:'The water cycle, kinds of weather, and why we have four seasons.',
+  lessons:[
+    { t:'The Water Cycle', icon:'🌧️', act:'watercycle',
+      read:`<p>Water moves around and around in the <b>water cycle</b>. The sun warms water so it <b>evaporates</b> into the air. High in the sky it cools and <b>condenses</b> into clouds.</p><p>Then it falls as rain or snow, called <b>precipitation</b>. The water <b>collects</b> in oceans, lakes, and rivers, and the cycle starts again.</p>`,
+      words:[['Water cycle','How water moves from Earth to the sky and back'],['Precipitation','Rain, snow, sleet, or hail'],['Collection','Water gathering in oceans, lakes, and rivers']],
+      goal:'Go all the way around the water cycle.',
+      home:'Put a bowl of water in the sun with plastic wrap on top. Look for drops after an hour!' },
+    { t:'Weather', icon:'🌡️', act:'dress',
+      read:`<p><b>Weather</b> is what the air outside is like right now: hot or cold, sunny or cloudy, rainy, snowy, or windy.</p><p>A <b>thermometer</b> measures <b>temperature</b>, how hot or cold it is. Checking the weather helps us pick the right clothes and stay safe.</p>`,
+      words:[['Weather','What the air outside is like right now'],['Temperature','How hot or cold something is'],['Thermometer','A tool that measures temperature']],
+      goal:'Dress the explorer for all 4 kinds of weather.',
+      home:'Keep a weather chart for a week. Draw the weather each day.' },
+    { t:'The Four Seasons', icon:'🍂', act:'seasons',
+      read:`<p>The Earth is <b>tilted</b>. As it travels around the sun each year, our part of Earth leans toward the sun, then away. That gives us four <b>seasons</b>: spring, summer, fall, and winter.</p><p>God promised Noah that as long as the earth remains, the seasons will keep coming.</p>`,
+      words:[['Season','Spring, summer, fall, or winter'],['Tilt','Leaning to one side'],['Orbit','The path Earth travels around the sun']],
+      goal:'Move Earth around the sun to visit all four seasons.',
+      home:'Pick a tree near your house. Take a picture of it each season.' }
+  ],
+  match:[['Evaporate','Water turns into vapor and rises'],['Condense','Vapor cools into drops and clouds'],['Precipitation','Rain, snow, sleet, or hail'],['Weather','What the air is like right now'],['Thermometer','Measures temperature'],['Season','Spring, summer, fall, or winter']],
+  sort:{ bins:['☀️ Hot weather','❄️ Cold weather'], items:[['🩳 Shorts',0],['🩴 Sandals',0],['👙 Swimsuit',0],['👒 Sun hat',0],['🎽 Tank top',0],['🧤 Mittens',1],['🧥 Winter coat',1],['🥾 Snow boots',1],['🧣 Scarf',1],['🎿 Skis',1]] },
+  facts:[['Rain is a kind of precipitation.',true],['Clouds are made of tiny drops of water.',true],['The sun makes water evaporate.',true],['A thermometer measures wind.',false,'A thermometer measures temperature.'],['Weather can change from day to day.',true],['Summer is usually the coldest season.',false,'Winter is usually the coldest season.'],['The Earth is tilted.',true],['Snow is precipitation.',true],['Water that evaporates is gone forever.',false,'It comes back down as rain or snow.'],['God promised the seasons would keep coming.',true]],
+  quiz:[['What makes water evaporate?',["The sun's heat",'The moon','Snow','Rocks'],0,'Heat from the sun turns water into vapor.'],
+        ['Rain and snow are called…',['Evaporation','Precipitation','Condensation','Collection'],1,'Anything falling from clouds is precipitation.'],
+        ['What does a thermometer measure?',['Rain','Temperature','Wind','Time'],1,'A thermometer tells how hot or cold it is.'],
+        ['What should you wear on a snowy day?',['Swimsuit','Winter coat','Sandals','Tank top'],1,'A warm coat keeps you safe in the cold.'],
+        ['Which season comes after summer?',['Spring','Winter','Fall','Summer again'],2,'Spring, summer, fall, winter.'],
+        ['We have seasons because Earth is…',['Tilted as it orbits the sun','Getting closer to the moon','Spinning faster','Changing color'],0,'Earth\'s tilt makes our half lean toward or away from the sun.']]
+},
+{
+  id:'space', name:'Earth & Space', icon:'🪐', color:'#4b3fc4',
+  blurb:'The sun and planets, why we have day and night, and the phases of the moon.',
+  lessons:[
+    { t:'The Solar System', icon:'☀️', act:'planets',
+      read:`<p>On Day 4, God made the sun, moon, and stars. The <b>sun</b> is a <b>star</b>. Eight <b>planets</b> travel around it in paths called <b>orbits</b>.</p><p>Earth is the third planet from the sun. It is the only planet we know that has living things.</p>`,
+      words:[['Star','A giant ball of hot, glowing gas'],['Planet','A big world that travels around a star'],['Orbit','The path one thing travels around another']],
+      goal:'Visit the sun and all 8 planets.',
+      home:'On a clear night, go outside with a grown-up. A bright "star" that doesn\'t twinkle might be a planet!' },
+    { t:'Day and Night', icon:'🌗', act:'spin',
+      read:`<p>The Earth spins like a top. One full spin is called a <b>rotation</b>, and it takes 24 hours.</p><p>When your side of Earth faces the sun, it is <b>day</b>. When your side turns away from the sun, it is <b>night</b>.</p>`,
+      words:[['Rotation','One full spin'],['Axis','The middle line Earth spins around']],
+      goal:'Spin the Earth. See both day and night.',
+      home:'In a dark room, shine a flashlight on a ball. Turn the ball slowly to see day and night!' },
+    { t:'Phases of the Moon', icon:'🌕', act:'moon',
+      read:`<p>The moon does not make its own light. It <b>reflects</b> light from the sun, like a mirror.</p><p>As the moon travels around Earth, we see different amounts of its lit side. These shapes are called <b>phases</b>. One trip around Earth takes about a month.</p>`,
+      words:[['Reflect','To bounce light back'],['Phase','The shape of the lit moon that we see'],['Full moon','When we see the whole lit side of the moon']],
+      goal:'Move the moon around Earth to see all 8 phases.',
+      home:'Draw the moon every night for a week. How does it change?' }
+  ],
+  match:[['Star','A giant ball of hot, glowing gas'],['Planet','A big world that orbits a star'],['Orbit','The path around a sun or planet'],['Rotation','One full spin'],['Phase','The shape of the moon we see'],['Reflect','To bounce light back']],
+  sort:{ bins:['Planet','Not a planet'], items:[['🔴 Mars',0],['🟠 Jupiter',0],['🌍 Earth',0],['🪐 Saturn',0],['🟡 Venus',0],['🔵 Neptune',0],['☀️ The sun',1],['🌙 The moon',1],['☄️ A comet',1],['⭐ A star',1]] },
+  facts:[['The sun is a star.',true],['Earth is the third planet from the sun.',true],['The moon makes its own light.',false,'The moon reflects light from the sun.'],['One rotation of Earth takes 24 hours.',true],['It is night when your side of Earth faces the sun.',false,'Facing the sun makes it day.'],['Jupiter is the biggest planet.',true],['God made the sun, moon, and stars on Day 4.',true],['A full moon looks like a whole circle.',true],['Saturn has rings.',true],['Mars is called the Blue Planet.',false,'Mars is called the Red Planet.']],
+  quiz:[['What is the sun?',['A planet','A star','A moon','A cloud'],1,'The sun is the star closest to Earth.'],
+        ['Why do we have day and night?',['The sun turns off','Earth spins','The moon blocks the sun','Clouds cover the sky'],1,'As Earth spins, your side faces toward the sun and then away.'],
+        ['Where does moonlight come from?',['The moon is on fire','It reflects the sun\'s light','Fireflies','Lightning'],1,'The moon is like a mirror for sunlight.'],
+        ['Which planet do we live on?',['Mars','Venus','Earth','Jupiter'],2,'Earth, the third planet from the sun.'],
+        ['How long does one spin of Earth take?',['1 hour','24 hours','1 week','1 year'],1,'One rotation is one day: 24 hours.'],
+        ['Which is the biggest planet?',['Mercury','Earth','Jupiter','Mars'],2,'Jupiter is the biggest planet.']]
+}
+];
+
+/* ============ HELPERS ============ */
+const $ = s => document.querySelector(s);
+const app = $('#app');
 const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const shuffle = a => { a = a.slice(); for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+const unitById = id => UNITS.find(u=>u.id===id);
+function confetti(n=14){
+  const bits=['⭐','✨','🎉','🌟'];
+  for(let i=0;i<n;i++){ const s=document.createElement('div'); s.className='confetti'; s.textContent=bits[i%bits.length];
+    s.style.left=Math.random()*100+'vw'; s.style.animationDelay=(Math.random()*.4)+'s'; document.body.appendChild(s); setTimeout(()=>s.remove(),2400); }
+}
+function toast(t){ const d=document.createElement('div'); d.className='toast'; d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(),2200); }
+
+/* ============ SAVING (same approach as Grade 6 Science Home) ============ */
 const LS = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
   set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } }
 };
-/* Extra safety: mirror everything into IndexedDB and ask the browser to keep it */
 const IDB = {
   open(){ return new Promise((res,rej)=>{ try{ const r = indexedDB.open("g3science",1); r.onupgradeneeded = () => r.result.createObjectStore("kv"); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }catch(e){ rej(e); } }); },
   async put(v){ try{ const db = await IDB.open(); await new Promise((res,rej)=>{ const tx = db.transaction("kv","readwrite"); tx.objectStore("kv").put(v,"state"); tx.oncomplete = res; tx.onerror = () => rej(tx.error); }); }catch(e){} },
@@ -301,421 +434,988 @@ const _lsSet = LS.set;
 LS.set = (k,v) => { const ok = _lsSet(k,v); clearTimeout(_mirrorT); _mirrorT = setTimeout(() => IDB.put(snapshot()), 250); return ok; };
 try{ navigator.storage && navigator.storage.persist && navigator.storage.persist(); }catch(e){}
 
-let roster  = LS.get("g3-roster", []);     // ["Ava","Ben"]
+let roster  = LS.get("g3-roster", []);
 let student = LS.get("g3-student", "");
-let prog    = LS.get("g3-prog", {});       // {name:{earned:{key:time}, last:time}}
-let results = LS.get("g3-results", []);    // [{student, kind:"quiz", right, total, at}]
+let prog    = LS.get("g3-prog", {});      // {name:{best:{key:stars}, last:time}}
+let results = LS.get("g3-results", []);   // [{student, unit, kind, stars, right, total, missed, at}]
 let pin     = LS.get("g3-pin", "");
 let parentOK = false;
 const saveAll = () => { LS.set("g3-roster",roster); LS.set("g3-student",student); LS.set("g3-prog",prog); LS.set("g3-results",results); };
+function upgrade(){ // stars from the first version used a different system; keep the names, start the stars fresh
+  Object.values(prog).forEach(p => { if (p && !p.best){ p.best = {}; delete p.earned; } });
+  results = results.filter(r => r.unit);
+}
+upgrade();
 
-/* ---------- stars ---------- */
-// Every star has a name, so each one can be earned once per child.
-const ACTS = [
-  {id:'space',   name:'Solar System',     icon:'🪐', max:12},  // 9 bodies + 3 for all
-  {id:'matter',  name:'Ice, Water, Steam',icon:'🧊', max:3},   // solid, liquid, gas
-  {id:'hab',     name:'Animal Homes',     icon:'🐧', max:11},  // 8 animals + 3 for all
-  {id:'plant',   name:'Grow a Plant',     icon:'🌱', max:3},   // bloom
-  {id:'quiz',    name:'Big Quiz',         icon:'🏆', max:13}   // 10 questions + 3 for perfect
+/* ============ STARS & BADGES ============ */
+const GAMES = [
+  {k:'match', name:'Word Match', icon:'🔤', how:'Match each word to its meaning'},
+  {k:'sort',  name:'Sort It',    icon:'🗂️', how:'Put each card in the right group'},
+  {k:'climb', name:'Fact Climb', icon:'⛰️', how:'True or false? Climb to the top'},
+  {k:'quiz',  name:'Unit Quiz',  icon:'🏆', how:'Show what you know'}
 ];
-const STAR_MAX = ACTS.reduce((a,x)=>a+x.max,0);
-const STAR_VALUE = {'space-all':3,'hab-all':3,'plant-bloom':3,'quiz-perfect':3};
-const P = (s=student) => { if(!prog[s]) prog[s] = {earned:{},last:null}; return prog[s]; };
-function starsFor(s, act){
-  return Object.keys(P(s).earned).filter(k=>!act || k.startsWith(act+'-')).reduce((a,k)=>a+(STAR_VALUE[k]||1),0);
+const UNIT_MAX = 3 + GAMES.length*3;
+const STAR_MAX = UNITS.length * UNIT_MAX;
+const P = (s=student) => { if(!prog[s]) prog[s] = {best:{},last:null}; if(!prog[s].best) prog[s].best={}; return prog[s]; };
+const best = (s,key) => P(s).best[key] || 0;
+const lessonDone = (s,u,i) => best(s,`${u}-L${i}`) > 0;
+const lessonsDone = (s,u) => [0,1,2].filter(i=>lessonDone(s,u,i)).length;
+function unitStars(s,u){ return Object.entries(P(s).best).filter(([k])=>k.startsWith(u+'-')).reduce((a,[,v])=>a+v,0); }
+function starsFor(s){ return UNITS.reduce((a,u)=>a+unitStars(s,u.id),0); }
+function award(key, stars){
+  if(!student) return 0;
+  const was = best(student,key);
+  P().last = Date.now();
+  if(stars > was){ P().best[key] = stars; saveAll(); updateStars(); confetti(stars>1?14:6); return stars - was; }
+  saveAll(); return 0;
 }
-function addStar(key){
-  if(!student || P().earned[key]) return;
-  P().earned[key] = Date.now(); P().last = Date.now();
-  saveAll(); updateStars(); confetti(6);
-}
-function updateStars(){
-  const n = student ? starsFor(student) : 0;
-  $('starCount').textContent = n;
-  $('starFill').style.width = (n/STAR_MAX*100)+'%';
-}
-const BADGES = [
-  {i:'🌟',n:'First Star',d:'Earn your first star',ok:s=>starsFor(s)>=1},
-  {i:'🚀',n:'Space Explorer',d:'Visit the whole solar system',ok:s=>!!P(s).earned['space-all']},
-  {i:'🔬',n:'Particle Pro',d:'See all 3 states of matter',ok:s=>starsFor(s,'matter')===3},
-  {i:'🐾',n:'Animal Helper',d:'Get every animal home',ok:s=>!!P(s).earned['hab-all']},
-  {i:'🌻',n:'Green Thumb',d:'Grow a sunflower',ok:s=>!!P(s).earned['plant-bloom']},
-  {i:'🧠',n:'Quiz Whiz',d:'Get 7 or more on the Big Quiz',ok:s=>results.some(r=>r.student===s&&r.right>=7)},
-  {i:'💯',n:'Perfect Score',d:'Get all 10 on the Big Quiz',ok:s=>!!P(s).earned['quiz-perfect']},
-  {i:'🏅',n:'Super Scientist',d:`Earn all ${STAR_MAX} stars`,ok:s=>starsFor(s)>=STAR_MAX}
-];
-const badgeHTML = s => BADGES.map(b=>`<div class="badge ${b.ok(s)?'':'locked'}"><div class="bi">${b.i}</div><b>${b.n}</b>${b.d}</div>`).join('');
+function logResult(r){ results.push(Object.assign({student, at:new Date().toISOString()}, r)); saveAll(); }
+function updateStars(){ $('#starCount').textContent = student ? starsFor(student) : 0; }
+const starStr = n => '★'.repeat(n) + '☆'.repeat(3-n);
 
-function renderHome(){
-  $('hello').textContent = `Hi, ${student}! 👋`;
-  const n = starsFor(student);
-  $('helloSub').textContent = n>=STAR_MAX ? `You earned all ${STAR_MAX} stars! Amazing!` : `You have ${n} of ${STAR_MAX} stars. Pick an adventure!`;
-  const ids = ['space','matter','hab','plant','quiz'];
-  document.querySelectorAll('#tiles .tile').forEach((t,i)=>{
-    const a = ACTS.find(x=>x.id===ids[i]), got = starsFor(student,a.id);
-    let chip = t.querySelector('.done'); if(!chip){ chip=document.createElement('span'); chip.className='done'; t.lastElementChild.appendChild(chip); }
-    chip.textContent = got>=a.max ? `✅ All ${a.max} stars` : `⭐ ${got} of ${a.max}`;
-  });
-  $('myBadges').innerHTML = badgeHTML(student);
+const unitMaster = (s,u) => lessonsDone(s,u.id)===3 && best(s,u.id+'-quiz')>=2;
+function badgeList(s){
+  const mine = results.filter(r=>r.student===s);
+  return [
+    {i:'🌟', n:'First Star', d:'Earn your first star', ok: starsFor(s)>=1},
+    ...UNITS.map(u => ({i:u.icon, n:`${u.name} Explorer`, d:'Finish all 3 lessons and get 2+ stars on the quiz', ok: unitMaster(s,u)})),
+    {i:'🔤', n:'Word Wizard', d:'Get 3 stars in Word Match', ok: mine.some(r=>r.kind==='match'&&r.stars===3)},
+    {i:'🚩', n:'Summit', d:'Plant the flag in Fact Climb', ok: mine.some(r=>r.kind==='climb'&&r.stars===3)},
+    {i:'💯', n:'Perfect Score', d:'Get every question right on a quiz', ok: mine.some(r=>r.kind==='quiz'&&r.right===r.total)},
+    {i:'🏅', n:'Super Scientist', d:`Earn all ${STAR_MAX} stars`, ok: starsFor(s)>=STAR_MAX}
+  ];
+}
+const badgeHTML = s => badgeList(s).map(b=>`<div class="badge ${b.ok?'':'locked'}"><div class="bi">${b.i}</div><b>${esc(b.n)}</b>${esc(b.d)}</div>`).join('');
+
+/* ============ NAVIGATION ============ */
+let view = {page:'pick'};
+let cleanup = null;
+function go(v){
+  if (cleanup){ try{ cleanup(); }catch(e){} cleanup = null; }
+  view = v;
+  if (!student && v.page!=='parent' && v.page!=='pick') view = {page:'pick'};
+  if (view.page!=='parent') parentOK = false;
+  const kid = student && view.page!=='pick' && view.page!=='parent';
+  $('#whoBtn').style.display = kid ? 'inline-block' : 'none';
+  $('#starPill').style.display = kid ? 'inline-block' : 'none';
+  $('#whoBtn').textContent = '👤 ' + student;
+  document.documentElement.style.setProperty('--c', view.unit ? unitById(view.unit).color : '#3aa0ff');
   updateStars();
+  ({pick:renderPick, home:renderHome, unit:renderUnit, lesson:renderLesson, game:renderGame, parent:renderParent})[view.page]();
+  window.scrollTo({top:0});
 }
+$('#brand').onclick = () => go({page: student ? 'home' : 'pick'});
+$('#whoBtn').onclick = () => go({page:'pick'});
 
-/* ---------- picking a student ---------- */
+/* ============ PICK A STUDENT ============ */
 function renderPick(){
-  $('names').innerHTML = roster.length
-    ? roster.map(n=>`<button class="name-btn" data-n="${esc(n)}">${esc(n)}<small>⭐ ${starsFor(n)} stars</small></button>`).join('')
-    : '<p class="note" style="font-size:18px">No explorers yet. Add your name to start!</p>';
-  $('names').querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>chooseStudent(b.dataset.n));
-  $('addErr').textContent='';
-}
-function chooseStudent(n){
-  student = n; P().last = Date.now(); saveAll();
-  resetActivities(); go('home');
-}
-$('addForm').addEventListener('submit', e=>{
-  e.preventDefault();
-  const n = $('newName').value.trim().replace(/\s+/g,' ');
-  if(!n){ $('addErr').textContent='Type your name first.'; return; }
-  if(roster.some(x=>x.toLowerCase()===n.toLowerCase())){ $('addErr').textContent=`${n} is already here. Tap your name above!`; return; }
-  roster.push(n); $('newName').value=''; chooseStudent(n);
-});
-function resetActivities(){
-  visited.clear(); $('fact').innerHTML='<h3>👆 Tap something in space!</h3><p>The planets go in order from closest to the Sun to farthest.</p>';
-  document.querySelectorAll('.orbit .sel').forEach(e=>e.classList.remove('sel'));
-  shownState=''; resetHabitats(); resetPlant(); quizStarted=false;
-}
-function confetti(n=14){
-  const bits=['⭐','✨','🎉','🌟'];
-  for(let i=0;i<n;i++){
-    const s=document.createElement('div');
-    s.className='confetti'; s.textContent=bits[i%bits.length];
-    s.style.left=Math.random()*100+'vw'; s.style.animationDelay=(Math.random()*.4)+'s';
-    document.body.appendChild(s); setTimeout(()=>s.remove(),2400);
-  }
-}
-function go(id){
-  if(!student && id!=='parent') id='pick';
-  if(id!=='parent') parentOK=false;              // the parent area locks again when you leave it
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
-  $(id).classList.add('on');
-  $('backBtn').style.display = (id==='home'||id==='pick') ? 'none' : 'inline-block';
-  $('whoBtn').style.display = student && id!=='pick' && id!=='parent' ? 'inline-block' : 'none';
-  $('whoBtn').textContent = '👤 ' + student;
-  $('whoBtn').title = 'Switch explorer';
-  $('starPill').style.display = student && id!=='pick' && id!=='parent' ? 'inline-block' : 'none';
-  if(id==='pick') renderPick();
-  if(id==='home') renderHome();
-  if(id==='parent') renderParent();
-  window.scrollTo({top:0,behavior:'smooth'});
-  if(id==='matter') startMatter(); else stopMatter();
-  if(id==='quiz' && !quizStarted) startQuiz();
+  app.innerHTML = `<div class="screen">
+    <h1>Who's exploring today? 🔬</h1>
+    <p class="lead">Tap your name. New here? Add your name below.</p>
+    <div class="names">${roster.length ? roster.map(n=>`<button class="name-btn" data-n="${esc(n)}">${esc(n)}<small>⭐ ${starsFor(n)} stars</small></button>`).join('') : '<p class="note" style="font-size:18px">No explorers yet. Add your name to start!</p>'}</div>
+    <form class="add-row" id="addForm"><input class="txt" id="newName" maxlength="20" placeholder="Your first name" autocomplete="off" aria-label="Your first name"><button class="btn green" type="submit">➕ Add me</button></form>
+    <p class="err" id="addErr"></p>
+    <div class="foot"><button class="link" id="toParent">👪 Parent area</button></div></div>`;
+  app.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>{ student=b.dataset.n; P().last=Date.now(); saveAll(); go({page:'home'}); });
+  $('#toParent').onclick = () => go({page:'parent'});
+  $('#addForm').onsubmit = e => { e.preventDefault();
+    const n = $('#newName').value.trim().replace(/\s+/g,' ');
+    if(!n){ $('#addErr').textContent='Type your name first.'; return; }
+    const same = roster.find(x=>x.toLowerCase()===n.toLowerCase());
+    if(same){ $('#addErr').textContent=`${same} is already here. Tap your name above!`; return; }
+    roster.push(n); student=n; P().last=Date.now(); saveAll(); go({page:'home'}); };
 }
 
-/* ---------- SPACE ---------- */
-const bodies = [
-  {n:'Sun',sun:true,f:'The Sun is a star! It is a giant ball of hot, glowing gas.',x:['About 1 million Earths could fit inside!','It gives us light and heat.']},
-  {n:'Mercury',c:'#b5a69a',s:22,f:'Mercury is the closest planet to the Sun and the smallest planet.',x:['A year there is only 88 days','No moons']},
-  {n:'Venus',c:'#e8c27a',s:32,f:'Venus is the hottest planet. Its thick clouds trap heat like a blanket.',x:['Hotter than an oven!','Spins backwards']},
-  {n:'Earth',c:'linear',s:34,f:'Earth is our home! It is the only planet we know that has living things.',x:['1 moon','Mostly covered in water']},
-  {n:'Mars',c:'#d8613c',s:26,f:'Mars is called the Red Planet because its dirt has rust in it.',x:['2 tiny moons','Has the tallest volcano']},
-  {n:'Jupiter',c:'#d9a76a',s:70,f:'Jupiter is the biggest planet. It has a giant storm called the Great Red Spot.',x:['Over 90 moons','Made mostly of gas']},
-  {n:'Saturn',c:'#e9d08c',s:58,ring:true,f:'Saturn has beautiful rings made of ice and rock.',x:['Lots of moons','Could float in a giant bathtub!']},
-  {n:'Uranus',c:'#9fe3ea',s:44,f:'Uranus spins on its side, like a rolling ball.',x:['Very cold','Blue-green color']},
-  {n:'Neptune',c:'#4a7bea',s:42,f:'Neptune is the farthest planet from the Sun. It has the fastest winds.',x:['Very windy','Takes 165 years to go around the Sun']}
-];
-const visited = new Set();
-(function buildSpace(){
-  const o=document.getElementById('orbit');
-  bodies.forEach((b,i)=>{
-    const el=document.createElement('button');
-    if(b.sun){el.className='sun';}
-    else{
-      el.className='planet';
-      el.style.width=el.style.height=b.s+'px';
-      el.style.background = b.c==='linear'
-        ? 'radial-gradient(circle at 35% 35%,#7fd0ff,#2f7de0 55%,#2aa86b 56%,#2f7de0 70%)'
-        : `radial-gradient(circle at 35% 35%,#fff8 0%,${b.c} 45%,${b.c})`;
-      if(b.ring){const r=document.createElement('div');r.className='ring';el.appendChild(r);}
+/* ============ HOME ============ */
+function renderHome(){
+  const n = starsFor(student);
+  app.innerHTML = `<div class="screen">
+    <h1>Hi, ${esc(student)}! 👋</h1>
+    <p class="lead">${n>=STAR_MAX ? `You earned all ${STAR_MAX} stars! Amazing!` : `You have ${n} of ${STAR_MAX} stars. Pick a unit to explore!`}</p>
+    <div class="starbar" aria-hidden="true"><i style="width:${n/STAR_MAX*100}%"></i></div>
+    <div class="units">${UNITS.map((u,i)=>{ const s=unitStars(student,u.id);
+      return `<button class="utile" style="--c:${u.color}" data-u="${u.id}"><div class="ic">${u.icon}</div><div><span class="un">Unit ${i+1}</span><b>${esc(u.name)}</b>
+        <div class="ubar"><i style="width:${s/UNIT_MAX*100}%"></i></div><div class="done">${s>=UNIT_MAX?'✅ All stars!':`⭐ ${s} of ${UNIT_MAX} · ${lessonsDone(student,u.id)}/3 lessons`}</div></div></button>`; }).join('')}</div>
+    <h2>My badges 🏅</h2><div class="badges">${badgeHTML(student)}</div>
+    <div class="foot"><button class="link" id="toParent">👪 Parent area</button></div></div>`;
+  app.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>go({page:'unit', unit:b.dataset.u}));
+  $('#toParent').onclick = () => go({page:'parent'});
+}
+
+/* ============ UNIT ============ */
+function renderUnit(){
+  const u = unitById(view.unit), ui = UNITS.indexOf(u);
+  app.innerHTML = `<div class="screen">
+    <div class="crumbs"><button data-go="home">🏠 Home</button></div>
+    <div class="uhead"><div class="ic">${u.icon}</div><div><span class="note" style="color:#fff;opacity:.9">Unit ${ui+1} · ⭐ ${unitStars(student,u.id)} of ${UNIT_MAX}</span><h1>${esc(u.name)}</h1><p>${esc(u.blurb)}</p></div></div>
+    <h2>📖 Lessons</h2>
+    <div class="path">${u.lessons.map((L,i)=>`<button class="step ${lessonDone(student,u.id,i)?'isdone':''}" data-l="${i}"><span class="si">${L.icon}</span><span><small>Lesson ${i+1}</small><b>${esc(L.t)}</b></span><span class="st">${lessonDone(student,u.id,i)?'✅':''}</span></button>`).join('')}</div>
+    <h2>🎮 Games</h2>
+    <div class="path">${GAMES.map(g=>`<button class="step" data-g="${g.k}"><span class="si">${g.icon}</span><span><b>${g.name}</b><small>${g.how}</small></span><span class="st">${starStr(best(student,u.id+'-'+g.k))}</span></button>`).join('')}</div>
+  </div>`;
+  app.querySelector('[data-go]').onclick = () => go({page:'home'});
+  app.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>go({page:'lesson', unit:u.id, lesson:+b.dataset.l}));
+  app.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>go({page:'game', unit:u.id, game:b.dataset.g}));
+}
+
+/* ============ LESSON ============ */
+function renderLesson(){
+  const u = unitById(view.unit), i = view.lesson, L = u.lessons[i];
+  const wasDone = lessonDone(student,u.id,i);
+  app.innerHTML = `<div class="screen">
+    <div class="crumbs"><button data-go="home">🏠 Home</button> › <button data-go="unit">${esc(u.name)}</button></div>
+    <h1>${L.icon} ${esc(L.t)}</h1>
+    <p class="note" style="margin:0 0 14px">Lesson ${i+1} of 3 ${wasDone?'· ✅ done':''}</p>
+    <div class="lesson-grid">
+      <div class="panel"><div class="read">${L.read}</div>
+        <p class="sec-t" style="margin-top:12px">Words to know · tap to check</p>
+        <div class="words">${L.words.map(([w,m])=>`<button class="wcard"><b>${esc(w)}</b><span>Tap to see the meaning</span></button>`).join('')}</div>
+      </div>
+      <div class="seeit">
+        <p class="goal"><span class="tag">🎯 Goal</span><span>${esc(L.goal)}</span></p>
+        <div class="act" id="act"></div>
+        <div class="donebar" id="donebar"><span>✅ Lesson complete!${wasDone?'':' You earned a ⭐'}</span>
+          <span style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">${i<2?`<button class="btn small" id="nextL">Next lesson ➜</button>`:''}<button class="btn small ghost" id="toGames">🎮 Play the games</button></span></div>
+      </div>
+      <div class="home-try"><b>🏡 Try it at home</b>${esc(L.home)}</div>
+    </div></div>`;
+  app.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go({page:b.dataset.go, unit:u.id}));
+  app.querySelectorAll('.wcard').forEach((b,k)=>b.onclick=()=>{ b.classList.toggle('flip'); b.querySelector('span').textContent = b.classList.contains('flip') ? L.words[k][1] : 'Tap to see the meaning'; });
+  const doneBar = $('#donebar');
+  let finished = false;
+  const done = () => { if (finished) return; finished = true;
+    award(`${u.id}-L${i}`, 1); doneBar.classList.add('on');
+    setTimeout(()=>doneBar.scrollIntoView({behavior:'smooth', block:'nearest'}), 150); };
+  if ($('#nextL')) $('#nextL').onclick = () => go({page:'lesson', unit:u.id, lesson:i+1});
+  $('#toGames').onclick = () => go({page:'unit', unit:u.id});
+  const A = ACTS[L.act];
+  $('#act').innerHTML = A.html;
+  cleanup = A.init($('#act'), done) || null;
+}
+
+/* ============ LESSON ACTIVITIES (part 1: creation, plants, animals) ============ */
+const ACTS = {};
+const q = (root, s) => root.querySelector(s);
+const qa = (root, s) => [...root.querySelectorAll(s)];
+
+/* Put-in-order engine (used by Six Days and Plant Life Cycle) */
+function makeOrder(items, slotLabel, finalMsg, ask){
+  ask = ask || (i => `What comes ${slotLabel(i).toLowerCase()}?`);
+  return {
+    html:`<div class="slots"></div><div class="pool"></div><p class="msg center"></p>`,
+    init(root, done){
+      let n = 0;
+      const slots = q(root,'.slots'), pool = q(root,'.pool'), msg = q(root,'.msg');
+      slots.innerHTML = items.map((_,i)=>`<div class="slot" data-s="${i}">${slotLabel(i)}</div>`).join('');
+      pool.innerHTML = shuffle(items.map((_,i)=>i)).map(i=>`<button class="tbtn" data-i="${i}"><span class="e">${items[i].e}</span>${esc(items[i].t)}</button>`).join('');
+      msg.textContent = '👆 ' + ask(0);
+      qa(root,'[data-i]').forEach(b=>b.onclick=()=>{
+        const i = +b.dataset.i;
+        if (i===n){
+          const s = q(root,`[data-s="${n}"]`); s.classList.add('filled');
+          s.innerHTML = `<small>${slotLabel(n)}</small><span class="e">${items[i].e}</span>${esc(items[i].t)}`;
+          b.remove(); n++;
+          if (n===items.length){ msg.innerHTML = finalMsg; done(); }
+          else msg.textContent = '✅ Yes! ' + ask(n);
+        } else { b.classList.remove('bad'); void b.offsetWidth; b.classList.add('bad'); msg.textContent = 'Not yet! ' + ask(n); }
+      });
     }
-    el.setAttribute('aria-label',b.n);
-    el.onclick=()=>{
-      document.querySelectorAll('.orbit .sel').forEach(e=>e.classList.remove('sel'));
-      el.classList.add('sel');
-      visited.add(b.n);
-      const left = bodies.length-visited.size;
-      document.getElementById('fact').innerHTML =
-        `<h3>${b.n}${i>0?` <small style="color:#8a93ad;font-size:16px">planet #${i} from the Sun</small>`:''}</h3>
-         <p>${b.f}</p>${b.x.map(t=>`<span class="chip">${t}</span>`).join('')}
-         <p style="color:#8a93ad;font-size:15px;margin-top:10px">${left? `Visited ${visited.size} of 9 — ${left} to go!`:'🎉 You visited the whole solar system!'}</p>`;
-      addStar('space-'+b.n);
-      if(!left) addStar('space-all');
+  };
+}
+
+ACTS.days = makeOrder([
+  {e:'💡',t:'Light'},{e:'🌊',t:'Sky and seas'},{e:'🌳',t:'Land and plants'},
+  {e:'☀️',t:'Sun, moon, and stars'},{e:'🐟',t:'Fish and birds'},{e:'🧑',t:'Land animals and people'}],
+  i => `Day ${i+1}`, '🎉 You did it! And on <b>Day 7</b>, God rested. 😴', i => `What did God make on Day ${i+1}?`);
+
+ACTS.plantcycle = makeOrder([
+  {e:'🌰',t:'Seed'},{e:'🌱',t:'Sprout'},{e:'🌿',t:'Young plant'},{e:'🌻',t:'Grown plant with flowers'},{e:'🍎',t:'Fruit with new seeds'}],
+  i => ['First','Second','Third','Fourth','Fifth'][i], '🎉 The new seeds can grow into new plants, and the cycle starts again! 🔄');
+
+/* Created Kinds: change the dog's traits */
+ACTS.dog = {
+  html:`<div class="stage" style="background:linear-gradient(#e8f6ff,#e8f6ff 75%,#bfe5a5 75%)"><svg class="dogsvg" viewBox="0 0 300 220" width="100%" style="max-height:260px;display:block"></svg></div>
+    <div class="dogctl" style="display:grid;gap:8px;margin-top:12px"></div><p class="msg center"></p>`,
+  init(root, done){
+    const COLORS = {tan:['#d9a066','#a8743c'],brown:['#8a5a2b','#5e3b19'],black:['#3a3a3a','#1c1c1c'],white:['#f6f1e7','#c9bfae']};
+    const st = {size:'medium', color:'tan', ears:'floppy', coat:'short', spots:'none', legs:'medium'};
+    const CTL = [
+      ['size','Size',[['small','Small'],['medium','Medium'],['big','Big']]],
+      ['color','Color',[['tan','Tan'],['brown','Brown'],['black','Black'],['white','White']]],
+      ['ears','Ears',[['floppy','Floppy'],['pointy','Pointy']]],
+      ['coat','Fur',[['short','Short'],['fluffy','Fluffy']]],
+      ['spots','Spots',[['none','None'],['spots','Spots']]],
+      ['legs','Legs',[['short','Short'],['medium','Medium'],['long','Long']]]];
+    const changed = new Set(), finished = {v:false};
+    const svg = q(root,'.dogsvg'), ctl = q(root,'.dogctl'), msg = q(root,'.msg');
+    const draw = () => {
+      const [c,d] = COLORS[st.color], s = {small:.65,medium:.9,big:1.15}[st.size], leg = {short:22,medium:38,long:56}[st.legs];
+      const outline = st.color==='white' ? 'stroke="#b8ad9a" stroke-width="2"' : '';
+      const fluff = st.coat==='fluffy' ? `stroke="${c}" stroke-width="14" stroke-dasharray="1 9" stroke-linecap="round"` : outline;
+      const ears = st.ears==='floppy'
+        ? `<ellipse cx="206" cy="92" rx="10" ry="24" fill="${d}" transform="rotate(18 206 92)"/>`
+        : `<polygon points="200,70 210,36 224,66" fill="${d}"/>`;
+      const spots = st.spots==='spots' ? `<circle cx="120" cy="112" r="11" fill="${d}"/><circle cx="160" cy="125" r="8" fill="${d}"/><circle cx="185" cy="105" r="9" fill="${d}"/>` : '';
+      const legs = [100,122,172,194].map(x=>`<rect x="${x}" y="135" width="14" height="${leg}" rx="6" fill="${c}" ${outline}/>`).join('');
+      svg.innerHTML = `<ellipse cx="150" cy="${205}" rx="${80*s}" ry="8" fill="#000" opacity=".12"/>
+        <g transform="translate(150 205) scale(${s}) translate(-150 ${-(135+leg)})">
+          <path d="M84 112 Q60 96 58 70" stroke="${c}" stroke-width="10" fill="none" stroke-linecap="round"/>
+          ${legs}
+          <ellipse cx="150" cy="118" rx="72" ry="34" fill="${c}" ${fluff}/>
+          ${spots}
+          <circle cx="222" cy="86" r="30" fill="${c}" ${fluff}/>
+          <ellipse cx="250" cy="98" rx="18" ry="12" fill="${c}" ${outline}/>
+          <circle cx="266" cy="94" r="5" fill="#222"/><circle cx="230" cy="78" r="4.5" fill="#222"/>
+          <path d="M248 108 Q256 114 262 108" stroke="#222" stroke-width="2" fill="none"/>
+          ${ears}
+        </g>`;
+      ctl.innerHTML = CTL.map(([k,label,opts])=>`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b style="min-width:60px">${label}</b>${opts.map(([v,t])=>`<button class="tbtn ${st[k]===v?'sel':''}" data-k="${k}" data-v="${v}" style="padding:7px 12px;font-size:16px">${t}</button>`).join('')}</div>`).join('');
+      qa(ctl,'[data-k]').forEach(b=>b.onclick=()=>{ st[b.dataset.k]=b.dataset.v; changed.add(b.dataset.k); draw(); });
+      const left = Math.max(0, 4-changed.size);
+      msg.innerHTML = changed.size===0 ? 'Tap the buttons to change the dog\'s traits.'
+        : left ? `🐕 Still a dog! You changed ${changed.size} trait${changed.size===1?'':'s'}. Try ${left} more.`
+        : '🎉 Every one is still a dog! God put lots of <b>variety</b> inside the dog kind.';
+      if (!left && !finished.v){ finished.v = true; done(); }
     };
-    o.appendChild(el);
-  });
-})();
-
-/* ---------- MATTER ---------- */
-const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
-let parts=[], raf=null, T=-10;
-const states={
-  solid:{n:'Solid 🧊',d:'Ice is a <b>solid</b>. The particles are packed tight and just wiggle in place. A solid keeps its own shape.'},
-  liquid:{n:'Liquid 💧',d:'Water is a <b>liquid</b>. The particles slide past each other. A liquid takes the shape of its container.'},
-  gas:{n:'Gas ☁️',d:'Steam is a <b>gas</b>. The particles zoom around and spread out to fill all the space they can!'}
+    draw();
+  }
 };
-function stateOf(t){return t<0?'solid':t<100?'liquid':'gas';}
-function sizeCanvas(){const r=cv.getBoundingClientRect();cv.width=r.width*devicePixelRatio;cv.height=r.height*devicePixelRatio;}
-function initParts(){
-  sizeCanvas(); parts=[];
-  const W=cv.width,H=cv.height,R=11*devicePixelRatio, cols=8, rows=5, gap=R*2.3;
-  const x0=(W-cols*gap)/2+gap/2, y0=H-rows*gap-R;
-  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
-    const hx=x0+c*gap, hy=y0+r*gap;
-    parts.push({hx,hy,x:hx,y:hy,vx:(Math.random()-.5),vy:(Math.random()-.5),R});
+
+/* Fossils: dig through layers */
+ACTS.dig = {
+  html:`<div class="digwrap" style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;border-radius:16px;overflow:hidden;padding:4px;background:#6b4f33"></div>
+    <div class="ctrl"><span class="chips found"></span></div><p class="msg"></p>`,
+  init(root, done){
+    const LAYERS = ['#e0c191','#c9a173','#ad855a','#8e6a46'];
+    const FOSSILS = [['🐚','Shell','Sea shells are the most common fossils. Some are even found on top of mountains!'],
+      ['🐟','Fish','This fish was buried so fast it had no time to rot away.'],
+      ['🍃','Leaf','Even a soft leaf can become a fossil if mud covers it quickly.'],
+      ['🦴','Dinosaur bone','Dinosaurs lived on land. Mud from the Flood buried many of them.']];
+    const cells = shuffle([...Array(24).keys()]).slice(0,4);
+    const where = {}; cells.forEach((c,i)=>where[c]=i);
+    const found = [], wrap = q(root,'.digwrap'), msg = q(root,'.msg');
+    wrap.innerHTML = [...Array(24).keys()].map(c=>`<button data-c="${c}" style="aspect-ratio:1.4;border-radius:8px;font-size:26px;background:${LAYERS[Math.floor(c/6)]};box-shadow:inset 0 -5px 0 rgba(0,0,0,.18)">⛏️</button>`).join('');
+    const chips = () => q(root,'.found').innerHTML = FOSSILS.map((f,i)=>`<span class="chip ${found.includes(i)?'on':''}">${found.includes(i)?f[0]:'❔'} ${found.includes(i)?f[1]:'?'}</span>`).join(' ');
+    chips(); msg.textContent = 'Tap the rock to dig. Each row is a different layer.';
+    qa(wrap,'[data-c]').forEach(b=>b.onclick=()=>{
+      const c = +b.dataset.c; b.disabled = true;
+      b.style.background = LAYERS[Math.floor(c/6)]; b.style.filter = 'brightness(.72)'; b.style.boxShadow = 'inset 0 4px 8px rgba(0,0,0,.35)';
+      if (c in where){ const f = FOSSILS[where[c]]; b.textContent = f[0]; b.style.fontSize = '40px'; b.style.filter = 'none'; b.style.background = '#fff6e0'; found.push(where[c]); chips();
+        msg.innerHTML = `<b>You found a ${f[1].toLowerCase()} fossil!</b> ${f[2]}`;
+        if (found.length===4){ msg.innerHTML += '<br>🎉 You found all 4 fossils!'; done(); } }
+      else b.textContent = '';
+    });
   }
-}
-let shownState='';
-function updateLabels(){
-  const s=stateOf(T);
-  document.getElementById('tempLbl').textContent=T+'°C';
-  if(s!==shownState){
-    shownState=s;
-    document.getElementById('stName').innerHTML=states[s].n;
-    document.getElementById('stDesc').innerHTML=states[s].d;
-    addStar('matter-'+s);
+};
+
+/* Parts of a plant: find each part */
+ACTS.plantparts = {
+  html:`<div style="display:grid;grid-template-columns:minmax(200px,320px) 1fr;gap:16px;align-items:center" class="pp">
+    <div class="stage"><svg viewBox="0 0 300 320" width="100%">
+      <rect width="300" height="320" fill="#dff2ff"/><rect y="222" width="300" height="98" fill="#8a5a2b"/><rect y="222" width="300" height="10" fill="#6e4520"/>
+      <g data-p="roots" style="cursor:pointer"><rect x="95" y="226" width="110" height="80" fill="transparent"/>
+        <path d="M150 226 L150 290 M150 250 L118 280 M150 255 L184 286 M150 270 L130 300 M150 275 L170 305 M118 280 L104 292 M184 286 L198 296" stroke="#f1d9b5" stroke-width="5" stroke-linecap="round" fill="none"/></g>
+      <g data-p="stem" style="cursor:pointer"><rect x="136" y="96" width="28" height="128" fill="transparent"/><rect x="144" y="96" width="12" height="128" rx="6" fill="#3b9e4f"/></g>
+      <g data-p="leaves" style="cursor:pointer"><ellipse cx="112" cy="176" rx="36" ry="15" fill="#4cc38a" transform="rotate(-22 112 176)"/><ellipse cx="190" cy="146" rx="36" ry="15" fill="#4cc38a" transform="rotate(22 190 146)"/>
+        <path d="M86 186 L140 168 M216 156 L160 140" stroke="#2f9a63" stroke-width="2"/></g>
+      <g data-p="flower" style="cursor:pointer">${[0,60,120,180,240,300].map(a=>`<circle cx="${150+Math.cos(a*Math.PI/180)*22}" cy="${76+Math.sin(a*Math.PI/180)*22}" r="16" fill="#ff7aa8"/>`).join('')}<circle cx="150" cy="76" r="14" fill="#ffc93c"/></g>
+    </svg></div>
+    <div><p class="qtext pprompt"></p><p class="msg pmsg"></p><div class="chips pchips"></div></div></div>`,
+  init(root, done){
+    const JOBS = {roots:['Roots','Roots soak up water from the soil and hold the plant in the ground.'],
+      stem:['Stem','The stem holds the plant up tall and carries water from the roots to the leaves.'],
+      leaves:['Leaves','Leaves use sunlight, water, and air to make food for the plant.'],
+      flower:['Flower','The flower makes seeds so new plants can grow.']};
+    const order = shuffle(Object.keys(JOBS)); let n = 0;
+    const prompt = q(root,'.pprompt'), msg = q(root,'.pmsg');
+    const show = () => {
+      q(root,'.pchips').innerHTML = Object.keys(JOBS).map(k=>`<span class="chip ${order.indexOf(k)<n?'on':''}">${JOBS[k][0]}</span>`).join(' ');
+      prompt.innerHTML = n<order.length ? `👆 Tap the <b style="color:var(--c)">${JOBS[order[n]][0].toUpperCase()}</b>` : '🎉 You found every part! Tap any part to hear its job again.';
+    };
+    qa(root,'[data-p]').forEach(g=>g.addEventListener('click',()=>{
+      const p = g.dataset.p;
+      if (n<order.length && p!==order[n]){ msg.innerHTML = `That's the <b>${JOBS[p][0].toLowerCase()}</b>. Look for the ${JOBS[order[n]][0].toLowerCase()}!`; return; }
+      msg.innerHTML = `✅ <b>${JOBS[p][0]}:</b> ${JOBS[p][1]}`;
+      if (n<order.length){ n++; if (n===order.length) done(); }
+      show();
+    }));
+    show();
   }
+};
+
+/* What plants need: grow a sunflower */
+ACTS.grow = {
+  html:`<div style="display:grid;grid-template-columns:1.1fr 1fr;gap:16px;align-items:center" class="gw">
+    <div class="stage" style="height:300px;background:linear-gradient(180deg,#bfe6ff,#e8f7ff)"><svg class="plantSvg" viewBox="0 0 300 300" width="100%" height="100%"></svg></div>
+    <div><div class="needs" style="display:flex;flex-direction:column;gap:10px"></div><p class="msg pmsg"></p></div></div>`,
+  init(root, done){
+    const needs=[{k:'sun',em:'☀️',n:'Sunlight',col:'#ffc93c'},{k:'water',em:'💧',n:'Water',col:'#3aa0ff'},{k:'air',em:'🌬️',n:'Air',col:'#86d2b9'}];
+    const lv={sun:0,water:0,air:0}; let bloomed=false;
+    q(root,'.needs').innerHTML = needs.map(n=>`<div style="display:flex;align-items:center;gap:10px;background:#f6f9ff;border-radius:16px;padding:10px 12px">
+      <span style="font-size:30px">${n.em}</span><div style="flex:1"><b>${n.n}</b><div style="height:14px;background:#e3eaf5;border-radius:999px;overflow:hidden"><div class="f-${n.k}" style="height:100%;width:0;background:${n.col};border-radius:999px;transition:width .3s"></div></div></div>
+      <button class="tbtn" data-n="${n.k}" style="font-size:16px;padding:8px 12px">Give ${n.em}</button></div>`).join('');
+    const draw = () => {
+      needs.forEach(n=>q(root,'.f-'+n.k).style.width=(lv[n.k]/4*100)+'%');
+      const stage=Math.min(lv.sun,lv.water,lv.air), stemH=[0,40,80,115,145][stage];
+      let plant='';
+      if(stage===0) plant=`<ellipse cx="150" cy="232" rx="9" ry="6" fill="#8a5a2b"/>`;
+      else{
+        plant+=`<path d="M150 238 Q146 ${238-stemH/2} 150 ${238-stemH}" stroke="#3b9e4f" stroke-width="7" fill="none" stroke-linecap="round"/>`;
+        for(let i=1;i<=Math.min(stage,3);i++){ const y=238-stemH*(i/(stage+0.6));
+          plant+=`<ellipse cx="128" cy="${y}" rx="20" ry="9" fill="#4cc38a" transform="rotate(-25 128 ${y})"/><ellipse cx="172" cy="${y-6}" rx="20" ry="9" fill="#4cc38a" transform="rotate(25 172 ${y-6})"/>`; }
+        if(stage===4){ const cy=238-stemH;
+          for(let a=0;a<360;a+=30){const r=a*Math.PI/180,x=150+Math.cos(r)*20,y=cy+Math.sin(r)*20;plant+=`<ellipse cx="${x}" cy="${y}" rx="13" ry="7" fill="#ffc93c" transform="rotate(${a} ${x} ${y})"/>`;}
+          plant+=`<circle cx="150" cy="${cy}" r="13" fill="#7a4a1f"/>`; }
+      }
+      q(root,'.plantSvg').innerHTML = `${lv.sun?`<circle cx="250" cy="45" r="${18+lv.sun*5}" fill="#ffd54a" opacity=".9"/>`:''}
+        ${Array.from({length:lv.water},(_,i)=>`<text x="${40+i*22}" y="60" font-size="20">💧</text>`).join('')}
+        <rect x="0" y="250" width="300" height="50" fill="#9bd27a"/>${plant}
+        <path d="M110 236 L190 236 L180 290 L120 290 Z" fill="#d9774a"/><rect x="104" y="228" width="92" height="14" rx="4" fill="#c4643a"/>`;
+      const words=['A seed is waiting… 🌰','It sprouted! 🌱','Growing taller! 🌿','Almost there! 🪴','It bloomed into a sunflower! 🌻'];
+      let tip='';
+      if(stage<4 && Object.values(lv).some(v=>v>0)){ const low=needs.reduce((a,b)=>lv[a.k]<=lv[b.k]?a:b); tip=` It needs more <b>${low.n.toLowerCase()}</b> to keep growing.`; }
+      q(root,'.pmsg').innerHTML=words[stage]+tip;
+      if(stage===4 && !bloomed){ bloomed=true; done(); }
+    };
+    qa(root,'[data-n]').forEach(b=>b.onclick=()=>{ lv[b.dataset.n]=Math.min(4,lv[b.dataset.n]+1); draw(); });
+    draw();
+  }
+};
+
+/* Animal groups */
+ACTS.groups = {
+  html:`<div class="chips gbtns" style="gap:10px"></div><div class="gcard qcard" style="margin-top:14px;min-height:170px"></div>`,
+  init(root, done){
+    const G = [
+      ['🐻','Mammals',['Hair or fur','Babies drink milk','Breathe air with lungs'],'🐕 🐋 🐘 🦇 🧑','A whale is a mammal, and so is a bat!'],
+      ['🐦','Birds',['Feathers','Lay eggs with hard shells','Have wings and a beak'],'🦅 🐧 🦉 🦜 🐓','Penguins and ostriches are birds that can\'t fly.'],
+      ['🦎','Reptiles',['Dry, scaly skin','Most lay eggs on land','Breathe air with lungs'],'🐍 🐢 🐊 🦎 🦖','Turtles carry their homes on their backs!'],
+      ['🐸','Amphibians',['Smooth, wet skin','Start life in water','Most live on land when grown'],'🐸 🦎 🐌','Many amphibians can breathe through their skin.'],
+      ['🐟','Fish',['Live in water','Breathe with gills','Have fins and most have scales'],'🦈 🐠 🐡 🐟','Sharks are fish, but whales and dolphins are not!']];
+    const seen = new Set(); let finished=false;
+    const card = q(root,'.gcard');
+    const btns = () => q(root,'.gbtns').innerHTML = G.map((g,i)=>`<button class="tbtn ${seen.has(i)?'good':''}" data-g="${i}" style="font-size:20px">${g[0]} ${g[1]}</button>`).join('');
+    const bind = () => qa(root,'[data-g]').forEach(b=>b.onclick=()=>{ const i=+b.dataset.g, g=G[i]; seen.add(i);
+      card.innerHTML = `<p class="qtext" style="margin-bottom:6px">${g[0]} ${g[1]}</p><div style="font-size:34px;letter-spacing:6px">${g[3]}</div>
+        <ul style="font-size:19px;margin:10px 0">${g[2].map(t=>`<li>${t}</li>`).join('')}</ul><p style="margin:0;font-size:17px">💡 ${g[4]}</p>
+        <p class="note">${seen.size<5?`You've met ${seen.size} of 5 groups.`:'🎉 You met all 5 animal groups!'}</p>`;
+      btns(); bind(); if (seen.size===5 && !finished){ finished=true; done(); } });
+    btns(); bind(); card.innerHTML = '<p class="msg" style="margin:0">👆 Tap a group to meet it.</p>';
+  }
+};
+
+/* Life cycles: frog and butterfly */
+ACTS.cycles = {
+  html:`<div class="chips ctabs" style="gap:10px"></div>
+    <div class="qcard" style="margin-top:12px;text-align:center"><div class="cvis" style="height:150px;display:flex;align-items:center;justify-content:center"></div>
+    <p class="qtext cname" style="margin:6px 0"></p><p class="ctext" style="font-size:18px;margin:0 0 10px"></p><div class="cdots" style="font-size:22px;letter-spacing:6px"></div>
+    <div class="ctrl" style="justify-content:center"><button class="btn ghost cprev">◀ Back</button><button class="btn cnext">Next ▶</button></div></div>`,
+  init(root, done){
+    const svg = (inner) => `<svg viewBox="0 0 160 120" width="200" height="150">${inner}</svg>`;
+    const C = {
+      frog:{label:'🐸 Frog', stages:[
+        ['Eggs', 'A mother frog lays a clump of jelly-covered eggs in the water.', svg([[60,50],[80,45],[100,55],[70,70],[90,72],[110,75],[80,90],[55,85]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="13" fill="#d8eef6" stroke="#9cc7d9"/><circle cx="${x}" cy="${y}" r="5" fill="#222"/>`).join(''))],
+        ['Tadpole', 'A tadpole hatches! It lives in water, breathes with gills, and swims with its tail.', svg(`<ellipse cx="60" cy="60" rx="24" ry="18" fill="#4a5a3a"/><path d="M82 60 Q100 45 115 60 T148 60" stroke="#4a5a3a" stroke-width="9" fill="none" stroke-linecap="round"/><circle cx="50" cy="55" r="4" fill="#fff"/>`)],
+        ['Froglet', 'The tadpole grows legs, and its tail gets shorter. Now it can breathe air!', svg(`<ellipse cx="70" cy="66" rx="30" ry="20" fill="#5b8f3a"/><path d="M96 66 Q112 62 124 66" stroke="#5b8f3a" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M50 80 L36 98 L50 98 M86 82 L100 100 L86 100" stroke="#5b8f3a" stroke-width="6" fill="none" stroke-linecap="round"/><circle cx="56" cy="54" r="7" fill="#fff"/><circle cx="56" cy="54" r="3" fill="#222"/>`)],
+        ['Frog', 'A grown frog! It lives on land and in water, and one day it will lay eggs too.', '<span style="font-size:110px;line-height:1">🐸</span>']]},
+      fly:{label:'🦋 Butterfly', stages:[
+        ['Egg', 'A butterfly lays a tiny egg on a leaf.', svg(`<ellipse cx="80" cy="70" rx="62" ry="26" fill="#4cc38a" transform="rotate(-10 80 70)"/><path d="M22 80 L140 58" stroke="#2f9a63" stroke-width="3"/><ellipse cx="86" cy="58" rx="8" ry="11" fill="#fff6c9" stroke="#d9c26a"/>`)],
+        ['Caterpillar', 'A caterpillar hatches and eats and eats and eats! It grows very fast.', '<span style="font-size:110px;line-height:1">🐛</span>'],
+        ['Chrysalis', 'The caterpillar makes a hard case called a chrysalis. Inside, its body changes completely!', svg(`<path d="M30 14 L130 14" stroke="#8a5a2b" stroke-width="6" stroke-linecap="round"/><path d="M80 14 L80 26" stroke="#8a5a2b" stroke-width="3"/><path d="M80 26 Q104 50 92 86 Q80 112 68 86 Q56 50 80 26 Z" fill="#7ccf8f" stroke="#3f9a5b" stroke-width="3"/><path d="M72 50 Q80 56 88 50 M70 66 Q80 72 90 66" stroke="#3f9a5b" stroke-width="2" fill="none"/>`)],
+        ['Butterfly', 'A butterfly comes out, dries its wings, and flies away. That is metamorphosis!', '<span style="font-size:110px;line-height:1">🦋</span>']]}
+    };
+    let cur='frog', n=0; const fin = new Set(); let finished=false;
+    const draw = () => {
+      q(root,'.ctabs').innerHTML = Object.entries(C).map(([k,c])=>`<button class="tbtn ${k===cur?'sel':''} ${fin.has(k)?'good':''}" data-t="${k}" style="font-size:20px">${c.label} ${fin.has(k)?'✅':''}</button>`).join('');
+      qa(root,'[data-t]').forEach(b=>b.onclick=()=>{ cur=b.dataset.t; n=0; draw(); });
+      const s = C[cur].stages[n];
+      q(root,'.cvis').innerHTML = s[2]; q(root,'.cname').textContent = `${n+1}. ${s[0]}`; q(root,'.ctext').textContent = s[1];
+      q(root,'.cdots').textContent = C[cur].stages.map((_,i)=>i<=n?'●':'○').join(' ');
+      q(root,'.cprev').disabled = n===0;
+      q(root,'.cnext').textContent = n===C[cur].stages.length-1 ? '🔄 Start over' : 'Next ▶';
+      if (n===C[cur].stages.length-1){ fin.add(cur); qa(root,'[data-t]').forEach(b=>{ if(b.dataset.t===cur){ b.classList.add('good'); b.textContent=C[cur].label+' ✅'; } });
+        if (fin.size===2 && !finished){ finished=true; done(); } }
+    };
+    q(root,'.cnext').onclick = () => { n = n===C[cur].stages.length-1 ? 0 : n+1; draw(); };
+    q(root,'.cprev').onclick = () => { if(n>0){ n--; draw(); } };
+    draw();
+  }
+};
+
+/* Habitats: match animals to homes */
+ACTS.habitat = {
+  html:`<div class="animals" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:14px;min-height:72px"></div>
+    <div class="homes" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px"></div><p class="msg center hmsg"></p>`,
+  init(root, done){
+    const homes=[['ocean','Ocean 🌊','Salty water, lots of fish','#1c7be0,#4fc3f7'],['desert','Desert 🏜️','Hot, dry, and sandy','#d9822b,#f5c76a'],['arctic','Arctic ❄️','Icy, snowy, and very cold','#5b8fb9,#a9d8f2'],['forest','Forest 🌲','Lots of trees and shade','#1f7a4c,#62c48a']];
+    const critters=[['🐙','octopus','ocean','God gave the octopus gills to breathe underwater.'],['🐬','dolphin','ocean','Dolphins have smooth bodies made for fast swimming.'],
+      ['🐪','camel','desert','Camels are designed to go days without drinking water.'],['🦂','scorpion','desert','Scorpions hide under rocks to stay cool in the heat.'],
+      ['🐻‍❄️','polar bear','arctic','Thick fur and fat keep polar bears warm.'],['🐧','penguin','arctic','Penguins huddle together to stay warm.'],
+      ['🦉','owl','forest','Owls nest in trees and see well at night.'],['🦌','deer','forest','Deer hide among the trees and eat leaves.']];
+    let picked=null; const placed={}; homes.forEach(h=>placed[h[0]]=[]);
+    const msg=q(root,'.hmsg');
+    q(root,'.animals').innerHTML = shuffle(critters).map(c=>`<button class="tbtn" data-a="${c[1]}" style="font-size:40px;width:72px;height:72px;padding:0" aria-label="${c[1]}">${c[0]}</button>`).join('');
+    q(root,'.homes').innerHTML = homes.map(h=>`<button data-h="${h[0]}" style="border-radius:16px;padding:12px;min-height:130px;color:#fff;text-align:left;background:linear-gradient(160deg,${h[3]});box-shadow:0 5px 0 rgba(0,0,0,.15)"><b style="font-size:20px">${h[1]}</b><br><small style="font-size:14px">${h[2]}</small><div class="got" style="font-size:28px;letter-spacing:4px"></div></button>`).join('');
+    msg.textContent='👆 Tap an animal, then tap its home.';
+    qa(root,'[data-a]').forEach(b=>b.onclick=()=>{ qa(root,'[data-a]').forEach(x=>x.classList.remove('sel')); b.classList.add('sel'); picked=critters.find(c=>c[1]===b.dataset.a); msg.textContent=`Where does the ${picked[1]} live?`; });
+    qa(root,'[data-h]').forEach(d=>d.onclick=()=>{
+      if(!picked){ msg.textContent='👆 Pick an animal first!'; return; }
+      const h=d.dataset.h;
+      if(picked[2]===h){ placed[h].push(picked[0]); q(d,'.got').textContent=placed[h].join(' '); q(root,`[data-a="${picked[1]}"]`).remove();
+        msg.innerHTML=`✅ Yes! ${picked[3]}`; picked=null;
+        if(!q(root,'[data-a]')){ msg.innerHTML='🎉 Every animal is home! God designed each one for its habitat.'; done(); }
+      } else { d.animate([{transform:'translateX(-7px)'},{transform:'translateX(7px)'},{transform:'none'}],{duration:300}); msg.textContent=`Hmm. Could a ${picked[1]} live somewhere ${homes.find(x=>x[0]===h)[2].toLowerCase()}? Try again!`; }
+    });
+  }
+};
+
+/* ============ LESSON ACTIVITIES (part 2: matter, forces, weather, space) ============ */
+const raf = fn => { let id, on = true; const loop = () => { if(!on) return; fn(); id = requestAnimationFrame(loop); }; loop(); return () => { on=false; cancelAnimationFrame(id); }; };
+
+/* States of matter: particles */
+ACTS.particles = {
+  html:`<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center" class="pm">
+    <div style="position:relative;height:260px;border-radius:0 0 40px 40px;border:6px solid #9cc7e8;border-top:none;background:#f5fbff;overflow:hidden"><canvas style="display:block;width:100%;height:100%"></canvas></div>
+    <div><p class="qtext sname" style="font-size:32px;margin:0"></p><p class="sdesc" style="font-size:18px;line-height:1.45;color:var(--soft)"></p><div class="chips schips"></div></div></div>
+    <div class="slider-row">❄️ <input type="range" min="-20" max="120" value="-10" aria-label="Heat"> 🔥 <span class="out"></span></div>`,
+  init(root, done){
+    const cv=q(root,'canvas'), ctx=cv.getContext('2d'), sl=q(root,'input');
+    const S={solid:['Solid 🧊','Ice is a <b>solid</b>. The particles are packed tight and just wiggle in place. A solid keeps its own shape.'],
+      liquid:['Liquid 💧','Water is a <b>liquid</b>. The particles slide past each other. A liquid takes the shape of its container.'],
+      gas:['Gas ☁️','Steam is a <b>gas</b>. The particles zoom around and spread out to fill all the space they can!']};
+    const seen=new Set(); let shown='', parts=[], W=0, H=0, finished=false;
+    const stateOf=t=>t<0?'solid':t<100?'liquid':'gas';
+    const init=()=>{ const r=cv.getBoundingClientRect(); W=cv.width=Math.max(1,r.width*devicePixelRatio); H=cv.height=Math.max(1,r.height*devicePixelRatio); parts=[];
+      const R=10*devicePixelRatio, cols=8, rows=5, gap=R*2.3, x0=(W-cols*gap)/2+gap/2, y0=H-rows*gap-R;
+      for(let r2=0;r2<rows;r2++)for(let c=0;c<cols;c++){const hx=x0+c*gap,hy=y0+r2*gap;parts.push({hx,hy,x:hx,y:hy,vx:Math.random()-.5,vy:Math.random()-.5,R});} };
+    const label=()=>{ const T=+sl.value, s=stateOf(T); q(root,'.out').textContent=T+'°C';
+      if(s!==shown){ shown=s; seen.add(s); q(root,'.sname').innerHTML=S[s][0]; q(root,'.sdesc').innerHTML=S[s][1];
+        q(root,'.schips').innerHTML=['solid','liquid','gas'].map(k=>`<span class="chip ${seen.has(k)?'on':''}">${seen.has(k)?'✅':'❔'} ${k}</span>`).join(' ');
+        if(seen.size===3&&!finished){finished=true;done();} } };
+    sl.oninput=label; init(); label();
+    const onR=()=>init(); window.addEventListener('resize',onR);
+    const stop=raf(()=>{
+      if(!W) return; const T=+sl.value, s=stateOf(T); ctx.clearRect(0,0,W,H);
+      const sp = s==='solid'?.6 : s==='liquid'?1.6+(T/100)*1.2 : 4+(T-100)/10, top=H*.45;
+      parts.forEach(p=>{
+        if(s==='solid'){ p.x+=(p.hx-p.x)*.15+(Math.random()-.5)*sp; p.y+=(p.hy-p.y)*.15+(Math.random()-.5)*sp; }
+        else{ p.vx+=(Math.random()-.5)*.4*sp; p.vy+=(Math.random()-.5)*.4*sp; if(s==='liquid')p.vy+=.25;
+          const m=Math.hypot(p.vx,p.vy),mx=sp*1.6; if(m>mx){p.vx*=mx/m;p.vy*=mx/m;} p.x+=p.vx; p.y+=p.vy;
+          const t=s==='liquid'?top:p.R; if(p.x<p.R){p.x=p.R;p.vx*=-1} if(p.x>W-p.R){p.x=W-p.R;p.vx*=-1} if(p.y<t){p.y=t;p.vy=Math.abs(p.vy)} if(p.y>H-p.R){p.y=H-p.R;p.vy*=-1} }
+        ctx.beginPath(); ctx.arc(p.x,p.y,p.R,0,7); ctx.fillStyle=s==='solid'?'#7cc6f2':s==='liquid'?'#2f8df0':'#b9c6d6'; ctx.fill();
+        ctx.beginPath(); ctx.arc(p.x-p.R*.3,p.y-p.R*.3,p.R*.3,0,7); ctx.fillStyle='#ffffff99'; ctx.fill(); });
+    });
+    return ()=>{ stop(); window.removeEventListener('resize',onR); };
+  }
+};
+
+/* Heating and cooling */
+ACTS.heatcool = {
+  html:`<div class="stage" style="text-align:center;padding:18px;background:linear-gradient(#f4f9ff,#e6f2ff)">
+    <div class="hvis" style="font-size:110px;line-height:1.1;transition:transform .3s"></div><p class="qtext hname" style="margin:4px 0"></p>
+    <div class="thermo" style="height:16px;max-width:320px;margin:0 auto;background:#e3eaf5;border-radius:999px;overflow:hidden"><div class="tfill" style="height:100%;border-radius:999px;transition:width .4s,background .4s"></div></div></div>
+    <div class="ctrl" style="justify-content:center"><button class="btn" style="background:#e8553c" data-d="1">🔥 Heat it</button><button class="btn" style="background:#3a8ee8" data-d="-1">❄️ Cool it</button></div>
+    <p class="msg center hmsg"></p><div class="chips hchips" style="justify-content:center"></div>`,
+  init(root, done){
+    const ST=[['🧊','Ice (solid)','#7cc6f2',15],['💧','Water (liquid)','#2f8df0',55],['☁️','Water vapor (gas)','#b0bccb',95]];
+    const CH={'0>1':['melt','🫠 <b>Melting!</b> Heat turned the solid ice into liquid water.'],'1>2':['evaporate','♨️ <b>Evaporating!</b> Heat turned the liquid water into a gas.'],
+      '2>1':['condense','💦 <b>Condensing!</b> Cooling turned the gas back into liquid drops.'],'1>0':['freeze','🥶 <b>Freezing!</b> Cooling turned the liquid water into solid ice.']};
+    let s=0, finished=false; const seen=new Set();
+    const draw=(m)=>{ q(root,'.hvis').textContent=ST[s][0]; q(root,'.hname').textContent=ST[s][1];
+      const f=q(root,'.tfill'); f.style.width=ST[s][3]+'%'; f.style.background=ST[s][2];
+      q(root,'.hmsg').innerHTML=m||'Press Heat or Cool to change the water.';
+      q(root,'.hchips').innerHTML=['melt','evaporate','condense','freeze'].map(k=>`<span class="chip ${seen.has(k)?'on':''}">${seen.has(k)?'✅':'❔'} ${k}</span>`).join(' '); };
+    qa(root,'[data-d]').forEach(b=>b.onclick=()=>{ const d=+b.dataset.d, t=s+d;
+      if(t<0){ draw('It\'s already frozen solid! Try heating it. 🔥'); return; }
+      if(t>2){ draw('It\'s already a gas! Try cooling it. ❄️'); return; }
+      const c=CH[`${s}>${t}`]; s=t; seen.add(c[0]);
+      q(root,'.hvis').animate([{transform:'scale(.6)'},{transform:'scale(1.1)'},{transform:'scale(1)'}],{duration:400});
+      draw(c[1] + (seen.size===4?'<br>🎉 You saw all 4 changes!':''));
+      if(seen.size===4&&!finished){finished=true;done();} });
+    draw();
+  }
+};
+
+/* Sink or float */
+ACTS.float = {
+  html:`<div style="display:grid;grid-template-columns:1fr 1.1fr;gap:16px;align-items:start" class="fl">
+    <div><div class="objs" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px"></div><div class="fask qcard" style="margin-top:12px"></div></div>
+    <div class="tank" style="position:relative;height:250px;border-radius:0 0 26px 26px;border:6px solid #9cc7e8;border-top:none;background:linear-gradient(#ffffff 0 22%,#9ed4ff 22%,#3d9be9 100%);overflow:hidden"></div></div>
+    <p class="msg center fmsg"></p>`,
+  init(root, done){
+    const O=[['🍎','apple',true,'Apples have lots of air inside, so they float.'],['🪨','rock',false,'A rock is heavy for its size, so it sinks.'],['🔑','key',false,'Metal keys are heavy for their size, so they sink.'],['🪵','piece of wood',true,'Wood is light for its size, so it floats.'],
+      ['🪙','coin',false,'A coin is small but heavy for its size. It sinks!'],['🍃','leaf',true,'A leaf is very light and flat, so it floats.'],['🥄','metal spoon',false,'A metal spoon sinks to the bottom.'],['🦆','rubber duck',true,'A rubber duck is hollow and full of air, so it floats.']];
+    const tested={}; let pick=null, right=0, finished=false, nFloat=0, nSink=0;
+    const objs=q(root,'.objs'), ask=q(root,'.fask'), msg=q(root,'.fmsg'), tank=q(root,'.tank');
+    const drawObjs=()=>{ objs.innerHTML=O.map((o,i)=>`<button class="tbtn ${pick===i?'sel':''} ${i in tested?'good':''}" data-o="${i}" style="font-size:32px;padding:6px" ${i in tested?'disabled':''} aria-label="${o[1]}">${o[0]}</button>`).join('');
+      qa(objs,'[data-o]').forEach(b=>b.onclick=()=>{ pick=+b.dataset.o; drawObjs(); askFor(); }); };
+    const askFor=()=>{ const o=O[pick]; ask.innerHTML=`<p class="qtext" style="font-size:21px">Will the ${o[0]} ${o[1]} float or sink?</p><div class="tf"><button class="btn green" data-p="1">⬆️ Float</button><button class="btn" data-p="0">⬇️ Sink</button></div>`;
+      qa(ask,'[data-p]').forEach(b=>b.onclick=()=>test(+b.dataset.p===1)); };
+    const test=(guess)=>{ const i=pick, o=O[i], ok=guess===o[2]; tested[i]=o[2]; if(ok) right++; pick=null;
+      const el=document.createElement('div'); el.textContent=o[0]; el.style.cssText='position:absolute;font-size:36px;top:-50px;transition:top 1.1s cubic-bezier(.3,1.4,.6,1)';
+      const slot = o[2] ? nFloat++ : nSink++; el.style.left = (8 + (slot%4)*23) + '%'; tank.appendChild(el);
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{ el.style.top = o[2] ? '14%' : (78 - Math.floor(slot/4)*14)+'%'; }));
+      const n=Object.keys(tested).length;
+      msg.innerHTML=`You predicted <b>${guess?'float':'sink'}</b>. It <b>${o[2]?'floats':'sinks'}</b>! ${ok?'✅ Great prediction!':'😮 Surprise!'} ${o[3]}${n===O.length?`<br>🎉 You tested all 8! You predicted ${right} of 8 right.`:''}`;
+      ask.innerHTML='<p class="note" style="margin:0">Pick another object to test.</p>'; drawObjs();
+      if(n===O.length&&!finished){finished=true;done();} };
+    drawObjs(); ask.innerHTML='<p class="note" style="margin:0;font-size:17px">👆 Pick an object to test.</p>';
+  }
+};
+
+/* Pushes and pulls: kick the ball */
+ACTS.kick = {
+  html:`<div class="stage field" style="height:170px;background:linear-gradient(#bfe6ff 0 45%,#7fcf6a 45%);position:relative">
+    <div style="position:absolute;left:2%;bottom:30px;font-size:54px">🧒</div>
+    <div class="ball" style="position:absolute;left:12%;bottom:30px;font-size:36px;transition:left 0s">⚽</div><div class="marks"></div></div>
+    <div class="ctrl" style="justify-content:center"><button class="btn" data-k="0">🦶 Soft kick</button><button class="btn" data-k="1">🦶 Medium kick</button><button class="btn" data-k="2">🦶 HARD kick</button></div>
+    <p class="msg center kmsg"></p>`,
+  init(root, done){
+    const K=[['Soft',36,'#7fbcff'],['Medium',60,'#ffb347'],['Hard',86,'#ff6b6b']], used=new Set(); let finished=false, busy=false;
+    const ball=q(root,'.ball'), msg=q(root,'.kmsg');
+    msg.textContent='Kick the ball. How far does each push send it?';
+    qa(root,'[data-k]').forEach(b=>b.onclick=()=>{ if(busy) return; busy=true; const k=+b.dataset.k, [name,dist,col]=K[k];
+      ball.style.transition='left 0s'; ball.style.left='12%';
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{ ball.style.transition=`left ${0.7+k*.3}s cubic-bezier(.15,.7,.35,1)`; ball.style.left=dist+'%'; ball.animate([{transform:'rotate(0)'},{transform:`rotate(${360*(k+1)}deg)`}],{duration:(0.7+k*.3)*1000,easing:'ease-out'}); }));
+      setTimeout(()=>{ busy=false; used.add(k);
+        let m=q(root,`.mk${k}`); if(!m){ m=document.createElement('div'); m.className='mk'+k; q(root,'.marks').appendChild(m); }
+        m.style.cssText=`position:absolute;left:calc(${dist}% + 12px);bottom:${8+k*0}px;font-size:13px;font-weight:700;background:${col};color:#fff;border-radius:8px;padding:2px 6px`; m.textContent='🚩 '+name;
+        msg.innerHTML = used.size<3 ? `A <b>${name.toLowerCase()}</b> push sent the ball this far. Try another kick!` : '🎉 A bigger push (more force) makes the ball go farther and faster!';
+        if(used.size===3&&!finished){finished=true;done();} }, (0.7+k*.3)*1000+50);
+    });
+  }
+};
+
+/* Friction: race on 4 surfaces */
+ACTS.friction = {
+  html:`<div class="lanes" style="display:flex;flex-direction:column;gap:8px"></div><p class="msg center frmsg"></p>`,
+  init(root, done){
+    const S=[['🧊 Ice','linear-gradient(90deg,#e6f6ff,#c9ecff)',92,'Very smooth: almost no friction!'],['🪵 Wood floor','repeating-linear-gradient(90deg,#d9a86c 0 40px,#c99558 40px 42px)',68,'Smooth wood: a little friction.'],
+      ['🧶 Carpet','repeating-linear-gradient(45deg,#b07acb 0 4px,#9b63b8 4px 8px)',38,'Rough carpet: lots of friction.'],['🏖️ Sand','radial-gradient(#e8c87a 1px,#f3d899 1.5px) 0 0/8px 8px',22,'Bumpy sand: the most friction!']];
+    const tried=new Set(); let finished=false;
+    q(root,'.lanes').innerHTML=S.map((s,i)=>`<div style="display:flex;gap:8px;align-items:center"><button class="tbtn" data-s="${i}" style="width:150px;flex:0 0 150px;font-size:16px;padding:8px">${s[0]} ▶</button>
+      <div style="flex:1;height:54px;border-radius:12px;position:relative;background:${s[1]};box-shadow:inset 0 0 0 2px rgba(0,0,0,.08)"><div class="car c${i}" style="position:absolute;left:0;top:6px;font-size:34px;transform:scaleX(-1)">🚗</div></div></div>`).join('');
+    q(root,'.frmsg').textContent='Each car gets the same push. Which surface lets it go farthest?';
+    qa(root,'[data-s]').forEach(b=>b.onclick=()=>{ const i=+b.dataset.s, s=S[i], car=q(root,'.c'+i);
+      car.style.transition='left 0s'; car.style.left='0';
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{ car.style.transition='left 1.4s cubic-bezier(.1,.75,.3,1)'; car.style.left=`calc(${s[2]}% - 44px)`; }));
+      setTimeout(()=>{ tried.add(i); b.classList.add('good');
+        q(root,'.frmsg').innerHTML = `${s[0]}: ${s[3]}` + (tried.size===4?'<br>🎉 Less friction = farther slide. More friction = quicker stop!':'');
+        if(tried.size===4&&!finished){finished=true;done();} },1450);
+    });
+  }
+};
+
+/* Magnets */
+ACTS.magnet = {
+  html:`<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px" class="mg">
+    <div><p class="sec-t">1 · Test each object</p><div class="mobjs" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px"></div>
+      <div style="margin-top:10px;display:flex;align-items:center;gap:8px;background:#f6f9ff;border-radius:14px;padding:8px;min-height:62px"><span style="font-size:40px">🧲</span><span class="stuck" style="font-size:30px;letter-spacing:2px"></span></div></div>
+    <div><p class="sec-t">2 · Flip a magnet</p><div class="stage"><svg class="bars" viewBox="0 0 300 120" width="100%"></svg></div>
+      <div class="ctrl"><button class="btn small flip">🔄 Flip the right magnet</button></div></div></div>
+    <p class="msg center mmsg"></p>`,
+  init(root, done){
+    const O=[['📎','paper clip',true],['🔩','iron nail',true],['✂️','steel scissors',true],['🥫','steel can',true],['✏️','pencil',false],['🪙','penny',false],['🧽','sponge',false],['🥤','plastic cup',false]];
+    const tested=new Set(); let flipped=false, sawRepel=false, sawAttract=true, finished=false;
+    const msg=q(root,'.mmsg');
+    const check=()=>{ if(tested.size===8&&sawRepel&&!finished){ finished=true; done(); msg.innerHTML+='<br>🎉 Great magnet scientist!'; } };
+    q(root,'.mobjs').innerHTML=O.map((o,i)=>`<button class="tbtn" data-o="${i}" style="font-size:30px;padding:6px" aria-label="${o[1]}">${o[0]}</button>`).join('');
+    qa(root,'[data-o]').forEach(b=>b.onclick=()=>{ const o=O[+b.dataset.o]; b.disabled=true; tested.add(o[1]);
+      if(o[2]){ b.classList.add('good'); b.style.visibility='hidden'; q(root,'.stuck').textContent+=o[0]; msg.innerHTML=`🧲 <b>Attract!</b> The ${o[1]} is made of iron or steel, so the magnet pulls it.`; }
+      else { b.style.opacity='.4'; msg.innerHTML=`❌ <b>No pull.</b> The ${o[1]} is not made of iron or steel.`; }
+      if(tested.size===8) msg.innerHTML+= sawRepel?'':'<br>Now flip a magnet! 👉'; check(); });
+    const bar=(x,flip)=>{ const L=flip?['S','#3a8ee8']:['N','#e0405c'], R=flip?['N','#e0405c']:['S','#3a8ee8'];
+      return `<rect x="${x}" y="40" width="50" height="40" rx="6" fill="${L[1]}"/><rect x="${x+50}" y="40" width="50" height="40" rx="6" fill="${R[1]}"/>
+        <text x="${x+25}" y="67" font-size="20" fill="#fff" text-anchor="middle" font-weight="700">${L[0]}</text><text x="${x+75}" y="67" font-size="20" fill="#fff" text-anchor="middle" font-weight="700">${R[0]}</text>`; };
+    const drawBars=()=>{ const attract=!flipped, gap=attract?2:70, lx=attract?48:14, rx=lx+100+gap;
+      q(root,'.bars').innerHTML = bar(lx,false)+bar(rx,flipped)+`<text x="150" y="110" font-size="16" text-anchor="middle" fill="#1f2a44" font-weight="600">${attract?'S and N: opposite poles ATTRACT 🤝':'S and S: same poles REPEL ↔️'}</text>`; };
+    q(root,'.flip').onclick=()=>{ flipped=!flipped; if(flipped) sawRepel=true; drawBars();
+      msg.innerHTML = flipped ? '↔️ <b>Repel!</b> The same poles push apart.' : '🤝 <b>Attract!</b> Opposite poles pull together.'; check(); };
+    drawBars(); msg.textContent='Tap each object to see if the magnet pulls it.';
+  }
+};
+
+/* The water cycle */
+ACTS.watercycle = {
+  html:`<style>
+    @keyframes wc-rise{from{transform:translateY(0);opacity:0}30%{opacity:1}to{transform:translateY(-70px);opacity:0}}
+    @keyframes wc-fall{from{transform:translateY(0);opacity:1}to{transform:translateY(90px);opacity:.2}}
+    @keyframes wc-flow{to{stroke-dashoffset:-40}}
+    .wc-up{animation:wc-rise 2s linear infinite}.wc-rain{animation:wc-fall 1s linear infinite}.wc-river{animation:wc-flow 1s linear infinite}</style>
+    <div class="stage"><svg class="wcsvg" viewBox="0 0 400 250" width="100%"></svg></div>
+    <div class="ctrl" style="justify-content:space-between"><div class="chips wchips"></div><button class="btn wnext">Next step ➜</button></div>
+    <p class="msg wmsg"></p>`,
+  init(root, done){
+    const STEPS=[['Evaporation','☀️ The sun heats the ocean. Water <b>evaporates</b> and rises into the air as invisible water vapor.'],
+      ['Condensation','☁️ High in the sky, the vapor cools and <b>condenses</b> into tiny drops. Lots of drops make a cloud!'],
+      ['Precipitation','🌧️ The drops join together and get heavy. They fall as rain or snow. That is <b>precipitation</b>.'],
+      ['Collection','🏞️ The water runs down rivers and <b>collects</b> in lakes and oceans. Then the cycle starts again!']];
+    let s=-1, finished=false; const seen=new Set();
+    const draw=()=>{
+      const cloudR = s>=1 ? 1.25 : 1, cloudC = s===2 ? '#9aa8b8' : '#ffffff';
+      q(root,'.wcsvg').innerHTML=`<rect width="400" height="250" fill="#cfeeff"/>
+        <circle cx="55" cy="48" r="30" fill="#ffd54a"/>
+        <polygon points="250,250 330,110 410,250" fill="#7b8f6b"/><polygon points="310,145 330,110 350,145 340,140 330,150 320,140" fill="#fff"/>
+        <path d="M0 190 Q100 180 220 196 L220 250 L0 250 Z" fill="#2f80e8"/>
+        <path class="${s===3?'wc-river':''}" d="M318 160 Q290 190 260 200 Q235 208 215 205" stroke="#3a9cf0" stroke-width="${s===3?9:6}" fill="none" stroke-dasharray="${s===3?'10 10':'none'}" stroke-linecap="round"/>
+        <g transform="translate(250 60) scale(${cloudR}) translate(-250 -60)"><g fill="${cloudC}"><circle cx="225" cy="62" r="22"/><circle cx="250" cy="50" r="28"/><circle cx="278" cy="62" r="22"/><rect x="215" y="62" width="74" height="22" rx="11"/></g></g>
+        ${s===0?[60,110,160].map((x,i)=>`<path class="wc-up" style="animation-delay:${i*.6}s" d="M${x} 180 q-6 -10 0 -20 q6 -10 0 -20" stroke="#ffffff" stroke-width="4" fill="none"/>`).join(''):''}
+        ${s===2?[230,250,270,240,262].map((x,i)=>`<path class="wc-rain" style="animation-delay:${i*.2}s" d="M${x} 90 l-3 10" stroke="#2f80e8" stroke-width="4" stroke-linecap="round"/>`).join(''):''}
+        ${STEPS.map((st,i)=>{ const pos=[[110,150],[250,22],[300,128],[120,232]][i]; return `<text x="${pos[0]}" y="${pos[1]}" font-size="12" font-weight="700" text-anchor="middle" fill="${i===s?'#c2410c':'#1f2a44'}" opacity="${i===s?1:.55}">${i+1}. ${st[0]}</text>`; }).join('')}`;
+      q(root,'.wchips').innerHTML=STEPS.map((st,i)=>`<span class="chip ${seen.has(i)?'on':''}">${seen.has(i)?'✅':'❔'} ${st[0]}</span>`).join(' ');
+      q(root,'.wmsg').innerHTML = s<0 ? 'Press <b>Next step</b> to start the water cycle.' : STEPS[s][1] + (seen.size===4&&s===3?'<br>🎉 You went all the way around the water cycle!':'');
+      q(root,'.wnext').textContent = s===3 ? '🔄 Around again' : 'Next step ➜';
+    };
+    q(root,'.wnext').onclick=()=>{ s=(s+1)%4; seen.add(s); draw(); if(seen.size===4&&!finished){finished=true;done();} };
+    draw();
+  }
+};
+
+/* Weather: dress for the weather */
+ACTS.dress = {
+  html:`<div style="display:grid;grid-template-columns:1fr 1.3fr;gap:16px;align-items:start" class="dr">
+    <div class="stage dwx" style="text-align:center;padding:14px;min-height:240px"></div>
+    <div><p class="sec-t">Tap clothes to put them on or take them off</p><div class="ward" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px"></div>
+    <div class="ctrl"><button class="btn green dcheck">✅ Check my outfit</button></div></div></div><p class="msg center dmsg"></p>`,
+  init(root, done){
+    const ITEMS={shorts:['🩳','Shorts'],tshirt:['👕','T-shirt'],sandals:['🩴','Sandals'],sunglasses:['🕶️','Sunglasses'],umbrella:['☂️','Umbrella'],boots:['🥾','Boots'],coat:['🧥','Coat'],mittens:['🧤','Mittens'],scarf:['🧣','Scarf']};
+    const W=[['☀️','Hot and sunny','linear-gradient(#ffe9a8,#fff7d6)',['shorts','sunglasses'],['coat','mittens','scarf','boots'],'Shorts and sunglasses keep you cool and protect your eyes.'],
+      ['🌧️','Rainy','linear-gradient(#b8c4d4,#e3e9f1)',['umbrella','boots'],['sandals','sunglasses'],'An umbrella and boots keep you dry.'],
+      ['❄️','Snowy','linear-gradient(#e7f3ff,#ffffff)',['coat','mittens','boots'],['shorts','sandals','tshirt'],'A coat, mittens, and boots keep you warm and dry in the snow.'],
+      ['🌬️','Cool and windy','linear-gradient(#d6efe9,#f0faf7)',['coat','scarf'],['shorts','sandals','umbrella'],'A coat and scarf block the cold wind. (Umbrellas flip inside out in the wind!)']];
+    let w=0, finished=false; const on=new Set(), cleared=new Set();
+    const draw=(m)=>{ const x=W[w];
+      q(root,'.dwx').style.background=x[2];
+      q(root,'.dwx').innerHTML=`<div style="font-size:46px">${x[0]}</div><b style="font-size:20px">${x[1]}</b><div style="font-size:76px;line-height:1.1;margin-top:6px">🧒</div><div style="font-size:30px;min-height:40px">${[...on].map(k=>ITEMS[k][0]).join('')}</div><p class="note" style="margin:4px 0 0">Weather ${w+1} of 4</p>`;
+      q(root,'.ward').innerHTML=Object.entries(ITEMS).map(([k,v])=>`<button class="tbtn ${on.has(k)?'sel':''}" data-i="${k}" style="font-size:15px;padding:6px"><span style="font-size:28px;display:block">${v[0]}</span>${v[1]}</button>`).join('');
+      qa(root,'[data-i]').forEach(b=>b.onclick=()=>{ const k=b.dataset.i; on.has(k)?on.delete(k):on.add(k); draw(); });
+      q(root,'.dmsg').innerHTML=m||`What should the explorer wear when it is <b>${x[1].toLowerCase()}</b>?`; };
+    q(root,'.dcheck').onclick=()=>{ const x=W[w], miss=x[3].filter(k=>!on.has(k)), bad=x[4].filter(k=>on.has(k));
+      if(!miss.length && !bad.length){ cleared.add(w);
+        const m=`✅ <b>Perfect!</b> ${x[5]}`;
+        if(cleared.size===4){ draw(m+'<br>🎉 You dressed for all 4 kinds of weather!'); if(!finished){finished=true;done();} return; }
+        w=(w+1)%4; on.clear(); draw(m+' Here comes new weather!'); return; }
+      const parts=[]; if(bad.length) parts.push(`Take off the ${bad.map(k=>ITEMS[k][1].toLowerCase()).join(' and ')}.`); if(miss.length) parts.push(`Something is missing: think about ${miss.length===1?'one more thing':'a few more things'}.`);
+      draw('🤔 Not quite! '+parts.join(' ')); };
+    draw();
+  }
+};
+
+/* Seasons: move Earth around the sun */
+ACTS.seasons = {
+  html:`<div style="display:grid;grid-template-columns:1.3fr 1fr;gap:16px;align-items:center" class="ss">
+    <div class="stage" style="background:#0f1035"><svg class="ssvg" viewBox="0 0 400 260" width="100%"></svg></div>
+    <div><div class="sinfo qcard"></div><div class="ctrl"><button class="btn smove">🌍 Move Earth ➜</button></div><div class="chips schips" style="margin-top:10px"></div></div></div>`,
+  init(root, done){
+    // angle in screen degrees (0 = right). Earth's axis always leans to the right, so on the left side our half leans toward the sun.
+    const S=[['Winter',0,'❄️🌲','Our half of Earth leans <b>away</b> from the sun. Sunlight is weak and days are short. Brrr!'],
+      ['Spring',-90,'🌸🌷','Earth has moved a quarter of the way around. Days get longer and warmer, and flowers bloom.'],
+      ['Summer',180,'☀️🌳','Our half leans <b>toward</b> the sun. Sunlight is strong and days are long and hot!'],
+      ['Fall',90,'🍂🍁','Days get shorter and cooler. Leaves change color and fall.']];
+    let i=0, finished=false; const seen=new Set([0]);
+    const draw=()=>{ const [name,ang,em,txt]=S[i], r=ang*Math.PI/180, ex=200+150*Math.cos(r), ey=130+85*Math.sin(r);
+      const away=Math.atan2(ey-130,ex-200)*180/Math.PI;
+      q(root,'.ssvg').innerHTML=`${[...Array(30)].map((_,k)=>`<circle cx="${(k*137)%400}" cy="${(k*71)%260}" r="${k%3?1:1.6}" fill="#fff" opacity=".7"/>`).join('')}
+        <ellipse cx="200" cy="130" rx="150" ry="85" fill="none" stroke="#ffffff55" stroke-dasharray="5 6"/>
+        <circle cx="200" cy="130" r="46" fill="#ffe17a" opacity=".35"/><circle cx="200" cy="130" r="34" fill="#ffc93c"/>
+        ${S.map((s,k)=>{ const rr=s[1]*Math.PI/180; return `<text x="${200+150*Math.cos(rr)}" y="${130+85*Math.sin(rr)+(s[1]===-90?-30:s[1]===90?40:-30)}" fill="#fff" opacity="${k===i?1:.45}" font-size="14" text-anchor="middle" font-weight="700">${s[0]}</text>`; }).join('')}
+        <g transform="translate(${ex} ${ey})">
+          <circle r="22" fill="#2f80e8"/><path d="M-10 -8 q6 -8 14 -2 q4 6 -4 10 q-8 2 -10 -8z M4 6 q8 -2 10 6 q-4 6 -10 2z" fill="#4cc38a"/>
+          <path d="M0 -22 A22 22 0 0 1 0 22 Z" fill="#000" opacity=".55" transform="rotate(${away})"/>
+          <line x1="${-30*Math.sin(-23.5*Math.PI/180)}" y1="${-30*Math.cos(23.5*Math.PI/180)}" x2="${30*Math.sin(-23.5*Math.PI/180)}" y2="${30*Math.cos(23.5*Math.PI/180)}" stroke="#fff" stroke-width="2.5" transform="rotate(0)"/>
+          <circle cx="${-30*Math.sin(-23.5*Math.PI/180)}" cy="${-30*Math.cos(23.5*Math.PI/180)}" r="3" fill="#fff"/></g>`;
+      q(root,'.sinfo').innerHTML=`<p class="qtext" style="margin:0">${em} ${name}</p><p style="font-size:18px;margin:8px 0 0">${txt}</p>`;
+      q(root,'.schips').innerHTML=S.map((s,k)=>`<span class="chip ${seen.has(k)?'on':''}">${seen.has(k)?'✅':'❔'} ${s[0]}</span>`).join(' ');
+      if(seen.size===4&&!finished){ finished=true; done(); }
+    };
+    q(root,'.smove').onclick=()=>{ i=(i+1)%4; seen.add(i); draw(); };
+    draw();
+  }
+};
+
+/* Solar system */
+ACTS.planets = {
+  html:`<div style="background:radial-gradient(ellipse at 20% 40%,#2b2470 0%,#0f1035 70%);border-radius:18px;padding:14px"><div class="orbit" style="display:flex;align-items:center;gap:clamp(6px,1.4vw,14px);overflow-x:auto;padding:14px 6px"></div></div>
+    <div class="qcard pfact" style="margin-top:12px;min-height:120px"></div>`,
+  init(root, done){
+    const B=[['Sun',0,'#ffb300','The sun is a star! It is a giant ball of hot, glowing gas. About 1 million Earths could fit inside it.'],
+      ['Mercury',20,'#b5a69a','Mercury is the closest planet to the sun and the smallest planet.'],['Venus',30,'#e8c27a','Venus is the hottest planet. Its thick clouds trap heat like a blanket.'],
+      ['Earth',32,'earth','Earth is our home! God made it just right for living things, with air, water, and the perfect distance from the sun.'],['Mars',24,'#d8613c','Mars is called the Red Planet because its dirt has rust in it.'],
+      ['Jupiter',66,'#d9a76a','Jupiter is the biggest planet. It has a giant storm called the Great Red Spot.'],['Saturn',54,'#e9d08c','Saturn has beautiful rings made of ice and rock.'],
+      ['Uranus',42,'#9fe3ea','Uranus spins on its side, like a rolling ball.'],['Neptune',40,'#4a7bea','Neptune is the farthest planet from the sun. It has the fastest winds.']];
+    const seen=new Set(); let finished=false;
+    q(root,'.orbit').innerHTML=B.map((b,i)=>{ if(!i) return `<button data-b="0" aria-label="Sun" style="flex:0 0 auto;width:84px;height:84px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff3a8,#ffb300 55%,#ff7a00);box-shadow:0 0 36px #ffb30099"></button>`;
+      const bg = b[2]==='earth' ? 'radial-gradient(circle at 35% 35%,#7fd0ff,#2f7de0 55%,#2aa86b 56%,#2f7de0 70%)' : `radial-gradient(circle at 35% 35%,#fff8 0%,${b[2]} 45%,${b[2]})`;
+      return `<button data-b="${i}" aria-label="${b[0]}" style="flex:0 0 auto;position:relative;width:${b[1]}px;height:${b[1]}px;border-radius:50%;background:${bg};transition:transform .2s">${b[0]==='Saturn'?'<span style="position:absolute;left:50%;top:50%;width:180%;height:34%;border:3px solid #e8d49a;border-radius:50%;transform:translate(-50%,-50%) rotate(-18deg)"></span>':''}</button>`; }).join('');
+    q(root,'.pfact').innerHTML='<p class="qtext" style="margin:0">👆 Tap the sun or a planet!</p><p style="margin:6px 0 0;font-size:17px">They go in order from closest to the sun to farthest.</p>';
+    qa(root,'[data-b]').forEach(el=>el.onclick=()=>{ const i=+el.dataset.b, b=B[i]; seen.add(i);
+      qa(root,'[data-b]').forEach(x=>{ x.style.outline='none'; x.style.transform=''; }); el.style.outline='3px solid #fff'; el.style.outlineOffset='4px'; el.style.transform='scale(1.15)';
+      q(root,'.pfact').innerHTML=`<p class="qtext" style="margin:0">${b[0]} ${i?`<small class="note">planet #${i} from the sun</small>`:''}</p><p style="font-size:18px;margin:6px 0">${b[3]}</p><p class="note" style="margin:0">${seen.size<9?`Visited ${seen.size} of 9`:'🎉 You visited the whole solar system!'}</p>`;
+      if(seen.size===9&&!finished){finished=true;done();} });
+  }
+};
+
+/* Day and night: spin the Earth */
+ACTS.spin = {
+  html:`<div style="display:grid;grid-template-columns:1.4fr 1fr;gap:14px;align-items:center" class="sp">
+    <div class="stage" style="background:#0f1035"><svg class="spsvg" viewBox="0 0 400 260" width="100%"></svg></div>
+    <div class="sky stage" style="height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:background .4s;color:#fff;text-align:center"></div></div>
+    <div class="slider-row">🔄 <input type="range" min="0" max="359" value="0" aria-label="Spin the Earth"><button class="btn small spauto">▶ Spin</button></div>
+    <p class="msg center spmsg"></p>`,
+  init(root, done){
+    const sl=q(root,'input'); const seen=new Set(); let finished=false, auto=null;
+    const draw=()=>{ const th=+sl.value, a=(180-th)*Math.PI/180, cx=270, cy=130, R=80, px=cx+(R+14)*Math.cos(a), py=cy+(R+14)*Math.sin(a), day=Math.cos(a)<0;
+      const tod = th<20||th>340?'Noon':th<80?'Afternoon':th<100?'Sunset':th<170?'Evening':th<190?'Midnight':th<260?'Late night':th<280?'Sunrise':'Morning';
+      seen.add(day?'day':'night');
+      q(root,'.spsvg').innerHTML=`${[...Array(26)].map((_,k)=>`<circle cx="${(k*151)%400}" cy="${(k*67)%260}" r="1.3" fill="#fff" opacity=".6"/>`).join('')}
+        <circle cx="30" cy="130" r="46" fill="#ffc93c"/>${[-60,-30,0,30,60].map(y=>`<line x1="86" y1="${130+y}" x2="170" y2="${130+y*.6}" stroke="#ffe17a" stroke-width="3" stroke-dasharray="8 8" opacity=".8"/>`).join('')}
+        <g transform="rotate(${-th} ${cx} ${cy})"><circle cx="${cx}" cy="${cy}" r="${R}" fill="#2f80e8"/>
+          <path d="M${cx-50} ${cy-30} q20 -25 45 -10 q15 20 -10 30 q-25 6 -35 -20z M${cx+10} ${cy+20} q30 -10 40 15 q-10 25 -35 15z M${cx-20} ${cy+40} q10 -5 18 4 q-6 10 -18 -4z" fill="#4cc38a"/></g>
+        <path d="M${cx} ${cy-R} A${R} ${R} 0 0 1 ${cx} ${cy+R} Z" fill="#000" opacity=".6"/>
+        <text x="${px}" y="${py}" font-size="26" text-anchor="middle" dominant-baseline="middle" transform="rotate(${-th-90} ${px} ${py})">🧍</text>
+        <text x="${cx-60}" y="248" fill="#ffe17a" font-size="14" text-anchor="middle" font-weight="700">DAY side</text><text x="${cx+50}" y="248" fill="#9fb3ff" font-size="14" text-anchor="middle" font-weight="700">NIGHT side</text>`;
+      const sky=q(root,'.sky');
+      sky.style.background = day ? (tod==='Sunset'||tod==='Sunrise'?'linear-gradient(#ff9f6b,#ffd27a)':'linear-gradient(#5fb8ff,#bfe6ff)') : 'linear-gradient(#0b0e2b,#26306b)';
+      sky.innerHTML = `<div style="font-size:54px">${day?(tod==='Sunset'||tod==='Sunrise'?'🌅':'☀️'):'🌙✨'}</div><b style="font-size:22px">${tod}</b><span style="font-size:16px">${day?'Your side faces the sun':'Your side faces away from the sun'}</span>`;
+      q(root,'.spmsg').innerHTML = seen.size<2 ? 'Drag the slider or press Spin. Watch the person 🧍 as Earth turns.' : '🎉 One full spin (rotation) takes 24 hours: that\'s one day and one night!';
+      if(seen.size===2&&!finished){finished=true;done();}
+    };
+    sl.oninput=draw;
+    q(root,'.spauto').onclick=()=>{ if(auto){ auto(); auto=null; q(root,'.spauto').textContent='▶ Spin'; return; }
+      q(root,'.spauto').textContent='⏸ Stop'; auto=raf(()=>{ sl.value=(+sl.value+1.2)%360; draw(); }); };
+    draw();
+    return ()=>{ if(auto) auto(); };
+  }
+};
+
+/* Phases of the moon */
+function moonPhasePath(cx, cy, r, k){ // k: 0..7, 0 new, 4 full; waxing lit on the right
+  if (k===0) return '';
+  if (k===4) return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#f5f0d8"/>`;
+  const p=k/8, rx=Math.abs(Math.cos(2*Math.PI*p))*r, top=`${cx} ${cy-r}`, bot=`${cx} ${cy+r}`;
+  const waxing = k<4, crescent = (k===1||k===7), quarter = (k===2||k===6);
+  let d;
+  if (waxing) d = `M${top} A${r} ${r} 0 0 1 ${bot} ` + (quarter?`Z`:`A${rx} ${r} 0 0 ${crescent?0:1} ${top} Z`);
+  else        d = `M${top} A${r} ${r} 0 0 0 ${bot} ` + (quarter?`Z`:`A${rx} ${r} 0 0 ${crescent?1:0} ${top} Z`);
+  return `<path d="${d}" fill="#f5f0d8"/>`;
 }
-function tick(){
-  const W=cv.width,H=cv.height,s=stateOf(T);
-  ctx.clearRect(0,0,W,H);
-  const speed = s==='solid'? .6 : s==='liquid'? 1.6+ (T/100)*1.2 : 4+(T-100)/10;
-  const waterTop = H*0.45;
-  parts.forEach(p=>{
-    if(s==='solid'){
-      p.x += (p.hx-p.x)*.15 + (Math.random()-.5)*speed;
-      p.y += (p.hy-p.y)*.15 + (Math.random()-.5)*speed;
+ACTS.moon = {
+  html:`<div style="display:grid;grid-template-columns:1.3fr 1fr;gap:14px;align-items:center" class="mn">
+    <div class="stage" style="background:#0f1035"><svg class="msvg" viewBox="0 0 320 260" width="100%"></svg></div>
+    <div class="stage" style="background:#0b0e2b;text-align:center;color:#fff;padding:10px"><p style="margin:4px 0;font-size:15px;opacity:.8">What we see from Earth</p><svg class="mview" viewBox="0 0 160 160" width="70%"></svg><b class="mname" style="font-size:22px;display:block"></b></div></div>
+    <div class="slider-row">🌑 <input type="range" min="0" max="7" step="1" value="0" aria-label="Moon phase"> 🌑 <button class="btn small mnext">Next ➜</button></div>
+    <div class="chips mchips" style="margin-top:8px"></div><p class="msg center mmsg"></p>`,
+  init(root, done){
+    const N=['New moon','Waxing crescent','First quarter','Waxing gibbous','Full moon','Waning gibbous','Third quarter','Waning crescent'];
+    const sl=q(root,'input'), seen=new Set(); let finished=false;
+    const draw=()=>{ const k=+sl.value; seen.add(k);
+      const ang=(180 - k*45)*Math.PI/180, cx=190, cy=130, mx=cx+95*Math.cos(ang), my=cy+95*Math.sin(ang);
+      q(root,'.msvg').innerHTML=`<text x="14" y="22" fill="#ffe17a" font-size="13" font-weight="700">☀️ Sunlight →</text>
+        ${[40,90,140,190,240].map(y=>`<line x1="0" y1="${y}" x2="40" y2="${y}" stroke="#ffe17a" stroke-width="2" stroke-dasharray="6 6" opacity=".7"/>`).join('')}
+        <circle cx="${cx}" cy="${cy}" r="95" fill="none" stroke="#ffffff44" stroke-dasharray="4 6"/>
+        <circle cx="${cx}" cy="${cy}" r="26" fill="#2f80e8"/><path d="M${cx} ${cy-26} A26 26 0 0 1 ${cx} ${cy+26} Z" fill="#000" opacity=".55"/><text x="${cx}" y="${cy+44}" fill="#fff" font-size="12" text-anchor="middle">Earth</text>
+        <circle cx="${mx}" cy="${my}" r="13" fill="#3a3a4a"/><path d="M${mx} ${my-13} A13 13 0 0 0 ${mx} ${my+13} Z" fill="#f5f0d8"/>`;
+      q(root,'.mview').innerHTML=`<circle cx="80" cy="80" r="62" fill="#2a2d45"/>${moonPhasePath(80,80,62,k)}`;
+      q(root,'.mname').textContent=N[k];
+      q(root,'.mchips').innerHTML=N.map((n,i)=>`<span class="chip ${seen.has(i)?'on':''}" style="font-size:13px">${seen.has(i)?'✅':'❔'} ${n}</span>`).join(' ');
+      q(root,'.mmsg').innerHTML = seen.size<8 ? `The sun always lights half the moon. We see more or less of that lit half as the moon goes around Earth. (${seen.size} of 8 phases)` : '🎉 You saw all 8 phases! One trip around Earth takes about a month.';
+      if(seen.size===8&&!finished){finished=true;done();}
+    };
+    sl.oninput=draw; q(root,'.mnext').onclick=()=>{ sl.value=(+sl.value+1)%8; draw(); };
+    draw();
+  }
+};
+
+/* ============ GAMES ============ */
+function renderGame(){
+  const u = unitById(view.unit), g = GAMES.find(x=>x.k===view.game);
+  app.innerHTML = `<div class="screen">
+    <div class="crumbs"><button data-go="home">🏠 Home</button> › <button data-go="unit">${esc(u.name)}</button></div>
+    <div class="panel"><div class="ghead"><span class="gkind">${g.icon} ${g.name}</span><span class="note" id="gstat"></span></div><div id="game"></div></div></div>`;
+  app.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go({page:b.dataset.go, unit:u.id}));
+  ({match:gameMatch, sort:gameSort, climb:gameClimb, quiz:gameQuiz})[g.k](u, $('#game'), $('#gstat'));
+}
+function finishGame(u, kind, stars, extra, box, line){
+  const key = `${u.id}-${kind}`, gain = award(key, stars);
+  logResult(Object.assign({unit:u.id, kind, stars}, extra));
+  const g = GAMES.find(x=>x.k===kind), gi = GAMES.indexOf(g), nextG = GAMES[gi+1];
+  box.innerHTML = `<div class="result"><div class="stars3" style="color:#f0a500">${starStr(stars)}</div>
+    <p class="qtext">${line}</p>
+    <p class="note" style="font-size:17px">${gain ? `+${gain} new ⭐ for ${esc(student)}!` : `Your best here: ${starStr(best(student,key))}`}</p>
+    <div class="ctrl" style="justify-content:center"><button class="btn" id="again">🔄 Play again</button>
+    ${nextG ? `<button class="btn ghost" id="nextG">${nextG.icon} ${nextG.name} ➜</button>` : `<button class="btn ghost" id="back">Back to ${esc(u.name)}</button>`}</div></div>`;
+  $('#again').onclick = () => go({page:'game', unit:u.id, game:kind});
+  if (nextG) $('#nextG').onclick = () => go({page:'game', unit:u.id, game:nextG.k}); else $('#back').onclick = () => go({page:'unit', unit:u.id});
+}
+
+/* ---- Word Match: tap a word, then its meaning ---- */
+function gameMatch(u, box, stat){
+  const pairs = u.match, left = shuffle(pairs.map((_,i)=>i)), right = shuffle(pairs.map((_,i)=>i));
+  let sel = null, matched = [], misses = 0;
+  const draw = () => {
+    stat.textContent = `${matched.length}/${pairs.length} matched · ${misses} oops`;
+    box.innerHTML = `<p class="howto">Tap a word, then tap its meaning. Fewer oopses means more stars!</p>
+      <div class="board"><div class="colw">${left.map(i=>`<button class="tcard word ${matched.includes(i)?'done':''} ${sel===i?'sel':''}" data-w="${i}" ${matched.includes(i)?'disabled':''}>${esc(pairs[i][0])}</button>`).join('')}</div>
+      <div class="colw">${right.map(i=>`<button class="tcard ${matched.includes(i)?'done':''}" data-d="${i}" ${matched.includes(i)?'disabled':''}>${esc(pairs[i][1])}</button>`).join('')}</div></div>`;
+    box.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>{ sel=+b.dataset.w; draw(); });
+    box.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{
+      if (sel===null){ toast('Tap a word first!'); return; }
+      const d = +b.dataset.d;
+      if (d===sel){ matched.push(d); sel=null;
+        if (matched.length===pairs.length){ const st = misses===0?3:misses<=2?2:1;
+          finishGame(u,'match',st,{right:pairs.length,total:pairs.length,misses},box, misses===0?'Perfect match! 🎉':`All matched with ${misses} oops${misses===1?'':'es'}!`); stat.textContent=''; return; }
+        draw();
+      } else { misses++; b.classList.add('badflash'); stat.textContent = `${matched.length}/${pairs.length} matched · ${misses} oops`; setTimeout(()=>b.classList.remove('badflash'),450); }
+    });
+  };
+  draw();
+}
+
+/* ---- Sort It: put each card in the right group ---- */
+function gameSort(u, box, stat){
+  const items = shuffle(u.sort.items), bins = u.sort.bins;
+  let i = 0, right = 0, missed = [];
+  const draw = (fb='') => {
+    stat.textContent = `${i+1} of ${items.length} · ${right} right`;
+    box.innerHTML = `<p class="howto">Where does this card go? Tap the right group.</p>
+      <div class="progress"><div style="width:${i/items.length*100}%"></div></div>
+      <div class="sortcard">${esc(items[i][0])}</div>
+      <div class="bins">${bins.map((b,k)=>`<button class="tbtn" data-b="${k}">${esc(b)}</button>`).join('')}</div><p class="msg center" id="fb">${fb}</p>`;
+    box.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{
+      const it = items[i], ok = +b.dataset.b===it[1];
+      box.querySelectorAll('[data-b]').forEach(x=>x.disabled=true);
+      if (ok){ right++; b.classList.add('good'); } else { missed.push(it[0]); b.classList.add('bad'); box.querySelector(`[data-b="${it[1]}"]`).classList.add('good'); }
+      const msg = ok ? '✅ Yes!' : `Not quite. ${esc(it[0])} goes in <b>${esc(bins[it[1]])}</b>.`;
+      $('#fb').innerHTML = msg;
+      setTimeout(()=>{ i++;
+        if (i>=items.length){ const pct = right/items.length, st = pct===1?3:pct>=.7?2:1;
+          stat.textContent=''; finishGame(u,'sort',st,{right,total:items.length,missed},box,`You sorted ${right} of ${items.length} right!`); }
+        else draw(); }, ok?650:1500);
+    });
+  };
+  draw();
+}
+
+/* ---- Fact Climb: true or false, climb the mountain ---- */
+const CLIMB_TOP = 7;
+function climbSVG(pos){
+  const steps = [];
+  for (let s=0;s<=CLIMB_TOP;s++){ const x = 20 + s*24, y = 210 - s*26; steps.push([x,y]); }
+  const [cx,cy] = steps[pos];
+  return `<svg viewBox="0 0 220 240" width="100%" style="max-width:240px;display:block;margin:auto" aria-label="Climber on step ${pos} of ${CLIMB_TOP}">
+    <rect width="220" height="240" rx="18" fill="#e8f5ff"/>
+    <polygon points="0,240 200,22 220,40 220,240" fill="color-mix(in srgb, var(--c) 35%, #8fa3b8)"/>
+    <polygon points="170,55 200,22 214,36 196,58 186,50" fill="#fff"/>
+    ${steps.map(([x,y],s)=>`<rect x="${x-10}" y="${y+10}" width="26" height="6" rx="3" fill="${s<=pos?'#ffc93c':'#ffffffaa'}"/>`).join('')}
+    <line x1="${steps[CLIMB_TOP][0]+4}" y1="${steps[CLIMB_TOP][1]+10}" x2="${steps[CLIMB_TOP][0]+4}" y2="${steps[CLIMB_TOP][1]-22}" stroke="#555" stroke-width="2"/>
+    ${pos===CLIMB_TOP?`<polygon points="${steps[CLIMB_TOP][0]+4},${steps[CLIMB_TOP][1]-22} ${steps[CLIMB_TOP][0]+24},${steps[CLIMB_TOP][1]-16} ${steps[CLIMB_TOP][0]+4},${steps[CLIMB_TOP][1]-10}" fill="#e0405c"/>`:''}
+    <text x="${cx+3}" y="${cy+9}" font-size="32" text-anchor="middle">🧗</text></svg>`;
+}
+function gameClimb(u, box, stat){
+  let deck = shuffle(u.facts), k = 0, pos = 0, slips = 0, asked = 0, wrongs = [];
+  const draw = (answered=null) => {
+    if (k>=deck.length){ deck = shuffle(u.facts); k = 0; }
+    const f = deck[k];
+    stat.textContent = `Step ${pos} of ${CLIMB_TOP} · ${slips} slip${slips===1?'':'s'}`;
+    box.innerHTML = `<p class="howto">Is it true or false? Each right answer climbs one step. A wrong answer slips you down one.</p>
+      <div class="climbwrap">${climbSVG(pos)}
+      <div class="qcard"><p class="qtext">${esc(f[0])}</p>
+      ${answered===null ? `<div class="tf"><button class="btn green" id="tfT">👍 True</button><button class="btn" style="background:#e0405c" id="tfF">👎 False</button></div>`
+        : `<div class="why">${answered ? '✅ <b>Right!</b> ' : '💡 <b>Oops!</b> '} It's <b>${f[1]?'true':'false'}</b>. ${esc(f[2]||'')}</div>
+           <div class="ctrl"><button class="btn" id="nextF">${pos===CLIMB_TOP?'🚩 Plant the flag!':'Next ➜'}</button></div>`}
+      </div></div>`;
+    if (answered===null){
+      const pick = v => { asked++; const ok = v===f[1];
+        if (ok) pos = Math.min(CLIMB_TOP, pos+1); else { pos = Math.max(0,pos-1); slips++; wrongs.push(f[0]); }
+        draw(ok); };
+      $('#tfT').onclick = () => pick(true); $('#tfF').onclick = () => pick(false);
     } else {
-      p.vx += (Math.random()-.5)*.4*speed; p.vy += (Math.random()-.5)*.4*speed;
-      if(s==='liquid') p.vy += .25;
-      const max=speed*1.6, m=Math.hypot(p.vx,p.vy); if(m>max){p.vx*=max/m;p.vy*=max/m;}
-      p.x+=p.vx; p.y+=p.vy;
-      const top = s==='liquid'? waterTop : p.R;
-      if(p.x<p.R){p.x=p.R;p.vx*=-1} if(p.x>W-p.R){p.x=W-p.R;p.vx*=-1}
-      if(p.y<top){p.y=top;p.vy=Math.abs(p.vy)} if(p.y>H-p.R){p.y=H-p.R;p.vy*=-1}
+      $('#nextF').onclick = () => {
+        if (pos===CLIMB_TOP){ const st = slips===0?3:slips<=2?2:1; stat.textContent='';
+          finishGame(u,'climb',st,{right:asked-slips,total:asked,missed:wrongs},box, slips===0?'You reached the top with no slips! 🚩':`You reached the top with ${slips} slip${slips===1?'':'s'}! 🚩`); return; }
+        k++; draw(); };
     }
-    ctx.beginPath(); ctx.arc(p.x,p.y,p.R,0,Math.PI*2);
-    ctx.fillStyle = s==='solid'?'#7cc6f2': s==='liquid'?'#2f8df0':'#b9c6d6';
-    ctx.fill();
-    ctx.beginPath(); ctx.arc(p.x-p.R*.3,p.y-p.R*.3,p.R*.3,0,Math.PI*2); ctx.fillStyle='#ffffff99'; ctx.fill();
-  });
-  raf=requestAnimationFrame(tick);
-}
-function startMatter(){ if(!parts.length||cv.width===0) initParts(); updateLabels(); if(!raf) tick(); }
-function stopMatter(){ if(raf){cancelAnimationFrame(raf);raf=null;} }
-document.getElementById('heat').addEventListener('input',e=>{T=+e.target.value;updateLabels();});
-window.addEventListener('resize',()=>{ if(raf){ initParts(); } });
-
-/* ---------- HABITATS ---------- */
-const homes=[
-  {k:'ocean',n:'Ocean 🌊',d:'Salty water, lots of fish',cls:'h-ocean'},
-  {k:'desert',n:'Desert 🏜️',d:'Hot, dry, and sandy',cls:'h-desert'},
-  {k:'arctic',n:'Arctic ❄️',d:'Icy, snowy, and very cold',cls:'h-arctic'},
-  {k:'forest',n:'Forest 🌲',d:'Lots of trees and shade',cls:'h-forest'}
-];
-const critters=[
-  {e:'🐙',n:'octopus',h:'ocean',why:'Octopuses breathe water through gills.'},
-  {e:'🐬',n:'dolphin',h:'ocean',why:'Dolphins swim fast in the sea.'},
-  {e:'🐪',n:'camel',h:'desert',why:'Camels can go a long time without drinking water.'},
-  {e:'🦂',n:'scorpion',h:'desert',why:'Scorpions hide under rocks to stay cool.'},
-  {e:'🐻‍❄️',n:'polar bear',h:'arctic',why:'Thick fur and fat keep polar bears warm.'},
-  {e:'🐧',n:'penguin',h:'arctic',why:'Penguins huddle together to stay warm in the cold.'},
-  {e:'🦉',n:'owl',h:'forest',why:'Owls nest in trees and hunt at night.'},
-  {e:'🦌',n:'deer',h:'forest',why:'Deer eat leaves and hide among trees.'}
-];
-let picked=null, placed={};
-function resetHabitats(){
-  picked=null; placed={}; homes.forEach(h=>placed[h.k]=[]);
-  const a=document.getElementById('animals'); a.innerHTML='';
-  [...critters].sort(()=>Math.random()-.5).forEach(c=>{
-    const b=document.createElement('button'); b.className='animal'; b.textContent=c.e; b.setAttribute('aria-label',c.n);
-    b.onclick=()=>{document.querySelectorAll('.animal').forEach(x=>x.classList.remove('sel')); b.classList.add('sel'); picked={c,b};
-      document.getElementById('habMsg').textContent=`Where does the ${c.n} live?`;};
-    a.appendChild(b);
-  });
-  const H=document.getElementById('homes'); H.innerHTML='';
-  homes.forEach(h=>{
-    const d=document.createElement('button'); d.className='home '+h.cls; d.id='home-'+h.k;
-    d.innerHTML=`<h4>${h.n}</h4><small>${h.d}</small><div class="got"></div>`;
-    d.onclick=()=>dropIn(h,d); H.appendChild(d);
-  });
-  document.getElementById('habMsg').textContent='👆 Pick an animal first!';
-}
-function dropIn(h,d){
-  const m=document.getElementById('habMsg');
-  if(!picked){m.textContent='👆 Pick an animal first!';return;}
-  if(picked.c.h===h.k){
-    placed[h.k].push(picked.c.e); d.querySelector('.got').textContent=placed[h.k].join(' ');
-    picked.b.remove(); m.innerHTML=`✅ Yes! ${picked.c.why}`; addStar('hab-'+picked.c.n); picked=null;
-    if(!document.querySelector('.animal')){ m.innerHTML='🎉 Every animal is home! Great job!'; addStar('hab-all'); confetti(24); }
-  } else {
-    d.classList.remove('shake'); void d.offsetWidth; d.classList.add('shake');
-    m.textContent=`Hmm, not quite. Could a ${picked.c.n} live somewhere ${h.d.toLowerCase()}? Try again!`;
-  }
-}
-resetHabitats();
-
-/* ---------- PLANT ---------- */
-const needs=[{k:'sun',em:'☀️',n:'Sunlight',col:'#ffc93c'},{k:'water',em:'💧',n:'Water',col:'#3aa0ff'},{k:'air',em:'🌬️',n:'Air',col:'#9adbc5'}];
-let lv={};
-function resetPlant(){
-  needs.forEach(n=>lv[n.k]=0);
-  const box=document.getElementById('needs'); box.innerHTML='';
-  needs.forEach(n=>{
-    const row=document.createElement('div'); row.className='need';
-    row.innerHTML=`<span class="em">${n.em}</span><div style="flex:1"><div style="font-weight:600">${n.n}</div><div class="bar"><div class="fill" id="f-${n.k}" style="background:${n.col}"></div></div></div><button>Give ${n.em}</button>`;
-    row.querySelector('button').onclick=()=>{lv[n.k]=Math.min(4,lv[n.k]+1);drawPlant();};
-    box.appendChild(row);
-  });
-  drawPlant();
-}
-function drawPlant(){
-  needs.forEach(n=>document.getElementById('f-'+n.k).style.width=(lv[n.k]/4*100)+'%');
-  const stage=Math.min(lv.sun,lv.water,lv.air); // grows only as fast as the smallest need
-  const svg=document.getElementById('plantSvg');
-  const sunGlow = lv.sun? `<circle cx="250" cy="45" r="${18+lv.sun*5}" fill="#ffd54a" opacity=".9"/>`:'';
-  const drops = lv.water? Array.from({length:lv.water},(_,i)=>`<text x="${40+i*22}" y="60" font-size="20">💧</text>`).join(''):'';
-  const stemH=[0,40,80,115,145][stage];
-  let plant='';
-  if(stage===0) plant=`<ellipse cx="150" cy="232" rx="9" ry="6" fill="#8a5a2b"/>`;
-  else{
-    plant+=`<path d="M150 238 Q${146} ${238-stemH/2} 150 ${238-stemH}" stroke="#3b9e4f" stroke-width="7" fill="none" stroke-linecap="round"/>`;
-    for(let i=1;i<=Math.min(stage,3);i++){
-      const y=238-stemH*(i/(stage+0.6));
-      plant+=`<ellipse cx="${150-22}" cy="${y}" rx="20" ry="9" fill="#4cc38a" transform="rotate(-25 ${128} ${y})"/>
-              <ellipse cx="${150+22}" cy="${y-6}" rx="20" ry="9" fill="#4cc38a" transform="rotate(25 ${172} ${y-6})"/>`;
-    }
-    if(stage===4){
-      const cy=238-stemH;
-      for(let a=0;a<360;a+=30){const r=a*Math.PI/180;plant+=`<ellipse cx="${150+Math.cos(r)*20}" cy="${cy+Math.sin(r)*20}" rx="13" ry="7" fill="#ffc93c" transform="rotate(${a} ${150+Math.cos(r)*20} ${cy+Math.sin(r)*20})"/>`;}
-      plant+=`<circle cx="150" cy="${cy}" r="13" fill="#7a4a1f"/>`;
-    }
-  }
-  svg.innerHTML=`${sunGlow}${drops}
-    <rect x="0" y="250" width="300" height="50" fill="#9bd27a"/>
-    ${plant}
-    <path d="M110 236 L190 236 L180 290 L120 290 Z" fill="#d9774a"/><rect x="104" y="228" width="92" height="14" rx="4" fill="#c4643a"/>`;
-  const msg=document.getElementById('plantMsg');
-  const words=['A seed is waiting… 🌰','It sprouted! 🌱','Growing taller! 🌿','Almost there! 🪴','It bloomed into a sunflower! 🌻'];
-  let tip='';
-  if(stage<4){
-    const low=needs.reduce((a,b)=>lv[a.k]<=lv[b.k]?a:b);
-    if(Object.values(lv).some(v=>v>0)) tip=` It needs more <b>${low.n.toLowerCase()}</b> to keep growing.`;
-  }
-  msg.innerHTML=words[stage]+tip;
-  if(stage===4){addStar('plant-bloom');}
-}
-resetPlant();
-
-/* ---------- QUIZ ---------- */
-const Q=[
-  {q:'Which planet is closest to the Sun?',o:['Mars','Mercury','Earth','Neptune'],a:1,w:'Mercury is planet #1 from the Sun.'},
-  {q:'What happens when ice gets warm?',o:['It turns to rock','It melts into water','It gets bigger','Nothing'],a:1,w:'Heat makes ice melt into liquid water.'},
-  {q:'Which animal lives in the Arctic?',o:['Camel','Dolphin','Polar bear','Scorpion'],a:2,w:'Polar bears have thick fur to stay warm in the icy Arctic.'},
-  {q:'What do plants need to grow?',o:['Candy and juice','Sunlight, water, and air','Only dirt','Darkness'],a:1,w:'Plants use sunlight, water, and air to make their own food.'},
-  {q:'Which state of matter fills up all the space it can?',o:['Solid','Liquid','Gas','Ice'],a:2,w:'Gas particles zoom apart to fill the whole space.'},
-  {q:'What is the Sun?',o:['A planet','A star','A moon','A comet'],a:1,w:'The Sun is a star — the closest one to Earth!'},
-  {q:'Which planet has big, beautiful rings?',o:['Saturn','Venus','Mars','Mercury'],a:0,w:'Saturn’s rings are made of ice and rock.'},
-  {q:'Water boils and turns to steam at…',o:['0°C','50°C','100°C','10°C'],a:2,w:'Water boils at 100 degrees Celsius.'},
-  {q:'A camel is best suited for which habitat?',o:['Ocean','Desert','Arctic','Pond'],a:1,w:'Camels can live a long time without water in the hot desert.'},
-  {q:'Which part of a plant takes in water from the soil?',o:['Flower','Leaves','Roots','Petals'],a:2,w:'Roots soak up water and hold the plant in the ground.'}
-];
-let qi=0, score=0, quizStarted=false, order=[], missed=[];
-function startQuiz(){quizStarted=true;qi=0;score=0;missed=[];order=[...Q].sort(()=>Math.random()-.5);showQ();}
-function showQ(){
-  const box=document.getElementById('quizBox');
-  if(qi>=order.length){
-    if(student && !order.saved){
-      order.saved = true;
-      results.push({student, kind:'quiz', right:score, total:order.length, missed:missed.slice(), at:new Date().toISOString()});
-      if(score===order.length) P().earned['quiz-perfect'] = Date.now();
-      P().last = Date.now(); saveAll(); updateStars();
-    }
-    const msg = score===order.length?'Perfect score! You are a super scientist! 🧑‍🔬':score>=7?'Awesome work, scientist! 🌟':score>=4?'Nice job! Keep exploring! 🔍':'Good try! Explore the activities and try again! 💪';
-    box.innerHTML=`<div class="center"><div class="big-emoji">${score>=7?'🏆':'🎈'}</div>
-      <p class="q">You got ${score} out of ${order.length}!</p><p class="lead">${msg}</p>
-      <button class="btn pink" onclick="startQuiz()">Play again</button></div>`;
-    if(score>=7) confetti(30);
-    return;
-  }
-  const it=order[qi];
-  box.innerHTML=`<div class="progress"><div style="width:${qi/order.length*100}%"></div></div>
-    <div style="color:#8a93ad;font-size:16px">Question ${qi+1} of ${order.length}</div>
-    <p class="q">${it.q}</p>
-    <div class="opts">${it.o.map((t,i)=>`<button class="opt" data-i="${i}">${t}</button>`).join('')}</div>
-    <div class="why" id="why"></div>
-    <div class="center" style="margin-top:14px"><button class="btn" id="next" style="display:none">Next ➜</button></div>`;
-  box.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
-    const i=+b.dataset.i;
-    box.querySelectorAll('.opt').forEach(x=>{x.disabled=true; if(+x.dataset.i===it.a) x.classList.add('right');});
-    const why=document.getElementById('why');
-    if(i===it.a){score++; why.innerHTML='✅ <b>Correct!</b> '+it.w; addStar('quiz-q'+Q.indexOf(it));}
-    else {b.classList.add('wrong'); missed.push(it.q); why.innerHTML='💡 <b>Good try!</b> '+it.w;}
-    why.style.display='block';
-    const n=document.getElementById('next'); n.style.display='inline-block'; n.onclick=()=>{qi++;showQ();};
-  });
+  };
+  draw();
 }
 
-/* ---------- PARENT AREA ---------- */
+/* ---- Unit Quiz ---- */
+function gameQuiz(u, box, stat){
+  const qs = shuffle(u.quiz);
+  let i = 0, right = 0, missed = [];
+  const draw = () => {
+    const q = qs[i];
+    stat.textContent = `Question ${i+1} of ${qs.length}`;
+    box.innerHTML = `<div class="progress"><div style="width:${i/qs.length*100}%"></div></div>
+      <p class="qtext">${esc(q[0])}</p>
+      <div class="opts">${q[1].map((t,k)=>`<button class="opt" data-o="${k}">${esc(t)}</button>`).join('')}</div>
+      <div id="qfb"></div>`;
+    box.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{
+      const k = +b.dataset.o, ok = k===q[2];
+      box.querySelectorAll('[data-o]').forEach(x=>{ x.disabled=true; if(+x.dataset.o===q[2]) x.classList.add('right'); });
+      if (ok) right++; else { b.classList.add('wrong'); missed.push(q[0]); }
+      $('#qfb').innerHTML = `<div class="why">${ok?'✅ <b>Correct!</b>':'💡 <b>Good try!</b>'} ${esc(q[3])}</div><div class="ctrl"><button class="btn" id="nextQ">${i+1<qs.length?'Next ➜':'See my score'}</button></div>`;
+      $('#nextQ').onclick = () => { i++;
+        if (i>=qs.length){ const st = right===qs.length?3:right>=qs.length-2?2:1; stat.textContent='';
+          finishGame(u,'quiz',st,{right,total:qs.length,missed},box, `You got ${right} out of ${qs.length}!`); }
+        else draw(); };
+    });
+  };
+  draw();
+}
+
+/* ============ PARENT AREA ============ */
 let pview = {tab:'progress', who:''};
 const fmtDate = t => { try{ return new Date(t).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); }catch(e){ return ''; } };
 function renderParent(){
-  const box = $('parentBox');
   if(!parentOK){
     const creating = !pin;
-    box.innerHTML = `<div class="pinbox">
-      <div class="big-emoji" style="font-size:56px">👪</div>
+    app.innerHTML = `<div class="screen panel"><div class="pinbox">
+      <div class="big">👪</div>
       <h1 style="font-size:30px">${creating ? 'Create a parent PIN' : 'Enter your parent PIN'}</h1>
       <p class="note" style="font-size:17px">${creating ? "Pick 4 numbers. You'll need this PIN to see progress and change settings." : 'Progress and settings are behind this PIN.'}</p>
       <form id="pinform"><input id="pinin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="PIN"><br><br>
-      <button class="btn" type="submit">${creating ? 'Save PIN' : 'Unlock'}</button></form>
-      <p class="err" id="pinerr"></p></div>`;
-    $('pinin').focus();
-    $('pinform').onsubmit = e => { e.preventDefault(); const v = $('pinin').value.trim();
-      if(!/^\d{4}$/.test(v)){ $('pinerr').textContent='Use exactly 4 numbers.'; return; }
+      <button class="btn" type="submit">${creating ? 'Save PIN' : 'Unlock'}</button> <button class="btn ghost" type="button" id="pinBack">Back</button></form>
+      <p class="err" id="pinerr"></p></div></div>`;
+    $('#pinin').focus();
+    $('#pinBack').onclick = () => go({page: student?'home':'pick'});
+    $('#pinform').onsubmit = e => { e.preventDefault(); const v = $('#pinin').value.trim();
+      if(!/^\d{4}$/.test(v)){ $('#pinerr').textContent='Use exactly 4 numbers.'; return; }
       if(creating){ pin=v; LS.set('g3-pin',pin); parentOK=true; renderParent(); }
       else if(v===pin){ parentOK=true; renderParent(); }
-      else { $('pinerr').textContent="That PIN doesn't match. Try again."; $('pinin').value=''; } };
+      else { $('#pinerr').textContent="That PIN doesn't match. Try again."; $('#pinin').value=''; } };
     return;
   }
   const who = roster.includes(pview.who) ? pview.who : (roster.includes(student) ? student : roster[0] || '');
   pview.who = who;
-  const tabs = [['progress','📊 Progress'],['quiz','📝 Quiz history'],['settings','⚙️ Backup & settings']];
-  let body = '';
+  const tabs = [['progress','📊 Progress'],['history','📝 Game history'],['settings','⚙️ Backup & settings']];
   const kidChips = roster.length ? `<div class="tabs">${roster.map(n=>`<button data-who="${esc(n)}" aria-pressed="${n===who}">${esc(n)}</button>`).join('')}</div>` : '<p class="note">No students yet. A child adds their name on the start screen.</p>';
-
+  const uname = id => (unitById(id)||{name:id}).name;
+  let body = '';
   if(pview.tab==='progress' && who){
-    const p = P(who), st = starsFor(who), mine = results.filter(r=>r.student===who);
-    const best = mine.reduce((a,r)=>Math.max(a,r.right),-1);
+    const p = P(who), st = starsFor(who), bl = badgeList(who);
     body = kidChips + `
-      <p style="font-size:19px;margin:4px 0"><b>${esc(who)}</b>: ⭐ ${st} of ${STAR_MAX} stars · ${BADGES.filter(b=>b.ok(who)).length} of ${BADGES.length} badges</p>
-      <p class="note" style="margin-top:0">Last active: ${p.last ? fmtDate(p.last) : 'not yet'} · Quizzes taken: ${mine.length}${best>=0?` · Best quiz score: ${best}/10`:''}</p>
-      <h3>Activities</h3>
-      ${ACTS.map(a=>{ const g=starsFor(who,a.id); return `<div class="act-row"><span>${a.icon} ${a.name}</span><div class="bar"><i style="width:${g/a.max*100}%"></i></div><span>${g}/${a.max}</span></div>`; }).join('')}
+      <p style="font-size:19px;margin:4px 0"><b>${esc(who)}</b>: ⭐ ${st} of ${STAR_MAX} stars · ${bl.filter(b=>b.ok).length} of ${bl.length} badges</p>
+      <p class="note" style="margin-top:0">Last active: ${p.last ? fmtDate(p.last) : 'not yet'} · Games played: ${results.filter(r=>r.student===who).length}</p>
+      <div style="overflow-x:auto"><table class="hist"><tr><th>Unit</th><th>Lessons</th>${GAMES.map(g=>`<th>${g.name}</th>`).join('')}<th>Stars</th></tr>
+      ${UNITS.map(u=>`<tr><td>${u.icon} ${esc(u.name)}</td><td>${lessonsDone(who,u.id)}/3</td>${GAMES.map(g=>`<td style="color:#e3a008;white-space:nowrap">${starStr(best(who,u.id+'-'+g.k))}</td>`).join('')}<td><b>${unitStars(who,u.id)}</b>/${UNIT_MAX}</td></tr>`).join('')}</table></div>
       <h3>Badges</h3><div class="badges">${badgeHTML(who)}</div>`;
-  } else if(pview.tab==='quiz' && who){
+  } else if(pview.tab==='history' && who){
     const mine = results.filter(r=>r.student===who).sort((a,b)=>b.at.localeCompare(a.at));
-    body = kidChips + (mine.length ? `<table class="hist"><tr><th>When</th><th>Score</th><th>Missed</th></tr>${mine.map(r=>`<tr><td>${fmtDate(r.at)}</td><td><b>${r.right}/${r.total}</b></td><td>${r.missed&&r.missed.length?r.missed.map(esc).join('<br>'):'None 🎉'}</td></tr>`).join('')}</table>` : `<p class="note">${esc(who)} hasn't finished a quiz yet.</p>`);
+    const gname = k => (GAMES.find(g=>g.k===k)||{name:k}).name;
+    body = kidChips + (mine.length ? `<div style="overflow-x:auto"><table class="hist"><tr><th>When</th><th>Unit</th><th>Game</th><th>Score</th><th>Missed</th></tr>${mine.map(r=>`<tr><td>${fmtDate(r.at)}</td><td>${esc(uname(r.unit))}</td><td>${gname(r.kind)}</td><td style="white-space:nowrap"><b>${r.right}/${r.total}</b> <span style="color:#e3a008">${starStr(r.stars)}</span></td><td>${r.missed&&r.missed.length?r.missed.map(esc).join('<br>'):'None 🎉'}</td></tr>`).join('')}</table></div>` : `<p class="note">${esc(who)} hasn't played a game yet.</p>`);
   } else if(pview.tab==='settings'){
-    let code=''; try{ code = btoa(unescape(encodeURIComponent(JSON.stringify({app:'g3science',roster,prog,results})))); }catch(e){}
+    let code=''; try{ code = btoa(unescape(encodeURIComponent(JSON.stringify({app:'g3science',v:2,roster,prog,results})))); }catch(e){}
     body = `
       <h3 style="margin-top:4px">Back up all stars and progress</h3>
-      <p class="note">Progress is saved in this browser on this device. If the browser's data gets cleared, it's erased. Copy this code into a note or a text to yourself, and you can restore it here later.</p>
+      <p class="note">Progress is saved in this browser on this device. If the browser's data gets cleared, it's erased. Copy this code into a note or a text to yourself, and you can restore it here or on another device.</p>
       <textarea id="bk" readonly rows="4">${code}</textarea>
       <div class="ctrl"><button class="btn small" id="bkcopy">Copy backup code</button><span class="note" id="bkmsg"></span></div>
       <h3>Restore from a backup code</h3>
       <textarea id="rs" rows="3" placeholder="Paste a backup code here"></textarea>
       <div class="ctrl"><button class="btn small ghost" id="rsgo">Restore</button><span class="note" id="rsmsg"></span></div>
       <h3>Change PIN</h3>
-      <div class="ctrl"><input id="newpin" type="password" inputmode="numeric" maxlength="4" placeholder="New PIN" style="width:150px"><button class="btn small ghost" id="pinsave">Save</button><span class="note" id="pinmsg"></span></div>
+      <div class="ctrl"><input class="txt" id="newpin" type="password" inputmode="numeric" maxlength="4" placeholder="New PIN" style="width:150px"><button class="btn small ghost" id="pinsave">Save</button><span class="note" id="pinmsg"></span></div>
       <h3>Students</h3>
       ${roster.length ? roster.map(n=>`<div class="ctrl"><span style="min-width:120px;font-size:18px"><b>${esc(n)}</b> ⭐ ${starsFor(n)}</span>
         <button class="btn small danger" data-reset="${esc(n)}">Reset stars</button>
@@ -723,53 +1423,54 @@ function renderParent(){
       <p class="note" id="stumsg"></p>`;
   } else body = kidChips;
 
-  box.innerHTML = `<h1 style="margin-top:0">Parent area 👪</h1>
+  app.innerHTML = `<div class="screen panel"><h1 style="margin-top:0">Parent area 👪</h1>
     <div class="tabs">${tabs.map(([k,l])=>`<button data-tab="${k}" aria-pressed="${pview.tab===k}">${l}</button>`).join('')}</div>${body}
-    <div class="ctrl" style="margin-top:24px"><button class="btn small ghost" id="lockBtn">🔒 Lock</button></div>`;
+    <div class="ctrl" style="margin-top:24px"><button class="btn small ghost" id="lockBtn">🔒 Lock and go back</button></div></div>`;
 
-  box.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{pview.tab=b.dataset.tab;renderParent();});
-  box.querySelectorAll('[data-who]').forEach(b=>b.onclick=()=>{pview.who=b.dataset.who;renderParent();});
-  $('lockBtn').onclick = ()=>{ parentOK=false; go(student?'home':'pick'); };
+  app.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{pview.tab=b.dataset.tab;renderParent();});
+  app.querySelectorAll('[data-who]').forEach(b=>b.onclick=()=>{pview.who=b.dataset.who;renderParent();});
+  $('#lockBtn').onclick = ()=>{ parentOK=false; go({page: student?'home':'pick'}); };
 
   if(pview.tab==='settings'){
-    $('bkcopy').onclick = () => { const ta=$('bk');
-      try{ navigator.clipboard.writeText(ta.value).then(()=>{$('bkmsg').textContent='Copied.';},()=>{ta.select();$('bkmsg').textContent='Selected. Press copy.';}); }
-      catch(e){ ta.select(); $('bkmsg').textContent='Selected. Press copy.'; } };
+    $('#bkcopy').onclick = () => { const ta=$('#bk');
+      try{ navigator.clipboard.writeText(ta.value).then(()=>{$('#bkmsg').textContent='Copied.';},()=>{ta.select();$('#bkmsg').textContent='Selected. Press copy.';}); }
+      catch(e){ ta.select(); $('#bkmsg').textContent='Selected. Press copy.'; } };
     let armed=false;
-    $('rsgo').onclick = () => {
-      let d; try{ d = JSON.parse(decodeURIComponent(escape(atob($('rs').value.trim())))); }catch(e){ $('rsmsg').textContent="That code isn't a valid backup."; return; }
-      if(!d || d.app!=='g3science' || !Array.isArray(d.roster)){ $('rsmsg').textContent="That code isn't a valid backup for this app."; return; }
-      if(!armed){ armed=true; $('rsgo').textContent='Yes, replace everything'; $('rsmsg').textContent='This replaces all stars on this device.'; return; }
-      roster=d.roster; prog=d.prog||{}; results=d.results||[]; if(!roster.includes(student)) student='';
-      saveAll(); renderParent(); $('rsmsg') && ($('rsmsg').textContent='Restored.');
+    $('#rsgo').onclick = () => {
+      let d; try{ d = JSON.parse(decodeURIComponent(escape(atob($('#rs').value.trim())))); }catch(e){ $('#rsmsg').textContent="That code isn't a valid backup."; return; }
+      if(!d || d.app!=='g3science' || !Array.isArray(d.roster)){ $('#rsmsg').textContent="That code isn't a valid backup for this app."; return; }
+      if(!armed){ armed=true; $('#rsgo').textContent='Yes, replace everything'; $('#rsmsg').textContent='This replaces all stars on this device.'; return; }
+      roster=d.roster; prog=d.prog||{}; results=d.results||[]; upgrade(); if(!roster.includes(student)) student='';
+      saveAll(); renderParent(); toast('Restored.');
     };
-    $('pinsave').onclick = () => { const v=$('newpin').value.trim(); if(!/^\d{4}$/.test(v)){ $('pinmsg').textContent='Use exactly 4 numbers.'; return; } pin=v; LS.set('g3-pin',pin); $('pinmsg').textContent='PIN changed.'; $('newpin').value=''; };
+    $('#pinsave').onclick = () => { const v=$('#newpin').value.trim(); if(!/^\d{4}$/.test(v)){ $('#pinmsg').textContent='Use exactly 4 numbers.'; return; } pin=v; LS.set('g3-pin',pin); $('#pinmsg').textContent='PIN changed.'; $('#newpin').value=''; };
     const twoTap = (b, label, act) => b.onclick = () => {
       if(b.dataset.armed){ act(); return; }
-      b.dataset.armed='1'; b.textContent=label; setTimeout(()=>{ if(b.isConnected){ delete b.dataset.armed; b.textContent=b.dataset.reset?'Reset stars':'Remove'; } },4000);
+      b.dataset.armed='1'; const old=b.textContent; b.textContent=label;
+      setTimeout(()=>{ if(b.isConnected){ delete b.dataset.armed; b.textContent=old; } },4000);
     };
-    box.querySelectorAll('[data-reset]').forEach(b=>twoTap(b,'Tap again to reset',()=>{ const n=b.dataset.reset; prog[n]={earned:{},last:null}; results=results.filter(r=>r.student!==n); saveAll(); renderParent(); $('stumsg').textContent=`${n}'s stars and quiz history were reset.`; }));
-    box.querySelectorAll('[data-remove]').forEach(b=>twoTap(b,'Tap again to remove',()=>{ const n=b.dataset.remove; roster=roster.filter(x=>x!==n); delete prog[n]; results=results.filter(r=>r.student!==n); if(student===n) student=''; saveAll(); renderParent(); $('stumsg').textContent=`${n} was removed.`; }));
+    app.querySelectorAll('[data-reset]').forEach(b=>twoTap(b,'Tap again to reset',()=>{ const n=b.dataset.reset; prog[n]={best:{},last:null}; results=results.filter(r=>r.student!==n); saveAll(); renderParent(); toast(`${n}'s stars were reset.`); }));
+    app.querySelectorAll('[data-remove]').forEach(b=>twoTap(b,'Tap again to remove',()=>{ const n=b.dataset.remove; roster=roster.filter(x=>x!==n); delete prog[n]; results=results.filter(r=>r.student!==n); if(student===n) student=''; saveAll(); renderParent(); toast(`${n} was removed.`); }));
   }
 }
 
-/* ---------- start up ---------- */
+/* ============ START UP ============ */
 if(!roster.includes(student)) student='';
-go(student ? 'home' : 'pick');
+go({page: student ? 'home' : 'pick'});
 (async () => {
   const saved = await IDB.get();
   if(!saved){ IDB.put(snapshot()); return; }
   const g = (k,d) => { try{ return saved[k] ? JSON.parse(saved[k]) : d; }catch(e){ return d; } };
-  const count = p => Object.values(p||{}).reduce((a,x)=>a+Object.keys((x&&x.earned)||{}).length,0);
+  const count = p => Object.values(p||{}).reduce((a,x)=>a+Object.keys((x&&x.best)||{}).length,0);
   // If the browser lost its main copy but the backup copy has more, bring the backup back.
-  if(count(g('g3-prog',{})) > count(prog) || g('g3-results',[]).length > results.length || (!roster.length && g('g3-roster',[]).length)){
+  if(count(g('g3-prog',{})) > count(prog) || g('g3-results',[]).filter(r=>r.unit).length > results.length || (!roster.length && g('g3-roster',[]).length)){
     try{ Object.entries(saved).forEach(([k,v]) => localStorage.setItem(k,v)); }catch(e){}
     roster=g('g3-roster',[]); prog=g('g3-prog',{}); results=g('g3-results',[]); pin=g('g3-pin',''); student=g('g3-student','');
-    if(!roster.includes(student)) student='';
-    const cur = document.querySelector('.screen.on');
-    if(cur && (cur.id==='pick'||cur.id==='home')) go(student?'home':'pick');
+    upgrade(); if(!roster.includes(student)) student='';
+    if(view.page==='pick'||view.page==='home') go({page: student?'home':'pick'});
   } else IDB.put(snapshot());
 })();
+
 </script>
 </body>
 </html>

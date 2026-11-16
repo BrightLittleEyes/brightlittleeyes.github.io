@@ -1269,6 +1269,7 @@ async function copyYesterday(){
 function openEditor(){
   const c=clone(CFG); delete c.pwKid; delete c.pwParent;
   S.edit=c; S.edRoot = dayRoot(S.date); renderEditor(); show('editor');
+  $('#editor .ed-top h2').textContent = `Edit ${kidLabel(S.kid)}'s board`;
 }
 const getAt = path => path.split('.').reduce((o,k)=>o[k], S.edit);
 function setAt(path, val){
@@ -1339,13 +1340,13 @@ function renderEditor(){
   if(!Array.isArray(E.satBlocks)) E.satBlocks=[];
   if(!Array.isArray(E.sunBlocks)) E.sunBlocks=[];
   $('#edBody').innerHTML = `
-    <div class="ed-sec"><h3>Top of ${esc(kidLabel('main'))}'s board</h3>
+    <div class="ed-sec"${S.kid!=='main'?' hidden':''}><h3>Top of ${esc(kidLabel('main'))}'s board</h3>
       <label class="ed-f">Verse<textarea data-path="verse" rows="3">${esc(E.verse)}</textarea></label>
       <div class="ed-grid">
         <label class="ed-f">Verse reference<input data-path="verseRef" value="${esc(E.verseRef)}"></label>
         <label class="ed-f">Her name<input data-path="kidName" value="${esc(E.kidName)}" placeholder="optional"></label>
       </div></div>
-    ${Object.entries(E.kids||{}).map(([id,k])=>`<div class="ed-sec"><h3>Top of ${esc((k.name||'').trim()||id)}'s board</h3>
+    ${Object.entries(E.kids||{}).filter(([id])=>id===S.kid).map(([id,k])=>`<div class="ed-sec"><h3>Top of ${esc((k.name||'').trim()||id)}'s board</h3>
       <p class="help">She has the same blocks and tags, with her own checkmarks, picks and verse.</p>
       <label class="ed-f">Verse<textarea data-path="kids.${id}.verse" rows="3">${esc(k.verse)}</textarea></label>
       <div class="ed-grid">
@@ -1360,6 +1361,7 @@ function renderEditor(){
         <button data-act="edroot" data-root="sunBlocks" aria-pressed="${R==='sunBlocks'}">Sunday board</button>
       </div>
       <p class="help">${R==='blocks'?'Monday through Friday.':R==='satBlocks'?'Shows every Saturday.':'Shows every Sunday.'} All three boards share the same tags. Changing one board doesn't change the others.</p>
+      <p class="help"><b>${kidIds().map(kidLabel).map(esc).join(' and ')} share these blocks and tags.</b> A change here changes every board.</p>
       <p class="help">Use ▲ ▼ to move things up and down. At the top or bottom of a block, they move it into the block above or below. ✕ removes it. Renaming an item keeps today's checkmarks.</p>
       ${E[R].map((b,bi)=>blockEd(b,bi,E[R].length,R)).join('')}
       <button class="ed-add" data-act="addblock" data-root="${R}">+ Add a block</button></div>
@@ -1379,7 +1381,7 @@ function renderEditor(){
     </div>
     <div class="ed-sec"><h3>Passwords</h3><p class="help">Leave blank to keep the current password.</p>
       <div class="ed-grid">
-        <label class="ed-f">New password for her<input type="password" id="newKid" autocomplete="new-password"></label>
+        <label class="ed-f"${S.kid!=='main'?' hidden':''}>New password for ${esc(kidLabel('main'))}<input type="password" id="newKid" autocomplete="new-password"></label>
         <label class="ed-f">New password for you<input type="password" id="newParent" autocomplete="new-password"></label>
       </div></div>
     <div class="ed-sec"><h3>Your original board</h3><p class="help">"Reset" puts the blocks, tags, verse and timer sound back to your original board. Your passwords and her name stay the same.${E.original&&E.original.savedOn?` Your original was last set on ${esc(E.original.savedOn)}.`:''}</p>

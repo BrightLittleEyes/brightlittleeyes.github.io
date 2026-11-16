@@ -164,6 +164,9 @@ h1{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:clamp(
 .ed-tag{display:flex;gap:6px;align-items:center;margin-bottom:6px;flex-wrap:wrap}
 .ed-tag>input{flex:1 1 150px;min-width:0}
 .ed-reset{border:1px solid var(--flag);color:var(--flag);background:#fff;border-radius:10px;min-height:44px;padding:0 14px;cursor:pointer;font-weight:700}
+.kidswitch{display:flex;gap:8px;justify-content:center;margin:10px 0 4px;flex-wrap:wrap}
+.kidswitch button{min-height:44px;padding:0 20px;border-radius:22px;border:2px solid var(--navy);background:#fff;color:var(--navy);font-weight:700;font-size:16px;cursor:pointer}
+.kidswitch button[aria-pressed=true]{background:var(--navy);color:#fff}
 @media (max-width:420px){ .wrap{padding:12px} .row{padding:12px} .opts{grid-template-columns:1fr} .ed-top h2{font-size:17px} }
 </style>
 </head>
@@ -184,6 +187,7 @@ h1{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:clamp(
       <button id="next" aria-label="Next day">›</button>
     </div>
     <div class="datebar" id="todayRow"><button id="today">Today</button></div>
+    <div class="kidswitch" id="kidSwitch" hidden></div>
     <div class="status" id="status"><i></i>Connecting…</div>
   </header>
 
@@ -256,6 +260,7 @@ const DEFAULT_CONFIG = {
   "verse": "So do not fear, for I am with you; do not be dismayed, for I am your God. I will strengthen you and help you; I will uphold you with my righteous right hand.",
   "verseRef": "Isaiah 41:10",
   "kidName": "",
+  "kids": {"ruth": {"name": "Ruth", "verse": "", "verseRef": ""}},
   "sound": "beep",
   "repeat": true,
   "sunBlocks": [
@@ -729,7 +734,20 @@ const newId = p => p + Date.now().toString(36) + Math.random().toString(36).slic
 async function sha256(t){ const b=await crypto.subtle.digest('SHA-256', new TextEncoder().encode('rhythm|'+t)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''); }
 
 const S = { date:keyOf(new Date()), data:blank(), db:null, unsub:null, picking:null, timers:{}, paused:{}, saveT:null,
-            role:null, view:null, started:false, edit:null, gateMode:null };
+            role:null, view:null, started:false, edit:null, gateMode:null, kid:'main' };
+/* More than one child: the first child is "main" (her days are the top of each day's record);
+   every other child keeps her own checks and tags under her id inside the same day record. */
+const kidIds = () => ['main', ...Object.keys(CFG.kids||{})];
+const kidInfo = k => k==='main' ? {name:CFG.kidName, verse:CFG.verse, verseRef:CFG.verseRef} : ((CFG.kids||{})[k]||{});
+const kidLabel = k => (kidInfo(k).name||'').trim() || (k==='main' ? 'First board' : k);
+const lkey = key => S.kid==='main' ? key : S.kid+':'+key;      // this device's copy of a day
+function pickDay(doc){
+  if(!doc) return null;
+  const v = S.kid==='main' ? doc : doc[S.kid];
+  return v ? {checks:v.checks||{}, slots:v.slots||{}, snack:Array.isArray(v.snack)?v.snack:blank().snack} : null;
+}
+function getKid(){ try{ return localStorage.getItem('rhythm:kid')||'main'; }catch(e){ return 'main'; } }
+function setKid(k){ try{ localStorage.setItem('rhythm:kid', k); }catch(e){} }
 
 function toast(msg, ms=2600){ const t=$('#toast'); t.textContent=msg; t.hidden=false; clearTimeout(t._h); t._h=setTimeout(()=>t.hidden=true, ms); }
 function setStatus(cls, txt){ const s=$('#status'); s.className='status '+cls; s.innerHTML='<i></i>'+txt; }
@@ -749,10 +767,13 @@ function normalize(d){
   ['verse','verseRef','kidName','pwKid','pwParent','sound'].forEach(k=>{ if(typeof d[k]==='string') c[k]=d[k]; });
   if(typeof d.repeat==='boolean') c.repeat=d.repeat;
   if(typeof d.noRepeat==='boolean') c.noRepeat=d.noRepeat;
+  if(d.kids && typeof d.kids==='object') c.kids=clone(d.kids);
   if(d.original && typeof d.original==='object') c.original=d.original;
   c.blocks.forEach(b=>{ b.items = Array.isArray(b.items)?b.items:[]; });
   c.satBlocks.forEach(b=>{ b.items = Array.isArray(b.items)?b.items:[]; });
   c.sunBlocks.forEach(b=>{ b.items = Array.isArray(b.items)?b.items:[]; });
+  c.kids = c.kids || {};
+  if(!c.kids.ruth) c.kids.ruth = {name:'Ruth', verse:'', verseRef:''};     // second child: same blocks, her own verse
   c.v = d.v || 1;
   if(c.v < 2){                       // split the long morning at the snack break
     const bi=c.blocks.findIndex(b=>b.id==='morning'), m=c.blocks[bi];
@@ -875,10 +896,17 @@ function useDay(){
 function applyConfig(c){
   CFG = c; TAGS = c.tags;
   useDay();
-  $('#verse').innerHTML = c.verse ? `&ldquo;${esc(c.verse)}&rdquo;${c.verseRef?`<span class="ref">${esc(c.verseRef)}</span>`:''}` : '';
-  $('#verse').hidden = !c.verse;
-  $('#hello').textContent = c.kidName ? `Hi, ${c.kidName}!` : '';
-  $('#hello').hidden = !c.kidName;
+  paintKid();
+}
+function paintKid(){
+  const k=kidInfo(S.kid);
+  $('#verse').innerHTML = k.verse ? `&ldquo;${esc(k.verse)}&rdquo;${k.verseRef?`<span class="ref">${esc(k.verseRef)}</span>`:''}` : '';
+  $('#verse').hidden = !k.verse;
+  $('#hello').textContent = k.name ? `Hi, ${k.name}!` : '';
+  $('#hello').hidden = !k.name;
+  const sw=$('#kidSwitch');
+  sw.hidden = S.role!=='parent';
+  sw.innerHTML = S.role==='parent' ? kidIds().map(id=>`<button data-kid="${esc(id)}" aria-pressed="${id===S.kid}">${esc(kidLabel(id))}</button>`).join('') : '';
 }
 async function writeConfig(c){
   cacheLocal('config', c);
@@ -899,8 +927,13 @@ function route(){
   if(S.view==='editor') return;
   if(!CFG.pwParent || !CFG.pwKid){ if(S.gateMode!=='setup') showSetup(); return; }
   const r=getRole();
-  S.role = r && r===CFG.pwParent ? 'parent' : r && r===CFG.pwKid ? 'kid' : null;
+  const other = r && Object.entries(CFG.kids||{}).find(([,v])=>v && v.pw && v.pw===r);
+  S.role = r && r===CFG.pwParent ? 'parent' : r && (r===CFG.pwKid || other) ? 'kid' : null;
   if(!S.role){ setRole(null); if(S.gateMode!=='login') showLogin(); return; }
+  let kid = S.role==='kid' ? (other ? other[0] : 'main') : getKid();
+  if(!kidIds().includes(kid)) kid='main';
+  const changed = kid!==S.kid; S.kid=kid; paintKid();
+  if(changed && S.started){ S.timers={}; S.paused={}; watchDay(); }
   S.gateMode=null;
   $('#editBtn').hidden = S.role!=='parent';
   if(S.view!=='app') show('app');
@@ -925,7 +958,7 @@ function showLogin(){
   S.gateMode='login';
   $('#gateform').innerHTML = `
     <h1>DAILY RHYTHM</h1>
-    <p>${CFG.kidName?`Hi, ${esc(CFG.kidName)}! `:''}Type your password to open the board.</p>
+    <p>Hi! Type your password to open your board.</p>
     <label>Password<input type="password" id="lPw" required autocomplete="current-password"></label>
     <label class="show"><input type="checkbox" id="showPw"> Show password</label>
     <p class="gerr" id="gerr" hidden></p>
@@ -950,20 +983,22 @@ $('#gateform').addEventListener('submit', async e=>{
     toast('All set! Tap "Edit board" at the bottom any time to make changes.', 4500);
   } else {
     const h=await sha256($('#lPw').value.trim());
-    if(h!==CFG.pwKid && h!==CFG.pwParent){ $('#lPw').value=''; return gateErr('That password isn\'t right. Try again.'); }
+    if(h!==CFG.pwKid && h!==CFG.pwParent && !Object.values(CFG.kids||{}).some(v=>v && v.pw===h)){ $('#lPw').value=''; return gateErr('That password isn\'t right. Try again.'); }
     setRole(h); S.gateMode=null; route();
   }
 });
 
 /* ---------- day data ---------- */
 function save(){
-  cacheLocal(S.date, S.data);
+  cacheLocal(lkey(S.date), S.data);
   if(!S.db) return;
   clearTimeout(S.saveT);
-  const key=S.date, data=clone(S.data);
+  const key=S.date, kid=S.kid, d=clone(S.data), mine={checks:d.checks||{}, slots:d.slots||{}, snack:d.snack||blank().snack};
+  const doc = kid==='main' ? {...mine} : {[kid]:mine};
+  const fields = kid==='main' ? ['checks','slots','snack','date','savedAt'] : [kid,'date','savedAt'];
   setStatus('', 'Saving…');
   S.saveT=setTimeout(async()=>{
-    try{ await S.db.doc(COL+'/'+key).set({...data, date:key, savedAt:new Date().toISOString()}); setStatus('ok','Saved'); }
+    try{ await S.db.doc(COL+'/'+key).set({...doc, date:key, savedAt:new Date().toISOString()}, {mergeFields:fields}); setStatus('ok','Saved'); }
     catch(err){ console.error(err); setStatus('warn','Not saved online — kept on this device'); }
   }, 400);
 }
@@ -973,21 +1008,23 @@ function loadYesterday(){
   S.recent = {};                     // days back (1..N) -> that day's placed tags
   for(let n=1;n<=Math.min(longest-1,31);n++){
     const dk=shift(k,-n);
-    S.recent[n] = ((readLocal(dk)||{}).slots)||{};
-    if(S.db) S.db.doc(COL+'/'+dk).get().then(s=>{ if(k===S.date && s.exists) S.recent[n]=(s.data().slots)||{}; }).catch(()=>{});
+    S.recent[n] = ((readLocal(lkey(dk))||{}).slots)||{};
+    const kid=S.kid;
+    if(S.db) S.db.doc(COL+'/'+dk).get().then(s=>{ if(k===S.date && kid===S.kid && s.exists) S.recent[n]=((pickDay(s.data())||{}).slots)||{}; }).catch(()=>{});
   }
 }
 function watchDay(){
   if(S.unsub){ S.unsub(); S.unsub=null; }
   loadYesterday();
-  S.data = Object.assign(blank(), readLocal(S.date)||{});
+  S.data = Object.assign(blank(), readLocal(lkey(S.date))||{});
   render();
   if(!S.db){ setStatus('warn','Saving on this device only'); return; }
-  const key=S.date;
+  const key=S.date, kid=S.kid;
   S.unsub = S.db.doc(COL+'/'+key).onSnapshot(snap=>{
-    if(key!==S.date) return;
+    if(key!==S.date || kid!==S.kid) return;
     if(snap.metadata.hasPendingWrites) return;
-    if(snap.exists){ const v=snap.data(); delete v.date; delete v.savedAt; S.data=Object.assign(blank(), v); cacheLocal(key,S.data); }
+    const v = snap.exists ? pickDay(snap.data()) : null;
+    if(v){ S.data=Object.assign(blank(), v); cacheLocal(lkey(key),S.data); }
     setStatus('ok','Synced');
     render();
   }, err=>{ console.error(err); setStatus('warn','Can\'t reach the database — saving on this device only'); });
@@ -1178,6 +1215,8 @@ $('#app').addEventListener('click', e=>{
   const t=e.target.closest('button'); if(!t) return;
   const D=S.data;
   if(t.dataset.check){ const k=t.dataset.check; if(D.checks[k]) delete D.checks[k]; else D.checks[k]=true; save(); render(); return; }
+  if(t.dataset.kid){ if(S.role!=='parent' || t.dataset.kid===S.kid) return;
+    S.kid=t.dataset.kid; setKid(S.kid); S.timers={}; S.paused={}; paintKid(); watchDay(); paintTimer(); syncWake(); return; }
   if(t.dataset.slot){ if(isChg(t.dataset.slot) && S.role!=='parent') return; openPicker(t.dataset.slot); return; }
   if(t.dataset.tact){ const id=t.dataset.tid, a=t.dataset.tact, info=timerInfo(id); if(!info) return;
     if(a==='start'){ S.timers[id]=Date.now()+info.secs*1000; delete S.paused[id]; }
@@ -1214,8 +1253,8 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape' && !$('#scrim').hi
 async function copyYesterday(){
   const y=shift(S.date,-1);
   let prev=null;
-  if(S.db){ try{ const s=await S.db.doc(COL+'/'+y).get(); if(s.exists) prev=s.data(); }catch(e){} }
-  if(!prev) prev=readLocal(y);
+  if(S.db){ try{ const s=await S.db.doc(COL+'/'+y).get(); if(s.exists) prev=pickDay(s.data()); }catch(e){} }
+  if(!prev) prev=readLocal(lkey(y));
   if(!prev || !prev.slots || !Object.keys(prev.slots).filter(k=>!isChg(k)).length){ toast('No tags were placed yesterday.'); return; }
   const noRep = CFG.noRepeat!==false;
   const fits = Object.keys(prev.slots).filter(k=>!isChg(k) && SLOT_IDS.includes(k) && !(noRep && (itemById(k)||{}).slot==='mech'));
@@ -1300,12 +1339,20 @@ function renderEditor(){
   if(!Array.isArray(E.satBlocks)) E.satBlocks=[];
   if(!Array.isArray(E.sunBlocks)) E.sunBlocks=[];
   $('#edBody').innerHTML = `
-    <div class="ed-sec"><h3>Top of the board</h3>
+    <div class="ed-sec"><h3>Top of ${esc(kidLabel('main'))}'s board</h3>
       <label class="ed-f">Verse<textarea data-path="verse" rows="3">${esc(E.verse)}</textarea></label>
       <div class="ed-grid">
         <label class="ed-f">Verse reference<input data-path="verseRef" value="${esc(E.verseRef)}"></label>
         <label class="ed-f">Her name<input data-path="kidName" value="${esc(E.kidName)}" placeholder="optional"></label>
       </div></div>
+    ${Object.entries(E.kids||{}).map(([id,k])=>`<div class="ed-sec"><h3>Top of ${esc((k.name||'').trim()||id)}'s board</h3>
+      <p class="help">She has the same blocks and tags, with her own checkmarks, picks and verse.</p>
+      <label class="ed-f">Verse<textarea data-path="kids.${id}.verse" rows="3">${esc(k.verse)}</textarea></label>
+      <div class="ed-grid">
+        <label class="ed-f">Verse reference<input data-path="kids.${id}.verseRef" value="${esc(k.verseRef)}"></label>
+        <label class="ed-f">Her name<input data-path="kids.${id}.name" value="${esc(k.name)}"></label>
+      </div>
+      <label class="ed-f">${k.pw?'New password for her <small>(leave blank to keep it)</small>':'Her password <small>(she can\'t log in until you set one)</small>'}<input type="password" class="kidpw" data-kidpw="${esc(id)}" autocomplete="new-password"></label></div>`).join('')}
     <div class="ed-sec"><h3>Blocks</h3>
       <div class="ed-tabs" role="group" aria-label="Which board">
         <button data-act="edroot" data-root="blocks" aria-pressed="${R==='blocks'}">Weekday board</button>
@@ -1391,14 +1438,14 @@ $('#editor').addEventListener('click', async e=>{
   if(a==='addtag'){ E.tags[t.dataset.k].push({id:newId('t'), name:''}); renderEditor(); focusLast(`[data-path^="tags.${t.dataset.k}."][data-path$=".name"]`); return; }
   if(a==='setorig'){
     if(!confirm('Make the board as it is on this screen your new original? "Reset" will go back to this from now on.')) return;
-    const o=clone(E); delete o.original; delete o.kidName; delete o.pwKid; delete o.pwParent;
+    const o=clone(E); delete o.original; delete o.kidName; delete o.pwKid; delete o.pwParent; delete o.kids;
     o.savedOn=new Date().toLocaleDateString(undefined,{month:'long', day:'numeric', year:'numeric'});
     E.original=o; renderEditor(); toast('Set as your original. Press Save to keep it.', 3500); return;
   }
   if(a==='reset'){ if(confirm('Put the board back to your original blocks, tags, verse and sound? Press Save after to keep it.')){
     const keepName=E.kidName, keepOrig=E.original;
     const base=normalize(clone(keepOrig||DEFAULT_CONFIG)); delete base.savedOn; delete base.original; delete base.pwKid; delete base.pwParent;
-    S.edit=base; S.edit.kidName=keepName; if(keepOrig) S.edit.original=keepOrig;
+    const keepKids=E.kids; S.edit=base; S.edit.kidName=keepName; if(keepOrig) S.edit.original=keepOrig; if(keepKids) S.edit.kids=keepKids;
     renderEditor(); toast('Original board restored. Press Save to keep it.'); } return; }
   if(t.id==='edCancel'){ if(confirm('Leave without saving your changes?')){ S.edit=null; show('app'); render(); } return; }
   if(t.id==='edSave') saveEditor();
@@ -1428,6 +1475,14 @@ async function saveEditor(){
   E.pwKid = nk ? await sha256(nk) : CFG.pwKid;
   E.pwParent = np ? await sha256(np) : CFG.pwParent;
   if(E.pwKid===E.pwParent) return toast('Her password and yours need to be different.', 3500);
+  for(const [id,k] of Object.entries(E.kids||{})){
+    k.name=(k.name||'').trim(); k.verse=(k.verse||'').trim(); k.verseRef=(k.verseRef||'').trim();
+    const el=document.querySelector(`[data-kidpw="${id}"]`), v=el?el.value.trim():'';
+    if(v && v.length<3) return toast(`${k.name||id}'s password needs at least 3 letters or numbers.`, 3500);
+    if(v) k.pw = await sha256(v); else if(CFG.kids && CFG.kids[id] && CFG.kids[id].pw) k.pw = CFG.kids[id].pw;
+  }
+  const allPw=[E.pwKid, E.pwParent, ...Object.values(E.kids||{}).map(k=>k.pw).filter(Boolean)];
+  if(new Set(allPw).size!==allPw.length) return toast('Each child\'s password and yours need to be different.', 3500);
   $('#edSave').disabled=true; $('#edSave').textContent='Saving…';
   const ok = await writeConfig(E);
   $('#edSave').disabled=false; $('#edSave').textContent='Save';

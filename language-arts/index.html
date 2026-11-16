@@ -1,0 +1,1531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wildflower Language Arts 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Andika:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,500;0,600;0,700;1,500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FBF7EF; --card:#FFFFFF; --ink:#2E2A25; --soft:#6F675D; --line:#E8DFD0; --cream:#F5EEDF;
+  --read:#6E9A64; --spell:#C9785D; --gram:#4F86A6; --write:#9A6A9E; --poem:#C99A2E; --art:#B5677A; --geo:#3E8E8A; --book:#8A7458;
+  --ok:#5E9A5A; --okbg:#E5F1E1; --no:#C0614E; --nobg:#F8E3DD; --gold:#E3B04B;
+  --r:20px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:"Andika","Segoe UI",system-ui,sans-serif;color:var(--ink);background:var(--paper);font-size:19px;line-height:1.55;min-height:100vh;
+  background-image:radial-gradient(circle at 8% 0%,#F3E6D3 0,transparent 32%),radial-gradient(circle at 100% 30%,#E9F0E2 0,transparent 30%);}
+h1,h2,h3{font-family:"Lora",Georgia,serif;font-weight:600;margin:0;text-wrap:balance}
+button{font-family:inherit;cursor:pointer;border:none;color:inherit}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--gram);outline-offset:2px}
+.wrap{max-width:1000px;margin:0 auto;padding:16px 18px 70px}
+.screen{display:none}.screen.on{display:block;animation:fade .3s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}}
+
+/* top bar */
+header.top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.logo{display:flex;align-items:center;gap:10px;font-family:"Lora",serif;font-size:clamp(20px,3.6vw,27px);font-weight:600}
+.logo small{display:block;font-family:"Andika",sans-serif;font-size:13px;color:var(--soft);font-weight:400;letter-spacing:.4px}
+.pills{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pill{background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:7px 14px;font-size:16px;font-weight:700}
+button.pill:hover{background:var(--cream)}
+
+/* generic */
+.lead{color:var(--soft);font-size:clamp(17px,2.4vw,20px);margin:6px 0 18px}
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:var(--r);box-shadow:0 3px 0 #EDE4D4}
+.btn{background:var(--read);color:#fff;font-size:18px;font-weight:700;border-radius:14px;padding:11px 20px;box-shadow:0 4px 0 rgba(0,0,0,.18)}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.18)}
+.btn:disabled{opacity:.45;cursor:default;transform:none}
+.btn.ghost{background:#fff;color:var(--ink);border:1.5px solid var(--line);box-shadow:0 3px 0 var(--line)}
+.btn.small{font-size:15px;padding:7px 14px}
+.btn.danger{background:#fff;color:var(--no);border:1.5px solid #EBC4BA;box-shadow:0 3px 0 #EBC4BA}
+.link{background:none;color:var(--soft);text-decoration:underline;font-size:16px;padding:4px}
+.note{color:var(--soft);font-size:15px}
+.err{color:var(--no);min-height:24px;margin:6px 0 0;font-size:16px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+/* pick */
+.names{display:flex;flex-wrap:wrap;gap:12px;margin:10px 0 20px}
+.name-btn{background:#fff;border:1.5px solid var(--line);border-radius:18px;padding:14px 22px;font-size:22px;font-weight:700;box-shadow:0 4px 0 var(--line);min-width:150px;text-align:left}
+.name-btn small{display:block;font-size:15px;color:var(--soft);font-weight:400}
+input[type=text],input[type=password],input[type=number],textarea{font-family:inherit;font-size:19px;padding:11px 14px;border-radius:14px;border:2px solid var(--line);background:#fff;color:var(--ink)}
+
+/* home */
+.hero{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;padding:22px 24px;margin-bottom:22px;background:linear-gradient(120deg,#FFFDF8,#F6EEDD)}
+.hero h1{font-size:clamp(26px,4.4vw,36px)}
+.hero .go{font-size:20px;padding:14px 24px}
+.starbar{height:14px;background:var(--cream);border-radius:999px;overflow:hidden;margin-top:10px;max-width:440px;border:1.5px solid var(--line)}
+.starbar i{display:block;height:100%;background:linear-gradient(90deg,#F2CF6B,var(--gold));border-radius:999px;transition:width .4s}
+@media(max-width:600px){.hero{grid-template-columns:1fr}}
+.unit{margin:0 0 22px}
+.unit-head{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.unit-head .badge-ic{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:26px;color:#fff}
+.unit-head h2{font-size:23px}
+.unit-head span{color:var(--soft);font-size:15px;display:block}
+.lgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.ltile{background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:12px 14px;text-align:left;box-shadow:0 3px 0 var(--line);position:relative;min-height:92px}
+.ltile b{display:block;font-size:13px;color:var(--soft);letter-spacing:.6px;text-transform:uppercase}
+.ltile span{display:block;font-family:"Lora",serif;font-size:17px;line-height:1.25;margin-top:3px}
+.ltile.done{background:#F3F8F0;border-color:#BFD8B6}
+.ltile.done::after{content:"✓";position:absolute;top:8px;right:10px;width:26px;height:26px;border-radius:50%;background:var(--ok);color:#fff;display:grid;place-items:center;font-size:15px;font-weight:700}
+.ltile.next{border-color:var(--gold);box-shadow:0 3px 0 var(--gold)}
+.ltile.rev span::before{content:"⭐ "}
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:10px}
+.badge{background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:12px;text-align:center;font-size:14px;color:var(--soft)}
+.badge b{display:block;font-size:16px;color:var(--ink);margin-top:2px}
+.badge .bi{font-size:32px}
+.badge.locked{opacity:.38;filter:grayscale(1)}
+
+/* lesson */
+.lhead{margin-bottom:14px}
+.kicker{font-size:14px;letter-spacing:1.4px;text-transform:uppercase;color:var(--soft);font-weight:700}
+.lhead h1{font-size:clamp(28px,4.6vw,40px);margin-top:2px}
+.dots{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 4px}
+.dot{display:flex;align-items:center;gap:6px;background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:5px 12px 5px 6px;font-size:14px;font-weight:700}
+.dot i{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:12px;color:#fff}
+.dot.done i::before{content:"✓"}
+.sec{margin:18px 0;overflow:hidden}
+.sec-h{display:flex;align-items:center;gap:12px;padding:12px 18px;color:#fff}
+.sec-h .ic{font-size:24px}
+.sec-h h2{font-size:22px;color:#fff;flex:1}
+.sec-h .chk:empty{display:none}
+.sec-h .chk{background:rgba(255,255,255,.25);border-radius:999px;padding:3px 12px;font-size:14px;font-weight:700}
+.sec-b{padding:18px 22px 22px}
+.sec-b p{margin:0 0 12px}
+.story{font-size:21px;line-height:1.7;max-width:66ch}
+.story p{text-indent:1.4em;margin:0 0 10px}
+.story h3{font-size:28px;margin:4px 0 12px;text-align:center}
+.drop::first-letter{float:left;font-family:"Lora",serif;font-size:3.1em;line-height:.9;padding:4px 8px 0 0;color:var(--read)}
+.vocab{display:grid;gap:6px;background:var(--cream);border-radius:14px;padding:12px 16px;margin:14px 0}
+.vocab div{font-size:17px}
+.vocab b{font-family:"Lora",serif}
+.verse{border-left:5px solid var(--poem);background:#FBF4E1;border-radius:0 14px 14px 0;padding:12px 18px;margin:16px 0 4px;font-family:"Lora",serif;font-style:italic;font-size:19px}
+.verse small{display:block;font-family:"Andika",sans-serif;font-style:normal;font-size:14px;color:var(--soft);margin-top:4px}
+.virtue{display:inline-block;background:#FBF4E1;color:#8A6A15;border-radius:999px;padding:3px 12px;font-size:14px;font-weight:700;margin-bottom:10px}
+.rule{background:var(--cream);border-radius:14px;padding:14px 16px;margin:0 0 12px;font-size:18px}
+.rule .ex{display:block;margin-top:8px;font-family:"Lora",serif;font-size:18px;color:#4A443C}
+.listen{background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:6px 14px;font-size:15px;font-weight:700;box-shadow:0 2px 0 var(--line)}
+.words{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 14px}
+.word{background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:6px 14px;font-size:20px;font-weight:700;box-shadow:0 2px 0 var(--line)}
+.word::after{content:" 🔈";font-size:14px}
+.q{margin:16px 0 0;padding-top:12px;border-top:1.5px dashed var(--line)}
+.q:first-of-type{border-top:none}
+.q p.ask{font-weight:700;font-size:19px;margin-bottom:8px}
+.opts{display:grid;gap:8px}
+.opt{text-align:left;background:#fff;border:2px solid var(--line);border-radius:14px;padding:10px 14px;font-size:18px}
+.opt:hover:not(:disabled){background:var(--cream)}
+.opt.right{background:var(--okbg);border-color:var(--ok)}
+.opt.wrong{background:var(--nobg);border-color:var(--no)}
+.opt:disabled{cursor:default}
+.fb{margin-top:8px;border-radius:12px;padding:8px 12px;font-size:17px}
+.fb.ok{background:var(--okbg)} .fb.no{background:#FBF1DC}
+.tapline{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}
+.tapw{background:#fff;border:2px solid var(--line);border-radius:10px;padding:6px 10px;font-size:20px}
+.tapw.sel{background:#E6EEF4;border-color:var(--gram)}
+.tapw.right{background:var(--okbg);border-color:var(--ok)}
+.tapw.wrong{background:var(--nobg);border-color:var(--no)}
+.tapw.miss{border-style:dashed;border-color:var(--ok)}
+.task{display:flex;gap:12px;align-items:flex-start;background:#F4F7FA;border-radius:14px;padding:12px 16px;margin:12px 0}
+.task .ti{font-size:24px}
+.done-row{display:flex;justify-content:flex-end;margin-top:14px;gap:10px;flex-wrap:wrap;align-items:center}
+.complete-badge{color:var(--ok);font-weight:700}
+.poem{font-family:"Lora",serif;font-size:21px;line-height:1.6;white-space:pre-line;background:#FFFCF4;border:1.5px solid #F0E3C2;border-radius:16px;padding:18px 24px;max-width:520px}
+.poem h3{font-size:24px;margin:0 0 2px}
+.poem .by{font-family:"Andika",sans-serif;font-size:15px;color:var(--soft);margin-bottom:12px;display:block}
+.artcard{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center;background:#FBF0F2;border-radius:16px;padding:14px 16px;margin-bottom:12px}
+.frame{width:86px;height:86px;border:7px solid #C9A86A;outline:2px solid #9F7F45;background:linear-gradient(135deg,#F6D9A8,#B5677A 60%,#5D4A6E);border-radius:4px}
+.artcard h3{font-size:22px}
+.artcard a{color:var(--art);font-weight:700}
+ul.look{margin:6px 0 12px;padding-left:22px}
+.mapbox{background:#EEF6F6;border-radius:16px;padding:10px;margin:10px 0}
+.mapbox svg{display:block;width:100%;height:auto;max-height:300px}
+textarea.writebox{width:100%;min-height:150px;font-size:20px;line-height:1.7;background:#fff repeating-linear-gradient(transparent 0 33px,#DCE6EE 33px 34px);background-attachment:local;padding:6px 14px}
+
+/* tiles */
+.tilebox{background:#F3EEE4;border-radius:18px;padding:14px;margin-top:10px}
+.tb-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.tb-count{font-weight:700;color:var(--soft)}
+.slot{min-height:66px;background:#fff;border:2.5px dashed #D6CAB4;border-radius:14px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px;margin-bottom:12px}
+.slot.ok{border-color:var(--ok);border-style:solid;background:var(--okbg)}
+.slot.no{border-color:var(--no);border-style:solid;background:var(--nobg)}
+.slot .ph{color:#B8AC97;font-size:16px;padding-left:6px}
+.tiles{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.tile{min-width:46px;height:50px;padding:0 10px;border-radius:10px;background:#FFFDF7;border:1.5px solid #D9CCB3;box-shadow:0 3px 0 #D9CCB3;font-size:24px;font-weight:700;font-family:"Andika",sans-serif}
+.tile.v{background:#FBE3DC;border-color:#E3B3A5;box-shadow:0 3px 0 #E3B3A5;color:#8A3B2A}
+.tile.ph{background:#FBF0CF;border-color:#E3CB86;box-shadow:0 3px 0 #E3CB86}
+.tile:active{transform:translateY(2px);box-shadow:none}
+.slot .tile{height:46px}
+.tb-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:12px}
+.peek{font-family:"Lora",serif;font-size:30px;text-align:center;min-height:40px;letter-spacing:2px;color:var(--spell)}
+
+/* finish */
+.finish{text-align:center;padding:30px 20px}
+.stamp{display:inline-block;border:3px solid var(--ok);color:var(--ok);border-radius:10px;padding:6px 14px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;transform:rotate(-3deg);font-size:15px}
+.finish h2{font-size:30px;margin:12px 0 6px}
+.big{font-size:70px}
+
+/* parent */
+.pinbox{max-width:380px;margin:20px auto;text-align:center;padding:26px}
+.pinbox input{width:170px;text-align:center;letter-spacing:10px;font-size:28px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 16px}
+.tabs button{background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:7px 15px;font-size:15px;font-weight:700}
+.tabs button[aria-pressed=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.punit{background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:12px 14px}
+.punit h3{font-size:18px;margin-bottom:6px}
+table.t{width:100%;border-collapse:collapse;font-size:15px}
+table.t td,table.t th{padding:5px 4px;border-top:1px solid var(--line);text-align:left;vertical-align:top}
+table.t th{font-size:13px;color:var(--soft);text-transform:uppercase;letter-spacing:.6px;border-top:none}
+.sq{display:inline-block;width:14px;height:14px;border-radius:4px;background:var(--cream);border:1.5px solid var(--line);vertical-align:middle;margin-right:2px}
+.sq.on{background:var(--ok);border-color:var(--ok)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:8px 0 16px}
+.stat{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:10px 14px}
+.stat .v{font-family:"Lora",serif;font-size:28px;font-weight:600}
+.stat .k{font-size:13px;color:var(--soft);text-transform:uppercase;letter-spacing:.8px}
+.wsample{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:10px;white-space:pre-wrap;font-size:17px}
+.wsample b{display:block;font-size:14px;color:var(--soft);white-space:normal}
+.booklist{columns:2 260px;padding-left:20px}
+.booklist li{margin-bottom:6px;break-inside:avoid}
+.confetti{position:fixed;top:-20px;font-size:26px;pointer-events:none;animation:fall 1.9s linear forwards;z-index:9}
+@keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.6}}
+@media(max-width:560px){.sec-b{padding:14px}.story{font-size:19px}.artcard{grid-template-columns:1fr}.frame{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="logo"><span style="font-size:1.3em">🌼</span><div>Wildflower Language Arts<small>LEVEL 3 · READING · SPELLING · GRAMMAR · WRITING</small></div></div>
+    <div class="pills">
+      <button class="pill" id="homeBtn" style="display:none" onclick="go('home')">🏡 Lessons</button>
+      <button class="pill" id="whoBtn" style="display:none" onclick="go('pick')"></button>
+      <span class="pill" id="starPill" style="display:none">⭐ <span id="starCount">0</span></span>
+    </div>
+  </header>
+
+  <section class="screen" id="pick">
+    <h1 style="font-size:clamp(28px,5vw,40px)">Who is learning today? 📖</h1>
+    <p class="lead">Tap your name. New here? Add your name below.</p>
+    <div class="names" id="names"></div>
+    <form class="row" id="addForm">
+      <input type="text" id="newName" maxlength="20" placeholder="Your first name" autocomplete="off" aria-label="Your first name">
+      <button class="btn" type="submit">➕ Add me</button>
+    </form>
+    <p class="err" id="addErr"></p>
+    <div style="text-align:center;margin-top:30px"><button class="link" onclick="go('parent')">👪 Parent area</button></div>
+  </section>
+
+  <section class="screen" id="home"></section>
+  <section class="screen" id="lesson"></section>
+  <section class="screen" id="parent"><div class="card" style="padding:22px" id="parentBox"></div></section>
+</div>
+
+<script>
+/* Units 1–2. Every story is original; poems are public-domain classics; verses are KJV. */
+const UNITS = [
+ {n:1, title:"Home and Family", icon:"🏡", color:"#C9785D",
+  poem:{title:"The Swing", by:"Robert Louis Stevenson", lines:[
+   "How do you like to go up in a swing,","Up in the air so blue?","Oh, I do think it the pleasantest thing","Ever a child can do!","",
+   "Up in the air and over the wall,","Till I can see so wide,","Rivers and trees and cattle and all","Over the countryside—","",
+   "Till I look down on the garden green,","Down on the roof so brown—","Up in the air I go flying again,","Up in the air and down!"]}},
+ {n:2, title:"Woods and Meadows", icon:"🌿", color:"#6E9A64",
+  poem:{title:"Who Has Seen the Wind?", by:"Christina Rossetti", lines:[
+   "Who has seen the wind?","Neither I nor you:","But when the leaves hang trembling,","The wind is passing through.","",
+   "Who has seen the wind?","Neither you nor I:","But when the trees bow down their heads,","The wind is passing by."]}},
+ {n:3, title:"Brave and Kind Hearts", icon:"💛", color:"#C99A2E",
+  poem:{title:"The Arrow and the Song", by:"Henry Wadsworth Longfellow", lines:[
+   "I shot an arrow into the air,","It fell to earth, I knew not where;","For, so swiftly it flew, the sight","Could not follow it in its flight.","",
+   "I breathed a song into the air,","It fell to earth, I knew not where;","For who has sight so keen and strong,","That it can follow the flight of song?","",
+   "Long, long afterward, in an oak","I found the arrow, still unbroke;","And the song, from beginning to end,","I found again in the heart of a friend."]}},
+ {n:4, title:"Lands Far Away", icon:"🌍", color:"#4F86A6",
+  poem:{title:"Foreign Lands", by:"Robert Louis Stevenson", lines:[
+   "Up into the cherry tree","Who should climb but little me?","I held the trunk with both my hands","And looked abroad on foreign lands.","",
+   "I saw the next door garden lie,","Adorned with flowers, before my eye,","And many pleasant places more","That I had never seen before.","",
+   "I saw the dimpling river pass","And be the sky's blue looking-glass;","The dusty roads go up and down","With people tramping in to town.","",
+   "If I could find a higher tree","Farther and farther I should see,","To where the grown-up river slips","Into the sea among the ships."]}},
+ {n:5, title:"Seasons of Thanks", icon:"🍂", color:"#9A6A9E",
+  poem:{title:"Autumn Fires", by:"Robert Louis Stevenson", lines:[
+   "In the other gardens","And all up the vale,","From the autumn bonfires","See the smoke trail!","",
+   "Pleasant summer over","And all the summer flowers,","The red fire blazes,","The grey smoke towers.","",
+   "Sing a song of seasons!","Something bright in all!","Flowers in the summer,","Fires in the fall!"]}}
+];
+
+const LESSONS = [];
+const L = o => LESSONS.push(o);
+
+/* ================= UNIT 1 ================= */
+L({u:1, story:{title:"The Quilt Square", virtue:"Patience",
+ text:[
+ "Grandma kept a basket of cloth scraps by her rocking chair. There were blue checks, red stripes, and a soft green with tiny white flowers. Every winter she sewed the scraps into a quilt.",
+ "“May I help this year?” asked Ruth.",
+ "Grandma smiled and handed her a needle, a thimble, and two small squares. “Sew them together with little stitches,” she said. “Little stitches hold tight.”",
+ "Ruth wanted to be swift. She made big, quick stitches. In a few minutes, she held up her square. But when she tugged it, the two pieces pulled apart.",
+ "Ruth felt her face get hot. She wanted to toss the square back in the basket. Grandma did not scold. She just took out the loose thread and gave the square back.",
+ "“Try again, slow and steady,” she said. “A quilt is made one stitch at a time.”",
+ "So Ruth tried again. In, out. In, out. Her fingers got tired, but she kept going. This time, when she tugged, the square held fast.",
+ "That night, the new quilt was spread on Ruth’s bed. In one corner was a square of blue checks and green flowers. It was not perfect, but it was strong, and Ruth had made it herself."],
+ vocab:[["scraps","small leftover pieces"],["thimble","a little metal cap that keeps your finger safe when you sew"]],
+ verse:{ref:"Colossians 3:23", text:"And whatsoever ye do, do it heartily, as to the Lord, and not unto men."},
+ q:[["Why did Ruth’s first square pull apart?",["Her stitches were too big and quick","The cloth was torn","Grandma cut it"],0,"Big, quick stitches don’t hold tight."],
+    ["What did Grandma do when the square fell apart?",["She scolded Ruth","She took out the thread and let Ruth try again","She finished it for Ruth"],1,"Grandma was patient and gave Ruth another chance."],
+    ["What did Ruth learn?",["Fast work is always best","Slow, steady work makes something strong","Quilts are too hard"],1,"Patience made the square strong."]]},
+ spell:{title:"Short vowels with blends", rule:"In a closed syllable, a vowel is followed by a consonant and says its short sound: ă, ĕ, ĭ, ŏ, ŭ. Two consonants together, like <b>st</b>, <b>cr</b>, or <b>lt</b>, are a blend. You can hear both sounds.",
+  words:["plant","stamp","crisp","swift","blend","trust","quilt","shelf"], tiles:["st","bl","cr","sw"]},
+ gram:{title:"Complete Sentences", rule:"A sentence is a complete thought. It begins with a capital letter and ends with an end mark, like a period.",
+  ex:"Ruth sewed a square. ✔️ &nbsp; sewed a square ✖️",
+  items:[
+   {type:"mc", q:"Which one is a complete sentence?", o:["Grandma rocked in her chair.","rocked in her chair","the basket of scraps"], a:0, why:"It tells who and what happened, and it has a capital letter and a period."},
+   {type:"mc", q:"Which one is NOT a complete sentence?", o:["The quilt was warm.","Ruth tried again.","a soft green cloth"], a:2, why:"“a soft green cloth” does not tell what happened."},
+   {type:"mc", q:"What does every sentence start with?", o:["A capital letter","A comma","A number"], a:0, why:"Every sentence begins with a capital letter."},
+   {type:"mc", q:"Pick the sentence written correctly.", o:["the needle was sharp","The needle was sharp.","The needle was sharp"], a:1, why:"It has a capital letter at the start and a period at the end."}]},
+ write:{p:"Write three complete sentences about something you have made with your own hands.", tip:"Check that each sentence starts with a capital letter and ends with a period."},
+ extra:{kind:"poem"}
+});
+
+L({u:1, story:{title:"Pancakes for Papa", virtue:"Service",
+ text:[
+ "Papa had a bad cold. He sat by the window with a quilt on his lap and a cup of tea in his hands.",
+ "“He works so hard for us,” whispered Sam to his sister June. “Let’s make him breakfast.”",
+ "June was nine and could read the recipe. Sam was seven and could crack the eggs. Mama said they could use the stove if she stood close by.",
+ "June measured the flour and the milk. Sam cracked two eggs, and only one tiny bit of shell fell in. He fished it out with a spoon. They stirred until the batter was smooth.",
+ "Mama poured the first pancake. It came out lumpy and brown on one side. The second was round and golden. Soon there was a tall stack on the plate.",
+ "Sam picked a few red berries from the bowl and made a smile on the top pancake. June set a napkin and a fork on a tray. Then they carried it to Papa, slowly, so nothing would spill.",
+ "Papa’s eyes got shiny. “What a fine gift,” he said in his scratchy voice. “Will you stay and eat with me?”",
+ "So they did. It was a gray, rainy day, but the room felt bright and warm."],
+ vocab:[["recipe","steps that tell how to make a food"],["batter","a wet mix of flour, eggs, and milk"]],
+ verse:{ref:"Galatians 6:2", text:"Bear ye one another's burdens, and so fulfil the law of Christ."},
+ q:[["Why did Sam and June make breakfast?",["They were hungry","Papa was sick and they wanted to serve him","It was Papa’s birthday"],1,"They wanted to help Papa because he had a cold."],
+    ["What job did Sam do?",["He read the recipe","He cracked the eggs","He washed the dishes"],1,"Sam cracked the eggs."],
+    ["How did the room feel at the end?",["Cold and gray","Bright and warm","Noisy"],1,"Serving others fills a home with warmth."]]},
+ spell:{title:"Silent e", rule:"When a word ends in vowel–consonant–<b>e</b>, the <b>e</b> is silent. It makes the vowel before it say its name: <i>shin</i> → <i>shine</i>, <i>glad</i> → <i>grape</i>.",
+  words:["shine","stone","brave","flute","smile","theme","grape","spoke"], tiles:["sh","th","br","gr"]},
+ gram:{title:"Four Kinds of Sentences", rule:"A <b>statement</b> tells something (.). A <b>question</b> asks something (?). A <b>command</b> tells someone to do something (.). An <b>exclamation</b> shows strong feeling (!).",
+  ex:"Papa is sick. · Is Papa sick? · Bring the tray. · What a fine gift!",
+  items:[
+   {type:"mc", q:"“Will you stay and eat with me?” What kind of sentence is this?", o:["Statement","Question","Command","Exclamation"], a:1, why:"It asks something and ends with a question mark."},
+   {type:"mc", q:"“Stir the batter slowly.” What kind of sentence is this?", o:["Statement","Question","Command","Exclamation"], a:2, why:"It tells someone to do something."},
+   {type:"mc", q:"“What a tall stack of pancakes!” What kind of sentence is this?", o:["Statement","Question","Command","Exclamation"], a:3, why:"It shows strong feeling and ends with !"},
+   {type:"mc", q:"Which end mark belongs here? “Where is the flour”", o:[".","?","!"], a:1, why:"It is asking something, so it needs a question mark."}]},
+ write:{p:"Write one statement, one question, one command, and one exclamation about cooking with your family.", tip:"Use a different end mark for the question and the exclamation."},
+ extra:{kind:"geo", title:"Maps and the Compass Rose",
+  text:["A <b>map</b> is a drawing of a place as if you were a bird looking down. Maps help us find our way.","Most maps have a <b>compass rose</b>. It shows the four <b>cardinal directions</b>: <b>North</b>, <b>East</b>, <b>South</b>, and <b>West</b>. North is usually at the top of the map.","A good way to remember them going around clockwise: <b>N</b>ever <b>E</b>at <b>S</b>oggy <b>W</b>affles!"],
+  svg:"compass",
+  task:"Draw a map of your kitchen or bedroom. Add a compass rose in the corner.",
+  q:[["On most maps, which direction is at the top?",["South","North","West"],1,"North is usually at the top."],["Which direction is opposite of East?",["West","North","South"],0,"East and West are opposites."]]}
+});
+
+L({u:1, story:{title:"The Broken Jar", virtue:"Honesty",
+ text:[
+ "On Mama’s windowsill sat a blue glass jar. It had belonged to Great-Grandma, and the morning sun made it glow like the sea.",
+ "Eli was tossing his ball in the kitchen. He knew he was not supposed to. Toss, catch. Toss, catch. Then the ball bounced off his fingers and hit the windowsill.",
+ "<i>Crash!</i> The blue jar lay on the floor in three pieces.",
+ "Eli’s heart pounded like rain on a tin roof. The cat was sitting nearby. <i>Mama might think the cat did it,</i> he thought. He could slip outside and say nothing.",
+ "But Eli knew that would be a lie, even without words. He took a deep breath and walked to the garden where Mama was pulling weeds.",
+ "“Mama,” he said, and his voice shook. “I was playing ball in the kitchen. I broke Great-Grandma’s jar. I’m sorry.”",
+ "Mama was quiet for a long moment. Then she knelt and held his hands. “I am sad about the jar,” she said. “But I am glad that you told me the truth. A jar can be glued. Trust is harder to fix.”",
+ "That evening they glued the pieces together. You can still see the cracks. Whenever Eli looks at the jar, he remembers that telling the truth made his heart feel light again."],
+ vocab:[["windowsill","the flat shelf at the bottom of a window"],["trust","believing someone will be honest and true"]],
+ verse:{ref:"Proverbs 12:22", text:"Lying lips are abomination to the LORD: but they that deal truly are his delight."},
+ q:[["How did the jar break?",["The cat knocked it over","Eli’s ball hit it","Mama dropped it"],1,"Eli was playing ball in the kitchen."],
+    ["What did Eli think about doing at first?",["Letting Mama think the cat did it","Buying a new jar","Hiding the ball"],0,"He was tempted to let the cat take the blame."],
+    ["What did Mama say is harder to fix than a jar?",["A window","Trust","A ball"],1,"Honesty keeps trust strong."]]},
+ spell:{title:"Vowel team ai and ay", rule:"<b>ai</b> and <b>ay</b> both say long ā. Use <b>ai</b> in the middle of a word (<i>rain</i>). Use <b>ay</b> at the end of a word (<i>stay</i>).",
+  words:["rain","train","paint","stay","gray","delay","sprain","holiday"], tiles:["ai","ay","tr","pr"]},
+ gram:{title:"Common Nouns", rule:"A <b>noun</b> names a person, place, or thing. A <b>common noun</b> names any person, place, or thing, like <i>boy</i>, <i>kitchen</i>, or <i>jar</i>.",
+  ex:"The <u>boy</u> broke the <u>jar</u> in the <u>kitchen</u>.",
+  items:[
+   {type:"tap", q:"Tap the 2 nouns.", s:"The cat sat by the window.", ans:["cat","window"], why:"Cat is a thing (an animal) and window is a thing."},
+   {type:"tap", q:"Tap the 3 nouns.", s:"Mama pulled weeds in the garden.", ans:["Mama","weeds","garden"], why:"Mama is a person, weeds are things, and garden is a place."},
+   {type:"mc", q:"Which word is a noun?", o:["glow","glue","shook","quiet"], a:1, why:"Glue is a thing. (It can also be an action, but here it names a thing you use.)"},
+   {type:"mc", q:"Which word names a place?", o:["ball","garden","sorry"], a:1, why:"A garden is a place."}]},
+ write:{p:"Write about a time when you told the truth even though it was hard. How did you feel afterward?", tip:"Tell what happened first, next, and last."},
+ extra:{kind:"art", artist:"Jean-François Millet", work:"The Angelus", year:"1859", search:"Millet The Angelus 1859",
+  text:["In this painting, a farmer and his wife stop working in the field at the end of the day. A church bell is ringing far away, and they bow their heads to pray.","Millet loved to paint farm families and their hard, honest work. Notice the <b>horizon line</b>, where the land meets the sky. The two people stand tall against the glowing evening sky."],
+  look:["What time of day do you think it is? How can you tell?","What tools did the farmers bring with them?","How does this painting make you feel?"],
+  task:"Draw a horizon line across your paper. Draw a field below it and a sunset sky above it. Add one small person or tree standing on the horizon."}
+});
+
+L({u:1, story:{title:"The Garden Gate", virtue:"Gentleness",
+ text:[
+ "Lily and her brother Ben both wanted to paint the garden gate.",
+ "“I asked first!” said Lily, grabbing the brush.",
+ "“But Papa said I could!” Ben shouted, and he grabbed it too. Green paint dripped on the grass. Their voices got louder and louder, like two crows in a tree.",
+ "Lily felt angry words climbing up her throat. She wanted to say something sharp. Then she remembered what Mama said: <i>A soft answer turns away anger.</i>",
+ "Lily let go of the brush. She took a slow breath. “Ben,” she said quietly, “we both want to paint. What if you paint the top and I paint the bottom?”",
+ "Ben blinked. He had been ready to argue some more. But it is hard to yell at someone who is speaking softly.",
+ "“Okay,” he said. “And we can switch halfway.”",
+ "So they painted together. Ben painted the top boards, and Lily painted the bottom boards, and they met in the middle. By supper time, the gate was a fresh, clean green.",
+ "Papa came out to look. “This is the finest gate in the whole county,” he said. “And I can tell it was painted by two people who worked as a team.”"],
+ vocab:[["gentle","kind, soft, and calm"],["county","a part of a state with its own towns and roads"]],
+ verse:{ref:"Proverbs 15:1", text:"A soft answer turneth away wrath: but grievous words stir up anger."},
+ q:[["What were Lily and Ben arguing about?",["Who would paint the gate","Who would eat first","Who would pull weeds"],0,"They both wanted to paint the gate."],
+    ["What did Lily do instead of saying something sharp?",["She ran away","She spoke softly and offered to share","She told Papa"],1,"Her soft answer stopped the fight."],
+    ["Why did Ben stop arguing?",["He was tired","It is hard to yell at someone speaking softly","Papa made him stop"],1,"Gentle words calm anger."]]},
+ spell:{title:"Vowel teams ee and ea", rule:"<b>ee</b> and <b>ea</b> can both say long ē, as in <i>green</i> and <i>beach</i>. You have to learn which words use which team.",
+  words:["sheep","green","beach","clean","peace","wheat","between","season"], tiles:["ee","ea","sh","wh","ch"]},
+ gram:{title:"Proper Nouns", rule:"A <b>proper noun</b> names a <i>special</i> person, place, or thing. It always starts with a capital letter: <i>Lily</i>, <i>Indiana</i>, <i>Monday</i>, <i>July</i>.",
+  ex:"common noun: girl → proper noun: Lily",
+  items:[
+   {type:"tap", q:"Tap the 2 proper nouns.", s:"Lily and Ben painted on Saturday.", ans:["Lily","Saturday"], why:"Lily names a special person, and Saturday names a special day. (Ben is one too! Tapping him is also fine.)", extra:["Ben"]},
+   {type:"mc", q:"Which word should start with a capital letter?", o:["river","ohio","gate","brush"], a:1, why:"Ohio is the name of a special place, a state."},
+   {type:"mc", q:"Which is written correctly?", o:["we visited aunt rose in june.","We visited Aunt Rose in June.","We visited aunt Rose in june."], a:1, why:"Names, titles with names, and months get capitals."},
+   {type:"mc", q:"Which is a proper noun?", o:["dog","Rover","puppy"], a:1, why:"Rover is the special name of one dog."}]},
+ write:{p:"Write a short paragraph about a time you and someone in your family solved a problem by working together.", tip:"Use at least two proper nouns (names of people, places, or days)."},
+ extra:{kind:"geo", title:"The Seven Continents",
+  text:["The earth has seven huge pieces of land called <b>continents</b>.","They are: <b>North America</b>, <b>South America</b>, <b>Europe</b>, <b>Asia</b>, <b>Africa</b>, <b>Australia</b>, and <b>Antarctica</b>.","We live in North America. Asia is the biggest continent, and Australia is the smallest. Antarctica is covered in ice all year long."],
+  svg:"continents",
+  task:"Say the seven continents out loud three times. Can you say them without looking?",
+  q:[["Which continent do we live on?",["Europe","North America","Africa"],1,"The United States is in North America."],["Which continent is covered in ice?",["Antarctica","Asia","Australia"],0,"Antarctica is icy all year long."]]}
+});
+
+L({u:1, story:{title:"Grandpa’s Rowboat", virtue:"Gratitude",
+ text:[
+ "Early on Saturday, Grandpa knocked on Owen’s window. “The lake is like glass,” he whispered. “Shall we row?”",
+ "Owen pulled on his coat and boots. Mist rose off the water like steam from a teapot. The old wooden rowboat was tied to the dock, and it bumped softly against the post.",
+ "Grandpa rowed slowly. The oars dipped in and out with a quiet <i>splash, drip, splash</i>. A heron stood in the reeds on one long leg. A fish jumped and made rings that grew wider and wider.",
+ "“Grandpa,” said Owen, “we didn’t catch any fish. We didn’t go anywhere special. Why do you love rowing so much?”",
+ "Grandpa rested the oars across his knees. The sun was coming up over the trees, turning the water gold.",
+ "“Look around,” he said. “God made this whole morning, and He gave it to us. Some people rush right past mornings like this. I don’t want to miss one.”",
+ "Owen looked. He saw the gold water, the gray heron, and Grandpa’s kind, wrinkled face. He felt full inside, like after Thanksgiving dinner.",
+ "As they rowed back to the dock, Owen said, “Thank you, God, for this day.” Grandpa smiled and rowed a little slower, so the morning would last."],
+ vocab:[["mist","a thin, low cloud near the ground or water"],["heron","a tall bird with long legs that wades in water"]],
+ verse:{ref:"Psalm 118:24", text:"This is the day which the LORD hath made; we will rejoice and be glad in it."},
+ q:[["What did Owen and Grandpa do on Saturday morning?",["They went fishing in a big boat","They rowed on the lake","They went to town"],1,"They rowed Grandpa’s old rowboat."],
+    ["Why does Grandpa love rowing?",["He catches lots of fish","He doesn’t want to miss the beautiful mornings God made","He likes to go fast"],1,"Grandpa is grateful for ordinary, beautiful days."],
+    ["How did Owen feel at the end?",["Bored","Full inside and thankful","Hungry"],1,"He learned to be grateful for the day."]]},
+ spell:{title:"Long o: oa, ow, oe", rule:"Long ō can be spelled <b>oa</b> (<i>boat</i>), <b>ow</b> (<i>snow</i>), or <b>oe</b> (<i>toe</i>). <b>ow</b> is often at the end of a word.",
+  words:["boat","coast","toast","snow","grow","window","toe","follow"], tiles:["oa","ow","oe","sn","gr"]},
+ gram:{title:"Singular and Plural Nouns", rule:"A <b>singular</b> noun names one. A <b>plural</b> noun names more than one. Add <b>-s</b> to most nouns to make them plural: <i>boat → boats</i>.",
+  ex:"one oar → two oars",
+  items:[
+   {type:"mc", q:"Which noun is plural?", o:["heron","oars","dock"], a:1, why:"Oars means more than one oar."},
+   {type:"mc", q:"What is the plural of <i>tree</i>?", o:["tree","trees","treees"], a:1, why:"Just add -s."},
+   {type:"tap", q:"Tap the plural noun.", s:"The fish made rings in the water.", ans:["rings"], why:"Rings means more than one ring."},
+   {type:"mc", q:"Which noun is singular?", o:["boots","mornings","lake"], a:2, why:"Lake names just one."}]},
+ write:{p:"Write a thank-you note to God or to someone in your family for an ordinary, happy day.", tip:"Name at least three things you were thankful for."},
+ extra:{kind:"art", artist:"Mary Cassatt", work:"Children Playing on the Beach", year:"1884", search:"Mary Cassatt Children Playing on the Beach",
+  text:["Mary Cassatt was an American painter who loved to paint children and families. In this painting, two little girls play in the sand by the sea.","Look at the colors. The sea and sky are <b>cool colors</b> (blue, green, purple). The children’s hair and the sand are <b>warm colors</b> (red, orange, yellow, brown). Warm colors seem to come toward you."],
+  look:["What are the children doing?","Where do you see warm colors? Where do you see cool colors?","Why do you think the artist painted the children so big and the boats so small?"],
+  task:"Draw a picture of water. Color the water and sky with only cool colors. Then draw yourself with warm colors."}
+});
+
+L({u:1, review:true,
+ story:{title:"Sunday Supper", text:[
+ "Every Sunday, the whole family came to Grandma’s house for supper. Aunt May brought fresh bread. Uncle Joe brought corn from his farm. The cousins brought their noise and their laughter.",
+ "Before they ate, everyone held hands around the long table. Grandpa prayed, and he thanked God for each person by name. Even the baby.",
+ "After supper, the grown-ups washed the dishes and the children played tag in the yard until the stars came out."],
+ q:[["Who brought the corn?",["Aunt May","Uncle Joe","Grandpa"],1,"Uncle Joe brought corn from his farm."],["What did Grandpa do before supper?",["He told a joke","He prayed and thanked God for each person","He read a book"],1,"He thanked God for each person by name."],["What did the children do after supper?",["Washed dishes","Played tag","Went to bed"],1,"They played tag until the stars came out."]]},
+ gram:[
+  {type:"mc", q:"Which is a complete sentence?", o:["the long table","Grandpa prayed.","after supper"], a:1, why:"It tells who and what happened."},
+  {type:"mc", q:"“Pass the bread, please.” What kind of sentence is this?", o:["Question","Command","Exclamation"], a:1, why:"It tells someone to do something."},
+  {type:"tap", q:"Tap the proper noun.", s:"Aunt May baked bread.", ans:["May"], why:"May is a special name. (Aunt goes with it, so it is fine to tap Aunt too.)", extra:["Aunt"]},
+  {type:"mc", q:"What is the plural of <i>cousin</i>?", o:["cousin","cousins","cousines"], a:1, why:"Add -s."},
+  {type:"mc", q:"Which word is a common noun?", o:["Sunday","Grandma","table"], a:2, why:"Table names any table."},
+  {type:"mc", q:"Which needs a question mark?", o:["Who brought the corn","The corn is sweet","Eat your corn"], a:0, why:"It asks something."}]
+});
+
+/* ================= UNIT 2 ================= */
+L({u:2, story:{title:"Fireflies at Night", virtue:"Wonder",
+ text:[
+ "On a warm night in June, Clara and her little brother Teddy sat on the back steps in their pajamas. The sky turned from blue to purple to deep, dark night.",
+ "Then, down in the meadow, a tiny light blinked on. Then another, and another, until the whole field twinkled.",
+ "“Fireflies!” said Teddy.",
+ "Papa came out with an empty jar. “You may catch a few to look at,” he said, “but you must let them go before bed. They have work to do tonight.”",
+ "Clara cupped her hands and caught one gently. It crawled on her palm. Its tail glowed yellow-green, on and off, on and off. It did not feel hot at all.",
+ "“How does it make light without a fire?” she asked.",
+ "“God made fireflies to glow from the inside,” said Papa. “Scientists still study how it works. They blink to call to each other in the dark.”",
+ "Teddy caught three, and they watched them glow in the jar. Then, as Papa had said, they lifted the lid. The fireflies floated up, up, up, blinking like tiny lanterns, until Clara couldn’t tell them apart from the stars."],
+ vocab:[["meadow","a field of grass and wildflowers"],["lantern","a light you can carry"]],
+ verse:{ref:"Psalm 19:1", text:"The heavens declare the glory of God; and the firmament sheweth his handywork."},
+ q:[["When does this story happen?",["A winter morning","A warm night in June","A rainy afternoon"],1,"It is a warm June night."],["Why do fireflies blink?",["To keep warm","To call to each other in the dark","To scare birds"],1,"Their blinking is how they talk to each other."],["What did the children do before bed?",["Kept the fireflies in the jar","Let the fireflies go","Gave them to Papa"],1,"They obeyed Papa and set them free."]]},
+ spell:{title:"Long i: igh, ie, y", rule:"Long ī can be spelled <b>igh</b> (<i>light</i>), <b>ie</b> (<i>pie</i>), or <b>y</b> at the end of a short word (<i>sky</i>). The <b>gh</b> in <b>igh</b> is silent.",
+  words:["light","bright","night","pie","tie","sky","fly","delight"], tiles:["igh","ie","br","fl"]},
+ gram:{title:"Action Verbs", rule:"A <b>verb</b> tells what someone or something does. Action verbs show an action you can do or see: <i>run</i>, <i>blink</i>, <i>catch</i>.",
+  ex:"The firefly <u>blinked</u>. Clara <u>caught</u> it.",
+  items:[
+   {type:"tap", q:"Tap the action verb.", s:"Teddy caught three fireflies.", ans:["caught"], why:"Caught tells what Teddy did."},
+   {type:"tap", q:"Tap the action verb.", s:"The fireflies floated up.", ans:["floated"], why:"Floated is what the fireflies did."},
+   {type:"mc", q:"Which word is an action verb?", o:["meadow","glow","dark"], a:1, why:"Glow is something a firefly does."},
+   {type:"mc", q:"Pick the best action verb: The children ___ on the steps.", o:["sat","jar","happy"], a:0, why:"Sat tells what the children did."}]},
+ write:{p:"Describe a night sky you remember. Use at least four action verbs.", tip:"Strong verbs: twinkled, blinked, glowed, drifted, shimmered."},
+ extra:{kind:"poem"}
+});
+
+L({u:2, story:{title:"The Barn Owl", virtue:"Trust in God’s Care",
+ text:[
+ "High in the barn, above the hay loft, lived a barn owl. Her face was white and shaped like a heart. Her feathers were the color of toast and cream.",
+ "Every evening, Marcus climbed to the loft to feed the horses. He would look up at the dark corner of the roof. Sometimes he saw two black eyes looking down at him.",
+ "One morning in March, Marcus heard tiny hissing sounds. He climbed the ladder very quietly. In the corner sat four fuzzy white owlets.",
+ "“Papa, how will she feed them all?” he asked at supper. “It’s still cold, and the corn hasn’t even been planted.”",
+ "“Don’t worry about the owl,” said Papa. “The field mice are busy in the barn and the forest. She knows how to hunt. God made her for this.”",
+ "Every night that spring, Marcus heard the mother owl fly out on silent wings. Every morning, the owlets were a little bigger.",
+ "By summer, all four young owls flew out of the barn into the evening sky. Marcus watched them go. He thought about the verse Mama had read: <i>Behold the fowls of the air… your heavenly Father feedeth them.</i>",
+ "If God took such good care of the owls, Marcus knew He would take care of him too."],
+ vocab:[["loft","a high room or space under a roof"],["owlet","a baby owl"]],
+ verse:{ref:"Matthew 6:26", text:"Behold the fowls of the air: for they sow not, neither do they reap, nor gather into barns; yet your heavenly Father feedeth them."},
+ q:[["What shape is a barn owl’s face?",["A circle","A heart","A square"],1,"Barn owls have heart-shaped faces."],["How many owlets were there?",["Two","Four","Six"],1,"There were four fuzzy owlets."],["What did Marcus learn?",["Owls are scary","God cares for the owls and for him","Owls eat corn"],1,"God provides for all His creatures."]]},
+ spell:{title:"r-controlled ar and or", rule:"When <b>r</b> comes after a vowel, it changes the vowel’s sound. <b>ar</b> says /ar/ as in <i>barn</i>. <b>or</b> says /or/ as in <i>corn</i>.",
+  words:["barn","garden","march","storm","horse","morning","corn","forest"], tiles:["ar","or","ch","st"]},
+ gram:{title:"Linking Verbs", rule:"Some verbs don’t show action. A <b>linking verb</b> links the subject to a word that tells about it. Common linking verbs: <i>am, is, are, was, were</i>.",
+  ex:"The owl <u>is</u> white. The owlets <u>were</u> fuzzy.",
+  items:[
+   {type:"tap", q:"Tap the linking verb.", s:"The barn is old.", ans:["is"], why:"Is links barn to old."},
+   {type:"tap", q:"Tap the linking verb.", s:"Her feathers were soft.", ans:["were"], why:"Were links feathers to soft."},
+   {type:"mc", q:"Pick the right linking verb: The owlets ___ hungry.", o:["is","are","am"], a:1, why:"Use are with more than one."},
+   {type:"mc", q:"Pick the right linking verb: I ___ quiet in the barn.", o:["am","are","is"], a:0, why:"Use am with I."}]},
+ write:{p:"Write about an animal you have watched closely. What did it look like? What did it do?", tip:"Use one linking verb (is, are, was, were) and two action verbs."},
+ extra:{kind:"geo", title:"The Five Oceans",
+  text:["Most of the earth is covered with salty water. The biggest bodies of water are called <b>oceans</b>.","The five oceans are the <b>Pacific</b>, <b>Atlantic</b>, <b>Indian</b>, <b>Southern</b>, and <b>Arctic</b>.","The Pacific Ocean is the biggest and deepest. The Atlantic Ocean is east of the United States, and the Pacific Ocean is to the west."],
+  svg:"continents",
+  task:"Find the oceans on a globe or world map. Point to each one and say its name.",
+  q:[["Which is the biggest ocean?",["Atlantic","Pacific","Arctic"],1,"The Pacific is the biggest and deepest."],["Which ocean is east of the United States?",["Atlantic","Pacific","Indian"],0,"The Atlantic is to the east."]]}
+});
+
+L({u:2, story:{title:"The First Robin", virtue:"Patience",
+ text:[
+ "All winter, Hazel had waited for spring. She marked each day on the calendar. She asked Mama a hundred times, “When will the birds come back?”",
+ "One morning, she heard a cheery song outside: <i>cheerily, cheer-up, cheerily!</i> On the fence sat a bird with a gray back and a rusty orange chest.",
+ "“The first robin!” Hazel cried.",
+ "For days she watched from the window. The robin and her mate carried twigs, grass, and mud to the fork of the apple tree. They worked and worked until they had built a round, firm nest.",
+ "Then one day Hazel climbed onto the stool and peeked. Inside were three eggs, as blue as the sky. She wanted to touch them, but Mama said, “Only look. If you wait, you will see something wonderful.”",
+ "Waiting was hard. For twelve days, the mother robin sat on her eggs, through wind and rain. Hazel waited too.",
+ "At last she heard tiny peeping. Three fuzzy babies with wide yellow mouths stretched up to be fed.",
+ "Hazel laughed. “Mama, you were right. Waiting made it even better.”"],
+ vocab:[["mate","an animal’s partner"],["fork","the place where a branch splits in two"]],
+ verse:{ref:"Ecclesiastes 3:1", text:"To every thing there is a season, and a time to every purpose under the heaven."},
+ q:[["What color were the robin’s eggs?",["White","Sky blue","Speckled brown"],1,"Robin eggs are blue as the sky."],["How long did the mother sit on her eggs?",["Two days","Twelve days","Twenty days"],1,"She sat for twelve days."],["What did Hazel learn?",["Waiting made it better","Birds are noisy","Nests are easy to build"],0,"Good things are worth waiting for."]]},
+ spell:{title:"r-controlled er, ir, ur", rule:"<b>er</b>, <b>ir</b>, and <b>ur</b> all say /er/ as in <i>her</i>, <i>bird</i>, and <i>turn</i>. Learn each word’s spelling by heart.",
+  words:["fern","her","bird","first","girl","church","turn","purple"], tiles:["er","ir","ur","ch","pl"]},
+ gram:{title:"Verb Tenses", rule:"Verbs tell <b>when</b>. <b>Past</b>: it already happened (<i>walked</i>). <b>Present</b>: it is happening now (<i>walks</i>). <b>Future</b>: it will happen (<i>will walk</i>).",
+  ex:"Yesterday the bird sang. Today the bird sings. Tomorrow the bird will sing.",
+  items:[
+   {type:"mc", q:"“The robin built a nest.” What tense is <i>built</i>?", o:["Past","Present","Future"], a:0, why:"It already happened."},
+   {type:"mc", q:"“The babies will fly soon.” What tense?", o:["Past","Present","Future"], a:2, why:"Will fly hasn’t happened yet."},
+   {type:"mc", q:"“Hazel watches from the window.” What tense?", o:["Past","Present","Future"], a:1, why:"It is happening now."},
+   {type:"mc", q:"Change to past tense: The robin <i>sings</i>.", o:["The robin sang.","The robin will sing.","The robin singing."], a:0, why:"Sang is the past tense of sing."}]},
+ write:{p:"Write about something you had to wait for. Was it worth the wait?", tip:"Tell the story in the past tense."},
+ extra:{kind:"art", artist:"John James Audubon", work:"American Robin (from The Birds of America)", year:"1830s", search:"Audubon American Robin Birds of America",
+  text:["John James Audubon spent years walking through forests and fields to study birds. He painted every kind of bird he could find in America, life-size and in great detail.","He drew birds the way they really move, perching on branches, flying, and eating berries."],
+  look:["What details did Audubon include about the robin?","What is the bird doing?","How did he show the feathers?"],
+  task:"Draw a bird using shapes: a small circle for the head, a big oval for the body, and a triangle for the tail. Then add a beak, eyes, legs, and feathers."}
+});
+
+L({u:2, story:{title:"Lessons from the Ant Hill", virtue:"Diligence",
+ text:[
+ "Noah was lying in the grass with nothing to do. His chores were waiting, but the sun was warm, and he felt too lazy to move.",
+ "Then he noticed a line of ants marching past his nose. Each ant carried something: a crumb, a seed, a bit of leaf. Some carried things much bigger than themselves.",
+ "Noah followed the line to a little hill of sand by the path. The ants went in through a tiny hole and came back out with empty jaws, then marched off to fetch more.",
+ "One ant dropped her seed in a crack. She tugged and tugged until it came loose. Then she went right on her way.",
+ "Noah laughed. “Nobody is making you work,” he told the ant. “Why don’t you rest?”",
+ "Grandma was sitting on the porch. “Proverbs says, ‘Go to the ant, thou sluggard; consider her ways, and be wise,’” she said. “The ant works hard in summer so she will have food when it’s cold. Nobody has to tell her twice.”",
+ "Noah looked at the ants. Then he looked at the pile of wood he was supposed to stack. He jumped up.",
+ "By noon, the wood was stacked in a neat row, and Noah felt strong and proud. He brought Grandma a glass of cool water, then went back to watch his tiny teachers."],
+ vocab:[["sluggard","a lazy person"],["diligent","working hard and carefully"]],
+ verse:{ref:"Proverbs 6:6", text:"Go to the ant, thou sluggard; consider her ways, and be wise."},
+ q:[["What were the ants carrying?",["Crumbs, seeds, and bits of leaf","Sticks and stones","Nothing"],0,"Each ant carried food."],["Why do ants work hard in summer?",["Someone makes them","So they will have food when it’s cold","They like the sun"],1,"They store food for winter."],["What did Noah do after watching the ants?",["Took a nap","Stacked the wood","Went fishing"],1,"He learned diligence from the ants."]]},
+ spell:{title:"oo, ew, ue", rule:"The sound /oo/ as in <i>moon</i> can be spelled <b>oo</b> (<i>spoon</i>), <b>ew</b> (<i>grew</i>), or <b>ue</b> (<i>blue</i>). <b>ew</b> and <b>ue</b> often come at the end.",
+  words:["moon","spoon","room","grew","flew","new","blue","true"], tiles:["oo","ew","ue","sp","bl"]},
+ gram:{title:"Adjectives", rule:"An <b>adjective</b> describes a noun. It tells <i>what kind</i>, <i>how many</i>, or <i>which one</i>: <i>tiny</i> ants, <i>three</i> seeds, <i>that</i> hill.",
+  ex:"The <u>tiny</u> ant carried a <u>big</u> seed.",
+  items:[
+   {type:"tap", q:"Tap the adjective.", s:"The ant carried a green leaf.", ans:["green"], why:"Green tells what kind of leaf."},
+   {type:"tap", q:"Tap the 2 adjectives.", s:"Noah stacked the heavy wood in a neat row.", ans:["heavy","neat"], why:"Heavy describes wood, and neat describes row."},
+   {type:"mc", q:"Pick an adjective for the blank: The ___ sun warmed the grass.", o:["warm","ran","quickly"], a:0, why:"Warm describes the sun."},
+   {type:"mc", q:"Which adjective tells <i>how many</i>?", o:["tiny","five","brown"], a:1, why:"Five tells how many."}]},
+ write:{p:"Write about a job you do at home. Tell how to do it well, step by step.", tip:"Use words like first, next, then, and last. Add two adjectives."},
+ extra:{kind:"geo", title:"North America and the United States",
+  text:["We live on the continent of <b>North America</b>. The three biggest countries in North America are <b>Canada</b> (north), the <b>United States</b> (middle), and <b>Mexico</b> (south).","The United States has <b>50 states</b>. Our capital city is <b>Washington, D.C.</b>, where the President lives and works.","Alaska and Hawaii are states too, but they are not connected to the other 48."],
+  svg:"usa",
+  task:"Find your state on a map of the United States. Which states are next to it?",
+  q:[["Which country is north of the United States?",["Mexico","Canada","Brazil"],1,"Canada is to the north."],["How many states are in the United States?",["13","48","50"],2,"There are 50 states."]]}
+});
+
+L({u:2, story:{title:"The Mouse in the Pantry", virtue:"Kindness to Creatures",
+ text:[
+ "Someone had been nibbling the crackers in the pantry. There were tiny crumbs on the shelf and a little hole in the corner of the box.",
+ "“A mouse!” said Mama, and she frowned. “We can’t have a mouse in the house.”",
+ "Papa set a box trap that would not hurt it. In the morning, Abby and Papa found a small brown mouse inside, with round ears and bright black eyes. It was shivering.",
+ "“Poor thing,” said Abby. “It was only hungry. Do we have to hurt it?”",
+ "“No,” said Papa. “The Bible says a good man takes care of his animals. The mouse doesn’t belong in our pantry, but it can live in the field, where God made it to live.”",
+ "So they walked down the path, past the town road, to the edge of the meadow. The ground was soft, and there were seeds everywhere. Papa set the trap down and opened the door.",
+ "For a moment the mouse sat still. Then it twitched its whiskers and scampered into the tall grass.",
+ "“Goodbye, little mouse!” Abby called. “Find a cozy home!”",
+ "Walking back, she held Papa’s hand. “I’m glad we were kind,” she said. “Even to a mouse.”"],
+ vocab:[["pantry","a small room where food is kept"],["scamper","to run quickly with light steps"]],
+ verse:{ref:"Proverbs 12:10", text:"A righteous man regardeth the life of his beast."},
+ q:[["How did they know there was a mouse?",["They heard it squeak","There were crumbs and a hole in the cracker box","The cat found it"],1,"The crumbs and hole were clues."],["What did Papa do with the mouse?",["Let it go in the meadow","Kept it as a pet","Gave it to a neighbor"],0,"He set it free where it belonged."],["What did Abby learn?",["To be kind, even to small creatures","Mice are bad","To lock the pantry"],0,"God wants us to care for His creatures."]]},
+ spell:{title:"ou and ow (as in cow)", rule:"<b>ou</b> and <b>ow</b> can both say /ow/ as in <i>ouch</i>. <b>ou</b> is usually in the middle (<i>cloud</i>). <b>ow</b> is often at the end or before n or l (<i>cow, town, owl</i>).",
+  words:["cloud","mouse","ground","house","owl","town","flower","brown"], tiles:["ou","ow","cl","gr","br"]},
+ gram:{title:"Articles: a, an, the", rule:"<b>A</b>, <b>an</b>, and <b>the</b> are special adjectives called <b>articles</b>. Use <b>a</b> before a consonant sound (<i>a mouse</i>). Use <b>an</b> before a vowel sound (<i>an owl</i>).",
+  ex:"a box · an apple · the pantry",
+  items:[
+   {type:"mc", q:"___ owl hooted.", o:["A","An"], a:1, why:"Owl starts with a vowel sound."},
+   {type:"mc", q:"Papa set ___ trap.", o:["a","an"], a:0, why:"Trap starts with a consonant sound."},
+   {type:"mc", q:"Abby ate ___ egg for breakfast.", o:["a","an"], a:1, why:"Egg starts with a vowel sound."},
+   {type:"tap", q:"Tap the 2 articles.", s:"The mouse ran into a field.", ans:["The","a"], why:"The and a are articles."}]},
+ write:{p:"Pretend you are the little mouse. Write about your night in the pantry and your new home in the meadow.", tip:"Write as if you are the mouse, using I and me."},
+ extra:{kind:"art", artist:"Albrecht Dürer", work:"Young Hare", year:"1502", search:"Albrecht Dürer Young Hare 1502",
+  text:["Over 500 years ago, Albrecht Dürer painted a young hare (a kind of rabbit). He painted it so carefully that you can almost count the hairs!","Dürer used thousands of tiny lines to show soft fur. The way lines show how something would feel is called <b>texture</b>."],
+  look:["How did Dürer make the fur look soft?","Can you see a window reflected in the hare’s eye?","Why do you think he looked so closely at a small animal?"],
+  task:"Draw a small animal. Use lots of short lines going the same direction to show fur texture."}
+});
+
+L({u:2, review:true,
+ story:{title:"A Walk in the Meadow", text:[
+ "On a bright morning, Grandpa and Ivy walked through the meadow. Bees buzzed in the clover. A rabbit froze, then hopped into the brush.",
+ "At the creek, Ivy found a smooth gray stone with a white stripe. “Is it worth anything?” she asked.",
+ "Grandpa turned it over in his rough hands. “It’s worth a memory,” he said. “Keep it, and you’ll remember this day.” And she did."],
+ q:[["Where did Ivy find the stone?",["In the barn","At the creek","Under a tree"],1,"She found it at the creek."],["What did Grandpa say the stone was worth?",["A dollar","A memory","Nothing"],1,"It was worth a memory."],["What did the rabbit do?",["Chased the bees","Hopped into the brush","Ate clover"],1,"It hopped into the brush."]]},
+ gram:[
+  {type:"tap", q:"Tap the action verb.", s:"Bees buzzed in the clover.", ans:["buzzed"], why:"Buzzed is what the bees did."},
+  {type:"mc", q:"Pick the linking verb: The stone ___ smooth.", o:["was","found","gray"], a:0, why:"Was links stone to smooth."},
+  {type:"mc", q:"“Ivy will keep the stone.” What tense?", o:["Past","Present","Future"], a:2, why:"Will keep hasn’t happened yet."},
+  {type:"tap", q:"Tap the adjective.", s:"Ivy found a smooth stone.", ans:["smooth"], why:"Smooth describes the stone."},
+  {type:"mc", q:"___ apple fell from the tree.", o:["A","An"], a:1, why:"Apple starts with a vowel sound."},
+  {type:"mc", q:"What is the past tense of <i>walk</i>?", o:["walks","walked","will walk"], a:1, why:"Add -ed."}]
+});
+/* ================= UNIT 3 ================= */
+L({u:3, story:{title:"The New Boy", virtue:"Including Others",
+ text:[
+ "On the first day of church camp, a new boy named Tomás stood alone by the fence. He held his lunch sack with both hands and looked at his shoes.",
+ "The other boys were already choosing teams for kickball. Daniel saw Tomás and remembered his own first day last year. Nobody had talked to him for hours. He still remembered how lonely that felt.",
+ "Daniel walked over. “Hi! I’m Daniel. Do you want to play on my team?”",
+ "Tomás looked up. “I don’t know the rules very well,” he said in a quiet voice. “In my old town, we played soccer.”",
+ "“That’s okay,” said Daniel. “It’s a lot like soccer, but you kick a big red ball and run the bases. I’ll show you.”",
+ "Tomás learned fast. On his second turn, he kicked the ball so far that it rolled into the bushes, and he ran all the way home. The whole team cheered and shouted his name.",
+ "At lunch, Tomás sat next to Daniel. He shared his sweet bread, and Daniel shared his apple slices.",
+ "That night, Daniel’s mother asked about his day. “I made a new friend,” he said. “And I think he made one too.”"],
+ vocab:[["lonely","sad because you feel alone"],["include","to let someone join in"]],
+ verse:{ref:"Luke 6:31", text:"And as ye would that men should do to you, do ye also to them likewise."},
+ q:[["Why did Daniel walk over to Tomás?",["The coach told him to","He remembered how lonely his own first day felt","He needed one more player"],1,"He treated Tomás the way he would want to be treated."],["What game did Tomás play in his old town?",["Baseball","Soccer","Tag"],1,"He played soccer."],["What did the boys share at lunch?",["Sweet bread and apple slices","Sandwiches","Cookies"],0,"They shared their food."]]},
+ spell:{title:"oi and oy", rule:"<b>oi</b> and <b>oy</b> both say /oy/ as in <i>boy</i>. Use <b>oi</b> in the middle of a word (<i>coin</i>). Use <b>oy</b> at the end (<i>joy</i>).",
+  words:["coin","voice","point","join","boy","joy","enjoy","royal"], tiles:["oi","oy","ce","nt"]},
+ gram:{title:"Adverbs", rule:"An <b>adverb</b> describes a verb. It tells <i>how</i>, <i>when</i>, or <i>where</i>. Many adverbs end in <b>-ly</b>: <i>quietly</i>, <i>quickly</i>, <i>gladly</i>.",
+  ex:"Tomás spoke <u>quietly</u>. He learned <u>fast</u>.",
+  items:[
+   {type:"tap", q:"Tap the adverb.", s:"Daniel walked over quickly.", ans:["quickly"], why:"Quickly tells how he walked."},
+   {type:"tap", q:"Tap the adverb.", s:"The team cheered loudly.", ans:["loudly"], why:"Loudly tells how they cheered."},
+   {type:"mc", q:"Which word is an adverb?", o:["kind","kindly","kindness"], a:1, why:"Kindly tells how someone does something."},
+   {type:"mc", q:"Pick the adverb that tells WHEN: We will play ___.", o:["tomorrow","happily","outside"], a:0, why:"Tomorrow tells when."}]},
+ write:{p:"Write about a time someone made you feel welcome, or a time you welcomed someone new.", tip:"Use two adverbs that tell how something was done."},
+ extra:{kind:"poem"}
+});
+
+L({u:3, story:{title:"Dawn at the Lake", virtue:"Courage",
+ text:[
+ "Every summer the cousins swam out to the wooden raft in the middle of the lake. Every summer, Molly stayed on the shore. The water was deep and dark, and she was afraid.",
+ "This year, Aunt Grace said, “Let’s practice together, early, before anyone else is awake.”",
+ "So at dawn, while mist hung over the lawn, Molly and Aunt Grace waded in. The water was cool. First Molly practiced floating on her back. Then she practiced kicking. Then she swam a little way, and back, and a little farther, and back.",
+ "Each morning she went a bit farther. Her heart still pounded, but each morning it pounded a little less.",
+ "“Being brave doesn’t mean you aren’t scared,” Aunt Grace told her. “It means you trust God and do the right thing anyway.”",
+ "On the last day of August, Molly stood at the edge of the dock. The cousins were on the raft, waving. She whispered, “Be strong and of a good courage,” and she jumped.",
+ "She kicked and pulled, kicked and pulled, with Aunt Grace swimming beside her. And then her hand touched the wet wood of the raft.",
+ "The cousins pulled her up, cheering. Molly lay on her back in the warm sun, laughing so hard she couldn’t stop."],
+ vocab:[["dawn","the very first light of morning"],["courage","doing what is right even when you are afraid"]],
+ verse:{ref:"Joshua 1:9", text:"Be strong and of a good courage; be not afraid, neither be thou dismayed: for the LORD thy God is with thee whithersoever thou goest."},
+ q:[["Why did Molly stay on the shore every summer?",["She didn’t like her cousins","She was afraid of the deep water","She was too busy"],1,"The deep, dark water scared her."],["How did Molly get ready?",["She practiced a little more each morning","She bought a raft","She watched videos"],0,"She practiced a little farther each day."],["What did Aunt Grace say being brave means?",["Never being scared","Trusting God and doing the right thing anyway","Swimming fast"],1,"Courage acts even when afraid."]]},
+ spell:{title:"aw and au", rule:"<b>aw</b> and <b>au</b> both say /aw/ as in <i>saw</i>. <b>aw</b> often comes at the end or before n (<i>draw, lawn</i>). <b>au</b> is usually in the middle (<i>haul</i>).",
+  words:["draw","straw","lawn","dawn","cause","haul","autumn","author"], tiles:["aw","au","th","str"]},
+ gram:{title:"Pronouns", rule:"A <b>pronoun</b> takes the place of a noun so we don’t repeat it. Pronouns: <i>I, me, you, he, him, she, her, it, we, us, they, them</i>.",
+  ex:"<u>Molly</u> jumped. → <u>She</u> jumped.",
+  items:[
+   {type:"tap", q:"Tap the pronoun.", s:"The cousins waved at her.", ans:["her"], why:"Her takes the place of Molly."},
+   {type:"mc", q:"Replace the underlined words: <u>The cousins</u> cheered.", o:["They","Them","She"], a:0, why:"They takes the place of the cousins."},
+   {type:"mc", q:"Replace the underlined word: Aunt Grace swam beside <u>Molly</u>.", o:["she","her","they"], a:1, why:"Use her after a word like beside."},
+   {type:"tap", q:"Tap the 2 pronouns.", s:"We watched him dive.", ans:["We","him"], why:"We and him are pronouns."}]},
+ write:{p:"Write about something that once scared you. What helped you be brave?", tip:"Use the pronouns I and me correctly."},
+ extra:{kind:"geo", title:"Our State: Indiana",
+  text:["Indiana is in the middle of the United States, in an area called the <b>Midwest</b>. Its nickname is the <b>Hoosier State</b>.","The capital of Indiana is <b>Indianapolis</b>. The state bird is the <b>cardinal</b>, and the state flower is the <b>peony</b>.","Indiana touches <b>Lake Michigan</b> in the north and the <b>Ohio River</b> in the south. Its neighbors are Illinois, Michigan, Ohio, and Kentucky."],
+  svg:"indiana",
+  task:"Draw the shape of Indiana. Put a star for Indianapolis and draw a red cardinal beside it.",
+  q:[["What is the capital of Indiana?",["Chicago","Indianapolis","Fort Wayne"],1,"Indianapolis is the capital."],["What is Indiana’s state bird?",["Robin","Cardinal","Blue jay"],1,"The cardinal is the state bird."]]}
+});
+
+L({u:3, story:{title:"Mrs. Page’s Groceries", virtue:"Thinking of Others",
+ text:[
+ "Mrs. Page lived across the street. She was eighty-four years old and walked with a cane. Every Tuesday, she rode the city bus to the grocery store.",
+ "One icy Tuesday, Grace watched from her window as Mrs. Page stepped off the bus with two heavy bags. Her cane slid on the sidewalk. She stopped and held onto the fence.",
+ "Grace grabbed her coat. “Mama, may I help Mrs. Page?”",
+ "Mama was already reaching for her own coat. Together they hurried across the street. Grace took one bag and Mama took the other, and Mama held Mrs. Page’s arm.",
+ "Step by careful step, they walked her to her door. Inside, her little house smelled like peppermint. Grace put the cans in the cupboard and the milk in the fridge.",
+ "“You are a gentle girl,” said Mrs. Page, and she gave Grace a peppermint from a glass dish. “Thank you for looking out for an old lady.”",
+ "That night, Grace had an idea. She made a card that said: <i>Every Tuesday, I will carry your bags. Love, Grace.</i>",
+ "From then on, every Tuesday, Grace waited by the window for the city bus. And Mrs. Page always had a peppermint waiting."],
+ vocab:[["cane","a stick that helps someone walk"],["cupboard","a cabinet with shelves for food or dishes"]],
+ verse:{ref:"Philippians 2:4", text:"Look not every man on his own things, but every man also on the things of others."},
+ q:[["Why did Mrs. Page need help?",["Her bags were heavy and the sidewalk was icy","She lost her keys","She missed the bus"],0,"It was icy and her bags were heavy."],["What did Mrs. Page give Grace?",["A dollar","A peppermint","A cookie"],1,"She gave her a peppermint."],["What promise did Grace make?",["To visit on Sundays","To carry Mrs. Page’s bags every Tuesday","To shovel snow"],1,"She promised to help every Tuesday."]]},
+ spell:{title:"Soft c and soft g", rule:"When <b>c</b> comes before <b>e</b>, <b>i</b>, or <b>y</b>, it usually says /s/ (<i>city</i>). When <b>g</b> comes before <b>e</b>, <b>i</b>, or <b>y</b>, it often says /j/ (<i>giant</i>). <b>dge</b> says /j/ after a short vowel (<i>bridge</i>).",
+  words:["city","face","circle","mice","giant","page","gentle","bridge"], tiles:["ce","ci","ge","dge","br"]},
+ gram:{title:"Subjects and Predicates", rule:"Every sentence has two parts. The <b>subject</b> tells <i>who or what</i> the sentence is about. The <b>predicate</b> tells <i>what the subject does or is</i>.",
+  ex:"<u>Mrs. Page</u> | rode the bus. (subject | predicate)",
+  items:[
+   {type:"mc", q:"What is the subject? “Grace carried the bag.”", o:["Grace","carried","the bag"], a:0, why:"Grace is who the sentence is about."},
+   {type:"mc", q:"What is the predicate? “The little house smelled like peppermint.”", o:["The little house","smelled like peppermint","peppermint"], a:1, why:"It tells what the house did."},
+   {type:"mc", q:"What is the subject? “The city bus stopped.”", o:["The city bus","stopped","city"], a:0, why:"The city bus is what the sentence is about."},
+   {type:"mc", q:"Which predicate finishes the sentence? “Mama ___.”", o:["held her arm","the icy street","and Grace"], a:0, why:"It tells what Mama did."}]},
+ write:{p:"Think of an older person you know. Write a kind letter or card to them.", tip:"Start with “Dear ___,” and end with “Love,” and your name."},
+ extra:{kind:"art", artist:"Emanuel Leutze", work:"Washington Crossing the Delaware", year:"1851", search:"Washington Crossing the Delaware Leutze",
+  text:["This huge painting shows General George Washington and his soldiers crossing an icy river on a cold winter night in 1776. It was a dangerous, brave journey.","Look at the <b>diagonal lines</b>: the slanted oars, the flag, and the boat. Diagonal lines make a picture feel full of motion and action."],
+  look:["Where is George Washington in the painting?","How can you tell the weather is cold?","What lines make the boat look like it is moving?"],
+  task:"Draw a boat on wavy water. Use diagonal lines for the oars and a flag to make it look like it is moving."}
+});
+
+L({u:3, story:{title:"The Lost Lamb", virtue:"Being a Good Neighbor",
+ text:[
+ "<i>Knock, knock, knock!</i> Someone was at the door before breakfast. It was Mr. Wright from the farm next door, and his face was worried.",
+ "“One of my lambs got through the fence last night,” he said. “Have you seen her? She has a black spot on one knee.”",
+ "Caleb and his big sister Joy pulled on their boots. “We’ll help you look!”",
+ "They searched the barn, the garden, and the ditch by the road. They called and called. Caleb’s thumbs got cold, and his boots got muddy, but he did not want to quit.",
+ "Then Joy held up her hand. “Listen!” From the thick brush by the creek came a thin, wobbly <i>baaa</i>.",
+ "The lamb was caught in a wild rose bush. Her wool was snagged on the thorns. Joy held the branches back while Caleb gently worked the wool free. The lamb trembled, but she let them carry her.",
+ "When they walked into Mr. Wright’s yard, the old farmer laughed out loud. “You found her! You two are the best neighbors a man could ask for.”",
+ "He wrapped the lamb in a blanket. Then he invited them in for hot cocoa, and Caleb’s cold thumbs got warm again."],
+ vocab:[["snagged","caught on something sharp"],["neighbor","someone who lives near you; anyone you can help"]],
+ verse:{ref:"Proverbs 17:17", text:"A friend loveth at all times, and a brother is born for adversity."},
+ q:[["How could they tell which lamb was lost?",["It had a black spot on one knee","It wore a bell","It was all black"],0,"She had a black spot on her knee."],["Where did they find the lamb?",["In the barn","Caught in a wild rose bush by the creek","On the road"],1,"Her wool was caught on thorns."],["What did Mr. Wright give them?",["A lamb","Hot cocoa","Money"],1,"He invited them in for hot cocoa."]]},
+ spell:{title:"Silent letters: kn, wr, mb", rule:"Some letters are silent. In <b>kn</b>, the k is silent (<i>knee</i>). In <b>wr</b>, the w is silent (<i>write</i>). In <b>mb</b>, the b is silent (<i>lamb</i>).",
+  words:["knee","know","knock","write","wrong","wren","lamb","thumb"], tiles:["kn","wr","mb","ck","th"]},
+ gram:{title:"Commas in a Series", rule:"When you list three or more things, put a <b>comma</b> after each item except the last. Put <i>and</i> or <i>or</i> before the last item.",
+  ex:"They searched the barn, the garden, and the ditch.",
+  items:[
+   {type:"mc", q:"Which is written correctly?", o:["We need boots coats and hats.","We need boots, coats, and hats.","We need, boots coats, and hats."], a:1, why:"Put a comma after each item except the last."},
+   {type:"mc", q:"Where do the commas go? “The lamb was cold wet and scared.”", o:["cold, wet, and scared","cold wet, and, scared","cold, wet and, scared"], a:0, why:"Commas go after cold and wet."},
+   {type:"mc", q:"How many commas belong in: “sheep cows pigs and goats”?", o:["1","2","3"], a:2, why:"sheep, cows, pigs, and goats."},
+   {type:"mc", q:"Which sentence needs commas?", o:["I like lambs.","Joy Caleb and Mr. Wright walked home.","The lamb was found."], a:1, why:"It lists three people."}]},
+ write:{p:"Write a list sentence about three ways you can help a neighbor. Then write two more sentences about one of them.", tip:"Use commas in your list."},
+ extra:{kind:"geo", title:"The Great Lakes and the Mississippi River",
+  text:["Five giant lakes sit between the United States and Canada. They are called the <b>Great Lakes</b>: <b>Superior</b>, <b>Michigan</b>, <b>Huron</b>, <b>Erie</b>, and <b>Ontario</b>. Remember them with the word <b>HOMES</b>!","The <b>Mississippi River</b> is one of the longest rivers in North America. It flows south through the middle of the country all the way to the <b>Gulf of Mexico</b>.","The Ohio River, on Indiana’s southern border, flows into the Mississippi."],
+  svg:"usa",
+  task:"Write the word HOMES down the side of your paper. Next to each letter, write the name of a Great Lake.",
+  q:[["Which word helps you remember the Great Lakes?",["HOMES","LAKES","WATER"],0,"Huron, Ontario, Michigan, Erie, Superior."],["Where does the Mississippi River end?",["The Great Lakes","The Gulf of Mexico","The Pacific Ocean"],1,"It flows south to the Gulf of Mexico."]]}
+});
+
+L({u:3, story:{title:"The Pocket Watch", virtue:"Honesty",
+ text:[
+ "After the town picnic, Jack stayed to help fold the chairs. Under the last table, something shiny caught his eye. It was a gold pocket watch on a chain.",
+ "Jack picked it up. It ticked softly in his hand. On the back were tiny letters: <i>To Walter, with love, 1952</i>.",
+ "“Wow,” said his friend Nate. “Finders keepers! You could sell that.”",
+ "Jack thought about it. A watch like this could buy a new baseball mitt, maybe even a bike. But it wasn’t his.",
+ "“It belongs to somebody named Walter,” he said. “He must be missing it.”",
+ "The boys asked the pastor, who knew everyone in town. “Walter Fitch!” said the pastor. “That’s his father’s watch. He was looking for it all afternoon.”",
+ "They walked to Mr. Fitch’s house. When Jack held out the watch, the old man’s hands began to shake. “My father gave me this when I was your age,” he said. “I thought it was gone forever.”",
+ "He tried to give Jack a reward, but Jack shook his head. “I just wanted you to have it back, sir.”",
+ "On the way home, Nate was quiet. Then he said, “You did the right thing.” Jack smiled. A good name, he decided, was worth more than any bike."],
+ vocab:[["reward","something given to thank someone for a good deed"],["pastor","a minister who leads a church"]],
+ verse:{ref:"Proverbs 22:1", text:"A good name is rather to be chosen than great riches."},
+ q:[["Where did Jack find the watch?",["In the grass","Under the last table","In his pocket"],1,"It was under the last table."],["How did they find out who owned it?",["They asked the pastor","They put up signs","They asked the police"],0,"The pastor knew everyone in town."],["Why did Jack say no to the reward?",["He wanted more money","He just wanted Mr. Fitch to have his watch back","He was in a hurry"],1,"He did right because it was right."]]},
+ spell:{title:"-tch and -ck", rule:"After a short vowel, the sound /ch/ is usually spelled <b>tch</b> (<i>catch</i>), and the sound /k/ is usually spelled <b>ck</b> (<i>duck</i>).",
+  words:["catch","watch","kitchen","stretch","duck","rocket","pocket","chicken"], tiles:["tch","ck","ch","str","et"]},
+ gram:{title:"Commas in Dates and Places", rule:"Put a <b>comma</b> between the day and the year: <i>July 4, 1776</i>. Put a comma between a city and its state: <i>Indianapolis, Indiana</i>.",
+  ex:"Mr. Fitch was born on May 3, 1940, in Muncie, Indiana.",
+  items:[
+   {type:"mc", q:"Which date is written correctly?", o:["June 5 2025","June, 5 2025","June 5, 2025"], a:2, why:"The comma goes between the day and the year."},
+   {type:"mc", q:"Which place is written correctly?", o:["Dallas Texas","Dallas, Texas","Dallas, texas"], a:1, why:"Comma between city and state, and both get capitals."},
+   {type:"mc", q:"Where does the comma go? “December 25 1952”", o:["December, 25 1952","December 25, 1952","December 25 1952,"], a:1, why:"Between the day and the year."},
+   {type:"mc", q:"Which is correct?", o:["Boston, Massachusetts","Boston Massachusetts","Boston massachusetts"], a:0, why:"City, comma, state."}]},
+ write:{p:"Write about a time you found something that belonged to someone else. What did you do?", tip:"Include a date written with a comma, like May 3, 2026."},
+ extra:{kind:"art", artist:"Winslow Homer", work:"Breezing Up (A Fair Wind)", year:"1876", search:"Winslow Homer Breezing Up A Fair Wind",
+  text:["Winslow Homer was an American painter who loved the sea. In this painting, a man and three boys sail a small boat on choppy water.","The boat is tipped to one side and the sail is full of wind. Look at the <b>triangle</b> shape of the sail and the white tops of the waves."],
+  look:["How can you tell the wind is strong?","What are the boys doing?","How would it feel to be in that boat?"],
+  task:"Draw a sailboat with a big triangle sail. Add choppy waves with little white tips."}
+});
+
+L({u:3, review:true,
+ story:{title:"Brave Little Sister", text:[
+ "Emma was only six, but when the thunder boomed, she didn’t hide. She held her baby brother’s hand and said, “God is with us. The storm will pass.”",
+ "She sang him a song until his tears stopped. When Papa came in with the lantern, he found them both asleep under a quilt.",
+ "In the morning, the sky was washed clean, and a rainbow stretched over the barn."],
+ q:[["What did Emma do during the storm?",["She hid under the bed","She comforted her baby brother","She ran outside"],1,"She held his hand and sang."],["What did Papa bring?",["A lantern","A blanket","A drink"],0,"He came in with a lantern."],["What was over the barn in the morning?",["Clouds","A rainbow","Snow"],1,"A rainbow stretched over the barn."]]},
+ gram:[
+  {type:"tap", q:"Tap the adverb.", s:"Emma sang softly.", ans:["softly"], why:"Softly tells how she sang."},
+  {type:"mc", q:"Replace the underlined word: <u>Emma</u> held his hand.", o:["She","Her","They"], a:0, why:"She takes the place of Emma."},
+  {type:"mc", q:"What is the subject? “The thunder boomed.”", o:["The thunder","boomed","thunder boomed"], a:0, why:"It is what the sentence is about."},
+  {type:"mc", q:"Which is correct?", o:["rain, wind and, thunder","rain, wind, and thunder","rain wind, and thunder"], a:1, why:"A comma after each item except the last."},
+  {type:"mc", q:"Which is correct?", o:["April 2 2026","April 2, 2026","April, 2 2026"], a:1, why:"Comma between day and year."},
+  {type:"mc", q:"Which is correct?", o:["Columbus, Ohio","Columbus Ohio","columbus, Ohio"], a:0, why:"City, comma, state."}]
+});
+/* ================= UNIT 4 ================= */
+L({u:4, story:{title:"Llamas in the Andes", virtue:"Hard Work",
+ text:[
+ "High in the Andes Mountains of Peru, the air is thin and cold. That is where Mateo lives with his family and their twelve llamas.",
+ "Every morning, Mateo’s job is to lead the llamas up the mountain to find grass. He wears a bright woven hat with flaps over his ears, made by his grandmother.",
+ "The llamas walk in a line, with bells on their necks. Their wool is thick, so they never mind the cold. Sometimes one gets stubborn and sits down on the path. Then Mateo has to coax it with a soft voice and a pat on the neck.",
+ "In the afternoon, he brings them home. His mother spins their wool into yarn and dyes it red, yellow, and deep blue, with colors made from plants. Then she weaves beautiful blankets to sell at the market in town.",
+ "Mateo’s legs are strong from all the climbing, and his heart is glad. “Our llamas give us wool,” he says, “and we give them good care. Everyone works together.”",
+ "At night, the family eats potato soup by the fire. Through the window, the stars look close enough to touch."],
+ vocab:[["coax","to gently talk someone into doing something"],["weave","to make cloth by crossing threads over and under"]],
+ verse:{ref:"Acts 17:26", text:"And hath made of one blood all nations of men for to dwell on all the face of the earth."},
+ q:[["In what country does Mateo live?",["Mexico","Peru","Spain"],1,"He lives in the Andes Mountains of Peru."],["What is Mateo’s job?",["Leading the llamas to find grass","Weaving blankets","Selling yarn"],0,"He takes the llamas up the mountain."],["What does Mateo’s mother make from the wool?",["Hats only","Blankets to sell","Soup"],1,"She weaves blankets for the market."]]},
+ spell:{title:"Plurals with -s and -es", rule:"Add <b>-es</b> to make a word plural when it ends in <b>s, x, z, ch,</b> or <b>sh</b>: <i>box → boxes</i>, <i>wish → wishes</i>. You can hear the extra syllable!",
+  words:["boxes","wishes","dishes","foxes","benches","churches","glasses","peaches"], tiles:["es","sh","ch","ss","x"]},
+ gram:{title:"Possessive Nouns", rule:"A <b>possessive noun</b> shows who owns something. For one owner, add <b>’s</b>: <i>Mateo’s hat</i>, <i>the llama’s bell</i>.",
+  ex:"the hat that belongs to Mateo → Mateo’s hat",
+  items:[
+   {type:"mc", q:"The wool that belongs to the llama is…", o:["the llamas wool","the llama’s wool","the llama wool’s"], a:1, why:"Add ’s for one owner."},
+   {type:"mc", q:"Which is a possessive noun?", o:["mothers","mother’s","mother"], a:1, why:"The apostrophe shows ownership."},
+   {type:"mc", q:"The blanket that belongs to Grandma is…", o:["Grandma’s blanket","Grandmas blanket","Grandma blanket’s"], a:0, why:"Grandma + ’s."},
+   {type:"tap", q:"Tap the possessive noun.", s:"Mateo’s llamas walked slowly.", ans:["Mateo’s"], why:"It shows the llamas belong to Mateo."}]},
+ write:{p:"Imagine you visit Mateo for one day. Write about what you would see, hear, and do.", tip:"Use at least one possessive noun, like Mateo’s or the llama’s."},
+ extra:{kind:"poem"}
+});
+
+L({u:4, story:{title:"The Alpine Cowbell", virtue:"Trusting God for Help",
+ text:[
+ "In the Swiss Alps, the mountains are so tall that snow stays on their tops all summer. Down below are green meadows full of flowers, where cows graze with big bells around their necks.",
+ "Anna and her brother Lukas helped their father herd the cows up to the high pasture. All summer, the family would live in a small wooden hut and make cheese from the milk.",
+ "One afternoon, a thick fog rolled in. It was so thick that Anna couldn’t see her own hand. Then she noticed that Bella, the youngest cow, was missing.",
+ "Anna stopped and listened. Far off, she heard a faint <i>clang, clang</i>. “That’s Bella’s bell!” she said.",
+ "Lukas was worried. “We could get lost in this fog.”",
+ "Anna prayed. “Lord, help us find her, and help us find our way home.” Then she looked up. The fog thinned just enough to show a row of stones along the trail. They followed the stones and the sound of the bell.",
+ "They found Bella nibbling grass beside a stream. They led her back, step by careful step, until they saw the warm glow of the hut’s window.",
+ "That night, Father hugged them both. “I will lift up mine eyes unto the hills,” he said, “from whence cometh my help.”"],
+ vocab:[["pasture","a grassy field where animals eat"],["graze","to eat grass in a field"]],
+ verse:{ref:"Psalm 121:1–2", text:"I will lift up mine eyes unto the hills, from whence cometh my help. My help cometh from the LORD, which made heaven and earth."},
+ q:[["What did the family make from the cows’ milk?",["Butter","Cheese","Ice cream"],1,"They made cheese all summer."],["How did Anna know where Bella was?",["She heard Bella’s bell","She saw her tracks","Lukas told her"],0,"She heard the clang of the cowbell."],["What did Anna do when she was worried?",["She cried","She prayed","She ran home"],1,"She asked God for help."]]},
+ spell:{title:"Doubling before -ed and -ing", rule:"If a short word ends in one vowel and one consonant, <b>double the last consonant</b> before adding -ed or -ing: <i>hop → hopped, hopping</i>.",
+  words:["hopped","hopping","planned","running","shopping","stopped","swimming","clapped"], tiles:["ed","ing","pp","nn","mm"]},
+ gram:{title:"Plural Possessive Nouns", rule:"When a plural noun already ends in <b>s</b>, show ownership by adding just an apostrophe after the s: <i>the cows’ bells</i> (the bells of many cows).",
+  ex:"one cow’s bell · two cows’ bells",
+  items:[
+   {type:"mc", q:"The bells that belong to the cows (many) are…", o:["the cow’s bells","the cows’ bells","the cows bells"], a:1, why:"Plural ending in s: add just an apostrophe."},
+   {type:"mc", q:"The hats of the two brothers are…", o:["the brothers’ hats","the brother’s hats","the brothers hats’"], a:0, why:"Brothers ends in s, so add an apostrophe."},
+   {type:"mc", q:"Which shows ONE girl owns the coat?", o:["the girls’ coat","the girl’s coat"], a:1, why:"One girl: ’s."},
+   {type:"mc", q:"Which shows MANY farmers own the barn?", o:["the farmer’s barn","the farmers’ barn"], a:1, why:"Many farmers: s’."}]},
+ write:{p:"Write about a time you were lost or worried. Who or what helped you?", tip:"Use one word with a doubled consonant, like stopped or running."},
+ extra:{kind:"geo", title:"Europe and the Alps",
+  text:["<b>Europe</b> is a continent with many countries close together. Some of them are <b>England</b>, <b>France</b>, <b>Germany</b>, <b>Italy</b>, <b>Spain</b>, and <b>Switzerland</b>.","The <b>Alps</b> are a tall mountain range in the middle of Europe. They stretch through Switzerland, France, Italy, Austria, and Germany.","A <b>mountain range</b> is a long row of mountains that are connected."],
+  svg:"continents",
+  task:"Find Europe on a globe. Then find Switzerland. Is it near the ocean?",
+  q:[["What are the Alps?",["A river","A mountain range","A country"],1,"The Alps are a long row of mountains."],["Which country is in the Alps?",["Switzerland","Peru","Kenya"],0,"Switzerland is in the Alps."]]}
+});
+
+L({u:4, story:{title:"Kites over the Rice Fields", virtue:"Patient Love",
+ text:[
+ "In a small village in Japan, every family flies kites in the spring. The kites are shaped like fish, birds, and dragons, painted in bright colors.",
+ "Hana was making a kite for her little brother Kenji. She bent thin strips of bamboo into a frame. She glued on thin paper and painted a carp, a strong fish that swims upstream.",
+ "Kenji kept poking the wet paint. “Is it done? Is it done?”",
+ "Hana felt like snapping at him. Instead she took a breath and handed him a brush. “You can paint the bubbles,” she said, smiling. Kenji’s bubbles were lopsided, but he was so proud.",
+ "On the windy day, the whole village gathered by the rice fields. Hana ran, and the kite rose, wobbling. Then it caught the wind and soared high, the carp’s tail waving.",
+ "She put the string in Kenji’s hands and held his hands in hers. “Hold tight,” she said. “Let it fly.”",
+ "Kenji’s eyes shone. “My bubbles are in the sky!”",
+ "Hana laughed. Making the kite had taken longer with Kenji’s help. But it was much happier this way."],
+ vocab:[["bamboo","a tall, strong grass with hollow stems"],["carp","a large fish"]],
+ verse:{ref:"1 Corinthians 13:4", text:"Charity suffereth long, and is kind."},
+ q:[["What did Hana paint on the kite?",["A dragon","A carp","A bird"],1,"She painted a carp."],["What did Hana do when Kenji kept poking the paint?",["She snapped at him","She let him paint the bubbles","She sent him away"],1,"She chose patient love."],["Where did the village fly kites?",["By the rice fields","On the beach","In the city"],0,"They gathered by the rice fields."]]},
+ spell:{title:"Drop the e before -ing", rule:"When a word ends in silent <b>e</b>, <b>drop the e</b> before adding -ing: <i>bake → baking</i>, <i>smile → smiling</i>.",
+  words:["baking","riding","hoping","smiling","making","shining","writing","skating"], tiles:["ing","wr","sk","sh","sm"]},
+ gram:{title:"Quotation Marks", rule:"<b>Quotation marks</b> go around the exact words someone says. Put a comma or end mark inside the closing quotation mark.",
+  ex:"“Hold tight,” said Hana. · Kenji asked, “Is it done?”",
+  items:[
+   {type:"mc", q:"Which is written correctly?", o:["“Let it fly,” said Hana.","Let it fly, said Hana.","“Let it fly, said Hana.”"], a:0, why:"Only the spoken words go inside the quotation marks."},
+   {type:"mc", q:"Which words did Kenji say? Kenji shouted, “My bubbles are in the sky!”", o:["Kenji shouted","My bubbles are in the sky!","the sky"], a:1, why:"The words inside the quotation marks are what he said."},
+   {type:"mc", q:"Which is written correctly?", o:["Mom said, “Time for lunch.”","Mom said, “Time for lunch”.","Mom said “Time for lunch.”"], a:0, why:"Comma after said, and the period goes inside."},
+   {type:"mc", q:"Where do quotation marks go?", o:["Around the whole sentence","Around the exact words spoken","Around the name"], a:1, why:"Around the exact words someone says."}]},
+ write:{p:"Write a short conversation between you and a brother, sister, or friend while making something together.", tip:"Put quotation marks around the words each person says."},
+ extra:{kind:"art", artist:"Katsushika Hokusai", work:"The Great Wave off Kanagawa", year:"about 1831", search:"Hokusai Great Wave off Kanagawa",
+  text:["Hokusai was an artist from Japan. This picture is a <b>woodblock print</b>. The artist carved the picture into wood, put ink on it, and pressed paper on top.","A giant wave curls over three boats. Its foamy edge looks like reaching fingers. Far in the back, small and calm, is Mount Fuji."],
+  look:["Find Mount Fuji. Why does it look so small?","How do the curving lines make the wave look strong?","What do you think the people in the boats are doing?"],
+  task:"Draw one big curling wave with a pattern of small curls at the top. Add a tiny mountain far away."}
+});
+
+L({u:4, story:{title:"Water from the Well", virtue:"Generosity",
+ text:[
+ "In a village in Kenya, in East Africa, there had been no rain for many weeks. The ground was cracked and the river had become a muddy trickle.",
+ "Every morning, Amani walked with her mother to the village well, carrying a yellow water can. The walk was long and dusty. On the way, they passed giraffes eating from tall acacia trees.",
+ "At the well, the line was long. An old grandmother named Mama Zawadi stood near the end. Her back was bent, and her can was heavy even when it was empty.",
+ "Amani’s family had only enough water for one day. But she whispered to her mother, “May I help Mama Zawadi?”",
+ "Her mother nodded. Amani filled the old woman’s can first, and then she carried it all the way to her house.",
+ "Mama Zawadi’s face crinkled into a smile. She gave Amani a handful of sweet berries. “It is more blessed to give than to receive,” she said. “But today I have received a blessing too.”",
+ "That night, thunder rolled over the plains. Big raindrops fell on the dry ground. The children ran outside, laughing and dancing in the cool rain, with their faces turned up to the sky."],
+ vocab:[["well","a deep hole dug in the ground to get water"],["acacia","a thorny tree with a flat top that grows in Africa"]],
+ verse:{ref:"Acts 20:35", text:"It is more blessed to give than to receive."},
+ q:[["Why was the river a muddy trickle?",["It had not rained for weeks","Someone dammed it","It was winter"],0,"There was a long dry time."],["How did Amani help Mama Zawadi?",["She filled and carried her water can","She gave her money","She cooked for her"],0,"She carried the heavy water to her house."],["What happened that night?",["It snowed","It rained","The well dried up"],1,"Thunder came, and then rain."]]},
+ spell:{title:"Change y to i", rule:"When a word ends in a consonant + <b>y</b>, <b>change the y to i</b> before adding -es, -ed, or -er: <i>baby → babies</i>, <i>cry → cried</i>, <i>happy → happier</i>.",
+  words:["babies","ponies","cities","cried","happier","families","berries","stories"], tiles:["ies","ied","ier","rr","st"]},
+ gram:{title:"Abbreviations", rule:"An <b>abbreviation</b> is a short way to write a word. Most begin with a capital letter and end with a period: <i>Mr.</i>, <i>Mrs.</i>, <i>Dr.</i>, <i>St.</i> (Street), <i>Mon.</i>, <i>Jan.</i>",
+  ex:"Doctor Lee → Dr. Lee · Main Street → Main St.",
+  items:[
+   {type:"mc", q:"What is the abbreviation for <i>Doctor</i>?", o:["Dr.","dr","Doc"], a:0, why:"Capital D, r, and a period."},
+   {type:"mc", q:"What is the abbreviation for <i>Street</i>?", o:["str","St.","ST"], a:1, why:"St. with a period."},
+   {type:"mc", q:"Which is written correctly?", o:["mr. Brown","Mr Brown","Mr. Brown"], a:2, why:"Capital M and a period."},
+   {type:"mc", q:"<i>Tues.</i> is short for…", o:["Tuesday","Thursday","Tulip"], a:0, why:"Tues. means Tuesday."}]},
+ write:{p:"Write about a time you shared something even when you didn’t have much. How did it feel?", tip:"Use one abbreviation, like Mr., Mrs., or Dr."},
+ extra:{kind:"geo", title:"Africa",
+  text:["<b>Africa</b> is the second-largest continent. It has more than fifty countries, including <b>Kenya</b>, <b>Egypt</b>, and <b>Nigeria</b>.","The <b>Sahara</b> in the north is the largest hot desert in the world. The <b>Nile River</b>, one of the longest rivers on earth, flows north through Egypt.","In East Africa there are wide grassy plains called <b>savannas</b>, where giraffes, zebras, and elephants live."],
+  svg:"continents",
+  task:"Find Africa on a globe. Trace the Nile River with your finger.",
+  q:[["What is the Sahara?",["A river","A large desert","A mountain"],1,"It is the largest hot desert."],["What are savannas?",["Grassy plains","Icy lands","Rainforests"],0,"Savannas are wide grassy plains."]]}
+});
+
+L({u:4, story:{title:"Tulip Time", virtue:"Caring for God’s Earth",
+ text:[
+ "In the Netherlands, the land is very flat. Long ago, people built walls called dikes to hold back the sea, and they used windmills to pump the water away. Now the land is green and full of farms.",
+ "In April, the fields turn into stripes of color: red, yellow, pink, purple, and white. These are the tulip fields, and they stretch as far as you can see.",
+ "Pieter’s grandfather grew tulips. In the fall, Pieter helped him plant the bulbs in neat rows. “Each bulb is like a little packed lunch,” Grandfather said. “It holds everything the flower needs to wait through the cold winter.”",
+ "All winter, the fields were brown and bare. Pieter wondered if anything was happening under the ground.",
+ "Then one spring morning, he biked to the farm with his sister on the back seat. Green shoots had pushed up everywhere. A week later, the whole field burst into bloom.",
+ "Grandfather knelt and touched a red tulip. “The earth is the Lord’s,” he said. “We only take care of it for Him. We plant, we wait, and God makes it grow.”",
+ "Pieter picked a bunch of yellow tulips for his mother’s birthday. The windmill turned slowly above them, like a giant waving hello."],
+ vocab:[["dike","a long wall that keeps water out"],["bulb","a round underground part of a plant that stores food"]],
+ verse:{ref:"Psalm 24:1", text:"The earth is the LORD'S, and the fulness thereof; the world, and they that dwell therein."},
+ q:[["What do dikes do?",["Hold back the sea","Grow flowers","Make wind"],0,"Dikes keep the sea out."],["When did Pieter plant the bulbs?",["In spring","In the fall","In summer"],1,"They planted the bulbs in the fall."],["What did Grandfather say about the earth?",["It belongs to the Lord, and we take care of it","It belongs to farmers","It is too flat"],0,"We take care of God’s earth."]]},
+ spell:{title:"Compound words", rule:"A <b>compound word</b> is made by joining two smaller words: <i>sun + shine = sunshine</i>. Spell each small word, then put them together.",
+  words:["sunshine","rainbow","butterfly","grandmother","cupcake","bedroom","sailboat","birthday"], tiles:["sh","ai","ow","th","oa"]},
+ gram:{title:"Parts of a Friendly Letter", rule:"A friendly letter has five parts: the <b>date</b>, the <b>greeting</b> (<i>Dear Grandma,</i>), the <b>body</b> (your message), the <b>closing</b> (<i>Love,</i>), and your <b>signature</b> (your name).",
+  ex:"May 1, 2026 / Dear Pieter, / … / Your friend, / Sarah",
+  items:[
+   {type:"mc", q:"Which part of a letter is “Dear Grandpa,”?", o:["Closing","Greeting","Body"], a:1, why:"The greeting says hello to the person."},
+   {type:"mc", q:"Which part of a letter is “Love,”?", o:["Closing","Greeting","Date"], a:0, why:"The closing comes before your name."},
+   {type:"mc", q:"What comes after the greeting?", o:["The signature","The body","The date"], a:1, why:"The body is your message."},
+   {type:"mc", q:"Which greeting is written correctly?", o:["dear Aunt Ruth","Dear Aunt Ruth,","Dear aunt ruth"], a:1, why:"Capital letters and a comma."}]},
+ write:{p:"Write a friendly letter to a grandparent or friend. Tell them about something beautiful you saw outside this week.", tip:"Include all five parts: date, greeting, body, closing, and signature."},
+ extra:{kind:"art", artist:"Johannes Vermeer", work:"The Milkmaid", year:"about 1658", search:"Vermeer The Milkmaid",
+  text:["Vermeer was a painter from the Netherlands. In this painting, a kitchen maid pours milk from a jug into a bowl. She is working carefully and quietly.","Vermeer loved to paint <b>light</b>. Notice how light comes in from the window on the left. It makes her yellow sleeves and the bread on the table glow."],
+  look:["Where is the light coming from?","What food is on the table?","What does this painting tell you about doing ordinary work well?"],
+  task:"Set a cup or jug by a window. Draw it, and shade the side that is away from the light a little darker."}
+});
+
+L({u:4, review:true,
+ story:{title:"A Letter from Norway", text:[
+ "Dear Sophie,",
+ "Greetings from Norway! Here the mountains drop straight into the sea. The long, narrow bays between them are called fjords. Yesterday we rode a ferry, and a waterfall poured right off the cliff beside us.",
+ "In the summer the sun stays up almost all night. I have been reading under the covers with no flashlight! I will bring you a wooden troll carving and a jar of cloudberry jam. Love, Aunt Helga"],
+ q:[["What are fjords?",["Mountains","Long, narrow bays between mountains","Waterfalls"],1,"Fjords are narrow bays between mountains."],["What is strange about summer in Norway?",["It snows","The sun stays up almost all night","It never rains"],1,"The sun barely sets in summer."],["Who wrote the letter?",["Sophie","Aunt Helga","Grandma"],1,"It is signed Aunt Helga."]]},
+ gram:[
+  {type:"mc", q:"The jam that belongs to Aunt Helga is…", o:["Aunt Helgas jam","Aunt Helga’s jam","Aunt Helgas’ jam"], a:1, why:"One owner: ’s."},
+  {type:"mc", q:"The toys of the two girls are…", o:["the girls’ toys","the girl’s toys"], a:0, why:"Many owners ending in s: s’."},
+  {type:"mc", q:"Which is written correctly?", o:["“Look at the fjord!” said Dad.","Look at the fjord! said Dad.","“Look at the fjord! said Dad.”"], a:0, why:"Quotation marks go around the exact words."},
+  {type:"mc", q:"What is the abbreviation for <i>Mister</i>?", o:["Mr.","Mi.","Mstr"], a:0, why:"Mr."},
+  {type:"mc", q:"In a letter, which part is “Love, Aunt Helga”?", o:["Greeting","Closing and signature","Body"], a:1, why:"Closing, then the signature."},
+  {type:"mc", q:"What is the plural of <i>box</i>?", o:["boxs","boxes","boxies"], a:1, why:"Words ending in x add -es."}]
+});
+
+/* ================= UNIT 5 ================= */
+L({u:5, story:{title:"The Harvest Table", virtue:"Thankfulness",
+ text:[
+ "It was the day before Thanksgiving, and Grandma’s kitchen smelled like cinnamon and baking bread.",
+ "“I can’t wait!” said Lucy. She and her cousins were making place cards for the long table. On each card they wrote a name and drew a little leaf.",
+ "Grandma handed each child a small slip of paper. “Before we eat tomorrow,” she said, “I’d like everyone to write one thing they’re thankful for. We’ll read them aloud.”",
+ "Lucy chewed her pencil. She was thankful for so many things. Her family. Her warm bed. Her dog, Biscuit. The red maple leaves outside. It was hard to choose just one.",
+ "So she wrote small and squeezed in as many as she could. When she turned the paper over, she kept going on the back.",
+ "The next day, twenty people crowded around the table. Grandpa prayed. Then each person read their slip. Uncle Ray was thankful for his new job. Baby Rose’s mother was thankful for Baby Rose. When it was Lucy’s turn, she read for so long that everyone started laughing.",
+ "“Lucy,” said Grandpa, with a twinkle in his eye, “I think you’ve discovered a secret. The more you count your blessings, the more you find.”"],
+ vocab:[["blessing","a good gift from God"],["harvest","the time when crops are gathered"]],
+ verse:{ref:"1 Thessalonians 5:18", text:"In every thing give thanks: for this is the will of God in Christ Jesus concerning you."},
+ q:[["What did Grandma ask everyone to write?",["Their name","One thing they were thankful for","A recipe"],1,"She asked for something they were thankful for."],["Why did everyone laugh when Lucy read?",["She read for so long","She made a mistake","Her dog barked"],0,"She had so many blessings to read."],["What secret did Lucy discover?",["Pie is the best food","The more you count your blessings, the more you find","Grandpa likes jokes"],1,"Gratitude grows when you practice it."]]},
+ spell:{title:"Contractions", rule:"A <b>contraction</b> joins two words into one. An <b>apostrophe</b> ( ' ) takes the place of the missing letters: <i>can not → can't</i>, <i>I am → I'm</i>.",
+  words:["can't","don't","I'm","it's","we're","you'll","they've","wouldn't"], tiles:["'","th","ou","ll","ve"]},
+ gram:{title:"Apostrophes in Contractions", rule:"In a contraction, the apostrophe goes exactly where letters were taken out. <i>do not → don't</i> (the o is gone).",
+  ex:"we are → we're · they have → they've · would not → wouldn't",
+  items:[
+   {type:"mc", q:"What is the contraction for <i>I am</i>?", o:["Im","I'm","Iam'"], a:1, why:"The apostrophe takes the place of the a."},
+   {type:"mc", q:"<i>won't</i> means…", o:["will not","want not","would not"], a:0, why:"Won’t is a special contraction for will not."},
+   {type:"mc", q:"What two words make <i>they've</i>?", o:["they have","they are","they will"], a:0, why:"The ’ve stands for have."},
+   {type:"mc", q:"Which is written correctly?", o:["did'nt","didnt","didn't"], a:2, why:"The apostrophe replaces the o in not."}]},
+ write:{p:"Make a list of ten things you are thankful for. Then write a paragraph about your favorite one.", tip:"Use at least two contractions."},
+ extra:{kind:"poem"}
+});
+
+L({u:5, story:{title:"Raking Leaves for Mr. Ortiz", virtue:"Perseverance",
+ text:[
+ "Mr. Ortiz had hurt his back, and his yard was buried under a blanket of leaves. Red, gold, and brown, they were piled up past the children’s ankles.",
+ "“Let’s rake them for him,” said Isaac. His sisters, Ada and Ruth, grabbed rakes from the shed.",
+ "At first it was fun. They raked a big pile and jumped in it. But then the wind blew, and half the leaves scattered back across the lawn.",
+ "“This is hopeless,” groaned Ada. “We’ll never finish.”",
+ "Isaac felt like quitting too. Then he remembered a verse they had learned: <i>Let us not be weary in well doing.</i>",
+ "“Let’s redo it, but smarter,” he said. “We’ll rake small piles and put them in bags right away. Then the wind can’t undo our work.”",
+ "So they did. One small pile, one bag. Another small pile, another bag. Their arms ached, but the bags lined up along the curb like soldiers: five, ten, fifteen.",
+ "By sunset the lawn was clean. Mr. Ortiz came out on his cane and looked around. “I was unable to do this myself,” he said. “You have given me a gift.” He brought out mugs of hot apple cider, and they drank it on his porch while the sky turned pink."],
+ vocab:[["persevere","to keep going even when it is hard"],["scatter","to spread out in every direction"]],
+ verse:{ref:"Galatians 6:9", text:"And let us not be weary in well doing: for in due season we shall reap, if we faint not."},
+ q:[["Why did the children rake Mr. Ortiz’s leaves?",["He paid them","He had hurt his back","Their parents made them"],1,"He couldn’t do it himself."],["What undid their first pile?",["A dog","The wind","Rain"],1,"The wind scattered the leaves."],["How did they solve the problem?",["They quit","They raked small piles and bagged them right away","They used a leaf blower"],1,"They worked smarter and kept going."]]},
+ spell:{title:"Prefixes un- and re-", rule:"A <b>prefix</b> is added to the front of a word. <b>un-</b> means <i>not</i> or <i>the opposite of</i> (<i>unkind</i>). <b>re-</b> means <i>again</i> (<i>redo</i>).",
+  words:["undo","unkind","unlock","unhappy","redo","reread","return","rebuild"], tiles:["un","re","ck","pp","ur"]},
+ gram:{title:"Synonyms and Antonyms", rule:"<b>Synonyms</b> are words that mean the same or almost the same: <i>big, large</i>. <b>Antonyms</b> are words with opposite meanings: <i>big, small</i>.",
+  ex:"tired / weary (synonyms) · start / finish (antonyms)",
+  items:[
+   {type:"mc", q:"Which is a synonym for <i>happy</i>?", o:["glad","sad","angry"], a:0, why:"Glad means almost the same as happy."},
+   {type:"mc", q:"Which is an antonym for <i>hot</i>?", o:["warm","cold","sunny"], a:1, why:"Cold is the opposite of hot."},
+   {type:"mc", q:"<i>Begin</i> and <i>start</i> are…", o:["synonyms","antonyms"], a:0, why:"They mean the same thing."},
+   {type:"mc", q:"Which is an antonym for <i>kind</i>?", o:["nice","unkind","gentle"], a:1, why:"Unkind is the opposite of kind."}]},
+ write:{p:"Write about a job that was hard but that you finished. What helped you keep going?", tip:"Use one word with un- and one with re-."},
+ extra:{kind:"geo", title:"Landforms",
+  text:["<b>Landforms</b> are the shapes of the land on the earth.","A <b>mountain</b> is very high land with steep sides. A <b>valley</b> is low land between hills or mountains. A <b>plain</b> is wide, flat land, like much of Indiana. A <b>plateau</b> is high, flat land.","An <b>island</b> is land with water all around it. A <b>peninsula</b> has water on three sides, like the state of Florida."],
+  svg:"landforms",
+  task:"Make a landform map out of play dough or clay: a mountain, a valley, a plain, and an island in a pan of water.",
+  q:[["What is an island?",["Land with water all around it","A tall mountain","A flat field"],0,"Water surrounds an island."],["What is a valley?",["High, flat land","Low land between hills or mountains","Land with water on three sides"],1,"A valley is low land between hills."]]}
+});
+
+L({u:5, story:{title:"The Thankful Jar", virtue:"Joyful Gratitude",
+ text:[
+ "On the first day of November, Mama set an empty glass jar on the kitchen counter. Next to it she put a stack of paper strips and a pencil.",
+ "“Every day,” she said, “write down one thing you’re thankful for and put it in the jar. On New Year’s Day, we’ll read them all.”",
+ "At first, Peter thought it was a silly idea. Then on a cold, gloomy day, he got a sore throat and couldn’t go to his friend’s house. He felt hopeless and grumpy.",
+ "Mama made him honey tea and sat with him. She read aloud from a funny book until he laughed so hard he coughed. That night, Peter wrote: <i>Thankful for Mama reading to me when I was sick.</i>",
+ "After that, Peter noticed things he had never noticed before. The way the cat curled up on his feet. The smell of pine trees. His sister helping him find his lost mitten.",
+ "Some days were hard, but there was always something to write. The jar filled slowly, then quickly, until the papers were pressed against the lid.",
+ "On New Year’s Day, the family sat in a circle and read every strip. Some were silly and some were sweet. When they finished, Peter said, “It’s like the jar was full of sunshine.”",
+ "Papa smiled. “It was there all along,” he said. “We just learned to see it.”"],
+ vocab:[["gloomy","dark, gray, and sad-feeling"],["notice","to see or pay attention to"]],
+ verse:{ref:"Psalm 107:1", text:"O give thanks unto the LORD, for he is good: for his mercy endureth for ever."},
+ q:[["What did the family put in the jar?",["Coins","Notes about what they were thankful for","Candy"],1,"They wrote one thankful thing each day."],["What happened on the gloomy day?",["Peter had a sore throat","It snowed","Peter lost his mitten"],0,"He was sick and grumpy."],["What did Papa mean by “It was there all along”?",["The good things were always there; they learned to notice them","The jar was always full","The sun came out"],0,"Gratitude helps us see God’s gifts."]]},
+ spell:{title:"Suffixes -ful, -less, -ly", rule:"A <b>suffix</b> is added to the end of a word. <b>-ful</b> means <i>full of</i> (<i>joyful</i>). <b>-less</b> means <i>without</i> (<i>careless</i>). <b>-ly</b> tells <i>how</i> (<i>slowly</i>).",
+  words:["thankful","helpful","careless","hopeless","kindly","slowly","joyful","gladly"], tiles:["ful","less","ly","th","ow"]},
+ gram:{title:"Comparing with -er and -est", rule:"Add <b>-er</b> to an adjective to compare <b>two</b> things (<i>taller</i>). Add <b>-est</b> to compare <b>three or more</b> (<i>tallest</i>).",
+  ex:"Peter is tall. Ann is taller. Papa is the tallest.",
+  items:[
+   {type:"mc", q:"Today is ___ than yesterday.", o:["cold","colder","coldest"], a:1, why:"Comparing two days: -er."},
+   {type:"mc", q:"That was the ___ day of the whole year!", o:["happy","happier","happiest"], a:2, why:"Comparing many days: -est (and y changes to i)."},
+   {type:"mc", q:"My jar is ___ than yours.", o:["full","fuller","fullest"], a:1, why:"Comparing two jars: -er."},
+   {type:"mc", q:"Of the three kittens, the gray one is the ___.", o:["small","smaller","smallest"], a:2, why:"Three or more: -est."}]},
+ write:{p:"Start your own thankful list. Write five thankful sentences, one for each day of the week.", tip:"Try to use one -ful word and one -ly word."},
+ extra:{kind:"art", artist:"Jules Breton", work:"The Song of the Lark", year:"1884", search:"Jules Breton The Song of the Lark",
+  text:["A young farm girl is walking out to the field very early in the morning, carrying a sickle to cut grain. She stops to listen to a lark singing.","The sun is just rising, a big red-orange circle. Breton used <b>warm colors</b> in the sky to show the glow of dawn."],
+  look:["What is the girl doing?","What time of day is it? How can you tell?","Why do you think she stopped walking?"],
+  task:"Paint or color a sunrise using only warm colors: red, orange, yellow, and pink. Add a dark field at the bottom."}
+});
+
+L({u:5, story:{title:"Snow Day Visit", virtue:"Love for Others",
+ text:[
+ "It snowed all night. In the morning, the whole town was white and quiet. School was closed, and the twins, Will and Kate, cheered.",
+ "“Let’s build a snow fort!” said Will.",
+ "But Kate was looking out the window at the gray house down the road. “Mrs. Hale is all alone,” she said. “Her son lives too far away to come. I bet she’s lonely.”",
+ "Will thought about the snow fort. Then he said, “We can build the fort later. Let’s go visit her.”",
+ "Their mother helped them pack a basket with cinnamon rolls and a jar of soup. They waded through snow up to their knees. Their breath made little clouds in the air.",
+ "Mrs. Hale opened the door with a surprised smile. “Well, look who’s here! Come in, come in!” Her house was warm, and there was a puzzle half finished on her table.",
+ "They helped her finish the puzzle. She told them stories about sledding on the same hill when she was a girl, almost seventy years ago. Will shoveled her front steps, and Kate brought in wood for the stove.",
+ "When it was time to go, Mrs. Hale hugged them both. “You two have warmed my heart more than this stove,” she said.",
+ "They built their snow fort that afternoon. It was the best one they had ever made."],
+ vocab:[["wade","to walk through something deep, like water or snow"],["lonely","sad from being alone"]],
+ verse:{ref:"Psalm 147:16", text:"He giveth snow like wool: he scattereth the hoarfrost like ashes."},
+ q:[["Why did Kate want to visit Mrs. Hale?",["She was lonely","She had cookies","She needed a doctor"],0,"Kate thought she might be lonely."],["What did Will do to help?",["Cooked soup","Shoveled her steps","Built a fort for her"],1,"He shoveled her front steps."],["What did the twins do in the afternoon?",["Went to school","Built their snow fort","Visited Grandma"],1,"They still built their fort."]]},
+ spell:{title:"Homophones", rule:"<b>Homophones</b> sound the same but have different spellings and meanings. Listen to the sentence to know which word to spell!",
+  words:["their","there","they're","to","too","two","hear","here"], tiles:["th","ei","er","'","oo"],
+  say:{"their":"Their house is warm. Spell their.","there":"Put it over there. Spell there.","they're":"They're going sledding. Spell they're.","to":"We walked to the door. Spell to.","too":"I want to come too. Spell too.","two":"I have two mittens. Spell two.","hear":"I can hear the wind. Spell hear.","here":"Come here, please. Spell here."}},
+ gram:{title:"Using Homophones", rule:"<b>their</b> = belongs to them · <b>there</b> = a place · <b>they're</b> = they are. <b>to</b> = toward · <b>too</b> = also or very · <b>two</b> = 2.",
+  ex:"They're putting their sleds over there.",
+  items:[
+   {type:"mc", q:"The twins put on ___ boots.", o:["their","there","they're"], a:0, why:"The boots belong to them."},
+   {type:"mc", q:"___ going to visit Mrs. Hale.", o:["Their","There","They're"], a:2, why:"They are going → They're."},
+   {type:"mc", q:"Kate had ___ cinnamon rolls.", o:["to","too","two"], a:2, why:"Two is the number 2."},
+   {type:"mc", q:"Will wanted to come ___.", o:["to","too","two"], a:1, why:"Too means also."}]},
+ write:{p:"Write about a snowy day (real or imagined). Who could you show love to on a day like that?", tip:"Use their, there, and they’re correctly."},
+ extra:{kind:"geo", title:"Australia, Antarctica, and South America",
+  text:["<b>Australia</b> is both a country and a continent. It is called “the land down under” because it is south of the equator. Kangaroos and koalas live there.","<b>Antarctica</b> is at the very bottom of the earth, around the South Pole. It is the coldest place on earth. Penguins live along its icy coasts, but no one lives there all year.","<b>South America</b> is south of North America. It has the long <b>Andes Mountains</b>, where Mateo’s llamas live, and the huge <b>Amazon</b> rainforest."],
+  svg:"continents",
+  task:"Now you know all seven continents! Point to each one on a globe and tell one thing about it.",
+  q:[["Which continent is around the South Pole?",["Australia","Antarctica","Asia"],1,"Antarctica surrounds the South Pole."],["Where do kangaroos live?",["South America","Australia","Africa"],1,"Kangaroos live in Australia."]]}
+});
+
+L({u:5, story:{title:"The Candle in the Window", virtue:"Letting Your Light Shine",
+ text:[
+ "Long ago, before there were streetlights, families on the prairie would put a candle in the window on winter nights. It helped travelers find their way through the dark and the snow.",
+ "Great-Grandpa told this story to Annie every December. Then he would take out a little brass candle holder and set a white candle in it.",
+ "“Your great-great-grandmother kept this candle burning the night of the big blizzard,” he said. “A man was lost in the storm with his horse. He saw this little light and followed it to the door. She gave him supper and a warm place by the fire. He said that tiny candle saved his life.”",
+ "Annie looked at the small, simple flame. “But it’s just a little candle,” she said.",
+ "Great-Grandpa smiled. “A little light can do a big job in the dark,” he said. “Jesus said we are to be lights in the world. Every kind word and helpful deed is a little candle. You never know who might be lost and looking for it.”",
+ "That night, Annie set the candle in the front window. Then she thought about who might need some light. She wrote a cheerful note to her friend who was sick. She set the table without being asked. She helped her little brother with his puzzle.",
+ "Before bed, she looked at the candle glowing on the windowsill. It was little. But it was bright, and it was shining."],
+ vocab:[["prairie","a wide, flat land covered with grass"],["blizzard","a big snowstorm with strong winds"]],
+ verse:{ref:"Matthew 5:16", text:"Let your light so shine before men, that they may see your good works, and glorify your Father which is in heaven."},
+ q:[["Why did prairie families put candles in the window?",["To help travelers find their way","To keep warm","To decorate"],0,"The light guided travelers in the dark."],["What happened the night of the big blizzard?",["The candle went out","A lost man followed the light to safety","The horse ran away"],1,"The candle saved the traveler."],["What did Great-Grandpa say a little candle is like?",["A kind word or helpful deed","A star","A lamp"],0,"Good deeds are lights in the world."]]},
+ spell:{title:"-le endings", rule:"Many words end in a consonant + <b>le</b>. The <b>le</b> says /ul/: <i>ap-ple</i>, <i>can-dle</i>, <i>lit-tle</i>. Clap the syllables, then spell each part.",
+  words:["apple","candle","gentle","little","table","puzzle","turtle","simple"], tiles:["le","pp","tt","zz","nd"]},
+ gram:{title:"Subject–Verb Agreement", rule:"The verb must match the subject. If the subject is <b>one</b>, add <b>-s</b> to the verb (<i>The candle glows</i>). If the subject is <b>more than one</b>, don’t add -s (<i>The candles glow</i>).",
+  ex:"Annie writes. Annie and Sam write.",
+  items:[
+   {type:"mc", q:"The candle ___ in the window.", o:["shine","shines"], a:1, why:"One candle → shines."},
+   {type:"mc", q:"The travelers ___ through the snow.", o:["walk","walks"], a:0, why:"More than one → walk."},
+   {type:"mc", q:"Great-Grandpa ___ a story.", o:["tell","tells"], a:1, why:"One person → tells."},
+   {type:"mc", q:"Annie and her brother ___ the puzzle.", o:["finish","finishes"], a:0, why:"Two people → finish."}]},
+ write:{p:"How can you be a light this week? Write about three small things you can do to help someone.", tip:"Check that each verb matches its subject."},
+ extra:{kind:"art", artist:"Pieter Bruegel the Elder", work:"Hunters in the Snow", year:"1565", search:"Bruegel Hunters in the Snow",
+  text:["This winter painting is over 450 years old. Tired hunters and their dogs walk home through the snow. Below them, in the valley, people skate on frozen ponds.","Bruegel shows <b>near and far</b>. Things that are near are drawn <b>big</b> and at the bottom. Things that are far away are drawn <b>small</b> and higher up."],
+  look:["What are the people in the valley doing?","Find the biggest thing in the picture and the smallest.","How does this painting make you feel? Cold? Cozy?"],
+  task:"Draw a winter scene. Put one big tree near the bottom of your page and three tiny trees far away near the top."}
+});
+
+L({u:5, review:true,
+ story:{title:"The First Snowfall", text:[
+ "The first snow came softly, while everyone was asleep. When Ben woke up, the world looked brand new.",
+ "He pressed his nose to the cold window. A cardinal sat on the white fence like a bright red berry.",
+ "Ben whispered a prayer: “Thank You, God, for snow, and for birds, and for this whole new day.” Then he ran to wake his sister."],
+ q:[["When did the snow come?",["While everyone was asleep","At lunchtime","During church"],0,"It came while they were asleep."],["What bird sat on the fence?",["A robin","A cardinal","An owl"],1,"A red cardinal."],["What did Ben do before he woke his sister?",["Ate breakfast","Prayed a thank-you prayer","Built a snowman"],1,"He thanked God."]]},
+ gram:[
+  {type:"mc", q:"What is the contraction for <i>do not</i>?", o:["dont","don't","do'nt"], a:1, why:"The apostrophe replaces the o."},
+  {type:"mc", q:"Which is a synonym for <i>quiet</i>?", o:["loud","silent","busy"], a:1, why:"Silent means quiet."},
+  {type:"mc", q:"This is the ___ snow I have ever seen!", o:["deep","deeper","deepest"], a:2, why:"Compared to all snows: -est."},
+  {type:"mc", q:"The children put on ___ coats.", o:["their","there","they're"], a:0, why:"The coats belong to them."},
+  {type:"mc", q:"The bird ___ on the fence.", o:["sit","sits"], a:1, why:"One bird → sits."},
+  {type:"mc", q:"<i>Unkind</i> means…", o:["very kind","not kind","kind again"], a:1, why:"un- means not."}]
+});
+
+</script>
+<script>
+/* ================= helpers & saving (same approach as Science Explorers) ================= */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const strip = s => String(s).replace(/<[^>]+>/g,"").replace(/&nbsp;/g," ");
+const shuffle = a => { a=[...a]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const LS = {
+  get(k,d){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); return true; }catch(e){ return false; } }
+};
+const IDB = {
+  open(){ return new Promise((res,rej)=>{ try{ const r=indexedDB.open("wildflower-la3",1); r.onupgradeneeded=()=>r.result.createObjectStore("kv"); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);}catch(e){rej(e);} }); },
+  async put(v){ try{ const db=await IDB.open(); await new Promise((res,rej)=>{ const tx=db.transaction("kv","readwrite"); tx.objectStore("kv").put(v,"state"); tx.oncomplete=res; tx.onerror=()=>rej(tx.error); }); }catch(e){} },
+  async get(){ try{ const db=await IDB.open(); return await new Promise((res,rej)=>{ const r=db.transaction("kv").objectStore("kv").get("state"); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }catch(e){ return null; } }
+};
+function snapshot(){ const o={}; try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k&&k.startsWith("la3-")) o[k]=localStorage.getItem(k);} }catch(e){} return o; }
+let _mt=null; const _set=LS.set;
+LS.set=(k,v)=>{ const ok=_set(k,v); clearTimeout(_mt); _mt=setTimeout(()=>IDB.put(snapshot()),250); return ok; };
+try{ navigator.storage&&navigator.storage.persist&&navigator.storage.persist(); }catch(e){}
+
+let roster=LS.get("la3-roster",[]), student=LS.get("la3-student",""), prog=LS.get("la3-prog",{}), pin=LS.get("la3-pin","");
+let parentOK=false;
+const saveAll=()=>{ LS.set("la3-roster",roster); LS.set("la3-student",student); LS.set("la3-prog",prog); };
+const P=(s=student)=>{ if(!prog[s]) prog[s]={lessons:{},stars:{},minutes:0,last:null,writing:{},reads:[]}; const p=prog[s]; p.lessons=p.lessons||{}; p.stars=p.stars||{}; p.writing=p.writing||{}; p.reads=p.reads||[]; return p; };
+const LP=(i,s=student)=>{ const p=P(s); if(!p.lessons[i]) p.lessons[i]={sec:{},done:false}; return p.lessons[i]; };
+
+/* ================= read aloud ================= */
+let voice=null;
+function pickVoice(){ try{ const v=speechSynthesis.getVoices().filter(v=>/^en[-_]US/i.test(v.lang));
+  voice=v.find(x=>/natural|neural/i.test(x.name))||v.find(x=>/samantha|aria|jenny|google us/i.test(x.name))||v[0]||null; }catch(e){} }
+try{ pickVoice(); speechSynthesis.onvoiceschanged=pickVoice; }catch(e){}
+function say(text,rate=.9){ try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(strip(text).replace(/[“”]/g,'"')); if(voice)u.voice=voice; u.rate=rate; u.lang="en-US"; speechSynthesis.speak(u); return true; }catch(e){ return false; } }
+function hush(){ try{ speechSynthesis.cancel(); }catch(e){} }
+
+/* ================= course structure ================= */
+const SEC = {
+  read:{n:"Reading",ic:"📖",c:"var(--read)"}, spell:{n:"Spelling & Phonics",ic:"🔤",c:"var(--spell)"},
+  gram:{n:"Grammar & Usage",ic:"✏️",c:"var(--gram)"}, write:{n:"Writing",ic:"📝",c:"var(--write)"},
+  poem:{n:"Poetry",ic:"🎵",c:"var(--poem)"}, art:{n:"Art Appreciation",ic:"🎨",c:"var(--art)"},
+  geo:{n:"Geography",ic:"🌍",c:"var(--geo)"}, book:{n:"Personal Reading",ic:"📚",c:"var(--book)"},
+  test:{n:"Spelling Check",ic:"🔤",c:"var(--spell)"}
+};
+const secsOf=L=> L.review ? ["read","test","gram","poem"] : ["read","spell","gram",L.extra.kind,"write","book"];
+const TOTAL_STARS = LESSONS.reduce((a,L)=>a+secsOf(L).length+2,0);
+function starCount(s=student){ return Object.keys(P(s).stars).reduce((a,k)=>a+(k.endsWith("-done")?2:1),0); }
+function addStar(key){ if(!student||P().stars[key]) return false; P().stars[key]=Date.now(); P().last=Date.now(); saveAll(); updateStars(); return true; }
+function updateStars(){ $("starCount").textContent=starCount(); }
+const lessonDone=(i,s=student)=>!!(P(s).lessons[i]&&P(s).lessons[i].done);
+const nextLesson=(s=student)=>{ for(let i=0;i<LESSONS.length;i++) if(!lessonDone(i,s)) return i; return LESSONS.length-1; };
+const lessonNo=i=>i+1;
+const unitLessons=u=>LESSONS.map((L,i)=>[L,i]).filter(([L])=>L.u===u);
+
+const BADGES=[
+  {i:"🌱",n:"First Lesson",d:"Finish Lesson 1",ok:s=>lessonDone(0,s)},
+  ...UNITS.map(U=>({i:U.icon,n:U.title,d:`Finish Unit ${U.n}`,ok:s=>unitLessons(U.n).every(([,i])=>lessonDone(i,s))})),
+  {i:"📚",n:"Bookworm",d:"Read 300 minutes",ok:s=>(P(s).minutes||0)>=300},
+  {i:"🔤",n:"Super Speller",d:"Spell 8 of 8 on the first try",ok:s=>Object.values(P(s).lessons).some(l=>l.sec&&((l.sec.spell&&l.sec.spell.score===8)||(l.sec.test&&l.sec.test.score===8)))},
+  {i:"🌼",n:"Wildflower Scholar",d:"Finish all 30 lessons",ok:s=>LESSONS.every((_,i)=>lessonDone(i,s))}
+];
+
+/* ================= navigation ================= */
+let curLesson=0;
+function go(id,arg){
+  hush();
+  if(!student&&id!=="parent") id="pick";
+  if(id!=="parent") parentOK=false;
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("on"));
+  $(id).classList.add("on");
+  const inKid=student&&id!=="pick"&&id!=="parent";
+  $("homeBtn").style.display=(id==="lesson")?"inline-block":"none";
+  $("whoBtn").style.display=inKid?"inline-block":"none"; $("whoBtn").textContent="👤 "+student; $("whoBtn").title="Switch student";
+  $("starPill").style.display=inKid?"inline-block":"none";
+  if(id==="pick") renderPick();
+  if(id==="home") renderHome();
+  if(id==="lesson") renderLesson(arg);
+  if(id==="parent") renderParent();
+  updateStars();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function confetti(n=14){ const b=["⭐","🌼","✨","🍃"]; for(let i=0;i<n;i++){ const s=document.createElement("div"); s.className="confetti"; s.textContent=b[i%b.length]; s.style.left=Math.random()*100+"vw"; s.style.animationDelay=(Math.random()*.4)+"s"; document.body.appendChild(s); setTimeout(()=>s.remove(),2500);} }
+
+/* ================= pick ================= */
+function renderPick(){
+  $("names").innerHTML=roster.length?roster.map(n=>`<button class="name-btn" data-n="${esc(n)}">${esc(n)}<small>Lesson ${lessonNo(nextLesson(n))} · ⭐ ${starCount(n)}</small></button>`).join(""):'<p class="note" style="font-size:18px">No students yet. Add your name to begin!</p>';
+  $("names").querySelectorAll("[data-n]").forEach(b=>b.onclick=()=>{ student=b.dataset.n; P().last=Date.now(); saveAll(); go("home"); });
+  $("addErr").textContent="";
+}
+$("addForm").addEventListener("submit",e=>{ e.preventDefault(); const n=$("newName").value.trim().replace(/\s+/g," ");
+  if(!n){ $("addErr").textContent="Type your name first."; return; }
+  if(roster.some(x=>x.toLowerCase()===n.toLowerCase())){ $("addErr").textContent=`${n} is already here. Tap your name above!`; return; }
+  roster.push(n); $("newName").value=""; student=n; P(); saveAll(); go("home"); });
+
+/* ================= home ================= */
+function renderHome(){
+  const nx=nextLesson(), all=LESSONS.every((_,i)=>lessonDone(i)), NL=LESSONS[nx], n=starCount();
+  const doneN=LESSONS.filter((_,i)=>lessonDone(i)).length;
+  let h=`<div class="card hero"><div>
+    <div class="kicker">Hello, ${esc(student)}!</div>
+    <h1>${all?"You finished every lesson! 🌼":`Lesson ${lessonNo(nx)}: ${esc(NL.story.title)}`}</h1>
+    <div class="note" style="font-size:16px;margin-top:4px">${doneN} of ${LESSONS.length} lessons done · ⭐ ${n} of ${TOTAL_STARS} stars</div>
+    <div class="starbar"><i style="width:${n/TOTAL_STARS*100}%"></i></div></div>
+    <button class="btn go" onclick="go('lesson',${nx})">${all?"Review":(P().lessons[nx]&&Object.keys(P().lessons[nx].sec).length?"Keep going ➜":"Start lesson ➜")}</button></div>`;
+  UNITS.forEach(U=>{
+    const ls=unitLessons(U.n), d=ls.filter(([,i])=>lessonDone(i)).length;
+    h+=`<div class="unit"><div class="unit-head"><div class="badge-ic" style="background:${U.color}">${U.icon}</div><div><h2>Unit ${U.n}: ${U.title}</h2><span>${d} of ${ls.length} lessons done · Poem: “${U.poem.title}”</span></div></div><div class="lgrid">`;
+    ls.forEach(([L,i])=>{ h+=`<button class="ltile ${lessonDone(i)?"done":""} ${i===nx&&!all?"next":""} ${L.review?"rev":""}" onclick="go('lesson',${i})"><b>Lesson ${lessonNo(i)}</b><span>${L.review?"Review & Check":esc(L.story.title)}</span></button>`; });
+    h+=`</div></div>`;
+  });
+  h+=`<h2 style="font-size:24px;margin-top:26px">My badges 🏅</h2><div class="badges">${BADGES.map(b=>`<div class="badge ${b.ok(student)?"":"locked"}"><div class="bi">${b.i}</div><b>${b.n}</b>${b.d}</div>`).join("")}</div>
+  <div style="text-align:center;margin-top:30px"><button class="link" onclick="go('parent')">👪 Parent area</button></div>`;
+  $("home").innerHTML=h;
+}
+
+/* ================= lesson ================= */
+function secDone(i,k){ const l=LP(i); return !!(l.sec[k]&&l.sec[k].done); }
+function markSec(k,data={}){
+  const i=curLesson, l=LP(i); l.sec[k]=Object.assign({},l.sec[k]||{},data,{done:true,at:Date.now()});
+  P().last=Date.now(); addStar(`L${i}-${k}`); saveAll();
+  const secs=secsOf(LESSONS[i]);
+  if(!l.done && secs.every(s=>secDone(i,s))){ l.done=true; l.doneAt=Date.now(); addStar(`L${i}-done`); saveAll(); renderLesson(i,true); return; }
+  refreshDots(); paintSecHead(k);
+}
+function paintSecHead(k){ const el=document.querySelector(`#sec-${k} .chk`); if(el) el.textContent=secDone(curLesson,k)?"✓ Done":""; }
+function refreshDots(){ const el=$("dots"); if(!el) return; const L=LESSONS[curLesson];
+  el.innerHTML=secsOf(L).map(k=>`<a class="dot ${secDone(curLesson,k)?"done":""}" href="#sec-${k}" onclick="event.preventDefault();document.getElementById('sec-${k}').scrollIntoView({behavior:'smooth'})" style="text-decoration:none;color:inherit"><i style="background:${SEC[k].c}">${secDone(curLesson,k)?"":SEC[k].ic}</i>${SEC[k].n}</a>`).join(""); }
+function secShell(k,title,body){ return `<section class="card sec" id="sec-${k}"><div class="sec-h" style="background:${SEC[k].c}"><span class="ic">${SEC[k].ic}</span><h2>${title||SEC[k].n}</h2><span class="chk">${secDone(curLesson,k)?"✓ Done":""}</span></div><div class="sec-b">${body}</div></section>`; }
+
+function renderLesson(i,finished){
+  curLesson=i; const L=LESSONS[i], U=UNITS[L.u-1];
+  if(finished){
+    confetti(30);
+    $("lesson").innerHTML=`<div class="card finish"><div class="big">🌼</div><span class="stamp">Lesson ${lessonNo(i)} complete</span>
+      <h2>Wonderful work, ${esc(student)}!</h2><p class="lead">${L.review?`You finished the Unit ${L.u} review.`:`You read “${esc(L.story.title)}” and finished every part of the lesson.`} You earned ${secsOf(L).length+2} stars.</p>
+      <div class="row" style="justify-content:center">${i<LESSONS.length-1?`<button class="btn" onclick="go('lesson',${i+1})">Next lesson ➜</button>`:""}<button class="btn ghost" onclick="go('home')">Back to lessons</button></div></div>`;
+    return;
+  }
+  let h=`<div class="lhead"><div class="kicker" style="color:${U.color}">Unit ${U.n} · ${U.title} · Lesson ${lessonNo(i)} of ${LESSONS.length}</div>
+    <h1>${L.review?`Unit ${U.n} Review & Check`:esc(L.story.title)}</h1>
+    <div class="row" style="margin-top:8px"><button class="btn ghost small" ${i===0?"disabled":""} onclick="go('lesson',${i-1})">‹ Lesson ${i}</button><button class="btn ghost small" ${i===LESSONS.length-1?"disabled":""} onclick="go('lesson',${i+1})">Lesson ${i+2} ›</button>${lessonDone(i)?`<span class="complete-badge">✓ Finished</span>`:""}</div>
+    <div class="dots" id="dots"></div></div>`;
+  secsOf(L).forEach(k=>{ h+=BUILD[k](L,i,U); });
+  $("lesson").innerHTML=h; refreshDots();
+  secsOf(L).forEach(k=>WIRE[k]&&WIRE[k](L,i,U));
+}
+
+/* ---- question block (multiple choice) ---- */
+function mcHTML(id,q,opts,ans,why){ const order=shuffle(opts.map((t,j)=>j));
+  return `<div class="q" data-qid="${id}" data-ans="${ans}"><p class="ask">${q}</p><div class="opts">${order.map(j=>`<button class="opt" data-j="${j}">${opts[j]}</button>`).join("")}</div><div class="fbx"></div><input type="hidden" value="${esc(why||"")}"></div>`; }
+function tapHTML(id,it){ const words=it.s.split(" ");
+  return `<div class="q" data-qid="${id}" data-tap="1"><p class="ask">${it.q}</p><div class="tapline">${words.map(w=>`<button class="tapw" data-w="${esc(w.replace(/[.,!?]/g,""))}">${esc(w)}</button>`).join("")}</div><button class="btn small" data-check>Check</button><div class="fbx"></div></div>`; }
+/* wires a group of questions; onAll(score,total) when all answered */
+function wireQs(root,items,onAll){
+  const res={};
+  const finish=()=>{ if(Object.keys(res).length===items.length){ const sc=Object.values(res).filter(Boolean).length; onAll(sc,items.length); } };
+  root.querySelectorAll(".q").forEach((qel,idx)=>{
+    const it=items[idx];
+    if(qel.dataset.tap){
+      qel.querySelectorAll(".tapw").forEach(b=>b.onclick=()=>{ if(qel.dataset.locked)return; b.classList.toggle("sel"); });
+      qel.querySelector("[data-check]").onclick=()=>{
+        if(qel.dataset.locked) return;
+        const sel=[...qel.querySelectorAll(".tapw.sel")].map(b=>b.dataset.w);
+        if(!sel.length){ qel.querySelector(".fbx").innerHTML=`<div class="fb no">Tap a word first.</div>`; return; }
+        const okSet=it.ans.concat(it.extra||[]);
+        const right=it.ans.every(a=>sel.includes(a))&&sel.every(w=>okSet.includes(w));
+        qel.dataset.locked=1; qel.querySelector("[data-check]").style.display="none";
+        qel.querySelectorAll(".tapw").forEach(b=>{ const w=b.dataset.w;
+          if(b.classList.contains("sel")) b.classList.add(okSet.includes(w)?"right":"wrong"); else if(it.ans.includes(w)) b.classList.add("miss"); b.classList.remove("sel"); b.disabled=true; });
+        qel.querySelector(".fbx").innerHTML=`<div class="fb ${right?"ok":"no"}">${right?"✅ <b>Yes!</b> ":"💡 <b>Good try.</b> "}${it.why}</div>`;
+        res[idx]=right; finish();
+      };
+    } else {
+      const ans=+qel.dataset.ans, why=qel.querySelector("input").value;
+      qel.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{
+        const j=+b.dataset.j; qel.querySelectorAll(".opt").forEach(x=>{ x.disabled=true; if(+x.dataset.j===ans) x.classList.add("right"); });
+        if(j!==ans) b.classList.add("wrong");
+        qel.querySelector(".fbx").innerHTML=`<div class="fb ${j===ans?"ok":"no"}">${j===ans?"✅ <b>Yes!</b> ":"💡 <b>Good try.</b> "}${why}</div>`;
+        res[idx]=(j===ans); finish();
+      });
+    }
+  });
+}
+const doneNote=(i,k)=>{ const s=LP(i).sec[k]; return s&&s.done&&s.total?`<p class="note">Last time: ${s.score} of ${s.total} correct. You can try again any time.</p>`:""; };
+
+const BUILD={}, WIRE={};
+/* ---- reading ---- */
+BUILD.read=(L,i)=>{ const S=L.story;
+  return secShell("read",L.review?"Reading Check":"Reading",`
+    ${S.virtue?`<span class="virtue">💛 ${S.virtue}</span>`:""}
+    <div class="row" style="margin-bottom:6px"><button class="listen" id="rdListen">🔈 Read it to me</button><button class="listen" id="rdStop">⏹ Stop</button></div>
+    <p class="note">${L.review?"Read this passage out loud. Then answer the questions.":"Read the story out loud to a parent, or read it quietly to yourself. Then answer the questions."}</p>
+    <div class="story"><h3>${esc(S.title)}</h3>${S.text.map((p,j)=>`<p>${p}</p>`).join("")}</div>
+    ${S.vocab?`<div class="vocab"><div style="font-weight:700;color:var(--read)">Words to know</div>${S.vocab.map(([w,d])=>`<div><b>${w}</b>: ${d}</div>`).join("")}</div>`:""}
+    <div id="rdQs"><h3 style="font-size:20px;margin-top:14px">Think about the story</h3>${S.q.map((q,j)=>mcHTML("r"+j,q[0],q[1],q[2],q[3])).join("")}</div>
+    ${S.verse?`<div class="verse">“${S.verse.text}”<small>${S.verse.ref} · Thought to keep</small></div>`:""}
+    ${doneNote(i,"read")}`); };
+WIRE.read=(L,i)=>{ const S=L.story;
+  $("rdListen").onclick=()=>say(S.title+". "+S.text.join(" "),.88); $("rdStop").onclick=hush;
+  wireQs($("rdQs"),S.q.map(q=>({type:"mc"})),(sc,t)=>markSec("read",{score:sc,total:t})); };
+
+/* ---- spelling with letter tiles ---- */
+BUILD.spell=(L,i)=>{ const S=L.spell;
+  return secShell("spell",`Spelling: ${S.title}`,`
+    <div class="rule">${S.rule}</div>
+    <p><b>This lesson’s words.</b> Tap a word to hear it. Read each one out loud.</p>
+    <div class="words">${S.words.map(w=>`<button class="word" data-say="${esc(w)}">${esc(w)}</button>`).join("")}</div>
+    <p><b>Letter tiles.</b> Listen to each word, then build it with the tiles. Try to spell it without peeking!</p>
+    <div id="tb-spell"></div>${doneNote(i,"spell")}`); };
+WIRE.spell=(L,i)=>{ document.querySelectorAll("#sec-spell [data-say]").forEach(b=>b.onclick=()=>say(sayFor(L.spell,b.dataset.say)));
+  tileBox($("tb-spell"),L.spell.words,L.spell,true,(sc,t)=>markSec("spell",{score:sc,total:t})); };
+const sayFor=(S,w)=> (S&&S.say&&S.say[w]) ? S.say[w] : w;
+
+/* ---- review spelling check ---- */
+BUILD.test=(L,i)=> secShell("test","Spelling Check",`<p>Here are 8 words from this unit. Listen to each word and build it with the letter tiles. No peeking this time. Do your best!</p><div id="tb-test"></div>${doneNote(i,"test")}`);
+WIRE.test=(L,i)=>{ const pool=[]; unitLessons(L.u).forEach(([X])=>{ if(X.spell) X.spell.words.forEach(w=>pool.push([w,X.spell])); });
+  const pick=shuffle(pool).slice(0,8); const tiles=[...new Set(pick.flatMap(([,S])=>S.tiles))].slice(0,10);
+  const S={tiles,say:Object.fromEntries(pick.map(([w,X])=>[w,sayFor(X,w)]))};
+  tileBox($("tb-test"),pick.map(p=>p[0]),S,false,(sc,t)=>markSec("test",{score:sc,total:t,words:pick.map(p=>p[0])})); };
+
+function tileBox(root,words,S,allowPeek,onDone){
+  let k=0, built=[], first=0, tries=0, peeked=false;
+  const needCaps=[...new Set(words.join("").replace(/[^A-Z]/g,"").split(""))].filter(Boolean);
+  const needApos=words.some(w=>w.includes("'"));
+  const letters="abcdefghijklmnopqrstuvwxyz".split("");
+  const ph=(S.tiles||[]).filter(t=>t!=="'"&&t.length>1);
+  const vowels="aeiou";
+  const tileHTML=(t,cls)=>`<button class="tile ${cls}" data-t="${esc(t)}" aria-label="${t==="'"?"apostrophe":esc(t)}">${esc(t)}</button>`;
+  function draw(){
+    if(k>=words.length){ root.innerHTML=`<div class="tilebox" style="text-align:center"><div class="big" style="font-size:54px">🎉</div><p style="font-size:20px"><b>All done!</b> You spelled ${first} of ${words.length} on the first try.</p><button class="btn ghost small" id="tbAgain">Practice again</button></div>`; root.querySelector("#tbAgain").onclick=()=>tileBox(root,shuffle(words),S,allowPeek,()=>{}); return; }
+    const w=words[k];
+    root.innerHTML=`<div class="tilebox">
+      <div class="tb-top"><span class="tb-count">Word ${k+1} of ${words.length}</span><div class="row"><button class="listen" data-a="hear">🔈 Hear the word</button>${allowPeek?`<button class="listen" data-a="peek">👀 Peek</button>`:""}</div></div>
+      <div class="peek" id="peek"></div>
+      <div class="slot" id="slot">${built.length?built.map((t,j)=>`<button class="tile ${t.length>1?"ph":vowels.includes(t)?"v":""}" data-rm="${j}">${esc(t)}</button>`).join(""):'<span class="ph">Tap tiles to build the word…</span>'}</div>
+      <div class="tiles">${letters.map(l=>tileHTML(l,vowels.includes(l)?"v":"")).join("")}${needCaps.map(l=>tileHTML(l,"v")).join("")}${needApos?tileHTML("'",""):""}</div>
+      ${ph.length?`<div class="tiles" style="margin-top:8px">${ph.map(t=>tileHTML(t,"ph")).join("")}</div>`:""}
+      <div class="tb-actions"><button class="btn ghost small" data-a="back">⌫ Back</button><button class="btn ghost small" data-a="clear">Clear</button><button class="btn small" data-a="check" style="background:var(--spell)">Check ✓</button></div>
+      <div id="tbfb"></div></div>`;
+    root.querySelectorAll(".tiles .tile").forEach(b=>b.onclick=()=>{ built.push(b.dataset.t); draw(); });
+    root.querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>{ built.splice(+b.dataset.rm,1); draw(); });
+    root.querySelector('[data-a="hear"]').onclick=()=>say(sayFor(S,w),.8);
+    const pk=root.querySelector('[data-a="peek"]'); if(pk) pk.onclick=()=>{ peeked=true; const el=root.querySelector("#peek"); el.textContent=w; setTimeout(()=>{ if(el.isConnected) el.textContent=""; },1600); };
+    root.querySelector('[data-a="back"]').onclick=()=>{ built.pop(); draw(); };
+    root.querySelector('[data-a="clear"]').onclick=()=>{ built=[]; draw(); };
+    root.querySelector('[data-a="check"]').onclick=()=>{
+      const guess=built.join(""); if(!guess){ root.querySelector("#tbfb").innerHTML=`<div class="fb no">Build the word first. Tap 🔈 to hear it.</div>`; return; }
+      tries++;
+      const slot=root.querySelector("#slot");
+      if(guess===w){ if(tries===1&&!peeked) first++; slot.classList.add("ok");
+        root.querySelector("#tbfb").innerHTML=`<div class="fb ok">✅ <b>${esc(w)}</b> is right!</div>`;
+        setTimeout(()=>{ k++; built=[]; tries=0; peeked=false; if(k>=words.length) onDone(first,words.length); draw(); if(k<words.length) setTimeout(()=>say(sayFor(S,words[k]),.8),250); },900);
+      } else { slot.classList.add("no");
+        root.querySelector("#tbfb").innerHTML= tries>=2
+          ? `<div class="fb no">This word is spelled <b style="font-size:22px;letter-spacing:1px">${esc(w)}</b>. Build it once more, looking at the letters.</div>`
+          : `<div class="fb no">Not quite. Say the word slowly and listen to each sound. Try again!</div>`;
+        setTimeout(()=>slot.classList.remove("no"),700);
+      }
+    };
+  }
+  draw();
+}
+
+/* ---- grammar ---- */
+BUILD.gram=(L,i)=>{ const G=L.review?{title:"Grammar Check",items:L.gram}:L.gram;
+  return secShell("gram",L.review?"Grammar Check":`Grammar: ${G.title}`,`
+    ${L.review?`<p>Show what you remember from this unit.</p>`:`<div class="rule">${G.rule}<span class="ex">${G.ex}</span></div>`}
+    <div id="grQs">${G.items.map((it,j)=>it.type==="tap"?tapHTML("g"+j,it):mcHTML("g"+j,it.q,it.o,it.a,it.why)).join("")}</div>${doneNote(i,"gram")}`); };
+WIRE.gram=(L,i)=>{ const items=L.review?L.gram:L.gram.items; wireQs($("grQs"),items,(sc,t)=>markSec("gram",{score:sc,total:t})); };
+
+/* ---- writing ---- */
+BUILD.write=(L,i)=>{ const W=L.write, saved=P().writing[i]||"";
+  return secShell("write","Writing",`<p style="font-size:20px"><b>${W.p}</b></p>
+    <div class="task"><span class="ti">💡</span><div>${W.tip}</div></div>
+    <p class="note">Write in your notebook, or type here. Your typing is saved for your parent to see.</p>
+    <textarea class="writebox" id="wrBox" placeholder="Start writing here…">${esc(saved)}</textarea>
+    <div class="done-row"><span class="note" id="wrMsg"></span><button class="btn" style="background:var(--write)" id="wrDone">${secDone(i,"write")?"✓ Finished (save changes)":"I finished my writing"}</button></div>`); };
+WIRE.write=(L,i)=>{ let t=null; const box=$("wrBox");
+  box.oninput=()=>{ clearTimeout(t); t=setTimeout(()=>{ P().writing[i]=box.value; saveAll(); const m=$("wrMsg"); if(m) m.textContent="Saved."; },500); };
+  $("wrDone").onclick=()=>{ clearTimeout(t); P().writing[i]=box.value; saveAll(); $("wrMsg").textContent="Saved."; if(!secDone(i,"write")) markSec("write",{words:box.value.trim().split(/\s+/).filter(Boolean).length}); else saveAll(); $("wrDone") && ($("wrDone").textContent="✓ Finished (save changes)"); }; };
+
+/* ---- poetry ---- */
+BUILD.poem=(L,i,U)=>{ const Pm=U.poem;
+  const intro=L.review?`Recite “${Pm.title}” for your family. Try to say as much as you can from memory!`:`This is the poem for Unit ${U.n}. Read it aloud slowly, two or three times. You will learn it by heart and recite it at the end of the unit.`;
+  return secShell("poem",L.review?"Poetry Recitation":"Poetry",`<p>${intro}</p>
+    <div class="row" style="margin-bottom:10px"><button class="listen" id="pmListen">🔈 Listen to the poem</button><button class="listen" onclick="hush()">⏹ Stop</button></div>
+    <div class="poem"><h3>${Pm.title}</h3><span class="by">by ${Pm.by}</span>${Pm.lines.join("\n")}</div>
+    ${L.review?"":`<div class="task"><span class="ti">🗣️</span><div>Which words rhyme? Clap the rhythm of the first stanza. Then try to say the first two lines with your eyes closed.</div></div>`}
+    <div class="done-row"><button class="btn" style="background:var(--poem)" id="pmDone" ${secDone(i,"poem")?"disabled":""}>${secDone(i,"poem")?"✓ Done":L.review?"I recited the poem":"I read it aloud"}</button></div>`); };
+WIRE.poem=(L,i,U)=>{ $("pmListen").onclick=()=>say(U.poem.title+", by "+U.poem.by+". "+U.poem.lines.filter(Boolean).join(". "),.85);
+  $("pmDone").onclick=()=>{ markSec("poem"); const b=$("pmDone"); if(b){ b.disabled=true; b.textContent="✓ Done"; } }; };
+
+/* ---- art ---- */
+BUILD.art=(L,i)=>{ const A=L.extra;
+  return secShell("art","Art Appreciation",`<div class="artcard"><div class="frame" aria-hidden="true"></div><div><h3>${A.work}</h3><div>${A.artist} · ${A.year}</div>
+    <a href="https://commons.wikimedia.org/w/index.php?search=${encodeURIComponent(A.search)}" target="_blank" rel="noopener">🖼️ Look at the painting with a parent ↗</a></div></div>
+    ${A.text.map(p=>`<p>${p}</p>`).join("")}
+    <p><b>Look closely and talk about it:</b></p><ul class="look">${A.look.map(x=>`<li>${x}</li>`).join("")}</ul>
+    <div class="task"><span class="ti">🖍️</span><div><b>Art activity:</b> ${A.task}</div></div>
+    <div class="done-row"><button class="btn" style="background:var(--art)" id="artDone" ${secDone(i,"art")?"disabled":""}>${secDone(i,"art")?"✓ Done":"I looked, talked, and drew"}</button></div>`); };
+WIRE.art=(L,i)=>{ $("artDone").onclick=()=>{ markSec("art"); const b=$("artDone"); if(b){b.disabled=true;b.textContent="✓ Done";} }; };
+
+/* ---- geography ---- */
+BUILD.geo=(L,i)=>{ const G=L.extra;
+  return secShell("geo",`Geography: ${G.title}`,`${G.text.map(p=>`<p>${p}</p>`).join("")}
+    ${G.svg?`<div class="mapbox">${MAPS[G.svg]()}</div>`:""}
+    <div class="task"><span class="ti">🧭</span><div><b>Try it:</b> ${G.task}</div></div>
+    <div id="geoQs">${G.q.map((q,j)=>mcHTML("geo"+j,q[0],q[1],q[2],q[3])).join("")}</div>${doneNote(i,"geo")}`); };
+WIRE.geo=(L,i)=>{ wireQs($("geoQs"),L.extra.q.map(()=>({type:"mc"})),(sc,t)=>markSec("geo",{score:sc,total:t})); };
+
+/* ---- personal reading ---- */
+BUILD.book=(L,i)=>{ const s=LP(i).sec.book;
+  return secShell("book","Personal Reading",`<p>Read a good book for <b>20 minutes</b>. Choose one from your book basket, or ask a parent to help you pick one from the book list.</p>
+    <div class="row"><label for="bkTitle">Book:</label><input type="text" id="bkTitle" style="flex:1;min-width:180px" placeholder="Title of your book" value="${esc(s&&s.title||"")}"></div>
+    <div class="row" style="margin-top:10px"><label for="bkMin">Minutes:</label><input type="number" id="bkMin" min="1" max="180" style="width:110px" value="${s&&s.min||20}"></div>
+    <div class="done-row"><span class="note" id="bkMsg"></span><button class="btn" style="background:var(--book)" id="bkDone" ${s&&s.done?"disabled":""}>${s&&s.done?"✓ Done":"I read today"}</button></div>`); };
+WIRE.book=(L,i)=>{ $("bkDone").onclick=()=>{ const m=Math.max(1,Math.min(180,parseInt($("bkMin").value)||20)), title=$("bkTitle").value.trim();
+  P().minutes=(P().minutes||0)+m; P().reads.push({at:Date.now(),min:m,title,lesson:i}); markSec("book",{min:m,title}); const b=$("bkDone"); if(b){b.disabled=true;b.textContent="✓ Done";} }; };
+
+/* ================= maps (simple drawings) ================= */
+const pt=(lo,la)=>[((lo+180)/360*600).toFixed(1),((90-la)/180*300).toFixed(1)].join(",");
+const poly=(a,fill,hl)=>`<polygon points="${a.map(([x,y])=>pt(x,y)).join(" ")}" fill="${fill}" stroke="#fff" stroke-width="1.5" ${hl?'stroke-width="2.5"':""}/>`;
+const CONT={
+  na:[[-168,66],[-140,70],[-95,72],[-80,62],[-60,55],[-55,48],[-70,42],[-80,25],[-97,18],[-88,15],[-78,8],[-90,15],[-105,22],[-117,32],[-125,42],[-125,50],[-140,60],[-165,60]],
+  gl:[[-50,82],[-20,75],[-40,62],[-55,70]],
+  sa:[[-78,8],[-60,10],[-50,0],[-35,-7],[-40,-22],[-55,-35],[-68,-55],[-75,-45],[-72,-20],[-81,-5]],
+  eu:[[-10,36],[-9,44],[-2,48],[-5,58],[10,63],[15,70],[30,70],[40,65],[45,55],[40,45],[28,40],[20,38],[12,44],[5,43]],
+  af:[[-17,21],[-5,36],[10,37],[32,31],[43,12],[51,12],[40,-5],[40,-15],[32,-28],[20,-35],[12,-17],[9,4],[-8,5],[-17,14]],
+  as:[[40,45],[45,55],[40,65],[60,70],[100,77],[140,72],[180,68],[170,60],[155,58],[140,50],[130,42],[122,30],[110,20],[105,10],[100,2],[98,15],[80,8],[72,20],[58,25],[50,30],[35,32],[28,40]],
+  au:[[114,-22],[130,-12],[142,-11],[153,-25],[150,-37],[140,-38],[130,-32],[115,-34]],
+  an:[[-180,-72],[-120,-74],[-60,-64],[0,-70],[60,-67],[120,-66],[180,-72],[180,-90],[-180,-90]]
+};
+const lbl=(lo,la,t,c="#2E2A25",sz=13)=>{ const [x,y]=pt(lo,la).split(","); return `<text x="${x}" y="${y}" text-anchor="middle" font-family="Andika,sans-serif" font-size="${sz}" font-weight="700" fill="${c}">${t}</text>`; };
+const MAPS={
+  continents:()=>`<svg viewBox="0 0 600 300" role="img" aria-label="Simple world map of the continents and oceans"><rect width="600" height="300" rx="12" fill="#CFE6EC"/>
+    ${poly(CONT.na,"#E3B04B")}${poly(CONT.gl,"#E3B04B")}${poly(CONT.sa,"#6E9A64")}${poly(CONT.eu,"#B5677A")}${poly(CONT.af,"#C9785D")}${poly(CONT.as,"#9A6A9E")}${poly(CONT.au,"#4F86A6")}${poly(CONT.an,"#F4F7F8")}
+    ${lbl(-102,46,"North America")}${lbl(-60,-18,"South America")}${lbl(16,55,"Europe")}${lbl(20,5,"Africa")}${lbl(95,50,"Asia")}${lbl(134,-27,"Australia")}${lbl(0,-80,"Antarctica")}
+    ${lbl(-150,10,"Pacific",'#2F6F8F',12)}${lbl(170,-20,"Pacific",'#2F6F8F',12)}${lbl(-38,22,"Atlantic",'#2F6F8F',12)}${lbl(78,-28,"Indian",'#2F6F8F',12)}${lbl(10,84,"Arctic",'#2F6F8F',12)}${lbl(60,-58,"Southern",'#2F6F8F',12)}
+    <text x="590" y="292" text-anchor="end" font-size="10" fill="#6F675D" font-family="Andika">simple drawing, not to scale</text></svg>`,
+  usa:()=>`<svg viewBox="0 0 600 300" role="img" aria-label="Simple world map with North America highlighted"><rect width="600" height="300" rx="12" fill="#CFE6EC"/>
+    ${poly(CONT.na,"#E3B04B",1)}${poly(CONT.gl,"#E9DDBF")}${poly(CONT.sa,"#DDD5C2")}${poly(CONT.eu,"#DDD5C2")}${poly(CONT.af,"#DDD5C2")}${poly(CONT.as,"#DDD5C2")}${poly(CONT.au,"#DDD5C2")}${poly(CONT.an,"#F4F7F8")}
+    ${lbl(-105,58,"CANADA")}${lbl(-98,40,"UNITED STATES")}${lbl(-102,24,"MEXICO",'#2E2A25',11)}${lbl(-84,44,"Great Lakes",'#2F6F8F',10)}${lbl(-150,10,"Pacific",'#2F6F8F',12)}${lbl(-45,30,"Atlantic",'#2F6F8F',12)}${lbl(-90,24,"Gulf",'#2F6F8F',10)}
+    <circle cx="${pt(-77,39).split(",")[0]}" cy="${pt(-77,39).split(",")[1]}" r="4" fill="#C0614E"/>${lbl(-62,38,"Washington, D.C.",'#C0614E',10)}</svg>`,
+  indiana:()=>`<svg viewBox="0 0 600 300" role="img" aria-label="Simple drawing of Indiana and its neighbors"><rect width="600" height="300" rx="12" fill="#EEF3E6"/>
+    <path d="M225 40 Q240 22 262 30 L380 30 L384 228 Q370 236 356 232 Q338 250 318 246 Q300 262 282 258 Q262 270 244 262 Q232 256 222 262 L224 70 Z" fill="#E3B04B" stroke="#8A6A15" stroke-width="2"/>
+    <path d="M150 0 L262 0 L262 30 Q240 22 225 40 Q205 30 190 0 Z" fill="#9DC7D8"/><text x="205" y="18" text-anchor="middle" font-size="12" fill="#2F6F8F" font-weight="700" font-family="Andika">Lake Michigan</text>
+    <path d="M222 262 Q232 256 244 262 Q262 270 282 258 Q300 262 318 246 Q338 250 356 232 Q370 236 384 228" stroke="#4F86A6" stroke-width="6" fill="none"/>
+    <text x="300" y="285" text-anchor="middle" font-size="13" fill="#2F6F8F" font-weight="700" font-family="Andika">Ohio River</text>
+    <text x="303" y="110" text-anchor="middle" font-size="24" font-family="Lora" font-weight="700" fill="#5C4510">INDIANA</text>
+    <text x="300" y="150" text-anchor="middle" font-size="26">⭐</text><text x="300" y="175" text-anchor="middle" font-size="14" font-weight="700" font-family="Andika">Indianapolis</text>
+    <circle cx="360" cy="205" r="9" fill="#C0392B"/><text x="372" y="210" font-size="12" font-family="Andika" fill="#7A1F14">cardinal</text>
+    <text x="120" y="150" text-anchor="middle" font-size="16" fill="#6F675D" font-family="Andika">Illinois</text><text x="470" y="150" text-anchor="middle" font-size="16" fill="#6F675D" font-family="Andika">Ohio</text>
+    <text x="320" y="20" text-anchor="middle" font-size="16" fill="#6F675D" font-family="Andika">Michigan</text><text x="470" y="270" text-anchor="middle" font-size="16" fill="#6F675D" font-family="Andika">Kentucky</text></svg>`,
+  compass:()=>`<svg viewBox="0 0 600 300" role="img" aria-label="Compass rose showing North, East, South and West"><rect width="600" height="300" rx="12" fill="#F7F1E3"/>
+    <g transform="translate(300 150)"><circle r="96" fill="#fff" stroke="#D9CCB3" stroke-width="3"/>
+    <polygon points="0,-90 14,-14 0,0" fill="#C0614E"/><polygon points="0,-90 -14,-14 0,0" fill="#E48F7E"/>
+    <polygon points="90,0 14,14 0,0" fill="#4F86A6"/><polygon points="90,0 14,-14 0,0" fill="#8BB3CB"/>
+    <polygon points="0,90 -14,14 0,0" fill="#4F86A6"/><polygon points="0,90 14,14 0,0" fill="#8BB3CB"/>
+    <polygon points="-90,0 -14,-14 0,0" fill="#4F86A6"/><polygon points="-90,0 -14,14 0,0" fill="#8BB3CB"/>
+    <circle r="8" fill="#E3B04B"/></g>
+    <g font-family="Lora" font-weight="700" font-size="26" text-anchor="middle"><text x="300" y="40" fill="#C0614E">N</text><text x="300" y="285">S</text><text x="418" y="159">E</text><text x="182" y="159">W</text></g>
+    <g font-family="Andika" font-size="16" fill="#6F675D"><text x="70" y="70">N = North</text><text x="70" y="95">E = East</text><text x="70" y="120">S = South</text><text x="70" y="145">W = West</text></g></svg>`,
+  landforms:()=>`<svg viewBox="0 0 600 300" role="img" aria-label="Drawing of landforms: mountain, valley, plateau, plain, island and peninsula"><rect width="600" height="300" rx="12" fill="#DCEFF6"/>
+    <rect y="210" width="600" height="90" fill="#9DC7D8"/>
+    <path d="M0 210 L40 120 L80 160 L120 70 L170 170 L200 150 L230 210 Z" fill="#8A9A7A"/><path d="M110 92 L120 70 L131 95 Z" fill="#fff"/>
+    
+    <path d="M230 210 L250 130 L340 130 L360 210 Z" fill="#B59A6A"/>
+    <path d="M360 210 L360 196 L470 196 L470 210 Q520 214 545 232 Q505 244 470 226 L360 222 Z" fill="#7FB070"/>
+    <ellipse cx="540" cy="275" rx="38" ry="12" fill="#7FB070"/><text x="540" y="279" text-anchor="middle" font-size="18">🌴</text>
+    <g font-family="Andika" font-weight="700" font-size="14" fill="#2E2A25" text-anchor="middle"><text x="120" y="56">mountain</text><text x="80" y="185">valley</text><text x="295" y="122">plateau</text><text x="412" y="190">plain</text><text x="505" y="222">peninsula</text><text x="540" y="258">island</text></g></svg>`
+};
+
+/* ================= parent area ================= */
+const BOOKS=[
+ ["Little House in the Big Woods","Laura Ingalls Wilder"],["Farmer Boy","Laura Ingalls Wilder"],["The Courage of Sarah Noble","Alice Dalgliesh"],
+ ["The Boxcar Children (original first book)","Gertrude Chandler Warner"],["Mr. Popper's Penguins","Richard & Florence Atwater"],["Sarah, Plain and Tall","Patricia MacLachlan"],
+ ["Charlotte's Web","E. B. White"],["The Year of Miss Agnes","Kirkpatrick Hill"],["Owls in the Family","Farley Mowat"],
+ ["Twenty and Ten","Claire Huchet Bishop"],["Heidi (children's edition)","Johanna Spyri"],["The Hundred Dresses","Eleanor Estes"],
+ ["Pilgrim's Progress for children (Little Pilgrim's Progress)","Helen L. Taylor"],["The Light at Tern Rock","Julia L. Sauer"],["Thy Friend, Obadiah","Brinton Turkle"],
+ ["Stone Fox","John Reynolds Gardiner"],["Sam the Minuteman","Nathaniel Benchley"],["A Lion to Guard Us","Clyde Robert Bulla"]
+];
+let pview={tab:"progress",who:""};
+const fmtDate=t=>{ try{ return new Date(t).toLocaleDateString([], {month:"short",day:"numeric",year:"numeric"}); }catch(e){ return ""; } };
+function scoreTxt(s){ return s&&s.done?(s.total?`${s.score}/${s.total}`:"✓"):"–"; }
+function renderParent(){
+  const box=$("parentBox");
+  if(!parentOK){ const creating=!pin;
+    box.innerHTML=`<div class="pinbox"><div style="font-size:52px">👪</div><h1 style="font-size:28px">${creating?"Create a parent PIN":"Enter your parent PIN"}</h1>
+      <p class="note">${creating?"Pick 4 numbers. You'll need this PIN to see progress and change settings.":"Progress and settings are behind this PIN."}</p>
+      <form id="pinform"><input id="pinin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="PIN"><br><br><button class="btn" type="submit">${creating?"Save PIN":"Unlock"}</button></form><p class="err" id="pinerr"></p>
+      <button class="link" onclick="go(student?'home':'pick')">← Back</button></div>`;
+    $("pinin").focus();
+    $("pinform").onsubmit=e=>{ e.preventDefault(); const v=$("pinin").value.trim();
+      if(!/^\d{4}$/.test(v)){ $("pinerr").textContent="Use exactly 4 numbers."; return; }
+      if(creating){ pin=v; LS.set("la3-pin",pin); parentOK=true; renderParent(); } else if(v===pin){ parentOK=true; renderParent(); } else { $("pinerr").textContent="That PIN doesn't match. Try again."; $("pinin").value=""; } };
+    return; }
+  const who=roster.includes(pview.who)?pview.who:(roster.includes(student)?student:roster[0]||""); pview.who=who;
+  const tabs=[["progress","📊 Progress"],["scores","📝 Scores"],["writing","✍️ Writing"],["reading","📚 Reading log"],["guide","🌼 How it works"],["settings","⚙️ Backup & settings"]];
+  const kids=roster.length?`<div class="tabs">${roster.map(n=>`<button data-who="${esc(n)}" aria-pressed="${n===who}">${esc(n)}</button>`).join("")}</div>`:`<p class="note">No students yet. A child adds their name on the start screen.</p>`;
+  let body="";
+  if(pview.tab==="progress"&&who){ const p=P(who), dn=LESSONS.filter((_,i)=>lessonDone(i,who)).length, nx=nextLesson(who);
+    body=kids+`<div class="stats"><div class="stat"><div class="k">Lessons done</div><div class="v">${dn}/${LESSONS.length}</div></div><div class="stat"><div class="k">Up next</div><div class="v">Lesson ${lessonNo(nx)}</div><div class="note">${esc(LESSONS[nx].review?"Unit review":LESSONS[nx].story.title)}</div></div>
+      <div class="stat"><div class="k">Minutes read</div><div class="v">${p.minutes||0}</div></div><div class="stat"><div class="k">Last active</div><div class="v" style="font-size:20px">${p.last?fmtDate(p.last):"—"}</div></div></div>
+      <div class="pgrid">${UNITS.map(U=>`<div class="punit"><h3>${U.icon} Unit ${U.n}: ${U.title}</h3><table class="t">${unitLessons(U.n).map(([L,i])=>{ const l=p.lessons[i]||{sec:{}}; const ss=secsOf(L);
+        return `<tr><td style="width:28px;color:var(--soft)">${lessonNo(i)}</td><td>${esc(L.review?"Review & Check":L.story.title)}${l.doneAt?`<div class="note" style="font-size:12px">done ${fmtDate(l.doneAt)}</div>`:""}</td><td style="white-space:nowrap;text-align:right">${ss.map(k=>`<span class="sq ${l.sec[k]&&l.sec[k].done?"on":""}" title="${SEC[k].n}"></span>`).join("")}</td></tr>`; }).join("")}</table></div>`).join("")}</div>
+      <p class="note">Each square is one part of the lesson (reading, spelling, grammar, and so on). Green means done.</p>`; }
+  else if(pview.tab==="scores"&&who){ const p=P(who);
+    const rows=LESSONS.map((L,i)=>[L,i,p.lessons[i]]).filter(([,,l])=>l&&Object.keys(l.sec||{}).length);
+    body=kids+(rows.length?`<table class="t"><tr><th>Lesson</th><th>Reading</th><th>Spelling (1st try)</th><th>Grammar</th><th>Geography</th></tr>${rows.map(([L,i,l])=>`<tr${L.review?' style="background:#FBF4E1"':""}><td>${lessonNo(i)}. ${esc(L.review?`Unit ${L.u} Review`:L.story.title)}</td><td>${scoreTxt(l.sec.read)}</td><td>${scoreTxt(l.sec.spell||l.sec.test)}</td><td>${scoreTxt(l.sec.gram)}</td><td>${scoreTxt(l.sec.geo)}</td></tr>`).join("")}</table>
+      <p class="note">Highlighted rows are unit reviews. Spelling counts words spelled right on the first try with no peeking. Scores show the first time a part was finished.</p>`:`<p class="note">${esc(who)} hasn't finished any parts yet.</p>`); }
+  else if(pview.tab==="writing"&&who){ const w=P(who).writing; const ks=Object.keys(w).filter(k=>w[k]&&w[k].trim()).sort((a,b)=>a-b);
+    body=kids+(ks.length?ks.map(k=>`<div class="wsample"><b>Lesson ${lessonNo(+k)} · ${esc(LESSONS[k].write?strip(LESSONS[k].write.p):"")}</b>${esc(w[k])}</div>`).join(""):`<p class="note">Writing typed into the app shows up here. Notebook writing won't appear, so check that in person!</p>`); }
+  else if(pview.tab==="reading"&&who){ const r=P(who).reads.slice().reverse();
+    body=kids+`<p><b>${P(who).minutes||0} minutes</b> of personal reading so far.</p>`+(r.length?`<table class="t"><tr><th>Date</th><th>Book</th><th>Minutes</th></tr>${r.map(x=>`<tr><td>${fmtDate(x.at)}</td><td>${esc(x.title||"—")}</td><td>${x.min}</td></tr>`).join("")}</table>`:`<p class="note">No reading logged yet.</p>`)
+      +`<h3 style="margin-top:22px;font-size:20px">Good books for personal reading</h3><p class="note">Wholesome, well-written books at about a 3rd grade level. Please preview any book yourself, since editions differ.</p><ul class="booklist">${BOOKS.map(([t,a])=>`<li><i>${esc(t)}</i>, ${esc(a)}</li>`).join("")}</ul>`; }
+  else if(pview.tab==="guide"){
+    body=`<h3 style="font-size:20px">How the course works</h3>
+      <p>The course has <b>5 units</b> with <b>6 lessons</b> each. Lessons 1–5 of each unit teach. Lesson 6 is a review with a reading check, a spelling check, a grammar check, and a poem recitation. Plan on one lesson every day or two, about 40–60 minutes each.</p>
+      <p>Each teaching lesson has six parts, like a course book page:</p>
+      <ul><li><b>📖 Reading:</b> an original story, written for this course, with a virtue and a Bible verse (KJV). Have your child read it aloud to you when you can.</li>
+      <li><b>🔤 Spelling & Phonics:</b> a spelling pattern, 8 words, and digital letter tiles. The app reads each word aloud.</li>
+      <li><b>✏️ Grammar & Usage:</b> a short rule with practice.</li>
+      <li><b>🎵 Poetry, 🎨 Art, or 🌍 Geography:</b> these take turns. Poems are classics to memorize. Art lessons link to famous paintings on Wikimedia Commons. Please open those with your child, since the app can't show the pictures itself.</li>
+      <li><b>📝 Writing:</b> a prompt to do in a notebook or type into the app.</li>
+      <li><b>📚 Personal Reading:</b> 20 minutes with a good book, logged in the app.</li></ul>
+      <p>Children earn a star for each part and two bonus stars for finishing a lesson. “Read it to me” and the spelling words use your device's built-in voice.</p>`; }
+  else if(pview.tab==="settings"){ let code=""; try{ code=btoa(unescape(encodeURIComponent(JSON.stringify({app:"wildflower-la3",roster,prog})))); }catch(e){}
+    body=`<h3 style="font-size:20px">Back up all progress</h3><p class="note">Progress is saved in this browser on this device. If the browser's data is cleared, it's lost. Copy this code somewhere safe so you can restore it later or move it to another device.</p>
+      <textarea id="bk" readonly rows="4" style="width:100%;font-size:13px;font-family:ui-monospace,monospace">${code}</textarea>
+      <div class="row" style="margin-top:8px"><button class="btn small" id="bkcopy">Copy backup code</button><span class="note" id="bkmsg"></span></div>
+      <h3 style="font-size:20px;margin-top:20px">Restore from a backup code</h3><textarea id="rs" rows="3" style="width:100%;font-size:13px" placeholder="Paste a backup code here"></textarea>
+      <div class="row" style="margin-top:8px"><button class="btn ghost small" id="rsgo">Restore</button><span class="note" id="rsmsg"></span></div>
+      <h3 style="font-size:20px;margin-top:20px">Change PIN</h3><div class="row"><input id="newpin" type="password" inputmode="numeric" maxlength="4" placeholder="New PIN" style="width:150px"><button class="btn ghost small" id="pinsave">Save</button><span class="note" id="pinmsg"></span></div>
+      <h3 style="font-size:20px;margin-top:20px">Students</h3>${roster.length?roster.map(n=>`<div class="row" style="margin:6px 0"><span style="min-width:130px"><b>${esc(n)}</b> · ⭐ ${starCount(n)}</span><button class="btn small danger" data-reset="${esc(n)}">Reset progress</button><button class="btn small danger" data-remove="${esc(n)}">Remove</button></div>`).join(""):`<p class="note">No students yet.</p>`}<p class="note" id="stumsg"></p>`; }
+  else body=kids;
+  box.innerHTML=`<h1 style="font-size:30px">Parent area 👪</h1><div class="tabs">${tabs.map(([k,l])=>`<button data-tab="${k}" aria-pressed="${pview.tab===k}">${l}</button>`).join("")}</div>${body}
+    <div class="row" style="margin-top:24px"><button class="btn ghost small" id="lockBtn">🔒 Lock</button></div>`;
+  box.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{ pview.tab=b.dataset.tab; renderParent(); });
+  box.querySelectorAll("[data-who]").forEach(b=>b.onclick=()=>{ pview.who=b.dataset.who; renderParent(); });
+  $("lockBtn").onclick=()=>{ parentOK=false; go(student?"home":"pick"); };
+  if(pview.tab==="settings"){
+    $("bkcopy").onclick=()=>{ const ta=$("bk"); try{ navigator.clipboard.writeText(ta.value).then(()=>{$("bkmsg").textContent="Copied.";},()=>{ta.select();$("bkmsg").textContent="Selected. Press copy.";}); }catch(e){ ta.select(); $("bkmsg").textContent="Selected. Press copy."; } };
+    let armed=false;
+    $("rsgo").onclick=()=>{ let d; try{ d=JSON.parse(decodeURIComponent(escape(atob($("rs").value.trim())))); }catch(e){ $("rsmsg").textContent="That code isn't a valid backup."; return; }
+      if(!d||d.app!=="wildflower-la3"||!Array.isArray(d.roster)){ $("rsmsg").textContent="That code isn't a backup for this app."; return; }
+      if(!armed){ armed=true; $("rsgo").textContent="Yes, replace everything"; $("rsmsg").textContent="This replaces all progress on this device."; return; }
+      roster=d.roster; prog=d.prog||{}; if(!roster.includes(student)) student=""; saveAll(); renderParent(); };
+    $("pinsave").onclick=()=>{ const v=$("newpin").value.trim(); if(!/^\d{4}$/.test(v)){ $("pinmsg").textContent="Use exactly 4 numbers."; return; } pin=v; LS.set("la3-pin",pin); $("pinmsg").textContent="PIN changed."; $("newpin").value=""; };
+    const twoTap=(b,label,act)=>b.onclick=()=>{ if(b.dataset.armed){ act(); return; } const orig=b.textContent; b.dataset.armed="1"; b.textContent=label; setTimeout(()=>{ if(b.isConnected){ delete b.dataset.armed; b.textContent=orig; } },4000); };
+    box.querySelectorAll("[data-reset]").forEach(b=>twoTap(b,"Tap again to reset",()=>{ const n=b.dataset.reset; delete prog[n]; P(n); saveAll(); renderParent(); $("stumsg").textContent=`${n}'s progress was reset.`; }));
+    box.querySelectorAll("[data-remove]").forEach(b=>twoTap(b,"Tap again to remove",()=>{ const n=b.dataset.remove; roster=roster.filter(x=>x!==n); delete prog[n]; if(student===n) student=""; saveAll(); renderParent(); $("stumsg").textContent=`${n} was removed.`; }));
+  }
+}
+
+/* ================= start ================= */
+if(!roster.includes(student)) student="";
+go(student?"home":"pick");
+(async()=>{ const saved=await IDB.get(); if(!saved){ IDB.put(snapshot()); return; }
+  const g=(k,d)=>{ try{ return saved[k]?JSON.parse(saved[k]):d; }catch(e){ return d; } };
+  const count=p=>Object.values(p||{}).reduce((a,x)=>a+Object.keys((x&&x.stars)||{}).length,0);
+  if(count(g("la3-prog",{}))>count(prog)||(!roster.length&&g("la3-roster",[]).length)){
+    try{ Object.entries(saved).forEach(([k,v])=>localStorage.setItem(k,v)); }catch(e){}
+    roster=g("la3-roster",[]); prog=g("la3-prog",{}); pin=g("la3-pin",""); student=g("la3-student",""); if(!roster.includes(student)) student="";
+    const cur=document.querySelector(".screen.on"); if(cur&&(cur.id==="pick"||cur.id==="home")) go(student?"home":"pick");
+  } else IDB.put(snapshot()); })();
+</script>
+</body>
+</html>

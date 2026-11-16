@@ -195,6 +195,24 @@ table.t th{font-size:13px;color:var(--soft);text-transform:uppercase;letter-spac
 .wsample b{display:block;font-size:14px;color:var(--soft);white-space:normal}
 .booklist{columns:2 260px;padding-left:20px}
 .booklist li{margin-bottom:6px;break-inside:avoid}
+.proj{border:2px dashed #E3B9C3;border-radius:18px;padding:16px 18px;margin:14px 0;background:#FFF9FA}
+.proj h3{font-size:22px;color:#8E4157;margin-bottom:8px}
+.proj .ptag{font-size:13px;letter-spacing:1.2px;text-transform:uppercase;color:var(--art);font-weight:700}
+.supplies{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:4px 14px;margin:6px 0 12px;padding:0;list-style:none}
+.supplies label{display:flex;gap:8px;align-items:flex-start;font-size:17px;cursor:pointer}
+.supplies input{width:20px;height:20px;margin-top:3px;accent-color:var(--art)}
+ol.steps{margin:6px 0 12px;padding:0;list-style:none;counter-reset:st;display:grid;gap:8px}
+ol.steps li{counter-increment:st;display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:start;font-size:18px}
+ol.steps li::before{content:counter(st);width:30px;height:30px;border-radius:50%;background:var(--art);color:#fff;display:grid;place-items:center;font-weight:700;font-size:15px}
+.photo{display:flex;flex-wrap:wrap;gap:14px;align-items:center;background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:12px}
+.photo img{max-width:220px;max-height:180px;border-radius:10px;border:6px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.filebtn{display:inline-block;background:var(--art);color:#fff;font-weight:700;border-radius:12px;padding:9px 16px;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.18)}
+.filebtn input{display:none}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px;margin-top:10px}
+.gallery figure{margin:0;background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:10px;text-align:center}
+.gallery img{width:100%;height:140px;object-fit:cover;border-radius:8px;border:5px solid #FBF7EF;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.gallery figcaption{font-size:14px;margin-top:6px;line-height:1.3}
+.gallery figcaption b{display:block;font-family:"Lora",serif;font-size:15px}
 .confetti{position:fixed;top:-20px;font-size:26px;pointer-events:none;animation:fall 1.9s linear forwards;z-index:9}
 @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.6}}
 @media(max-width:560px){.sec-b{padding:14px}.story{font-size:19px}.artcard{grid-template-columns:1fr}.frame{display:none}}
@@ -1068,6 +1086,128 @@ L({u:5, review:true,
   {type:"mc", q:"<i>Unkind</i> means…", o:["very kind","not kind","kind again"], a:1, why:"un- means not."}]
 });
 
+/* Hands-on art projects, keyed by lesson index (0 = Lesson 1). */
+const PROJECTS = {
+ 0:{title:"A Swing That Really Swings", supplies:["White paper or card stock","Crayons or colored pencils","Scissors","1 brass paper fastener (brad)","Pencil"],
+  steps:["Draw a big tree with a strong branch reaching across the top of your paper. Add blue sky, a wall, and a garden below, like in the poem.",
+   "On a separate scrap of paper, draw yourself sitting on a swing. Draw two long ropes going up from the swing seat. Make it about as tall as your hand.",
+   "Color yourself and the swing, then cut it out. Leave the two ropes joined at the top in a point.",
+   "Ask a parent to poke a small hole through the top of the ropes and through the tree branch.",
+   "Push the brad through both holes and open its legs on the back.",
+   "Now push your swing back and forth! Say the poem while you swing it."],
+  tip:"Make the ropes long. A longer swing goes higher!"},
+ 2:{title:"Sunset Field Silhouette", supplies:["White paper","Crayons or oil pastels (yellow, orange, red, pink)","Black crayon or black marker","Ruler","A tissue for blending"],
+  steps:["Use a ruler to draw a light horizon line about one third of the way up your paper.",
+   "Color the sky in bands: yellow just above the horizon, then orange, then red, then pink at the very top.",
+   "Rub the colors gently with a tissue or your finger so they melt together, like a real sunset.",
+   "Color the field below the horizon dark brown and green. Add lines that point toward the horizon, like rows in a field.",
+   "With black, draw shapes standing on the horizon: two people, a tree, or a church steeple far away. Fill them in solid black.",
+   "Add a few tiny birds in the sky as little “v” shapes."],
+  tip:"A silhouette is a solid dark shape with no details inside. The bright sky behind it makes it stand out."},
+ 4:{title:"Warm and Cool Seaside Picture", supplies:["White paper","Markers, crayons, or watercolor paints","Pencil"],
+  steps:["Draw a big picture of yourself at the beach or by a lake, close to the bottom of the page. You can be digging, holding a pail, or building a sandcastle.",
+   "Draw two or three tiny sailboats far away near the top of the water.",
+   "Color the water and the sky using only cool colors: blues, greens, and purples.",
+   "Color yourself, the sand, and your pail using warm colors: reds, oranges, yellows, and browns.",
+   "Step back and look. Do the warm colors seem to jump forward?"],
+  tip:"Big things look close. Tiny things look far away, just like Mary Cassatt’s boats."},
+ 6:{title:"Wind-Blown Straw Painting", supplies:["White paper","Watercolor or watery tempera paint (brown or black, plus green, pink, or yellow)","A drinking straw","A spoon or eyedropper","Newspaper to protect the table"],
+  steps:["Cover your table with newspaper.",
+   "Put a small puddle of watery brown or black paint near the bottom of your paper with a spoon.",
+   "Point the straw at the puddle and blow gently. Watch the paint run like a tree trunk and branches!",
+   "Turn the paper and blow the paint in different directions to make more branches. This is the wind you cannot see.",
+   "Let it dry. Then dab on leaves or blossoms with your fingertip in green, pink, or yellow.",
+   "Write “Who has seen the wind?” at the bottom."],
+  tip:"Blow softly and close to the paint. Big puffs make splatters."},
+ 8:{title:"Nature Journal Page: The Robin", supplies:["Plain white paper or a nature journal","Pencil and eraser","Colored pencils (brown, gray, orange, yellow, black)","A ruler"],
+  steps:["Lightly draw a circle for the head and a bigger oval for the body, touching each other.",
+   "Add a triangle tail at the back and a small pointed beak in front.",
+   "Draw a branch under the robin. Add two thin legs and little toes wrapped around the branch.",
+   "Erase the extra lines. Color the back and head gray-brown and the chest orange. Leave a white ring around the eye.",
+   "Draw short lines on the wings and tail to show feathers.",
+   "Like a real naturalist, write the bird’s name, today’s date, and one fact about robins."],
+  tip:"Draw light at first. Shape lines are easy to erase later."},
+ 10:{title:"Fuzzy Bunny Texture Drawing", supplies:["White paper","Pencils (a regular one and a soft dark one if you have it)","Brown and gray colored pencils","Eraser"],
+  steps:["Lightly sketch a bunny sitting: a big egg shape for the body, a smaller circle for the head, and two long ears.",
+   "Draw the eye as a dark circle. Leave a tiny white dot in it for a shine.",
+   "Now make fur. Draw lots of short lines that all go the same way, following the bunny’s shape.",
+   "Press harder and add more lines where it is shady, like under the chin and behind the legs.",
+   "Leave some places light, like the tops of the ears and back, where the sun hits.",
+   "Add thin whiskers and a little grass at the bottom."],
+  tip:"Short, quick lines look like fur. Long, slow lines look like hair."},
+ 12:{title:"Arrow and Song Friendship Card", supplies:["Card stock or heavy paper","Crayons, markers, or colored pencils","A ruler","Stickers or a glue stick and paper scraps (optional)"],
+  steps:["Fold your paper in half to make a card.",
+   "On the front, draw a big oak tree. Draw an arrow stuck in the trunk, just like the poem.",
+   "Around the tree, draw music notes floating through the air.",
+   "Inside, copy the last two lines of the poem in your best handwriting.",
+   "Under it, write a kind note to a friend. Tell them one thing you love about them.",
+   "Give or mail your card to your friend."],
+  tip:"Use a ruler to draw the straight arrow. Add feathers at the end!"},
+ 14:{title:"River Crossing Collage", supplies:["Construction paper (dark blue, light blue, white, brown, and any color for a flag)","Scissors","Glue stick","Crayons or markers"],
+  steps:["Use a sheet of light blue paper for the sky.",
+   "Tear strips of dark blue paper and glue them across the bottom half on a slant to make a rushing river.",
+   "Tear small white chunks for ice and glue them on the water.",
+   "Cut a long brown boat shape. Glue it on tilted, not flat, so it looks like it is moving.",
+   "Cut thin strips for oars and a pole for the flag. Glue them on diagonal slants.",
+   "Draw people in the boat with crayons. Add a flag at the top of the pole."],
+  tip:"Diagonal lines make action. Tilt everything a little!"},
+ 16:{title:"Crayon-Resist Sailboat Painting", supplies:["White paper (thick if you have it)","A white crayon","Watercolor paints and a brush","Crayons in other colors","A cup of water"],
+  steps:["With a white crayon, press hard and draw wavy lines and little curls across the bottom half of your paper. These will be the white tops of the waves.",
+   "With colored crayons, draw a sailboat with a big triangle sail. Draw yourself and your family in the boat.",
+   "Paint the sky with light blue watercolor.",
+   "Paint the sea with darker blue and green. Paint right over the white crayon.",
+   "Watch the white waves appear like magic! The wax keeps the paint away.",
+   "Let it dry flat."],
+  tip:"Press hard with the white crayon. Light lines will not show up."},
+ 18:{title:"Up in the Cherry Tree Picture", supplies:["White paper","Crayons or colored pencils","Pink and white tissue paper (or pink paper scraps)","Glue stick"],
+  steps:["Draw a big tree trunk up the left side of your paper, with branches reaching across the top. Draw yourself sitting on a branch.",
+   "In the rest of the picture, draw what you see far away: a river winding through, roads going up and down, a little town, and ships on the sea at the very top.",
+   "Remember: things far away are small and near the top.",
+   "Color your picture.",
+   "Crumple small squares of pink and white tissue paper into balls and glue them on the branches as cherry blossoms."],
+  tip:"Draw the far-away things first, then the tree on top."},
+ 20:{title:"Great Wave Pattern Drawing", supplies:["White paper","Blue crayons, markers, or colored pencils (light and dark)","A black fine-tip marker","Pencil"],
+  steps:["In pencil, draw one giant curling wave that starts low on the right and curls over to the left, like a big hook.",
+   "Along the top edge of the wave, draw lots of small curls, like little fingers.",
+   "Draw a tiny triangle mountain far away in the middle of the page. Make it small!",
+   "Draw two long boats under the wave.",
+   "Fill the wave with stripes of light blue and dark blue that follow its curve. Leave the curly tips white.",
+   "Trace your best lines with the black marker, just like a woodblock print."],
+  tip:"Repeating the same shape over and over makes a pattern. Hokusai used lots of patterns."},
+ 22:{title:"Window Light Still Life", supplies:["A cup, jug, or mug and an apple","A sunny window","White paper","Pencil and eraser"],
+  steps:["Set the cup and apple on a table next to a window. Notice which side of each one is bright.",
+   "Lightly draw their shapes: an oval for the top of the cup, two lines for its sides, and a circle for the apple.",
+   "Leave the side facing the window white.",
+   "Shade the middle part a little gray by pressing lightly.",
+   "Shade the side away from the window darker.",
+   "Draw the dark shadow each object makes on the table, on the side away from the window."],
+  tip:"Three shades make things look round: light, medium, and dark."},
+ 24:{title:"Autumn Leaf-Rubbing Bonfire", supplies:["Real leaves (different shapes)","Thin white paper","Crayons in red, orange, yellow, and brown, with the paper peeled off","Scissors","Glue stick","A sheet of dark paper"],
+  steps:["Go outside and collect fallen leaves of different shapes and sizes.",
+   "Place a leaf bumpy side up under the thin paper.",
+   "Rub the side of a peeled crayon over the leaf. Watch the veins and edges appear!",
+   "Make lots of rubbings in red, orange, yellow, and brown.",
+   "Cut them out. Glue them onto the dark paper in a pointy pile to make a bonfire, with the brown leaves at the bottom like logs.",
+   "Draw gray swirls of smoke rising up, like in the poem."],
+  tip:"Use the long side of the crayon, not the tip."},
+ 26:{title:"Glowing Sunrise Pastel", supplies:["Paper (dark blue or black works great, but white is fine)","Chalk pastels or crayons in warm colors","A tissue for blending","Black or dark green crayon"],
+  steps:["Draw a horizon line low on your paper.",
+   "Draw a big half-circle sun rising right on the horizon. Color it bright orange and red.",
+   "Draw rings of color around the sun: yellow, then orange, then pink, spreading out across the sky.",
+   "Blend the rings gently with a tissue so they glow.",
+   "Color the land below dark, like a field before the sun lights it up.",
+   "Add a small figure walking in the field, like the girl in the painting."],
+  tip:"Warm colors next to each other make a glow."},
+ 28:{title:"Winter Near and Far", supplies:["White or light blue paper","Pencil","Colored pencils or crayons","White paint and a cotton swab (optional)"],
+  steps:["Draw one big bare tree at the bottom left of your page. It is the nearest thing, so it is the biggest.",
+   "Draw a few middle-sized houses and trees in the middle of the page.",
+   "Near the top, draw a frozen pond with very tiny people skating. Things far away are small and high up.",
+   "Add tiny mountains at the very top.",
+   "Color the sky gray-blue and leave the snow white.",
+   "Dot white snowflakes all over with a cotton swab and white paint, or with a white crayon."],
+  tip:"Big and low means near. Small and high means far."}
+};
+
 </script>
 <script>
 /* ================= helpers & saving (same approach as Science Explorers) ================= */
@@ -1088,6 +1228,16 @@ function snapshot(){ const o={}; try{ for(let i=0;i<localStorage.length;i++){ co
 let _mt=null; const _set=LS.set;
 LS.set=(k,v)=>{ const ok=_set(k,v); clearTimeout(_mt); _mt=setTimeout(()=>IDB.put(snapshot()),250); return ok; };
 try{ navigator.storage&&navigator.storage.persist&&navigator.storage.persist(); }catch(e){}
+
+/* artwork photos live in their own IndexedDB store (too big for the backup code) */
+const ART={
+  open(){ return new Promise((res,rej)=>{ try{ const r=indexedDB.open("wildflower-la3-art",1); r.onupgradeneeded=()=>r.result.createObjectStore("pics"); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);}catch(e){rej(e);} }); },
+  async put(k,v){ const db=await ART.open(); return new Promise((res,rej)=>{ const tx=db.transaction("pics","readwrite"); v===null?tx.objectStore("pics").delete(k):tx.objectStore("pics").put(v,k); tx.oncomplete=res; tx.onerror=()=>rej(tx.error); }); },
+  async get(k){ try{ const db=await ART.open(); return await new Promise(res=>{ const r=db.transaction("pics").objectStore("pics").get(k); r.onsuccess=()=>res(r.result||null); r.onerror=()=>res(null); }); }catch(e){ return null; } },
+  async all(who){ try{ const db=await ART.open(); return await new Promise(res=>{ const out=[]; const r=db.transaction("pics").objectStore("pics").openCursor();
+    r.onsuccess=()=>{ const c=r.result; if(!c){ res(out); return; } if(String(c.key).startsWith(who+"|")) out.push(Object.assign({key:c.key},c.value)); c.continue(); }; r.onerror=()=>res(out); }); }catch(e){ return []; } }
+};
+function shrinkImage(file){ return new Promise((res,rej)=>{ const fr=new FileReader(); fr.onload=()=>{ const im=new Image(); im.onload=()=>{ const m=1000, s=Math.min(1,m/Math.max(im.width,im.height)); const c=document.createElement("canvas"); c.width=Math.round(im.width*s); c.height=Math.round(im.height*s); c.getContext("2d").drawImage(im,0,0,c.width,c.height); res(c.toDataURL("image/jpeg",.82)); }; im.onerror=rej; im.src=fr.result; }; fr.onerror=rej; fr.readAsDataURL(file); }); }
 
 let roster=LS.get("la3-roster",[]), student=LS.get("la3-student",""), prog=LS.get("la3-prog",{}), pin=LS.get("la3-pin","");
 let parentOK=false;
@@ -1178,8 +1328,10 @@ function renderHome(){
     h+=`</div></div>`;
   });
   h+=`<h2 style="font-size:24px;margin-top:26px">My badges 🏅</h2><div class="badges">${BADGES.map(b=>`<div class="badge ${b.ok(student)?"":"locked"}"><div class="bi">${b.i}</div><b>${b.n}</b>${b.d}</div>`).join("")}</div>
+  <h2 style="font-size:24px;margin-top:26px">My art gallery 🖼️</h2><div id="homeGallery"></div>
   <div style="text-align:center;margin-top:30px"><button class="link" onclick="go('parent')">👪 Parent area</button></div>`;
   $("home").innerHTML=h;
+  const who=student; galleryHTML(who).then(g=>{ const el=$("homeGallery"); if(el&&who===student) el.innerHTML=g; });
 }
 
 /* ================= lesson ================= */
@@ -1354,10 +1506,30 @@ BUILD.poem=(L,i,U)=>{ const Pm=U.poem;
   return secShell("poem",L.review?"Poetry Recitation":"Poetry",`<p>${intro}</p>
     <div class="row" style="margin-bottom:10px"><button class="listen" id="pmListen">🔈 Listen to the poem</button><button class="listen" onclick="hush()">⏹ Stop</button></div>
     <div class="poem"><h3>${Pm.title}</h3><span class="by">by ${Pm.by}</span>${Pm.lines.join("\n")}</div>
-    ${L.review?"":`<div class="task"><span class="ti">🗣️</span><div>Which words rhyme? Clap the rhythm of the first stanza. Then try to say the first two lines with your eyes closed.</div></div>`}
-    <div class="done-row"><button class="btn" style="background:var(--poem)" id="pmDone" ${secDone(i,"poem")?"disabled":""}>${secDone(i,"poem")?"✓ Done":L.review?"I recited the poem":"I read it aloud"}</button></div>`); };
-WIRE.poem=(L,i,U)=>{ $("pmListen").onclick=()=>say(U.poem.title+", by "+U.poem.by+". "+U.poem.lines.filter(Boolean).join(". "),.85);
+    ${L.review?"":`<div class="task"><span class="ti">🗣️</span><div>Which words rhyme? Clap the rhythm of the first stanza. Then try to say the first two lines with your eyes closed.</div></div>${projHTML(i)}`}
+    <div class="done-row"><button class="btn" style="background:var(--poem)" id="pmDone" ${secDone(i,"poem")?"disabled":""}>${secDone(i,"poem")?"✓ Done":L.review?"I recited the poem":PROJECTS[i]?"I read the poem and made my art":"I read it aloud"}</button></div>`); };
+WIRE.poem=(L,i,U)=>{ if(!L.review) wireProj(i); $("pmListen").onclick=()=>say(U.poem.title+", by "+U.poem.by+". "+U.poem.lines.filter(Boolean).join(". "),.85);
   $("pmDone").onclick=()=>{ markSec("poem"); const b=$("pmDone"); if(b){ b.disabled=true; b.textContent="✓ Done"; } }; };
+
+/* ---- art projects ---- */
+function projHTML(i){ const p=PROJECTS[i]; if(!p) return "";
+  return `<div class="proj" id="proj"><div class="ptag">🖌️ Art project</div><h3>${p.title}</h3>
+    <p style="margin-bottom:2px"><b>You will need:</b></p><ul class="supplies">${p.supplies.map(x=>`<li><label><input type="checkbox">${x}</label></li>`).join("")}</ul>
+    <p style="margin-bottom:2px"><b>Steps:</b></p><ol class="steps">${p.steps.map(x=>`<li><span>${x}</span></li>`).join("")}</ol>
+    <div class="task" style="background:#FBF0F2"><span class="ti">💡</span><div><b>Artist’s tip:</b> ${p.tip}</div></div>
+    <div class="photo" id="artPhoto"><div><b>All done?</b> Take or add a photo of your art for your gallery.<br><label class="filebtn">📷 Add a photo<input type="file" accept="image/*" id="artFile"></label> <span class="note" id="artMsg"></span></div><div id="artImg"></div></div></div>`; }
+async function wireProj(i){ const p=PROJECTS[i]; if(!p||!$("artFile")) return;
+  const key=student+"|"+i, who=student;
+  const show=async()=>{ const v=await ART.get(key); const box=$("artImg"); if(!box||who!==student) return;
+    box.innerHTML=v?`<img src="${v.data}" alt="${esc(p.title)}"><div><button class="link" id="artDel">Remove photo</button></div>`:"";
+    if(v) $("artDel").onclick=async()=>{ await ART.put(key,null); show(); }; };
+  $("artFile").onchange=async e=>{ const f=e.target.files&&e.target.files[0]; if(!f) return; $("artMsg").textContent="Saving…";
+    try{ const data=await shrinkImage(f); await ART.put(key,{data,title:p.title,lesson:i,at:Date.now()}); $("artMsg").textContent="Saved to your gallery! 🖼️"; show(); }
+    catch(err){ $("artMsg").textContent="That photo couldn't be saved. Try a different one."; } e.target.value=""; };
+  show(); }
+async function galleryHTML(who){ const items=(await ART.all(who)).sort((a,b)=>a.lesson-b.lesson);
+  return items.length?`<div class="gallery">${items.map(x=>`<figure><img src="${x.data}" alt="${esc(x.title)}"><figcaption><b>${esc(x.title)}</b>Lesson ${lessonNo(x.lesson)} · ${fmtDate(x.at)}</figcaption></figure>`).join("")}</div>`
+    :`<p class="note">No art photos yet. When ${esc(who)} finishes an art project, tap “Add a photo” at the bottom of the project.</p>`; }
 
 /* ---- art ---- */
 BUILD.art=(L,i)=>{ const A=L.extra;
@@ -1365,9 +1537,9 @@ BUILD.art=(L,i)=>{ const A=L.extra;
     <a href="https://commons.wikimedia.org/w/index.php?search=${encodeURIComponent(A.search)}" target="_blank" rel="noopener">🖼️ Look at the painting with a parent ↗</a></div></div>
     ${A.text.map(p=>`<p>${p}</p>`).join("")}
     <p><b>Look closely and talk about it:</b></p><ul class="look">${A.look.map(x=>`<li>${x}</li>`).join("")}</ul>
-    <div class="task"><span class="ti">🖍️</span><div><b>Art activity:</b> ${A.task}</div></div>
-    <div class="done-row"><button class="btn" style="background:var(--art)" id="artDone" ${secDone(i,"art")?"disabled":""}>${secDone(i,"art")?"✓ Done":"I looked, talked, and drew"}</button></div>`); };
-WIRE.art=(L,i)=>{ $("artDone").onclick=()=>{ markSec("art"); const b=$("artDone"); if(b){b.disabled=true;b.textContent="✓ Done";} }; };
+    ${projHTML(i)}
+    <div class="done-row"><button class="btn" style="background:var(--art)" id="artDone" ${secDone(i,"art")?"disabled":""}>${secDone(i,"art")?"✓ Done":"I finished my art project"}</button></div>`); };
+WIRE.art=(L,i)=>{ wireProj(i); $("artDone").onclick=()=>{ markSec("art"); const b=$("artDone"); if(b){b.disabled=true;b.textContent="✓ Done";} }; };
 
 /* ---- geography ---- */
 BUILD.geo=(L,i)=>{ const G=L.extra;
@@ -1464,7 +1636,7 @@ function renderParent(){
       if(creating){ pin=v; LS.set("la3-pin",pin); parentOK=true; renderParent(); } else if(v===pin){ parentOK=true; renderParent(); } else { $("pinerr").textContent="That PIN doesn't match. Try again."; $("pinin").value=""; } };
     return; }
   const who=roster.includes(pview.who)?pview.who:(roster.includes(student)?student:roster[0]||""); pview.who=who;
-  const tabs=[["progress","📊 Progress"],["scores","📝 Scores"],["writing","✍️ Writing"],["reading","📚 Reading log"],["guide","🌼 How it works"],["settings","⚙️ Backup & settings"]];
+  const tabs=[["progress","📊 Progress"],["scores","📝 Scores"],["writing","✍️ Writing"],["reading","📚 Reading log"],["art","🎨 Art gallery"],["guide","🌼 How it works"],["settings","⚙️ Backup & settings"]];
   const kids=roster.length?`<div class="tabs">${roster.map(n=>`<button data-who="${esc(n)}" aria-pressed="${n===who}">${esc(n)}</button>`).join("")}</div>`:`<p class="note">No students yet. A child adds their name on the start screen.</p>`;
   let body="";
   if(pview.tab==="progress"&&who){ const p=P(who), dn=LESSONS.filter((_,i)=>lessonDone(i,who)).length, nx=nextLesson(who);
@@ -1482,6 +1654,7 @@ function renderParent(){
   else if(pview.tab==="reading"&&who){ const r=P(who).reads.slice().reverse();
     body=kids+`<p><b>${P(who).minutes||0} minutes</b> of personal reading so far.</p>`+(r.length?`<table class="t"><tr><th>Date</th><th>Book</th><th>Minutes</th></tr>${r.map(x=>`<tr><td>${fmtDate(x.at)}</td><td>${esc(x.title||"—")}</td><td>${x.min}</td></tr>`).join("")}</table>`:`<p class="note">No reading logged yet.</p>`)
       +`<h3 style="margin-top:22px;font-size:20px">Good books for personal reading</h3><p class="note">Wholesome, well-written books at about a 3rd grade level. Please preview any book yourself, since editions differ.</p><ul class="booklist">${BOOKS.map(([t,a])=>`<li><i>${esc(t)}</i>, ${esc(a)}</li>`).join("")}</ul>`; }
+  else if(pview.tab==="art"&&who){ body=kids+`<p class="note">Photos of finished art projects. They're saved on this device only and aren't in the backup code.</p><div id="pGallery">Loading…</div>`; }
   else if(pview.tab==="guide"){
     body=`<h3 style="font-size:20px">How the course works</h3>
       <p>The course has <b>5 units</b> with <b>6 lessons</b> each. Lessons 1–5 of each unit teach. Lesson 6 is a review with a reading check, a spelling check, a grammar check, and a poem recitation. Plan on one lesson every day or two, about 40–60 minutes each.</p>
@@ -1490,6 +1663,7 @@ function renderParent(){
       <li><b>🔤 Spelling & Phonics:</b> a spelling pattern, 8 words, and digital letter tiles. The app reads each word aloud.</li>
       <li><b>✏️ Grammar & Usage:</b> a short rule with practice.</li>
       <li><b>🎵 Poetry, 🎨 Art, or 🌍 Geography:</b> these take turns. Poems are classics to memorize. Art lessons link to famous paintings on Wikimedia Commons. Please open those with your child, since the app can't show the pictures itself.</li>
+      <li><b>🖌️ Art projects:</b> 15 hands-on projects, one in every art lesson and every poetry lesson. Each has a supply list and step-by-step directions. Your child can save a photo of the finished piece to their art gallery.</li>
       <li><b>📝 Writing:</b> a prompt to do in a notebook or type into the app.</li>
       <li><b>📚 Personal Reading:</b> 20 minutes with a good book, logged in the app.</li></ul>
       <p>Children earn a star for each part and two bonus stars for finishing a lesson. “Read it to me” and the spelling words use your device's built-in voice.</p>`; }
@@ -1507,6 +1681,7 @@ function renderParent(){
   box.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{ pview.tab=b.dataset.tab; renderParent(); });
   box.querySelectorAll("[data-who]").forEach(b=>b.onclick=()=>{ pview.who=b.dataset.who; renderParent(); });
   $("lockBtn").onclick=()=>{ parentOK=false; go(student?"home":"pick"); };
+  if(pview.tab==="art"&&who) galleryHTML(who).then(g=>{ const el=$("pGallery"); if(el) el.innerHTML=g; });
   if(pview.tab==="settings"){
     $("bkcopy").onclick=()=>{ const ta=$("bk"); try{ navigator.clipboard.writeText(ta.value).then(()=>{$("bkmsg").textContent="Copied.";},()=>{ta.select();$("bkmsg").textContent="Selected. Press copy.";}); }catch(e){ ta.select(); $("bkmsg").textContent="Selected. Press copy."; } };
     let armed=false;

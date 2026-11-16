@@ -286,6 +286,8 @@ const sections = {
   tbl:  { title: "Fill the Table", sub: "Find the price for 1, then fill in every blank.", steps: ["Pick", "Price for 1", "Fill in", "Check"] },
   dec:  { title: "Decimal Times", sub: "Estimate, multiply without the dots, then put the dot back.", steps: ["Pick", "Estimate", "Multiply", "Dot", "Check"] },
   frac: { title: "Fraction Times", sub: "Estimate, multiply straight across, then simplify.", steps: ["Pick", "Estimate", "Multiply", "Simplify", "Check"] },
+  d2f:  { title: "Decimal to Fraction", sub: "Read the place, write it over 10, 100, or 1000, then simplify.", steps: ["Pick", "Read it", "Write it", "Simplify", "Check"] },
+  fdiv: { title: "Fraction Divide", sub: "Guess first. Keep, change, flip. Then multiply and simplify.", steps: ["Pick", "Guess", "Flip", "Multiply", "Simplify", "Check"] },
   est:  { title: "Round & Estimate", sub: "Round each number first, then add or subtract.", steps: ["Pick", "Round", "Estimate", "Check"] },
   mix:  { title: "Mixed Numbers", sub: "Switch between mixed numbers and improper fractions.", steps: ["Pick", "Wholes", "Pieces", "Check"] },
   fdp:  { title: "Fractions, Decimals & Percents", sub: "Change each one to a decimal, plot it, then compare.", steps: ["Pick", "Fraction", "Percent", "Plot", "Compare"] },
@@ -293,7 +295,7 @@ const sections = {
   mean: { title: "What Does It Mean?", sub: "The math is already done. You find what each number means.", steps: ["Pick a story", "Find the numbers", "Match the math"] }
 };
 
-let state = { section: null, step: 0, onBreak: false, solved: { trip: 0, ops: 0, rate: 0, pip: 0, mean: 0, lcm: 0, eq: 0, tbl: 0, dec: 0, frac: 0, est: 0, mix: 0, fdp: 0, area: 0 }, ar: null, arKind: "see", fd: null, fdKind: "mix", mx: null, mixMode: "toImp", es: null, esLevel: "ten", t: null, dc: null, fr: null, frLevel: "easy", lc: null, lcSize: "easy", e: null, eqLevel: "pos",
+let state = { section: null, step: 0, onBreak: false, solved: { trip: 0, ops: 0, rate: 0, pip: 0, mean: 0, lcm: 0, eq: 0, tbl: 0, dec: 0, frac: 0, est: 0, mix: 0, fdp: 0, area: 0, fdiv: 0, d2f: 0 }, dfr: null, dfLevel: "hun", fv: null, fvLevel: "fw", ar: null, arKind: "see", fd: null, fdKind: "mix", mx: null, mixMode: "toImp", es: null, esLevel: "ten", t: null, dc: null, fr: null, frLevel: "easy", lc: null, lcSize: "easy", e: null, eqLevel: "pos",
   p: null, size: "small", q: null, level: "easy", r: null, pp: null, m: null };
 try { const s = JSON.parse(localStorage.getItem("mathPlanner")); if (s && s.solved) state.solved = Object.assign(state.solved, s.solved); } catch (e) {}
 function save() { try { localStorage.setItem("mathPlanner", JSON.stringify({ solved: state.solved })); } catch (e) {} }
@@ -324,6 +326,8 @@ function render() {
   if (state.section === "tbl") return [tblPick, tblUnit, tblFill, tblCheck][state.step]();
   if (state.section === "dec") return [decPick, decEst, decMult, decDot, decCheck][state.step]();
   if (state.section === "frac") return [frPick, frEst, frMult, frSimp, frCheck][state.step]();
+  if (state.section === "d2f") return [dfPick, dfRead, dfWrite, dfSimp, dfCheck][state.step]();
+  if (state.section === "fdiv") return [fdPick, fdGuess, fdFlip, fdMult, fdSimp, fdCheck][state.step]();
   if (state.section === "est") return [estPick, estRound, estAdd, estDone][state.step]();
   if (state.section === "mix") return [mixPick, mixStep1, mixStep2, mixDone][state.step]();
   if (state.section === "fdp") { if (state.step > 0 && !state.fd) state.fd = makeFdp(state.fdKind); return [fdpPick, fdpFrac, fdpPct, fdpPlot, fdpCompare][state.step](); }
@@ -336,7 +340,7 @@ const HOME_GROUPS = [["rate", "Rates & tables"], ["num", "Numbers"], ["frac", "F
 const HOME_TILES = [
   ["trip", "Trip Planner", "mph", "rate"], ["rate", "Who's Fastest?", "÷1", "rate"], ["tbl", "Fill the Table", "▦", "rate"],
   ["est", "Round & Estimate", "≈", "num"], ["dec", "Decimal Times", "0.1", "num"], ["fdp", "Fractions, Decimals & Percents", "%", "num"], ["lcm", "Least Common Multiple", "LCM", "num"], ["area", "Area", "ft²", "num"],
-  ["frac", "Fraction Times", "½×", "frac"], ["mix", "Mixed Numbers", "4⅝", "frac"],
+  ["frac", "Fraction Times", "½×", "frac"], ["fdiv", "Fraction Divide", "½÷", "frac"], ["d2f", "Decimal to Fraction", ".5=½", "frac"], ["mix", "Mixed Numbers", "4⅝", "frac"],
   ["ops", "Order of Operations", "( )", "alg"], ["eq", "Solve & Plot", "x=", "alg"],
   ["mean", "What Does It Mean?", "?", "think"]
 ];
@@ -1356,6 +1360,90 @@ const PIP_TOPICS = {
       fixes: w === 0 ? [[`Multiply: ${W} rows of ${L} = ${L} × ${W}`, true], [`Add: ${L} + ${W}`, false, `That's what Pip did. That only counts squares along the top and one side. The middle is still empty!`], [`Go around the edge: ${L} + ${W} + ${L} + ${W}`, false, `Let's test it: that's a fence around the edge. Area is the inside.`]]
                      : [[`Divide: ${A} ÷ ${k}`, true], [`Multiply: ${A} × ${k}`, false, `Let's test it: that's ${A * k}, even more ${many}!`], ["Keep it the same", false, `That's what Pip did. One for every square foot is way too many.`]],
       fixed: `<b>${q} ${many}.</b> Area: ${L} × ${W} = ${A} square feet. Then ${A} ÷ ${k} = ${q}. Check: ${q} × ${k} = ${A}.` };
+  } },
+  fdiv: { label: "Fraction divide", sym: "½÷", make() {
+    const S = (n, d) => { const g = gcd(n, d); return d / g === 1 ? `${n / g}` : `${n / g}/${d / g}`; };
+    const simpStep = (n, d) => ({ label: "Step 3: Simplify", math: gcd(n, d) > 1 ? `${n}/${d} → ${S(n, d)}` : `${n}/${d} is already in simplest form` });
+    const right = Math.random() < .25, kind = pick(["times", "times", "noflip"]);
+    let a, b, w;
+    if (kind === "times") {
+      do { a = rint(1, 9); b = rint(2, 9); w = rint(2, 5); } while (gcd(a, b) !== 1 || a === b || a >= 2 * b);
+      const good = S(a, b * w), bad = S(a * w, b);
+      const goodSteps = [{ label: "Step 1: Keep, change, flip", math: `${a}/${b} ÷ ${w} → ${a}/${b} × 1/${w}` },
+        { label: "Step 2: Multiply across", math: `${a} × 1 = ${a}, ${b} × ${w} = ${b * w}, so ${a}/${b * w}` }, simpStep(a, b * w)];
+      const steps = right ? goodSteps.map(s => ({ ...s })) : [{ label: "Step 1: Keep, change, flip", math: `${a}/${b} ÷ ${w} → ${a}/${b} × ${w}` },
+        { label: "Step 2: Multiply across", math: `${a} × ${w} = ${a * w}, bottom stays ${b}, so ${a * w}/${b}` }, simpStep(a * w, b)];
+      return { q: `Divide. Write your answer in simplest form: <b>${a}/${b} ÷ ${w}</b>`, good: goodSteps, steps, wrong: right ? -1 : 0,
+        claim: `I think ${a}/${b} ÷ ${w} = <b>${right ? good : bad}</b>.`,
+        offRight: `Good eye. ${bad} is bigger than ${a}/${b}! Sharing ${a}/${b} into ${w} equal parts should make each part smaller.`,
+        yesWrong: `Let's picture it. ${a}/${b} of a pizza, shared between ${w} people. Should each person get more than ${a}/${b}, or less? Pip's answer, ${bad}, is more.`,
+        yesRight: `You checked it. Sharing ${a}/${b} between ${w} people gives each person less, and ${good} is smaller than ${a}/${b}. It fits.`,
+        offWrong: `Let's check together. Sharing ${a}/${b} between ${w} people should make each piece smaller. Is ${good} smaller than ${a}/${b}?`,
+        stepOk: i => i === 1 ? `Step 2 multiplied what Step 1 gave it. Look at how Step 1 changed the ÷.` : `Step 3 simplified the number it was given. Look at an earlier step.`,
+        fixQ: `In Step 1 I turned ÷ ${w} into × ${w}. What should ÷ ${w} turn into?`,
+        fixes: [[`× 1/${w}: write ${w} as ${w}/1, then flip it`, true],
+          [`× ${w}`, false, `That's what Pip did. Multiplying by ${w} makes it ${w} times bigger. Sharing should make it smaller.`],
+          [`× ${w}/1`, false, `${w}/1 is just ${w} written as a fraction. Don't forget to flip it upside down.`]],
+        fixed: `<b>${good}.</b> ${a}/${b} × 1/${w} = ${a}/${b * w}${gcd(a, b * w) > 1 ? `, which simplifies to ${good}` : ""}. Each share is smaller than ${a}/${b}, so it fits.` };
+    }
+    do { w = rint(2, 6); a = rint(1, 5); b = rint(a + 1, 9); } while (gcd(a, b) !== 1);
+    const good = S(w * b, a), bad = S(w * a, b);
+    const goodSteps = [{ label: "Step 1: Keep, change, flip", math: `${w} ÷ ${a}/${b} → ${w}/1 × ${b}/${a}` },
+      { label: "Step 2: Multiply across", math: `${w} × ${b} = ${w * b}, 1 × ${a} = ${a}, so ${w * b}/${a}` }, simpStep(w * b, a)];
+    const steps = right ? goodSteps.map(s => ({ ...s })) : [{ label: "Step 1: Keep, change, flip", math: `${w} ÷ ${a}/${b} → ${w}/1 × ${a}/${b}` },
+      { label: "Step 2: Multiply across", math: `${w} × ${a} = ${w * a}, 1 × ${b} = ${b}, so ${w * a}/${b}` }, simpStep(w * a, b)];
+    return { q: `Divide. Write your answer in simplest form: <b>${w} ÷ ${a}/${b}</b>`, good: goodSteps, steps, wrong: right ? -1 : 0,
+      claim: `I think ${w} ÷ ${a}/${b} = <b>${right ? good : bad}</b>.`,
+      offRight: `Good eye. ${a}/${b} is less than 1 whole, so lots of ${a}/${b} pieces fit into ${w}. The answer should be bigger than ${w}, but ${bad} is smaller!`,
+      yesWrong: `Let's picture it. How many pieces of size ${a}/${b} fit into ${w} whole pizzas? Each piece is less than a whole, so more than ${w} fit. Is ${bad} bigger than ${w}?`,
+      yesRight: `You checked it. Each ${a}/${b} piece is less than a whole, so more than ${w} pieces fit, and ${good} is bigger than ${w}. It fits.`,
+      offWrong: `Let's check together. ${a}/${b} is less than 1 whole, so the answer should be bigger than ${w}. Is ${good} bigger than ${w}?`,
+      stepOk: i => i === 1 ? `Step 2 multiplied what Step 1 gave it. Look at Step 1's three moves.` : `Step 3 simplified the number it was given. Look at an earlier step.`,
+      fixQ: `In Step 1 I kept ${w} and changed ÷ to ×. But I left ${a}/${b} the same. What's the last move?`,
+      fixes: [[`Flip it: × ${b}/${a}`, true],
+        [`Keep it: × ${a}/${b}`, false, `That's what Pip did. Keep, change, flip has three moves, and the flip got skipped.`],
+        [`Flip the first number too: 1/${w} × ${b}/${a}`, false, `Only the second number flips. The first one stays the same.`]],
+      fixed: `<b>${good}.</b> ${w}/1 × ${b}/${a} = ${w * b}/${a}${gcd(w * b, a) > 1 ? `, which simplifies to ${good}` : ""}. It's bigger than ${w}, so it fits.` };
+  } },
+  d2f: { label: "Decimal to fraction", sym: ".5=½", make() {
+    let t, g;
+    do { t = rint(11, 99); g = gcd(t, 100); } while (t % 10 === 0 || g === 1);
+    const s = "0." + t, n = t / g, dn = 100 / g, right = Math.random() < .25, kind = pick(["diff", "diff", "place"]);
+    const good = [{ label: "Step 1: Write it over the place", math: `${s} is ${t} hundredths, so ${s} = ${t}/100` },
+      { label: "Step 2: Simplify", math: `${t} ÷ ${g} = ${n} on top, 100 ÷ ${g} = ${dn} on the bottom` }];
+    const steps = good.map(x => ({ ...x }));
+    let bad = `${n}/${dn}`, w = -1, f2 = g;
+    if (!right && kind === "diff") {
+      f2 = pick([2, 4, 5, 10, 20, 25].filter(x => x !== g));
+      bad = `${n}/${100 / f2}`; w = 1;
+      steps[1].math = `${t} ÷ ${g} = ${n} on top, 100 ÷ ${f2} = ${100 / f2} on the bottom`;
+    }
+    const g10 = gcd(t, 10);
+    if (!right && kind === "place") {
+      bad = `${t / g10}/${10 / g10}`; w = 0;
+      steps[0] = { label: "Step 1: Write it over the place", math: `${s} = ${t}/10` };
+      steps[1].math = g10 > 1 ? `${t} ÷ ${g10} = ${t / g10} on top, 10 ÷ ${g10} = ${10 / g10} on the bottom` : `${t}/10 can't be simplified`;
+    }
+    const badVal = String(+(w === 1 ? (n / (100 / f2)).toFixed(2) : (t / 10).toFixed(1)));
+    return { q: `Write <b>${s}</b> as a fraction in simplest form.`, good, steps, wrong: w,
+      claim: `I think ${s} = <b>${bad}</b>.`,
+      offRight: w === 1 ? `Good eye. Let's test it: ${bad} is the same as ${badVal}, not ${s}. The size changed somewhere!`
+                        : `Good eye. ${bad} is more than 1 whole! But ${s} is less than 1, since it starts with 0.`,
+      yesWrong: w === 1 ? `Let's test it. Turn ${bad} back into hundredths: it's ${Math.round(badVal * 100)}/100, which is ${badVal}. Is that ${s}?`
+                        : `Let's check the size. ${s} starts with 0, so it's less than 1 whole. Is ${bad} less than 1?`,
+      yesRight: `You checked it. ${n}/${dn} = ${t}/100 = ${s}. It comes right back, so it's the same amount.`,
+      offWrong: `Let's check together. Turn ${n}/${dn} back into hundredths: × ${g} on top and bottom gives ${t}/100. Is that ${s}?`,
+      stepOk: i => i === 0 ? `Step 1 is right: 2 digits after the dot means hundredths, so ${s} = ${t}/100.` : `Step 2 simplified the fraction Step 1 gave it. Look at the step before it.`,
+      fixQ: w === 1 ? `In Step 2 I divided the top by ${g} and the bottom by ${f2}. What should I divide the bottom by?`
+                    : `In Step 1 I put ${t} over 10. ${s} has 2 digits after the dot. What should the bottom be?`,
+      fixes: w === 1
+        ? [[`÷ ${g}, the same as the top`, true],
+           [`÷ ${f2}, like Pip did`, false, `That's what Pip did. Dividing the top and bottom by different numbers changes the size of the fraction.`],
+           [`Don't divide the bottom at all`, false, `Let's test it: ${n}/100 is only ${(n / 100).toFixed(2)}. Whatever happens to the top has to happen to the bottom.`]]
+        : [["100, because 2 digits means hundredths", true],
+           ["10", false, "That's what Pip did. 10 is for tenths, when there's 1 digit after the dot."],
+           ["1000", false, "1000 is for thousandths, when there are 3 digits after the dot."]],
+      fixed: `<b>${n}/${dn}.</b> ${s} = ${t}/100, and ${t} ÷ ${g} = ${n}, 100 ÷ ${g} = ${dn}. Same number on top and bottom, so the size stays ${s}.` };
   } }
 };
 
@@ -2685,6 +2773,399 @@ function frCheck() {
   c.querySelector("#pick").onclick = () => { state.solved.frac++; save(); state.step = 0; render(); };
 }
 
+
+/* ---------- fraction divide (fraction ÷ whole, whole ÷ fraction) ---------- */
+function makeFdiv(kind) {
+  if (kind === "any") kind = Math.random() < .5 ? "fw" : "wf";
+  for (let i = 0; i < 5000; i++) {
+    const a = rint(1, 9), b = rint(2, 9), w = rint(2, 6);
+    if (gcd(a, b) !== 1 || a === b) continue;
+    if (kind === "fw") {
+      if (a >= 2 * b || b * w > 40) continue;
+      const N = a, D = b * w, g = gcd(N, D);
+      return { kind, a, b, w, A: [a, b], m: [1, w], N, D, n: N / g, dn: D / g, cur: [N, D], phase: 0, est: null };
+    }
+    if (a > 6) continue;
+    const N = w * b, D = a, g = gcd(N, D);
+    return { kind, a, b, w, A: [w, 1], m: [b, a], N, D, n: N / g, dn: D / g, cur: [N, D], phase: 0, est: null };
+  }
+}
+const fdProb = f => f.kind === "fw" ? `${FR(f.a, f.b)}<span>÷</span><span>${f.w}</span>` : `<span>${f.w}</span><span>÷</span>${FR(f.a, f.b)}`;
+const fdMulHTML = f => `${FR(f.A[0], f.A[1])}<span>×</span>${FR(f.m[0], f.m[1], "hi")}`;
+const fdStart = f => f.kind === "fw" ? `${f.a}/${f.b}` : `${f.w}`;
+const fdAns = (n, d) => d === 1 ? `<span>${n}</span>` : FR(n, d, "hi");
+
+function fdPick() {
+  const c = el(`<section class="card">
+    <h2>Pick a kind</h2>
+    <div class="choices">
+      <button class="home-pick" type="button" data-l="fw"><strong>Fraction ÷ whole number</strong><span>Like 7/6 ÷ 3</span></button>
+      <button class="home-pick" type="button" data-l="wf"><strong>Whole number ÷ fraction</strong><span>Like 3 ÷ 2/5</span></button>
+      <button class="home-pick" type="button" data-l="any"><strong>Mix them up</strong><span>Some of each</span></button>
+    </div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelectorAll("[data-l]").forEach(b => b.onclick = () => { state.fvLevel = b.dataset.l; state.fv = makeFdiv(b.dataset.l); state.step = 1; render(); });
+}
+
+function fdGuess() {
+  const f = state.fv, fw = f.kind === "fw", bigger = !fw && f.a < f.b, s = fdStart(f);
+  const c = el(`<section class="card">
+    <div class="fx">${fdProb(f)}</div>
+    <p class="story">${fw ? `Picture it: <b>${f.a}/${f.b}</b> of a pizza, shared fairly between <b>${f.w} people</b>.`
+                          : `Picture it: how many pieces of size <b>${f.a}/${f.b}</b> fit into <b>${f.w} whole pizzas</b>?`}</p>
+    <h2>Before any math: will the answer be bigger or smaller than ${s}?</h2>
+    <div class="choices">
+      <button type="button" data-g="bigger">Bigger than ${s}</button>
+      <button type="button" data-g="smaller">Smaller than ${s}</button>
+    </div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelectorAll("[data-g]").forEach(b => b.onclick = () => {
+    const fb = c.querySelector("#fb");
+    if ((b.dataset.g === "bigger") === bigger) {
+      f.est = bigger ? "bigger" : "smaller";
+      c.querySelectorAll("[data-g]").forEach(x => x.disabled = x !== b); b.classList.add("picked");
+      fb.innerHTML = `<div class="note ok">Yes. ${fw ? `Sharing between ${f.w} people gives each person a smaller piece.`
+        : bigger ? `${f.a}/${f.b} is less than 1 whole, so more than one piece fits in each pizza.`
+        : `${f.a}/${f.b} is more than 1 whole, so each piece is bigger than a pizza. Fewer than ${f.w} will fit.`} The answer should be ${f.est} than ${s}. Keep that in your pocket for the end.</div>`;
+      fb.appendChild(nextBtn(() => { state.step = 2; render(); }));
+    } else {
+      fb.innerHTML = `<div class="note look">${fw ? `Let's picture it again. If ${f.w} people share one piece of pizza, does each person get the whole piece or just part of it?`
+        : `Let's look at ${f.a}/${f.b}. Is it more or less than 1 whole pizza? ${bigger ? "If each piece is smaller than a pizza, how many fit in one pizza?" : "If each piece is bigger than a pizza, can even one piece fit in each pizza?"}`} Pick again whenever you're ready.</div>`;
+    }
+  });
+}
+
+function fdFlip() {
+  const f = state.fv, fw = f.kind === "fw";
+  const right = `× ${f.m[0]}/${f.m[1]}`;
+  const opts = fw
+    ? [[right, "ok"], [`× ${f.w}`, "times"], [`× ${f.w}/1`, "noflip"]]
+    : [[right, "ok"], [`× ${f.a}/${f.b}`, "noflip"], [`÷ ${f.b}/${f.a}`, "nochange"]];
+  opts.sort(() => Math.random() - .5);
+  const c = el(`<section class="card">
+    <div class="fx">${fdProb(f)}</div>
+    <h2>Dividing by a fraction is the same as multiplying by its flip.</h2>
+    <ol class="rules">
+      <li><span class="n">1</span><span class="sym">Keep</span>the first number: ${fdStart(f)}</li>
+      <li><span class="n">2</span><span class="sym">Change</span>÷ into ×</li>
+      <li><span class="n">3</span><span class="sym">Flip</span>the second number upside down.${fw ? ` A whole number like ${f.w} can be written ${f.w}/1.` : ""}</li>
+    </ol>
+    <p class="ask">What does ${fw ? `÷ ${f.w}` : `÷ ${f.a}/${f.b}`} turn into?</p>
+    <div class="choices" id="opts"></div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  opts.forEach(([t, why]) => {
+    const b = el(`<button type="button">${t}</button>`);
+    b.onclick = () => {
+      const fb = c.querySelector("#fb");
+      if (why === "ok") {
+        c.querySelectorAll("#opts button").forEach(x => x.disabled = x !== b); b.classList.add("picked");
+        fb.innerHTML = `<div class="note ok">Yes. ${fw ? `${f.w} is ${f.w}/1, and flipped it's 1/${f.w}. Splitting into ${f.w} equal shares is the same as taking 1/${f.w} of it.` : `Keep ${f.w}, change ÷ to ×, flip ${f.a}/${f.b} into ${f.b}/${f.a}.`}</div>
+          <div class="fx">${fdMulHTML(f)}</div>`;
+        fb.appendChild(nextBtn(() => { state.step = 3; render(); }, "Multiply it"));
+        return;
+      }
+      fb.innerHTML = `<div class="note look">${
+        why === "times" ? `Let's test that. × ${f.w} would make ${f.a}/${f.b} ${f.w} times bigger, and it would come out to ${f.a * f.w}/${f.b}. But you said sharing makes each piece smaller. Writing ${f.w} as ${f.w}/1 is the start. What's left to do?`
+        : why === "noflip" ? (fw ? `${f.w}/1 is just ${f.w} written as a fraction. That's a great start! Now do step 3: flip it upside down.`
+                                 : `That kept ${f.a}/${f.b} the same way up. Changing ÷ to × is done. Now step 3: flip it upside down.`)
+        : `You flipped it. Now check step 2: the ÷ has to change into × too.`}</div>`;
+    };
+    c.querySelector("#opts").appendChild(b);
+  });
+}
+
+function fdMult() {
+  const f = state.fv, k = f.phase;
+  const q = k === 0 ? { x: f.A[0], y: f.m[0], ans: f.N, where: "Tops first:" } : { x: f.A[1], y: f.m[1], ans: f.D, where: "Now the bottoms:" };
+  const c = el(`<section class="card">
+    <div class="fx">${fdMulHTML(f)}<span>=</span>${FR(k > 0 ? f.N : "?", "?")}</div>
+    <h2>Multiply straight across. ${q.where} ${q.x} × ${q.y}</h2>
+    <div class="row" style="align-items:center">
+      <span class="ask">${q.x} × ${q.y} =</span>
+      <input type="number" id="ans" inputmode="numeric" aria-label="${q.x} times ${q.y}">
+      <button class="primary" id="chk" type="button">Check</button>
+    </div>
+    <button class="quiet" id="hintBtn" type="button">Show me a hint</button>
+    <div id="hint"></div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelector("#hintBtn").onclick = e => {
+    c.querySelector("#hint").innerHTML = `<div class="hint">${q.x === 1 || q.y === 1 ? `Anything times 1 stays the same.`
+      : `Count by ${q.y}s, ${q.x} times: ${Array.from({ length: q.x }, (_, i) => q.y * (i + 1)).join(", ")}.`}</div>`;
+    e.target.disabled = true;
+  };
+  const input = c.querySelector("#ans");
+  const check = () => {
+    const fb = c.querySelector("#fb");
+    if (!input.value) { fb.innerHTML = `<div class="note look">Type a number first, then press Check.</div>`; return; }
+    const v = Number(input.value);
+    if (v === q.ans) {
+      if (k === 0) { f.phase = 1; render(); return; }
+      fb.innerHTML = `<div class="note ok">${f.A[0]} × ${f.m[0]} = ${f.N} on top, and ${f.A[1]} × ${f.m[1]} = ${f.D} on the bottom. That makes ${FR(f.N, f.D)}.</div>`;
+      fb.appendChild(nextBtn(() => { state.step = 4; render(); }, "Simplify it"));
+      input.disabled = true; c.querySelector("#chk").disabled = true;
+    } else if (v === q.x + q.y && q.x + q.y !== q.ans) {
+      fb.innerHTML = `<div class="note look">Let's test ${v}: ${q.x} + ${q.y} makes ${v}. Peek at the sign. It's ×! What is ${q.x} × ${q.y}?</div>`;
+    } else if (q.x === 1 || q.y === 1) {
+      fb.innerHTML = `<div class="note look">Let's test it: 1 group of ${Math.max(q.x, q.y)} is just ${Math.max(q.x, q.y)}. Anything times 1 stays the same.</div>`;
+    } else {
+      fb.innerHTML = `<div class="note look">Let's test it: ${q.x} × ${q.y} means ${q.x} groups of ${q.y}. Count by ${q.y}s, ${q.x} times. Do you land on ${v}? The hint can count it with you.</div>`;
+    }
+  };
+  c.querySelector("#chk").onclick = check;
+  input.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+  input.focus();
+}
+
+function fdSimp() {
+  const f = state.fv, [N, D] = f.cur, g = gcd(N, D);
+  const c = el(`<section class="card">
+    <div class="fx">${fdProb(f)}<span>=</span>${FR(N, D, "hi")}</div>
+    <h2>Simplest form means no number (other than 1) divides both the top and the bottom.</h2>
+    <p>Is there a number that divides <b>${N}</b> and <b>${D}</b> evenly? Tap it. If nothing works, tap the last button.</p>
+    <div class="factors" id="fs"></div>
+    <button id="none" type="button">Nothing works. It's already in simplest form.</button>
+    <button class="quiet" id="hintBtn" type="button">Show me a hint</button>
+    <div id="hint"></div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  const fb = c.querySelector("#fb");
+  for (let x = 2; x <= 12; x++) {
+    const b = el(`<button type="button">${x}</button>`);
+    b.onclick = () => {
+      const ta = N % x === 0, tb = D % x === 0;
+      if (ta && tb) { f.cur = [N / x, D / x]; render(); return; }
+      fb.innerHTML = `<div class="note look">${ta ? `${N} ÷ ${x} works, but ${D} ÷ ${x} doesn't come out even.` : tb ? `${D} ÷ ${x} works, but ${N} ÷ ${x} doesn't come out even.` : `Neither ${N} nor ${D} divides evenly by ${x}.`} It has to work for both. Try another number.</div>`;
+    };
+    c.querySelector("#fs").appendChild(b);
+  }
+  c.querySelector("#none").onclick = () => {
+    if (g === 1) { state.step = 5; render(); return; }
+    fb.innerHTML = `<div class="note look">Look again. ${N % 2 === 0 && D % 2 === 0 ? `${N} and ${D} are both even, so 2 divides both.` : `There's still a number that divides both ${N} and ${D}. Try the hint.`}</div>`;
+  };
+  c.querySelector("#hintBtn").onclick = e => {
+    const tip = N % 2 === 0 && D % 2 === 0 ? "Both numbers are even, so try 2."
+      : N % 3 === 0 && D % 3 === 0 ? "Both are in the 3 times table. Try 3."
+      : N % 5 === 0 && D % 5 === 0 ? "Both end in 0 or 5. Try 5."
+      : g > 1 ? `Try ${g}.` : `${N} and ${D} don't share any number except 1. This one is already in simplest form.`;
+    c.querySelector("#hint").innerHTML = `<div class="hint">${tip}</div>`;
+    e.target.disabled = true;
+  };
+}
+
+function fdBar(f) {
+  const per = f.b * f.w, rows = Math.ceil(f.a / f.b), W = 600, cw = W / per, rh = 34, gap = 10;
+  let s = `<svg viewBox="0 0 ${W + 4} ${rows * (rh + gap)}" style="width:100%;display:block" role="img" aria-label="${f.a}/${f.b} cut into ${f.w} equal shares">`;
+  for (let r = 0; r < rows; r++) {
+    const y = r * (rh + gap) + 2;
+    for (let j = 0; j < per; j++) {
+      const idx = r * per + j, fill = idx < f.a ? "var(--accent)" : idx < f.a * f.w ? "var(--accent-wash)" : "var(--card)";
+      s += `<rect x="${2 + j * cw}" y="${y}" width="${cw}" height="${rh}" style="fill:${fill};stroke:var(--line);stroke-width:1"/>`;
+    }
+    for (let k = 0; k <= f.b; k++) s += `<line x1="${2 + k * f.w * cw}" y1="${y}" x2="${2 + k * f.w * cw}" y2="${y + rh}" style="stroke:var(--ink);stroke-width:2"/>`;
+    s += `<rect x="2" y="${y}" width="${W}" height="${rh}" style="fill:none;stroke:var(--ink);stroke-width:2"/>`;
+  }
+  return `<div class="card" style="padding:14px;gap:8px">${s}</svg>
+    <p class="sub" style="margin:0">Each bar is 1 whole cut into ${f.b} parts. Each part is cut again into ${f.w}, so there are ${per} little pieces in a whole.
+    ${f.a}/${f.b} is all ${f.a * f.w} shaded pieces. Shared between ${f.w} people, one person gets the dark ${f.a}: <b>${f.a}/${per}</b>.</p></div>`;
+}
+
+function fdCheck() {
+  const f = state.fv, fw = f.kind === "fw", s = fdStart(f);
+  const val = f.n / f.dn, start = fw ? f.a / f.b : f.w, isBig = val > start;
+  const txt = f.dn === 1 ? `${f.n}` : `${f.n}/${f.dn}`, whole = Math.floor(f.n / f.dn), rem = f.n % f.dn;
+  const c = el(`<section class="card">
+    <div class="fx">${fdProb(f)}<span>=</span>${fdAns(f.n, f.dn)}</div>
+    <h2>The answer is ${txt}${f.dn > 1 && f.n > f.dn ? `, which is the same as ${whole} ${rem}/${f.dn}` : ""}.</h2>
+    <div class="note ok">Sense check: you said it would be ${f.est} than ${s}. ${txt} is ${isBig ? "bigger" : "smaller"}, so it fits.${f.N !== f.n ? ` Simplifying didn't change the size. ${f.N}/${f.D} and ${txt} are the same amount, just written with smaller numbers.` : ""}${f.dn === 1 ?` A bottom of 1 means it's just ${f.n} wholes.` : ""}</div>
+    ${fw ? fdBar(f) : ""}
+    <div class="row">
+      <button class="primary" id="again" type="button">Another one</button>
+      <button id="pick" type="button">Change kind</button>
+    </div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelector("#again").onclick = () => { state.solved.fdiv++; save(); state.fv = makeFdiv(state.fvLevel); state.step = 1; render(); };
+  c.querySelector("#pick").onclick = () => { state.solved.fdiv++; save(); state.step = 0; render(); };
+}
+
+/* ---------- decimal to fraction (simplest form) ---------- */
+const D2F_PLACES = { 1: ["tenths", 10], 2: ["hundredths", 100], 3: ["thousandths", 1000] };
+function makeD2f(level) {
+  const places = level === "ten" ? 1 : level === "hun" ? 2 : 3, D = 10 ** places;
+  for (let i = 0; i < 5000; i++) {
+    const t = rint(1, D - 1);
+    if (t % 10 === 0) continue;
+    if (places > 1 && gcd(t, D) === 1 && Math.random() < .7) continue;   // mostly ones that simplify
+    if (places === 3 && gcd(t, D) < 5 && Math.random() < .6) continue;
+    const g = gcd(t, D);
+    return { level, t, D, places, s: "0." + String(t).padStart(places, "0"), cur: [t, D], trail: [], n: t / g, dn: D / g };
+  }
+}
+const d2fName = d => D2F_PLACES[d.places][0];
+function d2fChart(d) {
+  const digits = d.s.split(".")[1].split(""), heads = ["Ones", "Tenths", "Hundredths", "Thousandths"].slice(0, d.places + 1);
+  return `<div class="tbl-wrap"><table class="rt">
+    <tr>${heads.map(h => `<th scope="col">${h}</th>`).join("")}</tr>
+    <tr><td>0 .</td>${digits.map((x, i) => `<td class="${i === d.places - 1 ? "now" : ""}">${x}</td>`).join("")}</tr>
+  </table></div>`;
+}
+
+function dfPick() {
+  const c = el(`<section class="card">
+    <h2>Pick a level</h2>
+    <div class="choices">
+      <button class="home-pick" type="button" data-l="ten"><strong>Tenths</strong><span>Like 0.4</span></button>
+      <button class="home-pick" type="button" data-l="hun"><strong>Hundredths</strong><span>Like 0.35</span></button>
+      <button class="home-pick" type="button" data-l="tho"><strong>Thousandths</strong><span>Like 0.125</span></button>
+    </div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelectorAll("[data-l]").forEach(b => b.onclick = () => { state.dfLevel = b.dataset.l; state.dfr = makeD2f(b.dataset.l); state.step = 1; render(); });
+}
+
+function dfRead() {
+  const d = state.dfr, name = d2fName(d);
+  const c = el(`<section class="card">
+    <div class="fx"><span>${d.s}</span></div>
+    ${d2fChart(d)}
+    <h2>Look at the last digit, ${d.s.slice(-1)}. Which place is it in?</h2>
+    <div class="choices" id="opts">
+      <button type="button" data-p="1">Tenths</button>
+      <button type="button" data-p="2">Hundredths</button>
+      <button type="button" data-p="3">Thousandths</button>
+    </div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelectorAll("[data-p]").forEach(b => b.onclick = () => {
+    const fb = c.querySelector("#fb");
+    if (+b.dataset.p === d.places) {
+      c.querySelectorAll("[data-p]").forEach(x => x.disabled = x !== b); b.classList.add("picked");
+      fb.innerHTML = `<div class="note ok">Yes. ${d.places} ${d.places === 1 ? "digit" : "digits"} after the dot means ${name}. So ${d.s} is read "${d.t} ${d.t === 1 ? name.slice(0, -1) : name}," and the bottom of the fraction is ${d.D}.</div>`;
+      fb.appendChild(nextBtn(() => { state.step = 2; render(); }, "Write the fraction"));
+    } else {
+      fb.innerHTML = `<div class="note look">Let's count the digits after the dot in ${d.s}. There ${d.places === 1 ? "is 1 digit" : `are ${d.places} digits`}. 1 digit means tenths, 2 means hundredths, 3 means thousandths.</div>`;
+    }
+  });
+}
+
+function dfWrite() {
+  const d = state.dfr, name = d2fName(d);
+  const c = el(`<section class="card">
+    <div class="fx"><span>${d.s}</span><span>=</span>${FR("?", d.D)}</div>
+    <h2>The bottom is ${d.D} because it's ${name}. What goes on top?</h2>
+    <p class="sub">Read the digits after the dot as a whole number. Zeros at the front don't count.</p>
+    <div class="row" style="align-items:center">
+      <span class="ask">Top =</span>
+      <input type="number" id="ans" inputmode="numeric" aria-label="Top of the fraction">
+      <button class="primary" id="chk" type="button">Check</button>
+    </div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  const input = c.querySelector("#ans");
+  const check = () => {
+    const fb = c.querySelector("#fb");
+    if (!input.value) { fb.innerHTML = `<div class="note look">Type a number first, then press Check.</div>`; return; }
+    const v = Number(input.value);
+    if (v === d.t) {
+      input.disabled = true; c.querySelector("#chk").disabled = true;
+      fb.innerHTML = `<div class="note ok">${d.s} = ${FR(d.t, d.D)}. That's ${d.t} out of ${d.D} equal pieces.</div>`;
+      fb.appendChild(nextBtn(() => { state.step = 3; render(); }, "Simplify it"));
+    } else if (v === Number(d.s)) {
+      fb.innerHTML = `<div class="note look">That's the decimal again. The top of the fraction is a whole number with no dot: just the digits after the dot.</div>`;
+    } else {
+      fb.innerHTML = `<div class="note look">Let's look at the digits after the dot in ${d.s}. Skip any zeros at the front. What number is left?</div>`;
+    }
+  };
+  c.querySelector("#chk").onclick = check;
+  input.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+  input.focus();
+}
+
+function dfSimp() {
+  const d = state.dfr, [N, D] = d.cur, g = gcd(N, D);
+  const c = el(`<section class="card">
+    <div class="fx"><span>${d.s}</span><span>=</span>${FR(N, D, "hi")}</div>
+    ${d.trail.length ? `<ol class="trail">${d.trail.map(x => `<li>${x}</li>`).join("")}</ol>` : ""}
+    <h2>Divide the top and the bottom by the <i>same</i> number.</h2>
+    <p>Is there a number that divides <b>${N}</b> and <b>${D}</b> evenly? Tap it. If nothing works, tap the last button.</p>
+    <p class="sub">Same number on top and bottom keeps the size the same. Different numbers would change it.</p>
+    <div class="factors" id="fs"></div>
+    <button id="none" type="button">Nothing works. It's already in simplest form.</button>
+    <button class="quiet" id="hintBtn" type="button">Show me a hint</button>
+    <div id="hint"></div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  const fb = c.querySelector("#fb");
+  [2, 3, 4, 5, 6, 7, 8, 9, 10, 25].forEach(x => {
+    const b = el(`<button type="button">${x}</button>`);
+    b.onclick = () => {
+      const ta = N % x === 0, tb = D % x === 0;
+      if (ta && tb) { d.trail.push(`${N} ÷ ${x} = ${N / x} on top, ${D} ÷ ${x} = ${D / x} on the bottom`); d.cur = [N / x, D / x]; render(); return; }
+      fb.innerHTML = `<div class="note look">${ta ? `${N} ÷ ${x} works, but ${D} ÷ ${x} doesn't come out even.` : tb ? `${D} ÷ ${x} works, but ${N} ÷ ${x} doesn't come out even.` : `Neither ${N} nor ${D} divides evenly by ${x}.`} It has to work for both. Try another number.</div>`;
+    };
+    c.querySelector("#fs").appendChild(b);
+  });
+  c.querySelector("#none").onclick = () => {
+    if (g === 1) { state.step = 4; render(); return; }
+    fb.innerHTML = `<div class="note look">Look again. ${N % 2 === 0 ? `${N} and ${D} are both even, so 2 divides both.` : N % 5 === 0 ? `${N} ends in 5, and ${D} ends in 0. 5 divides both.` : `There's still a number that divides both. Try the hint.`}</div>`;
+  };
+  c.querySelector("#hintBtn").onclick = e => {
+    const tip = g === 1 ? `${N} doesn't end in an even number, 0, or 5, so 2 and 5 don't work. This one is already in simplest form.`
+      : N % 25 === 0 && D % 25 === 0 ? "Both are in the 25 times table. Try 25."
+      : N % 5 === 0 ? `${N} ends in 5, and ${D} ends in 0. Try 5.`
+      : "Both numbers are even, so try 2.";
+    c.querySelector("#hint").innerHTML = `<div class="hint">${tip}</div>`;
+    e.target.disabled = true;
+  };
+}
+
+function dfCheck() {
+  const d = state.dfr, k = d.D / d.dn, simplified = k > 1;
+  const c = el(`<section class="card">
+    <div class="fx"><span>${d.s}</span><span>=</span>${FR(d.t, d.D)}${simplified ? `<span>=</span>${FR(d.n, d.dn, "hi")}` : ""}</div>
+    <h2>${simplified ? `Check it: turn ${d.n}/${d.dn} back into ${d.D}ths. ${d.dn} × ${k} = ${d.D}, so multiply the top by ${k} too.` : `The answer is ${d.n}/${d.dn}.`}</h2>
+    ${simplified ? `<div class="row" style="align-items:center">
+      <span class="ask">${d.n} × ${k} =</span>
+      <input type="number" id="ans" inputmode="numeric" aria-label="${d.n} times ${k}">
+      <button class="primary" id="chk" type="button">Check</button>
+    </div>` : `<div class="note ok">No number except 1 divides both ${d.t} and ${d.D}, so ${d.t}/${d.D} is already in simplest form. It's still ${d.s}.</div>`}
+    <div id="fb"></div>
+    <div class="row" id="end" ${simplified ? "hidden" : ""}>
+      <button class="primary" id="again" type="button">Another one</button>
+      <button id="pick" type="button">Change level</button>
+    </div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelector("#again").onclick = () => { state.solved.d2f++; save(); state.dfr = makeD2f(state.dfLevel); state.step = 1; render(); };
+  c.querySelector("#pick").onclick = () => { state.solved.d2f++; save(); state.step = 0; render(); };
+  if (!simplified) return;
+  const input = c.querySelector("#ans");
+  const check = () => {
+    const fb = c.querySelector("#fb");
+    if (!input.value) { fb.innerHTML = `<div class="note look">Type a number first, then press Check.</div>`; return; }
+    if (Number(input.value) === d.t) {
+      input.disabled = true; c.querySelector("#chk").disabled = true;
+      fb.innerHTML = `<div class="note ok">${d.n}/${d.dn} = ${d.t}/${d.D} = ${d.s}. It comes right back to where you started, so <b>${d.n}/${d.dn}</b> is the same amount. You checked it yourself.</div>`;
+      c.querySelector("#end").hidden = false;
+    } else {
+      fb.innerHTML = `<div class="note look">Let's test it: ${d.n} × ${k} means ${d.n} groups of ${k}. Count by ${k}s, ${d.n} times. Do you land on ${input.value}?</div>`;
+    }
+  };
+  c.querySelector("#chk").onclick = check;
+  input.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+  input.focus();
+}
 
 /* ---------- round & estimate ---------- */
 function roundTo(n, p) { return Math.round(n / p) * p; }

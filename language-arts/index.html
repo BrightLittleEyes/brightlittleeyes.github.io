@@ -213,6 +213,13 @@ ol.steps li::before{content:counter(st);width:30px;height:30px;border-radius:50%
 .gallery img{width:100%;height:140px;object-fit:cover;border-radius:8px;border:5px solid #FBF7EF;box-shadow:0 1px 4px rgba(0,0,0,.15)}
 .gallery figcaption{font-size:14px;margin-top:6px;line-height:1.3}
 .gallery figcaption b{display:block;font-family:"Lora",serif;font-size:15px}
+.bookcard{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center;margin-bottom:12px}
+.cover{width:78px;height:106px;border-radius:4px 8px 8px 4px;color:#fff;display:flex;align-items:flex-end;padding:8px;font-family:"Lora",serif;font-size:11px;line-height:1.2;box-shadow:inset 6px 0 0 rgba(0,0,0,.18),0 3px 6px rgba(0,0,0,.2)}
+.bookcard h3{font-size:22px}
+.chap{display:inline-block;background:#F3ECE2;border-radius:999px;padding:4px 14px;font-weight:700;font-size:18px;margin-top:6px}
+.bkbar{height:10px;background:var(--cream);border-radius:999px;overflow:hidden;margin-top:8px;max-width:260px;border:1px solid var(--line)}
+.bkbar i{display:block;height:100%;background:var(--book)}
+.unit-book{display:inline-flex;gap:6px;align-items:center;font-size:14px;color:var(--soft)}
 .confetti{position:fixed;top:-20px;font-size:26px;pointer-events:none;animation:fall 1.9s linear forwards;z-index:9}
 @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.6}}
 @media(max-width:560px){.sec-b{padding:14px}.story{font-size:19px}.artcard{grid-template-columns:1fr}.frame{display:none}}
@@ -1208,6 +1215,86 @@ const PROJECTS = {
   tip:"Big and low means near. Small and high means far."}
 };
 
+/* One classic chapter book per unit. plan = chapters for each of the 6 lessons in the unit. */
+const UNIT_BOOKS = {
+ 1:{title:"The Boxcar Children", author:"Gertrude Chandler Warner", year:1942, chapters:13, color:"#B9573E",
+  note:"Use the familiar 1942 edition (13 chapters, the one most libraries have).",
+  plan:[[1,2],[3,4],[5,6],[7,8],[9,10],[11,13]],
+  tell:["Tell who Henry, Jessie, Violet, and Benny are, and why they are on their own.",
+        "Tell how the children found the boxcar and what they did first to make it a home.",
+        "Tell some of the ways the children found or made the things they needed.",
+        "Tell what Henry does to earn money, and how the others help at home.",
+        "Tell about the hardest thing that has happened so far, and how the children took care of each other.",
+        "Tell how the story ends. What happened to the boxcar?"],
+  talk:["Jessie takes charge and makes a plan. How is she like a big sister or a mother to the others?",
+        "The children make a home out of almost nothing. What would you need to make a home in the woods?",
+        "The children are very thankful for small things. Which small thing would you be most thankful for?",
+        "Henry works hard and is honest. How does that help his brother and sisters?",
+        "How did the children show love when one of them needed help?",
+        "Why do you think the children were afraid of their grandfather at first? Were they right?"]},
+ 2:{title:"Little House in the Big Woods", author:"Laura Ingalls Wilder", year:1932, chapters:13, color:"#6E8B4E",
+  note:"Any edition works. The chapters are the same in all of them.",
+  plan:[[1,2],[3,4],[5,6],[7,8],[9,10],[11,13]],
+  tell:["Tell about Laura’s family and their little log house in the woods.",
+        "Tell some of the stories and fun things the family did on long winter days.",
+        "Tell what the family did on Sundays and how the seasons began to change.",
+        "Tell what happened when the family went to Grandpa’s house.",
+        "Tell about one adventure Laura or Pa had in the summer.",
+        "Tell how the family got ready for the next winter."],
+  talk:["The family works very hard to get ready for winter. What jobs would you like to help with?",
+        "Pa plays the fiddle and tells stories at night. What does your family do together on cold evenings?",
+        "Laura sometimes finds it hard to sit still and be good. When is that hard for you?",
+        "How do Laura’s family and relatives help one another?",
+        "Which part of pioneer life would you like best? Which would be hardest?",
+        "The book ends with Laura thinking about “now.” Why are ordinary days a gift?"]},
+ 3:{title:"The Courage of Sarah Noble", author:"Alice Dalgliesh", year:1954, chapters:8, color:"#B88A2E",
+  note:"A short, true-to-history story. Read it slowly and talk about it.",
+  plan:[[1,1],[2,2],[3,4],[5,5],[6,7],[8,8]],
+  tell:["Tell where Sarah and her father are going, and why Sarah came along.",
+        "Tell what made Sarah afraid on the journey, and what helped her.",
+        "Tell how Sarah and her father began to build a new home.",
+        "Tell about the new friends Sarah made.",
+        "Tell what Sarah had to do when her father left to bring the rest of the family.",
+        "Tell how the story ends. How had Sarah changed?"],
+  talk:["Sarah’s mother tells her, “Keep up your courage.” What does that mean?",
+        "Sarah holds her cloak when she is afraid. What helps you when you are afraid?",
+        "How does Sarah help her father?",
+        "Sarah makes friends with children who speak a different language. How do they understand each other?",
+        "Was it brave for Sarah to stay? Why?",
+        "What did Sarah learn about being brave?"]},
+ 4:{title:"Mr. Popper’s Penguins", author:"Richard and Florence Atwater", year:1938, chapters:20, color:"#3F6F94",
+  note:"A funny classic. It connects to this unit’s geography of far-away and frozen lands.",
+  plan:[[1,3],[4,6],[7,10],[11,13],[14,16],[17,20]],
+  tell:["Tell who Mr. Popper is and what he dreams about.",
+        "Tell how the Popper family takes care of Captain Cook.",
+        "Tell what happens when the penguin family grows.",
+        "Tell how the Poppers decide to earn money with the penguins.",
+        "Tell about the penguins’ adventures on the road.",
+        "Tell how the story ends. Was it the right choice for the penguins?"],
+  talk:["Mr. Popper loves to read about the Antarctic. What faraway place would you like to read about?",
+        "Mrs. Popper is patient even when the house gets strange. How does she show it?",
+        "What would be the hardest part of keeping penguins at home?",
+        "The Poppers work as a family. What job would you want in the penguin show?",
+        "What is the funniest thing that has happened so far?",
+        "Mr. Popper thinks about what is best for the penguins, not just himself. Why is that kind?"]},
+ 5:{title:"Charlotte’s Web", author:"E. B. White", year:1952, chapters:22, color:"#8A5E91",
+  note:"A beloved classic. Near the end a character dies. It is told gently, but you may want to read the last chapters together.",
+  plan:[[1,4],[5,8],[9,12],[13,15],[16,19],[20,22]],
+  tell:["Tell how Fern saved Wilbur, and how Wilbur came to live in the barn.",
+        "Tell how Wilbur and Charlotte became friends, and what bad news Wilbur heard.",
+        "Tell about Charlotte’s plan and how the people reacted to it.",
+        "Tell what new words Charlotte wrote, and what Fern’s mother was worried about.",
+        "Tell what happened when everyone went to the fair.",
+        "Tell how the story ends and how Wilbur kept his promise."],
+  talk:["Fern stood up for a little pig. When have you stood up for someone small?",
+        "Charlotte is a true friend to Wilbur. What makes someone a good friend?",
+        "Charlotte works hard to help Wilbur even when she is tired. How is that like the Thankful Jar or Mr. Ortiz’s leaves?",
+        "How does Templeton act? Is he a good friend?",
+        "Wilbur is humble even when people say he is special. What does humble mean?",
+        "The seasons keep turning on the farm. What does the ending teach about friendship and thankfulness?"]}
+};
+const MORE_BOXCAR = ["Surprise Island","The Yellow House Mystery","Mystery Ranch","Mike’s Mystery","Blue Bay Mystery","The Woodshed Mystery","The Lighthouse Mystery","Mountain Top Mystery"];
+
 </script>
 <script>
 /* ================= helpers & saving (same approach as Science Explorers) ================= */
@@ -1258,10 +1345,10 @@ const SEC = {
   read:{n:"Reading",ic:"📖",c:"var(--read)"}, spell:{n:"Spelling & Phonics",ic:"🔤",c:"var(--spell)"},
   gram:{n:"Grammar & Usage",ic:"✏️",c:"var(--gram)"}, write:{n:"Writing",ic:"📝",c:"var(--write)"},
   poem:{n:"Poetry",ic:"🎵",c:"var(--poem)"}, art:{n:"Art Appreciation",ic:"🎨",c:"var(--art)"},
-  geo:{n:"Geography",ic:"🌍",c:"var(--geo)"}, book:{n:"Personal Reading",ic:"📚",c:"var(--book)"},
+  geo:{n:"Geography",ic:"🌍",c:"var(--geo)"}, book:{n:"Book Time",ic:"📕",c:"var(--book)"},
   test:{n:"Spelling Check",ic:"🔤",c:"var(--spell)"}
 };
-const secsOf=L=> L.review ? ["read","test","gram","poem"] : ["read","spell","gram",L.extra.kind,"write","book"];
+const secsOf=L=> L.review ? ["read","test","gram","poem","book"] : ["read","spell","gram",L.extra.kind,"write","book"];
 const TOTAL_STARS = LESSONS.reduce((a,L)=>a+secsOf(L).length+2,0);
 function starCount(s=student){ return Object.keys(P(s).stars).reduce((a,k)=>a+(k.endsWith("-done")?2:1),0); }
 function addStar(key){ if(!student||P().stars[key]) return false; P().stars[key]=Date.now(); P().last=Date.now(); saveAll(); updateStars(); return true; }
@@ -1275,6 +1362,8 @@ const BADGES=[
   {i:"🌱",n:"First Lesson",d:"Finish Lesson 1",ok:s=>lessonDone(0,s)},
   ...UNITS.map(U=>({i:U.icon,n:U.title,d:`Finish Unit ${U.n}`,ok:s=>unitLessons(U.n).every(([,i])=>lessonDone(i,s))})),
   {i:"📚",n:"Bookworm",d:"Read 300 minutes",ok:s=>(P(s).minutes||0)>=300},
+  {i:"🚃",n:"Boxcar Reader",d:"Finish The Boxcar Children",ok:s=>bookPct(1,s)>=UNIT_BOOKS[1].chapters},
+  {i:"📕",n:"Five Classics",d:"Finish all five unit books",ok:s=>UNITS.every(U=>bookPct(U.n,s)>=UNIT_BOOKS[U.n].chapters)},
   {i:"🔤",n:"Super Speller",d:"Spell 8 of 8 on the first try",ok:s=>Object.values(P(s).lessons).some(l=>l.sec&&((l.sec.spell&&l.sec.spell.score===8)||(l.sec.test&&l.sec.test.score===8)))},
   {i:"🌼",n:"Wildflower Scholar",d:"Finish all 30 lessons",ok:s=>LESSONS.every((_,i)=>lessonDone(i,s))}
 ];
@@ -1323,7 +1412,7 @@ function renderHome(){
     <button class="btn go" onclick="go('lesson',${nx})">${all?"Review":(P().lessons[nx]&&Object.keys(P().lessons[nx].sec).length?"Keep going ➜":"Start lesson ➜")}</button></div>`;
   UNITS.forEach(U=>{
     const ls=unitLessons(U.n), d=ls.filter(([,i])=>lessonDone(i)).length;
-    h+=`<div class="unit"><div class="unit-head"><div class="badge-ic" style="background:${U.color}">${U.icon}</div><div><h2>Unit ${U.n}: ${U.title}</h2><span>${d} of ${ls.length} lessons done · Poem: “${U.poem.title}”</span></div></div><div class="lgrid">`;
+    h+=`<div class="unit"><div class="unit-head"><div class="badge-ic" style="background:${U.color}">${U.icon}</div><div><h2>Unit ${U.n}: ${U.title}</h2><span>${d} of ${ls.length} lessons done · 📕 <i>${UNIT_BOOKS[U.n].title}</i> · 🎵 “${U.poem.title}”</span></div></div><div class="lgrid">`;
     ls.forEach(([L,i])=>{ h+=`<button class="ltile ${lessonDone(i)?"done":""} ${i===nx&&!all?"next":""} ${L.review?"rev":""}" onclick="go('lesson',${i})"><b>Lesson ${lessonNo(i)}</b><span>${L.review?"Review & Check":esc(L.story.title)}</span></button>`; });
     h+=`</div></div>`;
   });
@@ -1549,14 +1638,26 @@ BUILD.geo=(L,i)=>{ const G=L.extra;
     <div id="geoQs">${G.q.map((q,j)=>mcHTML("geo"+j,q[0],q[1],q[2],q[3])).join("")}</div>${doneNote(i,"geo")}`); };
 WIRE.geo=(L,i)=>{ wireQs($("geoQs"),L.extra.q.map(()=>({type:"mc"})),(sc,t)=>markSec("geo",{score:sc,total:t})); };
 
-/* ---- personal reading ---- */
-BUILD.book=(L,i)=>{ const s=LP(i).sec.book;
-  return secShell("book","Personal Reading",`<p>Read a good book for <b>20 minutes</b>. Choose one from your book basket, or ask a parent to help you pick one from the book list.</p>
-    <div class="row"><label for="bkTitle">Book:</label><input type="text" id="bkTitle" style="flex:1;min-width:180px" placeholder="Title of your book" value="${esc(s&&s.title||"")}"></div>
-    <div class="row" style="margin-top:10px"><label for="bkMin">Minutes:</label><input type="number" id="bkMin" min="1" max="180" style="width:110px" value="${s&&s.min||20}"></div>
-    <div class="done-row"><span class="note" id="bkMsg"></span><button class="btn" style="background:var(--book)" id="bkDone" ${s&&s.done?"disabled":""}>${s&&s.done?"✓ Done":"I read today"}</button></div>`); };
-WIRE.book=(L,i)=>{ $("bkDone").onclick=()=>{ const m=Math.max(1,Math.min(180,parseInt($("bkMin").value)||20)), title=$("bkTitle").value.trim();
-  P().minutes=(P().minutes||0)+m; P().reads.push({at:Date.now(),min:m,title,lesson:i}); markSec("book",{min:m,title}); const b=$("bkDone"); if(b){b.disabled=true;b.textContent="✓ Done";} }; };
+/* ---- book time (one classic per unit) ---- */
+const posInUnit=i=>unitLessons(LESSONS[i].u).findIndex(([,j])=>j===i);
+function chapTxt(r){ return r[0]===r[1]?`Chapter ${r[0]}`:`Chapters ${r[0]}–${r[1]}`; }
+function bookPct(u,who=student){ const B=UNIT_BOOKS[u]; let last=0; unitLessons(u).forEach(([,j],k)=>{ const sc=P(who).lessons[j]; if(sc&&sc.sec&&sc.sec.book&&sc.sec.book.done) last=Math.max(last,B.plan[k][1]); }); return last; }
+BUILD.book=(L,i)=>{ const B=UNIT_BOOKS[L.u], k=posInUnit(i), r=B.plan[k], s=LP(i).sec.book, upto=bookPct(L.u);
+  const last=k===B.plan.length-1;
+  return secShell("book",`Book Time: ${B.title}`,`
+    <div class="bookcard"><div class="cover" style="background:${B.color}">${B.title}</div><div>
+      <h3><i>${B.title}</i></h3><div class="note" style="font-size:16px">by ${B.author} · ${B.chapters} chapters</div>
+      <div class="chap">📖 Today: ${chapTxt(r)}${last?" (the end!)":""}</div>
+      <div class="bkbar"><i style="width:${upto/B.chapters*100}%"></i></div><div class="note">${upto?`You’ve read through chapter ${upto}.`:"This is the book for this unit."}</div></div></div>
+    <p>${k===0?`Start our new book! Read ${chapTxt(r).toLowerCase()} out loud to a parent, or read quietly and then read one page aloud.`:`Read ${chapTxt(r).toLowerCase()} out loud to a parent, or read quietly and then read one page aloud.`}</p>
+    <div class="task"><span class="ti">🗣️</span><div><b>Tell it back:</b> Close the book. ${B.tell[k]} Use the characters’ names and tell what happened in order.</div></div>
+    <div class="task" style="background:#F6F1E8"><span class="ti">💬</span><div><b>Talk about it:</b> ${B.talk[k]}</div></div>
+    ${last?`<div class="task" style="background:#FBF0F2"><span class="ti">🎉</span><div><b>You finished the book!</b> Draw a picture of your favorite part and tell someone why you liked it.</div></div>`:""}
+    <div class="row" style="margin-top:10px"><label for="bkMin">Minutes read:</label><input type="number" id="bkMin" min="1" max="180" style="width:110px" value="${s&&s.min||20}"></div>
+    <div class="done-row"><span class="note" id="bkMsg"></span><button class="btn" style="background:var(--book)" id="bkDone" ${s&&s.done?"disabled":""}>${s&&s.done?"✓ Done":`I read ${chapTxt(r).toLowerCase()} and told it back`}</button></div>`); };
+WIRE.book=(L,i)=>{ const B=UNIT_BOOKS[L.u], r=B.plan[posInUnit(i)];
+  $("bkDone").onclick=()=>{ const m=Math.max(1,Math.min(180,parseInt($("bkMin").value)||20));
+    P().minutes=(P().minutes||0)+m; P().reads.push({at:Date.now(),min:m,title:B.title,ch:chapTxt(r),lesson:i}); markSec("book",{min:m,title:B.title,ch:r}); const b=$("bkDone"); if(b){b.disabled=true;b.textContent="✓ Done";} }; };
 
 /* ================= maps (simple drawings) ================= */
 const pt=(lo,la)=>[((lo+180)/360*600).toFixed(1),((90-la)/180*300).toFixed(1)].join(",");
@@ -1613,9 +1714,7 @@ const MAPS={
 
 /* ================= parent area ================= */
 const BOOKS=[
- ["Little House in the Big Woods","Laura Ingalls Wilder"],["Farmer Boy","Laura Ingalls Wilder"],["The Courage of Sarah Noble","Alice Dalgliesh"],
- ["The Boxcar Children (original first book)","Gertrude Chandler Warner"],["Mr. Popper's Penguins","Richard & Florence Atwater"],["Sarah, Plain and Tall","Patricia MacLachlan"],
- ["Charlotte's Web","E. B. White"],["The Year of Miss Agnes","Kirkpatrick Hill"],["Owls in the Family","Farley Mowat"],
+ ["Farmer Boy","Laura Ingalls Wilder"],["Little House on the Prairie","Laura Ingalls Wilder"],["Stuart Little","E. B. White"],["Sarah, Plain and Tall","Patricia MacLachlan"],["The Year of Miss Agnes","Kirkpatrick Hill"],["Owls in the Family","Farley Mowat"],
  ["Twenty and Ten","Claire Huchet Bishop"],["Heidi (children's edition)","Johanna Spyri"],["The Hundred Dresses","Eleanor Estes"],
  ["Pilgrim's Progress for children (Little Pilgrim's Progress)","Helen L. Taylor"],["The Light at Tern Rock","Julia L. Sauer"],["Thy Friend, Obadiah","Brinton Turkle"],
  ["Stone Fox","John Reynolds Gardiner"],["Sam the Minuteman","Nathaniel Benchley"],["A Lion to Guard Us","Clyde Robert Bulla"]
@@ -1652,8 +1751,11 @@ function renderParent(){
   else if(pview.tab==="writing"&&who){ const w=P(who).writing; const ks=Object.keys(w).filter(k=>w[k]&&w[k].trim()).sort((a,b)=>a-b);
     body=kids+(ks.length?ks.map(k=>`<div class="wsample"><b>Lesson ${lessonNo(+k)} · ${esc(LESSONS[k].write?strip(LESSONS[k].write.p):"")}</b>${esc(w[k])}</div>`).join(""):`<p class="note">Writing typed into the app shows up here. Notebook writing won't appear, so check that in person!</p>`); }
   else if(pview.tab==="reading"&&who){ const r=P(who).reads.slice().reverse();
-    body=kids+`<p><b>${P(who).minutes||0} minutes</b> of personal reading so far.</p>`+(r.length?`<table class="t"><tr><th>Date</th><th>Book</th><th>Minutes</th></tr>${r.map(x=>`<tr><td>${fmtDate(x.at)}</td><td>${esc(x.title||"—")}</td><td>${x.min}</td></tr>`).join("")}</table>`:`<p class="note">No reading logged yet.</p>`)
-      +`<h3 style="margin-top:22px;font-size:20px">Good books for personal reading</h3><p class="note">Wholesome, well-written books at about a 3rd grade level. Please preview any book yourself, since editions differ.</p><ul class="booklist">${BOOKS.map(([t,a])=>`<li><i>${esc(t)}</i>, ${esc(a)}</li>`).join("")}</ul>`; }
+    body=kids+`<h3 style="font-size:20px">The five unit books</h3><p class="note">Have these on hand before each unit starts. The library usually has them all.</p>
+      <table class="t"><tr><th>Unit</th><th>Book</th><th>Progress</th></tr>${UNITS.map(U=>{ const B=UNIT_BOOKS[U.n], up=bookPct(U.n,who); return `<tr><td>${U.n}</td><td><i>${B.title}</i>, ${B.author}<div class="note" style="font-size:13px">${B.note}</div></td><td style="white-space:nowrap">${up>=B.chapters?"✓ Finished":up?`through ch. ${up} of ${B.chapters}`:"not started"}</td></tr>`; }).join("")}</table>
+      <p style="margin-top:18px"><b>${P(who).minutes||0} minutes</b> of reading so far.</p>`+(r.length?`<table class="t"><tr><th>Date</th><th>Book</th><th>Read</th><th>Minutes</th></tr>${r.map(x=>`<tr><td>${fmtDate(x.at)}</td><td>${esc(x.title||"—")}</td><td>${esc(x.ch||"")}</td><td>${x.min}</td></tr>`).join("")}</table>`:`<p class="note">No reading logged yet.</p>`)
+      +`<h3 style="margin-top:22px;font-size:20px">More Boxcar Children</h3><p class="note">For extra reading after Unit 1. These are the next books Gertrude Chandler Warner wrote, in order:</p><ol>${MORE_BOXCAR.map(t=>`<li><i>${esc(t)}</i></li>`).join("")}</ol>
+      <h3 style="margin-top:22px;font-size:20px">More good books for free reading</h3><p class="note">Wholesome, well-written books at about a 3rd grade level. Please preview any book yourself, since editions differ.</p><ul class="booklist">${BOOKS.map(([t,a])=>`<li><i>${esc(t)}</i>, ${esc(a)}</li>`).join("")}</ul>`; }
   else if(pview.tab==="art"&&who){ body=kids+`<p class="note">Photos of finished art projects. They're saved on this device only and aren't in the backup code.</p><div id="pGallery">Loading…</div>`; }
   else if(pview.tab==="guide"){
     body=`<h3 style="font-size:20px">How the course works</h3>
@@ -1665,7 +1767,7 @@ function renderParent(){
       <li><b>🎵 Poetry, 🎨 Art, or 🌍 Geography:</b> these take turns. Poems are classics to memorize. Art lessons link to famous paintings on Wikimedia Commons. Please open those with your child, since the app can't show the pictures itself.</li>
       <li><b>🖌️ Art projects:</b> 15 hands-on projects, one in every art lesson and every poetry lesson. Each has a supply list and step-by-step directions. Your child can save a photo of the finished piece to their art gallery.</li>
       <li><b>📝 Writing:</b> a prompt to do in a notebook or type into the app.</li>
-      <li><b>📚 Personal Reading:</b> 20 minutes with a good book, logged in the app.</li></ul>
+      <li><b>📕 Book Time:</b> each unit has one classic chapter book, and every lesson assigns the next chapters. Your child reads from a real copy, tells it back, and talks about one question with you. The books are <i>The Boxcar Children</i>, <i>Little House in the Big Woods</i>, <i>The Courage of Sarah Noble</i>, <i>Mr. Popper’s Penguins</i>, and <i>Charlotte’s Web</i>. The full list is under 📚 Reading log.</li></ul>
       <p>Children earn a star for each part and two bonus stars for finishing a lesson. “Read it to me” and the spelling words use your device's built-in voice.</p>`; }
   else if(pview.tab==="settings"){ let code=""; try{ code=btoa(unescape(encodeURIComponent(JSON.stringify({app:"wildflower-la3",roster,prog})))); }catch(e){}
     body=`<h3 style="font-size:20px">Back up all progress</h3><p class="note">Progress is saved in this browser on this device. If the browser's data is cleared, it's lost. Copy this code somewhere safe so you can restore it later or move it to another device.</p>

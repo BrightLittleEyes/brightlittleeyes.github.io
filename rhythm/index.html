@@ -1117,6 +1117,13 @@ function watchDay(){
 }
 
 /* ---------- board ---------- */
+/* iPad: a web page can't ring while she's in another app, so also start the iPad's own Clock timer through the "Rhythm Timer" shortcut */
+function useClock(){ try{ return localStorage.getItem('rhythm:clockTimer')==='1'; }catch(e){ return false; } }
+function clockTimer(ms){
+  if(!useClock() || !(ms>0)) return;
+  const mins = Math.max(1, Math.round(ms/60000));
+  setTimeout(()=>{ location.href = 'shortcuts://run-shortcut?name=' + encodeURIComponent('Rhythm Timer') + '&input=text&text=' + mins; }, 300);
+}
 function timerInfo(id){
   const item=ALL_ITEMS.find(i=>i.id===id); if(!item) return null;
   if(item.timer) return {secs:item.timer, msg:item.endMsg || `${item.t} time is finished.`};
@@ -1318,9 +1325,9 @@ $('#app').addEventListener('click', e=>{
     S.kid=t.dataset.kid; setKid(S.kid); S.timers={}; S.paused={}; paintKid(); watchDay(); paintTimer(); syncWake(); return; }
   if(t.dataset.slot){ if(isChg(t.dataset.slot) && S.role!=='parent') return; openPicker(t.dataset.slot); return; }
   if(t.dataset.tact){ const id=t.dataset.tid, a=t.dataset.tact, info=timerInfo(id); if(!info) return;
-    if(a==='start'){ S.timers[id]=Date.now()+info.secs*1000; delete S.paused[id]; }
+    if(a==='start'){ S.timers[id]=Date.now()+info.secs*1000; delete S.paused[id]; clockTimer(info.secs*1000); }
     if(a==='pause'){ S.paused[id]=Math.max(0,S.timers[id]-Date.now()); delete S.timers[id]; }
-    if(a==='resume'){ S.timers[id]=Date.now()+S.paused[id]; delete S.paused[id]; }
+    if(a==='resume'){ S.timers[id]=Date.now()+S.paused[id]; clockTimer(S.paused[id]); delete S.paused[id]; }
     if(a==='reset'){ delete S.timers[id]; delete S.paused[id]; }
     paintTimer(); syncWake(); return; }
   if(t.dataset.snack){ const k=+t.dataset.snack, sid=t.dataset.sid; D.snack[k]=!D.snack[k];
@@ -1478,6 +1485,8 @@ function renderEditor(){
     <div class="ed-sec" style="margin-top:-8px"><label class="ed-chk" style="font-weight:700;color:var(--ink)"><input type="checkbox" data-path="noRepeat" data-type="flag" ${E.noRepeat!==false?'checked':''}> No repeats: a Helping Hands job she did yesterday is greyed out today ("You did this yesterday")</label></div>
     ${E._main?'':tagsEd('flag','Change of Routine tags','The red tags for "Anything different today?"',false,false)}
     <div class="ed-sec"><h3>Timer sound</h3><p class="help">What plays when a timer runs out. A "Time's up!" card also pops up until she taps OK.</p>
+      <label class="ed-chk" style="font-weight:700;color:var(--ink)"><input type="checkbox" id="clockTimerOn" ${useClock()?'checked':''}> On this iPad, also start the iPad's Clock timer, so it rings even when she's in another app</label>
+      <p class="help">Needs a shortcut named <b>Rhythm Timer</b> in the iPad's Shortcuts app (one action: <i>Start Timer</i> for <i>Shortcut Input</i> minutes). This setting is saved on this iPad only.</p>
       <div class="ed-grid" style="align-items:center">
         <label class="ed-f" style="flex:0 1 220px">Sound<select data-path="sound">
           <option value="beep" ${E.sound==='beep'?'selected':''}>Beep</option>
@@ -1508,6 +1517,7 @@ function readField(el){
 }
 $('#editor').addEventListener('input', e=>{ const el=e.target; if(el.dataset.path) setAt(el.dataset.path, readField(el)); });
 $('#editor').addEventListener('change', e=>{
+  if(e.target.id==='clockTimerOn'){ try{ localStorage.setItem('rhythm:clockTimer', e.target.checked?'1':''); }catch(x){} return; }
   const el=e.target;
   if(el.dataset.kind){
     const it=getAt(el.dataset.kind), v=el.value;

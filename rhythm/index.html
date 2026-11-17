@@ -173,6 +173,17 @@ h1{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:clamp(
 .ord button:disabled{opacity:.25;cursor:default}
 .ordnote{font-size:13px;color:var(--muted);padding:8px 16px 0;margin:0}
 
+
+/* ---- Bekah's look: books and blue ---- */
+body.theme-books{--bg:#EEF5FC;--line:#D3E3F4;--soft:#E4EFFA;--navy:#1F4E85;--done:#2A7FBA;
+  background:#EEF5FC url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220' viewBox='0 0 220 220'%3E%3Cg fill='%23CFE1F5'%3E%3Cpath d='M22 40c14-7 28-7 40 2v34c-12-8-26-9-40-2z'/%3E%3Cpath d='M66 42c12-9 26-9 40-2v34c-14-7-28-6-40 2z'/%3E%3Crect x='128' y='132' width='62' height='13' rx='2'/%3E%3Crect x='134' y='117' width='54' height='13' rx='2'/%3E%3Crect x='124' y='102' width='58' height='13' rx='2'/%3E%3Crect x='40' y='138' width='30' height='44' rx='3'/%3E%3C/g%3E%3Cg fill='none' stroke='%23B9D2EE' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M64 44v32'/%3E%3Cpath d='M30 50h22M30 57h22M74 50h22M74 57h22'/%3E%3Cpath d='M132 138.5h40M138 123.5h34M128 108.5h40'/%3E%3Cpath d='M46 138v44'/%3E%3C/g%3E%3Cpath d='M60 138v14l4-3 4 3v-14z' fill='%23A9C7EA'/%3E%3C/svg%3E")}
+body.theme-books h1{color:#1F4E85;display:inline-flex;align-items:center;gap:10px}
+body.theme-books h1::before{content:"";width:34px;height:28px;flex:none;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 28'%3E%3Cpath d='M1 4c6-3 11-3 15 1v22c-4-4-9-4-15-1z' fill='%232A7FBA'/%3E%3Cpath d='M18 5c4-4 9-4 15-1v22c-6-3-11-3-15 1z' fill='%235B9BD5'/%3E%3C/svg%3E") no-repeat center/contain}
+body.theme-books .hello{color:#2A6CB0}
+body.theme-books .tag-line{color:#3D5F84}
+body.theme-books .block{border-color:#D3E3F4;box-shadow:0 2px 0 #D3E3F4}
+body.theme-books .progress{background:#DCE9F7}
+body.theme-books .progress b{background:linear-gradient(90deg,#5B9BD5,#2A7FBA)}
 /* ---- Ruth's look: singing & dancing ---- */
 body.theme-dance{--bg:#FBF3FF;--ink:#3B2350;--muted:#7A6390;--line:#EBD7F5;--soft:#F6EAFB;--navy:#6A2C91;--done:#D63384;
   background:#FBF3FF url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg fill='%23E7C9F5' fill-opacity='.55'%3E%3Cpath d='M30 20v26a7 7 0 1 1-4-6V24l16-4v6z'/%3E%3Cpath d='M112 92v30a7 7 0 1 1-4-6V96l22-5v24a7 7 0 1 1-4-6V96z'/%3E%3Cpath d='M128 26l3 7 7 3-7 3-3 7-3-7-7-3 7-3z'/%3E%3Cpath d='M44 118l2 5 5 2-5 2-2 5-2-5-5-2 5-2z'/%3E%3C/g%3E%3C/svg%3E")}
@@ -785,7 +796,7 @@ const S = { date:keyOf(new Date()), data:blank(), db:null, unsub:null, picking:n
 /* More than one child: the first child is "main" (her days are the top of each day's record);
    every other child keeps her own checks and tags under her id inside the same day record. */
 const kidIds = () => ['main', ...Object.keys(CFG.kids||{})];
-const kidInfo = k => k==='main' ? {name:CFG.kidName, verse:CFG.verse, verseRef:CFG.verseRef} : ((CFG.kids||{})[k]||{});
+const kidInfo = k => k==='main' ? {name:CFG.kidName, verse:CFG.verse, verseRef:CFG.verseRef, theme:CFG.theme} : ((CFG.kids||{})[k]||{});
 const kidLabel = k => (kidInfo(k).name||'').trim() || (k==='main' ? 'First board' : k);
 const lkey = key => S.kid==='main' ? key : S.kid+':'+key;      // this device's copy of a day
 function pickDay(doc){
@@ -857,7 +868,7 @@ function normalizeMain(d){
   if(Array.isArray(d.satBlocks)) c.satBlocks = d.satBlocks;
   if(Array.isArray(d.sunBlocks)) c.sunBlocks = d.sunBlocks;
   if(d.tags) ['fun','mech','flag'].forEach(k=>{ if(Array.isArray(d.tags[k])) c.tags[k]=d.tags[k]; });
-  ['verse','verseRef','kidName','pwKid','pwParent','sound'].forEach(k=>{ if(typeof d[k]==='string') c[k]=d[k]; });
+  ['verse','verseRef','kidName','pwKid','pwParent','sound','theme'].forEach(k=>{ if(typeof d[k]==='string') c[k]=d[k]; });
   if(typeof d.repeat==='boolean') c.repeat=d.repeat;
   if(typeof d.noRepeat==='boolean') c.noRepeat=d.noRepeat;
   if(d.kids && typeof d.kids==='object') c.kids=clone(d.kids);
@@ -1008,6 +1019,10 @@ function normalizeMain(d){
     c.blocks.forEach(b=>b.items.forEach(i=>{ if(i.id==='math'){ i.remind = Math.round((i.timer||2700)/60); delete i.timer; delete i.clock; delete i.endMsg; } }));
     c.v = 22;
   }
+  if(c.v < 23){                       // Bekah's board: books and blue
+    if(!c.theme) c.theme='books';
+    c.v = 23;
+  }
   return c;
 }
 const BOARD_OF_DAY = {6:'satBlocks', 0:'sunBlocks'};   // Saturday, Sunday; every other day uses "blocks"
@@ -1030,6 +1045,7 @@ function applyConfig(c){
 function paintKid(){
   const k=kidInfo(S.kid);
   document.body.classList.toggle('theme-dance', k.theme==='dance');
+  document.body.classList.toggle('theme-books', k.theme==='books');
   $('#app header h1').textContent = k.theme==='dance' ? `${(k.name||'MY').toUpperCase()}'S RHYTHM` : 'DAILY RHYTHM';
   $('#verse').innerHTML = k.verse ? `&ldquo;${esc(k.verse)}&rdquo;${k.verseRef?`<span class="ref">${esc(k.verseRef)}</span>`:''}` : '';
   $('#verse').hidden = !k.verse;

@@ -271,7 +271,7 @@ body.theme-dance .ord button{border-radius:50%;width:36px;height:36px;border-col
   <div class="alarm-box"><span class="bell" aria-hidden="true">⏰</span><h2 id="alarmTitle">Time's up!</h2><p id="alarmMsg"></p><button id="alarmOk">OK</button></div>
 </div>
 <div class="alarm" id="clockRem" hidden role="dialog" aria-modal="true" aria-labelledby="clockRemTitle">
-  <div class="alarm-box"><span class="bell" aria-hidden="true">⏱️</span><h2 id="clockRemTitle">Start your iPad timer</h2>
+  <div class="alarm-box"><span class="bell" aria-hidden="true">⏱️</span><h2 id="clockRemTitle">Start your iPad timer first</h2>
     <p id="clockRemMsg"></p>
     <ol class="crsteps"><li>Say <b>"Hey Siri, set a timer for <span class="crmin"></span> minutes"</b></li><li>or swipe down from the top-right corner and tap the <b>timer</b> button, or open the <b>Clock</b> app → <b>Timers</b>.</li></ol>
     <button id="clockRemOk">OK, it's started</button></div>
@@ -999,6 +999,10 @@ function normalizeMain(d){
       i.d='30 minutes. Open Math from its icon and tap Start on the timer at the top.'; } }));
     c.v = 20;
   }
+  if(c.v < 21){                       // ALEKS is a website: she starts the iPad timer before she opens it
+    c.blocks.forEach(b=>b.items.forEach(i=>{ if(i.id==='math' && i.timer) i.clock=true; }));
+    c.v = 21;
+  }
   return c;
 }
 const BOARD_OF_DAY = {6:'satBlocks', 0:'sunBlocks'};   // Saturday, Sunday; every other day uses "blocks"
@@ -1196,7 +1200,7 @@ function tryMust(){
 function clockTimer(ms){
   if(!(ms>0)) return;
   const mins = Math.max(1, Math.round(ms/60000));
-  $('#clockRemMsg').textContent = `Set it for ${mins} minute${mins===1?'':'s'} so it rings while you're in your other apps.`;
+  $('#clockRemMsg').textContent = `Set it for ${mins} minute${mins===1?'':'s'} before you open your app. Then it rings while you work, and you never have to leave.`;
   document.querySelectorAll('#clockRem .crmin').forEach(e=>e.textContent=mins);
   $('#clockRem').hidden=false; setTimeout(()=>$('#clockRemOk').focus(),0);
 }

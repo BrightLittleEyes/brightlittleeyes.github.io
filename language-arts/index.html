@@ -1295,6 +1295,40 @@ const UNIT_BOOKS = {
 };
 const MORE_BOXCAR = ["Surprise Island","The Yellow House Mystery","Mystery Ranch","Mike’s Mystery","Blue Bay Mystery","The Woodshed Mystery","The Lighthouse Mystery","Mountain Top Mystery"];
 
+/* ---- book plan per lesson (Unit 1 starts with Cam Jansen, then The Boxcar Children) ---- */
+const BOOKDB={
+  cam:{title:"Cam Jansen and the Mystery at the Monkey House", short:"Cam Jansen", author:"David A. Adler", total:2, unit:"half", color:"#D08A2E",
+       note:"Cam Jansen mystery #10, a short (about 56 pages) chapter book. Read it in two halves."},
+  boxcar:{title:UNIT_BOOKS[1].title, author:UNIT_BOOKS[1].author, total:13, unit:"chapter", color:UNIT_BOOKS[1].color, note:UNIT_BOOKS[1].note},
+  house:{title:UNIT_BOOKS[2].title, author:UNIT_BOOKS[2].author, total:13, unit:"chapter", color:UNIT_BOOKS[2].color, note:UNIT_BOOKS[2].note},
+  sarah:{title:UNIT_BOOKS[3].title, author:UNIT_BOOKS[3].author, total:8, unit:"chapter", color:UNIT_BOOKS[3].color, note:UNIT_BOOKS[3].note},
+  popper:{title:UNIT_BOOKS[4].title, author:UNIT_BOOKS[4].author, total:20, unit:"chapter", color:UNIT_BOOKS[4].color, note:UNIT_BOOKS[4].note},
+  charlotte:{title:UNIT_BOOKS[5].title, author:UNIT_BOOKS[5].author, total:22, unit:"chapter", color:UNIT_BOOKS[5].color, note:UNIT_BOOKS[5].note}
+};
+const BOOK_ORDER=["cam","boxcar","house","sarah","popper","charlotte"];
+const PLAN={};
+[[2,"house"],[3,"sarah"],[4,"popper"],[5,"charlotte"]].forEach(([u,k])=>{ const B=UNIT_BOOKS[u]; PLAN[u]=B.plan.map((r,j)=>({b:k,r,tell:B.tell[j],talk:B.talk[j]})); });
+PLAN[1]=[
+ {b:"cam",r:[1,1],label:"The first half (to about page 28)",
+  tell:"Tell who Cam Jansen is and how she got her nickname. Then tell what happened at the monkey house.",
+  talk:"Cam says “Click!” when she wants to remember something. Look at a picture in your book for 30 seconds, close your eyes, and see how much you can remember. Then let a parent try!"},
+ {b:"cam",r:[2,2],label:"The second half, to the end",
+  tell:"Tell how Cam solved the mystery. What clues did she notice and remember?",
+  talk:"Cam noticed small things that other people missed. Why is paying close attention a good habit? When could it help you?"},
+ {b:"boxcar",r:[1,3],
+  tell:"Tell who Henry, Jessie, Violet, and Benny are, why they are on their own, and how they found the boxcar.",
+  talk:"Jessie takes charge and makes a plan. How is she like a big sister or a mother to the others?"},
+ {b:"boxcar",r:[4,6],
+  tell:"Tell how the children made the boxcar into a home and found or made the things they needed.",
+  talk:"The children are very thankful for small things. Which small thing would you be most thankful for?"},
+ {b:"boxcar",r:[7,9],
+  tell:"Tell what Henry did to earn money, and how the others helped at home.",
+  talk:"Henry works hard and is honest. How does that help his brother and sisters?"},
+ {b:"boxcar",r:[10,13],
+  tell:"Tell what happened when one of the children got sick, and how the story ends. What happened to the boxcar?",
+  talk:"Why do you think the children were afraid of their grandfather at first? Were they right?"}
+];
+
 </script>
 <script>
 /* ================= helpers & saving (same approach as Science Explorers) ================= */
@@ -1362,8 +1396,9 @@ const BADGES=[
   {i:"🌱",n:"First Lesson",d:"Finish Lesson 1",ok:s=>lessonDone(0,s)},
   ...UNITS.map(U=>({i:U.icon,n:U.title,d:`Finish Unit ${U.n}`,ok:s=>unitLessons(U.n).every(([,i])=>lessonDone(i,s))})),
   {i:"📚",n:"Bookworm",d:"Read 300 minutes",ok:s=>(P(s).minutes||0)>=300},
-  {i:"🚃",n:"Boxcar Reader",d:"Finish The Boxcar Children",ok:s=>bookPct(1,s)>=UNIT_BOOKS[1].chapters},
-  {i:"📕",n:"Five Classics",d:"Finish all five unit books",ok:s=>UNITS.every(U=>bookPct(U.n,s)>=UNIT_BOOKS[U.n].chapters)},
+  {i:"🚃",n:"Boxcar Reader",d:"Finish The Boxcar Children",ok:s=>bookDone("boxcar",s)},
+  {i:"🐒",n:"Mystery Solver",d:"Finish the Cam Jansen mystery",ok:s=>bookDone("cam",s)},
+  {i:"📕",n:"Six Great Books",d:"Finish every book in the course",ok:s=>BOOK_ORDER.every(k=>bookDone(k,s))},
   {i:"🔤",n:"Super Speller",d:"Spell 8 of 8 on the first try",ok:s=>Object.values(P(s).lessons).some(l=>l.sec&&((l.sec.spell&&l.sec.spell.score===8)||(l.sec.test&&l.sec.test.score===8)))},
   {i:"🌼",n:"Wildflower Scholar",d:"Finish all 30 lessons",ok:s=>LESSONS.every((_,i)=>lessonDone(i,s))}
 ];
@@ -1412,7 +1447,7 @@ function renderHome(){
     <button class="btn go" onclick="go('lesson',${nx})">${all?"Review":(P().lessons[nx]&&Object.keys(P().lessons[nx].sec).length?"Keep going ➜":"Start lesson ➜")}</button></div>`;
   UNITS.forEach(U=>{
     const ls=unitLessons(U.n), d=ls.filter(([,i])=>lessonDone(i)).length;
-    h+=`<div class="unit"><div class="unit-head"><div class="badge-ic" style="background:${U.color}">${U.icon}</div><div><h2>Unit ${U.n}: ${U.title}</h2><span>${d} of ${ls.length} lessons done · 📕 <i>${UNIT_BOOKS[U.n].title}</i> · 🎵 “${U.poem.title}”</span></div></div><div class="lgrid">`;
+    h+=`<div class="unit"><div class="unit-head"><div class="badge-ic" style="background:${U.color}">${U.icon}</div><div><h2>Unit ${U.n}: ${U.title}</h2><span>${d} of ${ls.length} lessons done · 📕 ${[...new Set(PLAN[U.n].map(p=>p.b))].map(k=>`<i>${BOOKDB[k].short||BOOKDB[k].title}</i>`).join(", then ")} · 🎵 “${U.poem.title}”</span></div></div><div class="lgrid">`;
     ls.forEach(([L,i])=>{ h+=`<button class="ltile ${lessonDone(i)?"done":""} ${i===nx&&!all?"next":""} ${L.review?"rev":""}" onclick="go('lesson',${i})"><b>Lesson ${lessonNo(i)}</b><span>${L.review?"Review & Check":esc(L.story.title)}</span></button>`; });
     h+=`</div></div>`;
   });
@@ -1638,26 +1673,29 @@ BUILD.geo=(L,i)=>{ const G=L.extra;
     <div id="geoQs">${G.q.map((q,j)=>mcHTML("geo"+j,q[0],q[1],q[2],q[3])).join("")}</div>${doneNote(i,"geo")}`); };
 WIRE.geo=(L,i)=>{ wireQs($("geoQs"),L.extra.q.map(()=>({type:"mc"})),(sc,t)=>markSec("geo",{score:sc,total:t})); };
 
-/* ---- book time (one classic per unit) ---- */
+/* ---- book time (classic chapter books, scheduled lesson by lesson) ---- */
 const posInUnit=i=>unitLessons(LESSONS[i].u).findIndex(([,j])=>j===i);
-function chapTxt(r){ return r[0]===r[1]?`Chapter ${r[0]}`:`Chapters ${r[0]}–${r[1]}`; }
-function bookPct(u,who=student){ const B=UNIT_BOOKS[u]; let last=0; unitLessons(u).forEach(([,j],k)=>{ const sc=P(who).lessons[j]; if(sc&&sc.sec&&sc.sec.book&&sc.sec.book.done) last=Math.max(last,B.plan[k][1]); }); return last; }
-BUILD.book=(L,i)=>{ const B=UNIT_BOOKS[L.u], k=posInUnit(i), r=B.plan[k], s=LP(i).sec.book, upto=bookPct(L.u);
-  const last=k===B.plan.length-1;
-  return secShell("book",`Book Time: ${B.title}`,`
-    <div class="bookcard"><div class="cover" style="background:${B.color}">${B.title}</div><div>
-      <h3><i>${B.title}</i></h3><div class="note" style="font-size:16px">by ${B.author} · ${B.chapters} chapters</div>
-      <div class="chap">📖 Today: ${chapTxt(r)}${last?" (the end!)":""}</div>
-      <div class="bkbar"><i style="width:${upto/B.chapters*100}%"></i></div><div class="note">${upto?`You’ve read through chapter ${upto}.`:"This is the book for this unit."}</div></div></div>
-    <p>${k===0?`Start our new book! Read ${chapTxt(r).toLowerCase()} out loud to a parent, or read quietly and then read one page aloud.`:`Read ${chapTxt(r).toLowerCase()} out loud to a parent, or read quietly and then read one page aloud.`}</p>
-    <div class="task"><span class="ti">🗣️</span><div><b>Tell it back:</b> Close the book. ${B.tell[k]} Use the characters’ names and tell what happened in order.</div></div>
-    <div class="task" style="background:#F6F1E8"><span class="ti">💬</span><div><b>Talk about it:</b> ${B.talk[k]}</div></div>
+const planOf=i=>PLAN[LESSONS[i].u][posInUnit(i)];
+function chapTxt(p){ if(p.label) return p.label; const r=p.r; return r[0]===r[1]?`Chapter ${r[0]}`:`Chapters ${r[0]}–${r[1]}`; }
+function bookPct(key,who=student){ let last=0; LESSONS.forEach((L,j)=>{ const p=planOf(j); if(p.b!==key) return; const sc=P(who).lessons[j]; if(sc&&sc.sec&&sc.sec.book&&sc.sec.book.done) last=Math.max(last,p.r[1]); }); return last; }
+const bookDone=(key,who=student)=>bookPct(key,who)>=BOOKDB[key].total;
+function upToTxt(B,n){ return B.unit==="half"?(n>=2?"You finished it!":"You read the first half."):`You’ve read through chapter ${n}.`; }
+BUILD.book=(L,i)=>{ const p=planOf(i), B=BOOKDB[p.b], s=LP(i).sec.book, upto=bookPct(p.b);
+  const first=p.r[0]===1, last=p.r[1]===B.total, ct=chapTxt(p);
+  return secShell("book",`Book Time: ${B.short||B.title}`,`
+    <div class="bookcard"><div class="cover" style="background:${B.color}">${B.short||B.title}</div><div>
+      <h3><i>${B.title}</i></h3><div class="note" style="font-size:16px">by ${B.author}${B.unit==="chapter"?` · ${B.total} chapters`:""}</div>
+      <div class="chap">📖 Today: ${ct}${last&&B.unit==="chapter"?" (the end!)":""}</div>
+      <div class="bkbar"><i style="width:${upto/B.total*100}%"></i></div><div class="note">${upto?upToTxt(B,upto):first?"A new book starts today!":""}</div></div></div>
+    <p>${first?"Start our new book! ":""}Read ${ct.charAt(0).toLowerCase()+ct.slice(1)} out loud to a parent, or read quietly and then read one page aloud.</p>
+    <div class="task"><span class="ti">🗣️</span><div><b>Tell it back:</b> Close the book. ${p.tell} Use the characters’ names and tell what happened in order.</div></div>
+    <div class="task" style="background:#F6F1E8"><span class="ti">💬</span><div><b>Talk about it:</b> ${p.talk}</div></div>
     ${last?`<div class="task" style="background:#FBF0F2"><span class="ti">🎉</span><div><b>You finished the book!</b> Draw a picture of your favorite part and tell someone why you liked it.</div></div>`:""}
     <div class="row" style="margin-top:10px"><label for="bkMin">Minutes read:</label><input type="number" id="bkMin" min="1" max="180" style="width:110px" value="${s&&s.min||20}"></div>
-    <div class="done-row"><span class="note" id="bkMsg"></span><button class="btn" style="background:var(--book)" id="bkDone" ${s&&s.done?"disabled":""}>${s&&s.done?"✓ Done":`I read ${chapTxt(r).toLowerCase()} and told it back`}</button></div>`); };
-WIRE.book=(L,i)=>{ const B=UNIT_BOOKS[L.u], r=B.plan[posInUnit(i)];
+    <div class="done-row"><span class="note" id="bkMsg"></span><button class="btn" style="background:var(--book)" id="bkDone" ${s&&s.done?"disabled":""}>${s&&s.done?"✓ Done":"I read it and told it back"}</button></div>`); };
+WIRE.book=(L,i)=>{ const p=planOf(i), B=BOOKDB[p.b];
   $("bkDone").onclick=()=>{ const m=Math.max(1,Math.min(180,parseInt($("bkMin").value)||20));
-    P().minutes=(P().minutes||0)+m; P().reads.push({at:Date.now(),min:m,title:B.title,ch:chapTxt(r),lesson:i}); markSec("book",{min:m,title:B.title,ch:r}); const b=$("bkDone"); if(b){b.disabled=true;b.textContent="✓ Done";} }; };
+    P().minutes=(P().minutes||0)+m; P().reads.push({at:Date.now(),min:m,title:B.title,ch:chapTxt(p),lesson:i}); markSec("book",{min:m,title:B.title,b:p.b,ch:p.r}); const b=$("bkDone"); if(b){b.disabled=true;b.textContent="✓ Done";} }; };
 
 /* ================= maps (simple drawings) ================= */
 const pt=(lo,la)=>[((lo+180)/360*600).toFixed(1),((90-la)/180*300).toFixed(1)].join(",");
@@ -1751,8 +1789,8 @@ function renderParent(){
   else if(pview.tab==="writing"&&who){ const w=P(who).writing; const ks=Object.keys(w).filter(k=>w[k]&&w[k].trim()).sort((a,b)=>a-b);
     body=kids+(ks.length?ks.map(k=>`<div class="wsample"><b>Lesson ${lessonNo(+k)} · ${esc(LESSONS[k].write?strip(LESSONS[k].write.p):"")}</b>${esc(w[k])}</div>`).join(""):`<p class="note">Writing typed into the app shows up here. Notebook writing won't appear, so check that in person!</p>`); }
   else if(pview.tab==="reading"&&who){ const r=P(who).reads.slice().reverse();
-    body=kids+`<h3 style="font-size:20px">The five unit books</h3><p class="note">Have these on hand before each unit starts. The library usually has them all.</p>
-      <table class="t"><tr><th>Unit</th><th>Book</th><th>Progress</th></tr>${UNITS.map(U=>{ const B=UNIT_BOOKS[U.n], up=bookPct(U.n,who); return `<tr><td>${U.n}</td><td><i>${B.title}</i>, ${B.author}<div class="note" style="font-size:13px">${B.note}</div></td><td style="white-space:nowrap">${up>=B.chapters?"✓ Finished":up?`through ch. ${up} of ${B.chapters}`:"not started"}</td></tr>`; }).join("")}</table>
+    body=kids+`<h3 style="font-size:20px">The course books, in order</h3><p class="note">Have each one on hand before its unit starts. The library usually has them all.</p>
+      <table class="t"><tr><th>Lessons</th><th>Book</th><th>Progress</th></tr>${BOOK_ORDER.map(k=>{ const B=BOOKDB[k], up=bookPct(k,who), ls=LESSONS.map((_,j)=>j).filter(j=>planOf(j).b===k); return `<tr><td style="white-space:nowrap">${ls[0]+1}–${ls[ls.length-1]+1}</td><td><i>${B.title}</i>, ${B.author}<div class="note" style="font-size:13px">${B.note}</div></td><td style="white-space:nowrap">${up>=B.total?"✓ Finished":up?(B.unit==="half"?"first half read":`through ch. ${up} of ${B.total}`):"not started"}</td></tr>`; }).join("")}</table>
       <p style="margin-top:18px"><b>${P(who).minutes||0} minutes</b> of reading so far.</p>`+(r.length?`<table class="t"><tr><th>Date</th><th>Book</th><th>Read</th><th>Minutes</th></tr>${r.map(x=>`<tr><td>${fmtDate(x.at)}</td><td>${esc(x.title||"—")}</td><td>${esc(x.ch||"")}</td><td>${x.min}</td></tr>`).join("")}</table>`:`<p class="note">No reading logged yet.</p>`)
       +`<h3 style="margin-top:22px;font-size:20px">More Boxcar Children</h3><p class="note">For extra reading after Unit 1. These are the next books Gertrude Chandler Warner wrote, in order:</p><ol>${MORE_BOXCAR.map(t=>`<li><i>${esc(t)}</i></li>`).join("")}</ol>
       <h3 style="margin-top:22px;font-size:20px">More good books for free reading</h3><p class="note">Wholesome, well-written books at about a 3rd grade level. Please preview any book yourself, since editions differ.</p><ul class="booklist">${BOOKS.map(([t,a])=>`<li><i>${esc(t)}</i>, ${esc(a)}</li>`).join("")}</ul>`; }
@@ -1767,7 +1805,7 @@ function renderParent(){
       <li><b>🎵 Poetry, 🎨 Art, or 🌍 Geography:</b> these take turns. Poems are classics to memorize. Art lessons link to famous paintings on Wikimedia Commons. Please open those with your child, since the app can't show the pictures itself.</li>
       <li><b>🖌️ Art projects:</b> 15 hands-on projects, one in every art lesson and every poetry lesson. Each has a supply list and step-by-step directions. Your child can save a photo of the finished piece to their art gallery.</li>
       <li><b>📝 Writing:</b> a prompt to do in a notebook or type into the app.</li>
-      <li><b>📕 Book Time:</b> each unit has one classic chapter book, and every lesson assigns the next chapters. Your child reads from a real copy, tells it back, and talks about one question with you. The books are <i>The Boxcar Children</i>, <i>Little House in the Big Woods</i>, <i>The Courage of Sarah Noble</i>, <i>Mr. Popper’s Penguins</i>, and <i>Charlotte’s Web</i>. The full list is under 📚 Reading log.</li></ul>
+      <li><b>📕 Book Time:</b> every lesson assigns the next chapters of a good chapter book. Your child reads from a real copy, tells it back, and talks about one question with you. The books are <i>Cam Jansen and the Mystery at the Monkey House</i>, <i>The Boxcar Children</i>, <i>Little House in the Big Woods</i>, <i>The Courage of Sarah Noble</i>, <i>Mr. Popper’s Penguins</i>, and <i>Charlotte’s Web</i>. The full list is under 📚 Reading log.</li></ul>
       <p>Children earn a star for each part and two bonus stars for finishing a lesson. “Read it to me” and the spelling words use your device's built-in voice.</p>`; }
   else if(pview.tab==="settings"){ let code=""; try{ code=btoa(unescape(encodeURIComponent(JSON.stringify({app:"wildflower-la3",roster,prog})))); }catch(e){}
     body=`<h3 style="font-size:20px">Back up all progress</h3><p class="note">Progress is saved in this browser on this device. If the browser's data is cleared, it's lost. Copy this code somewhere safe so you can restore it later or move it to another device.</p>

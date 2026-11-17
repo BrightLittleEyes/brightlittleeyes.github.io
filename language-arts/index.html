@@ -1464,7 +1464,7 @@ function markSec(k,data={}){
   const i=curLesson, l=LP(i); l.sec[k]=Object.assign({},l.sec[k]||{},data,{done:true,at:Date.now()});
   P().last=Date.now(); addStar(`L${i}-${k}`); saveAll();
   const secs=secsOf(LESSONS[i]);
-  if(!l.done && secs.every(s=>secDone(i,s))){ l.done=true; l.doneAt=Date.now(); addStar(`L${i}-done`); saveAll(); renderLesson(i,true); return; }
+  if(!l.done && secs.every(s=>secDone(i,s))){ l.done=true; l.doneAt=Date.now(); addStar(`L${i}-done`); saveAll(); try{ window.rhythmReport && rhythmReport('la3'); }catch(e){} renderLesson(i,true); return; }
   refreshDots(); paintSecHead(k);
 }
 function paintSecHead(k){ const el=document.querySelector(`#sec-${k} .chk`); if(el) el.textContent=secDone(curLesson,k)?"✓ Done":""; }
@@ -1849,5 +1849,6 @@ go(student?"home":"pick");
     const cur=document.querySelector(".screen.on"); if(cur&&(cur.id==="pick"||cur.id==="home")) go(student?"home":"pick");
   } else IDB.put(snapshot()); })();
 </script>
+<script src="../rhythm/report.js"></script>
 </body>
 </html>

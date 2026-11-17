@@ -293,6 +293,9 @@ footer { color: var(--soft); font-size: .85rem; text-align: center; }
     <p>Great work. You can go back to your rhythm board now.</p><button type="button" id="mtOk">OK</button></div>
 </div>
 <script>
+/* Tells the Daily Rhythm board Math is done: the 30-minute timer finished and at least one problem was finished today */
+function mathReport(){ try{ const t=JSON.parse(localStorage.getItem('mathTimer')||'{}')||{}; const d=JSON.parse(localStorage.getItem('mathDaily')||'{}')||{}; const n=new Date(), k=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
+  if(t.finished && t.day===n.toDateString() && d[k] && d[k].probs>0 && localStorage.getItem('mathReported')!==k){ localStorage.setItem('mathReported',k); window.rhythmReport && rhythmReport('math6'); } }catch(e){} }
 /* 30-minute math timer. It is saved on this device, so it keeps going if the app reloads. */
 (function(){
   const LEN = 30*60*1000, KEY = 'mathTimer';
@@ -325,7 +328,7 @@ footer { color: var(--soft); font-size: .85rem; text-align: center; }
     $('mt').setAttribute('aria-label', 'Math timer, '+fmt(ms)+' left');
   }
   function finish(){
-    st = {finished:true}; keep(); paint(); setWake(false);
+    st = {finished:true}; keep(); paint(); setWake(false); mathReport();
     $('mtDone').hidden = false; setTimeout(()=>$('mtOk').focus(),0);
     let n = 0; chime(); clearInterval(ring);
     ring = setInterval(()=>{ if(++n>=20){ clearInterval(ring); return; } chime(); }, 3000);   // every 3 seconds, up to 1 minute
@@ -386,7 +389,7 @@ try { const d = JSON.parse(localStorage.getItem("mathDaily")); if (d && typeof d
 let lastTotal = sumSolved(), lastActive = Date.now();
 function today() { const k = dayKey(); return state.daily[k] || (state.daily[k] = { sec: 0, probs: 0 }); }
 function saveDaily() { try { localStorage.setItem("mathDaily", JSON.stringify(state.daily)); } catch (e) {} }
-function countSolved() { const t = sumSolved(); if (t > lastTotal) { today().probs += t - lastTotal; saveDaily(); logClose(true); } lastTotal = t; }
+function countSolved() { const t = sumSolved(); if (t > lastTotal) { today().probs += t - lastTotal; saveDaily(); logClose(true); mathReport(); } lastTotal = t; }
 ["pointerdown", "keydown", "scroll", "input"].forEach(ev => document.addEventListener(ev, () => { lastActive = Date.now(); }, { passive: true, capture: true }));
 /* time only counts while the app is on screen, not on a break, and touched in the last 3 minutes */
 setInterval(() => {
@@ -4360,5 +4363,6 @@ function arPacks() {
 render();
 </script>
 
+<script src="../rhythm/report.js"></script>
 </body>
 </html>

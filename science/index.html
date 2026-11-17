@@ -2659,7 +2659,7 @@ function renderUnit(){
     if (step<5) return setStep(step+1);
     if (view.lesson<u.lessons.length-1) go({page:"unit", unit:u.id, lesson:view.lesson+1}); else startGame(u.id);
   };
-  const f=$("#finish"); if(f) f.onclick = () => { if (needStudent()) return; if (!P().done[key]){ P().done[key] = true; saveAll(); sfx.star(); confetti(); } render(); };
+  const f=$("#finish"); if(f) f.onclick = () => { if (needStudent()) return; if (!P().done[key]){ P().done[key] = true; saveAll(); try{ window.rhythmReport && rhythmReport('science6'); }catch(e){} sfx.star(); confetti(); } render(); };
   if (step===2 && F && F.init){ try{ const stop = F.init($("#fig")); if (stop) figStops.push(stop); }catch(e){ console.error(e); } }
   if (step===4) runFlash(L.vocab, () => { view.flashDone = true; const n = $("#snext"); if (n) n.disabled = false; });
 }
@@ -3213,5 +3213,6 @@ render();
 })();
 </script>
 
+<script src="../rhythm/report.js"></script>
 </body>
 </html>

@@ -923,7 +923,7 @@ function wireDay(w, d){
     const a = stepsChecked(student,w,d); a[view.step] = true; p.steps[id] = a;
     if (a.every(Boolean)){
       const before = badges(student).filter(b=>b.got).map(b=>b.name);
-      p.done[id] = new Date().toISOString(); delete p.steps[id]; saveAll(); renderStarChip();
+      p.done[id] = new Date().toISOString(); delete p.steps[id]; saveAll(); renderStarChip(); try{ window.rhythmReport && rhythmReport('writing6'); }catch(e){}
       view.finished = true; stopTimer(); sfx.star(); confetti(); render();
       const nb = badges(student).filter(b=>b.got && !before.includes(b.name));
       if (nb.length){ const f = app.querySelector(".finish"); if (f) f.insertAdjacentHTML("beforeend", `<div class="newbadge">New badge: <b>${nb.map(b=>esc(b.name)).join(", ")}</b></div>`); }
@@ -1184,5 +1184,6 @@ render();
 })();
 
 </script>
+<script src="../rhythm/report.js"></script>
 </body>
 </html>

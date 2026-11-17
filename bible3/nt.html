@@ -423,7 +423,7 @@ async function renderLesson(id, idx){
     document.getElementById("doneBtn").addEventListener("click", ()=>{
       if(!ready) return;
       const notes = l.think.map((_,i)=>document.getElementById(`t-${l.id}-${i}`).value.trim());
-      progress.done[l.id] = {score: answers.filter(Boolean).length, total: answers.length, at: Date.now(), notes};
+      progress.done[l.id] = {score: answers.filter(Boolean).length, total: answers.length, at: Date.now(), notes}; try{ window.rhythmReport && rhythmReport('bible3'); }catch(e){}
       save(); updateStars();
       f.dataset.celebrated = "1";
       f.innerHTML = `<div class="celebrate">${STAR}<h2>Well done!</h2><p class="note">You got ${progress.done[l.id].score} of ${answers.length} right. Your star has been added.</p></div>${navBtns()}`;
@@ -614,5 +614,6 @@ render();
   add();
 })();
 </script>
+<script src="../rhythm/report.js"></script>
 </body>
 </html>

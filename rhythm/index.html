@@ -209,6 +209,9 @@ body.theme-dance .slotbtn,body.theme-dance .opt{border-radius:18px}
 body.theme-dance .datebar button,body.theme-dance .tools button,body.theme-dance .foot button{border-radius:22px}
 body.theme-dance .ord button{border-radius:50%;width:36px;height:36px;border-color:#D9B8EA;color:#8E44AD}
 .remindbtn{border:2px solid var(--navy);background:var(--surface);color:var(--navy);border-radius:12px;min-height:48px;padding:0 16px;font-weight:700;font-size:16px;cursor:pointer}
+.appnote{margin-top:6px;font-size:.88em;color:#5A6670;line-height:1.35}
+.appnote.ok{color:#1E7A43;font-weight:700}
+.row:not(.done) .check.bylesson{background:#F1F3F5;border-style:dashed}
 .applink{display:inline-block;margin-top:8px;padding:10px 16px;border-radius:10px;background:var(--navy);color:#fff;font-weight:700;text-decoration:none;min-height:44px}
 .slotbtn.mech.filled small{font-weight:700}
 .kidswitch{display:flex;gap:8px;justify-content:center;margin:10px 0 4px;flex-wrap:wrap}
@@ -770,6 +773,24 @@ let CFG = clone(DEFAULT_CONFIG), BLOCKS = [], TAGS = {fun:[],mech:[],flag:[]}, A
 const KINDS = ['fun','mech','flag','mom','explore'];
 const PICK_TEXT = {fun:'+ Pick a fun tag', mech:'+ Pick a Helping Hands tag', mom:'+ Pick what we\'ll do together', explore:'+ Pick an adventure'};
 const KIND_NAME = {fun:'Fun Choice', mech:'Helping Hands', mom:'Mom & Me', explore:'Explore'};
+/* School apps that check a subject off by themselves when she finishes a lesson (they load ../rhythm/report.js).
+   A subject tied to an app can't be checked off by hand on her login. */
+const APPS = {
+  bible6:  {name:'Through the Word (Bible)',       how:'finish a Bible lesson'},
+  hist6:   {name:'Through the Word (History)',     how:'finish a History lesson'},
+  writing6:{name:'Grade 6 Writing',                how:'finish a Writing lesson'},
+  math6:   {name:'Trip Planner Math',              how:'finish the 30-minute timer and at least one problem'},
+  science6:{name:'Grade 6 Science',                how:'finish a Science lesson'},
+  bible3:  {name:'Through the Word 3 (Bible)',     how:'finish a Bible lesson'},
+  hist3:   {name:'Through the Word 3 (History)',   how:'finish a History lesson'},
+  la3:     {name:'Wildflower Language Arts',       how:'finish a Language Arts lesson'},
+  sciexp:  {name:'Science Explorers',              how:'finish a Science lesson'}
+};
+const APP_OF_MAIN = {bible:'bible6', history:'hist6', language:'writing6', mathapp:'math6', science:'science6'};
+const APP_OF_RUTH = {bible:'bible3', history:'hist3', language:'la3', science:'sciexp'};
+function tieApps(blockLists, map){ blockLists.forEach(bl=>(bl||[]).forEach(b=>(b.items||[]).forEach(i=>{ if(!i.slot && map[i.id] && !('app' in i)) i.app=map[i.id]; }))); }
+const appDone = i => !!(i && i.app && APPS[i.app] && (S.apps||{})[i.app]);
+const isOn = i => !!S.data.checks[i.id] || appDone(i);
 const DAY_OPTS = {all:'Every day', notsat:'Every day but Saturday', weekdays:'Weekdays', sat:'Saturdays', sun:'Sundays', weekend:'Weekends'};
 function tagToday(t, dow){
   switch(t.on||'all'){ case 'notsat': return dow!==6; case 'weekdays': return dow>=1&&dow<=5; case 'sat': return dow===6; case 'sun': return dow===0; case 'weekend': return dow===0||dow===6; default: return true; }
@@ -824,6 +845,7 @@ function normalize(d){
     ['satBlocks','sunBlocks'].forEach(r=>{ if(!Array.isArray(k[r])) k[r]=[]; }); [...k.blocks,...k.satBlocks,...k.sunBlocks].forEach(b=>{ b.items=Array.isArray(b.items)?b.items:[]; }); } });
   const ruth = c.kids && c.kids.ruth;
   if(ruth && !Array.isArray(ruth.blocks)) Object.assign(ruth, ruthBoard(c));
+  if(ruth && !(ruth.appsV>=1)){ tieApps([ruth.blocks], APP_OF_RUTH); ruth.appsV=1; }
   return c;
 }
 /* Ruth's own board, made from Bekah's: no timers, she picks her subject order, Mom & Me time, Explore time, no red tags. */
@@ -1029,6 +1051,10 @@ function normalizeMain(d){
       c.tags.mech.push({id:'yard', name:'Yard Work', sub:'Pick up sticks, rake, or sweep outside', on:'notsat'});
     c.v = 24;
   }
+  if(c.v < 25){                       // subjects check themselves off when she finishes a lesson in her school app
+    tieApps([c.blocks], APP_OF_MAIN);
+    c.v = 25;
+  }
   return c;
 }
 const BOARD_OF_DAY = {6:'satBlocks', 0:'sunBlocks'};   // Saturday, Sunday; every other day uses "blocks"
@@ -1180,6 +1206,7 @@ function watchDay(){
   useDay();
   loadYesterday();
   S.data = Object.assign(blank(), readLocal(lkey(S.date))||{});
+  S.apps = readLocal('apps:'+S.date)||{};
   render();
   if(!S.db){ S.ready.day=true; tryMust(); setStatus('warn','Saving on this device only'); return; }
   const key=S.date, kid=S.kid;
@@ -1188,6 +1215,7 @@ function watchDay(){
     if(snap.metadata.hasPendingWrites) return;
     const v = snap.exists ? pickDay(snap.data()) : null;
     if(v){ S.data=Object.assign(blank(), v); cacheLocal(lkey(key),S.data); }
+    S.apps = (snap.exists && snap.data().apps) || {}; cacheLocal('apps:'+key, S.apps);
     setStatus('ok','Synced');
     render();
     if(S.ready && !S.ready.day){ S.ready.day=true; tryMust(); }
@@ -1266,7 +1294,7 @@ function render(){
     </section>`).join('');
   S.just=null;
 
-  const done = ALL_ITEMS.filter(i=>D.checks[i.id]).length, total=ALL_ITEMS.length||1;
+  const done = ALL_ITEMS.filter(isOn).length, total=ALL_ITEMS.length||1;
   $('#bar').style.width = (done/total*100)+'%';
   $('#ptxt').textContent = done===ALL_ITEMS.length && done>0 ? (kidInfo(S.kid).theme==='dance' ? 'Every block done — take a bow!' : 'Every block done — well done!') : `${done} of ${ALL_ITEMS.length} done`;
   paintTimer();
@@ -1278,7 +1306,7 @@ function ordered(b){
   return b.items.map((it,n)=>({it,n})).sort((x,y)=>pos(x.it.id)-pos(y.it.id) || x.n-y.n).map(x=>x.it);
 }
 function rowHTML(i, ord){
-  const D=S.data, on=!!D.checks[i.id];
+  const D=S.data, on=isOn(i);
   let extra='';
   if(i.slot){
     const tag = D.slots[i.id] && findTag(i.slot, D.slots[i.id]);
@@ -1293,10 +1321,13 @@ function rowHTML(i, ord){
   }
   if(i.remind) extra += `<div class="slot"><button class="remindbtn" data-remind="${+i.remind}">⏱ Set my iPad timer (${+i.remind} min)</button></div>`;
   if(i.url) extra += `<a class="applink" href="${esc(i.url)}" target="_blank" rel="noopener">Open ${esc(i.t)}</a>`;
+  if(i.app && APPS[i.app]) extra += appDone(i)
+    ? `<div class="appnote ok">✓ Finished in ${esc(APPS[i.app].name)}</div>`
+    : `<div class="appnote">🔒 Checks itself off when you ${esc(APPS[i.app].how)} in <b>${esc(APPS[i.app].name)}</b>.</div>`;
   const label = i.slot || !i.d ? `<b>${esc(i.t)}</b>` : `<b>${esc(i.t)}:</b> <span class="d">${esc(i.d)}</span>`;
   const arrows = ord ? `<span class="ord"><button data-ord="up" data-ob="${esc(ord.b)}" data-oid="${esc(i.id)}" aria-label="Move ${esc(i.t)} up" ${ord.first?'disabled':''}>▲</button><button data-ord="down" data-ob="${esc(ord.b)}" data-oid="${esc(i.id)}" aria-label="Move ${esc(i.t)} down" ${ord.last?'disabled':''}>▼</button></span>` : '';
   return `<div class="row ${on?'done':''} ${on&&S.just===i.id?'pop':''}">
-    <button class="check" data-check="${esc(i.id)}" role="checkbox" aria-checked="${on}" aria-label="${esc(i.t)}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+    <button class="check ${i.app&&APPS[i.app]?'bylesson':''}" data-check="${esc(i.id)}" role="checkbox" aria-checked="${on}" aria-label="${esc(i.t)}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
     <div class="txt">${label}${extra}</div>${arrows}
   </div>`;
 }
@@ -1426,7 +1457,10 @@ function closePicker(){ $('#scrim').hidden=true; S.picking=null; }
 $('#app').addEventListener('click', e=>{
   const t=e.target.closest('button'); if(!t) return;
   const D=S.data;
-  if(t.dataset.check){ const k=t.dataset.check; if(D.checks[k]) delete D.checks[k]; else { D.checks[k]=true; S.just=k; } save(); render(); return; }
+  if(t.dataset.check){ const k=t.dataset.check, it=ALL_ITEMS.find(x=>x.id===k);
+    if(appDone(it)){ toast(`This was checked off when you finished a lesson in ${APPS[it.app].name}.`, 3200); return; }
+    if(it && it.app && APPS[it.app] && S.role!=='parent'){ toast(`To check this off, ${APPS[it.app].how} in ${APPS[it.app].name}. It checks itself!`, 4200); return; }
+    if(D.checks[k]) delete D.checks[k]; else { D.checks[k]=true; S.just=k; } save(); render(); return; }
   if(t.dataset.remind){ clockTimer(+t.dataset.remind*60000); return; }
   if(t.dataset.ord){ const b=BLOCKS.find(x=>x.id===t.dataset.ob); if(!b) return;
     const ids=ordered(b).map(i=>i.id), n=ids.indexOf(t.dataset.oid), m=n+(t.dataset.ord==='up'?-1:1);
@@ -1528,6 +1562,9 @@ function itemEd(it, bi, ii, len, R='blocks'){
     more = `<div class="ed-row2">
       <input data-path="${p}.d" value="${esc(it.d)}" placeholder="Short description (optional)">
       <input data-path="${p}.url" value="${esc(it.url)}" placeholder="App link (optional), e.g. ../math/" style="flex:1 1 180px">
+      <label class="ed-min" title="She can't check this off herself. It checks itself when she finishes a lesson in this app. You can still check it on your login.">Checks itself from <select data-path="${p}.app" aria-label="Checks itself when she finishes a lesson in">
+        <option value="" ${!it.app?'selected':''}>No app (she checks it)</option>
+        ${Object.entries(APPS).map(([k,a])=>`<option value="${k}" ${it.app===k?'selected':''}>${esc(a.name)}</option>`).join('')}</select></label>
       <label class="ed-min" title="Shows a 'Set my iPad timer' button (no countdown on the board), for apps like ALEKS">iPad timer reminder <input type="number" min="1" max="300" inputmode="numeric" data-path="${p}.remind" data-type="int" value="${it.remind||''}" placeholder="none"> min</label>
       <label class="ed-min">Timer <input type="number" min="1" max="300" inputmode="numeric" data-path="${p}.timer" data-type="min" value="${it.timer?Math.round(it.timer/60):''}" placeholder="none"> min</label>
     </div>${it.timer?`<div class="ed-row2"><input data-path="${p}.endMsg" value="${esc(it.endMsg)}" placeholder="Message when the timer ends, e.g. &quot;${esc(it.t||'Math')} time is finished!&quot;"></div>`:''}`;

@@ -366,7 +366,7 @@ async function renderLesson(cid, idx){
     f.innerHTML = `<button class="btn" id="doneBtn" ${ready?"":"disabled"}>Finish lesson and earn a star</button><p class="note">${ready?"Great work! Finishing adds this lesson's events to your timeline.":"Check \"I read the whole lesson\" and answer every quiz question to finish."}</p>`;
     document.getElementById("doneBtn").addEventListener("click", ()=>{
       if(!ready) return;
-      progress.done[l.id] = {score: answers.filter(Boolean).length, total: answers.length, at: Date.now(), assignment: document.getElementById("asg").value};
+      progress.done[l.id] = {score: answers.filter(Boolean).length, total: answers.length, at: Date.now(), assignment: document.getElementById("asg").value}; try{ window.rhythmReport && rhythmReport('hist3'); }catch(e){}
       save(); updateStars();
       f.dataset.celebrated = "1";
       f.innerHTML = `<div class="celebrate">${STAR}<h2>Well done!</h2><p class="note">You got ${progress.done[l.id].score} of ${answers.length} right, and ${l.timeline.length} event${l.timeline.length===1?"":"s"} joined your timeline.</p></div>${navBtns()}`;
@@ -546,5 +546,6 @@ render();
   add();
 })();
 </script>
+<script src="../rhythm/report.js"></script>
 </body>
 </html>

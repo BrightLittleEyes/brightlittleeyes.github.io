@@ -994,6 +994,11 @@ function normalizeMain(d){
     c.blocks.forEach(b=>b.items.forEach(i=>{ if(i.id==='math' && i.t==='Math Block') i.t='Aleks Math Block'; }));
     c.v = 19;
   }
+  if(c.v < 20){                       // the Math app has its own 30-minute timer now, so the board doesn't time it
+    c.blocks.forEach(b=>b.items.forEach(i=>{ if(i.id==='mathapp'){ delete i.timer; delete i.clock; delete i.endMsg; delete i.url;
+      i.d='30 minutes. Open Math from its icon and tap Start on the timer at the top.'; } }));
+    c.v = 20;
+  }
   return c;
 }
 const BOARD_OF_DAY = {6:'satBlocks', 0:'sunBlocks'};   // Saturday, Sunday; every other day uses "blocks"

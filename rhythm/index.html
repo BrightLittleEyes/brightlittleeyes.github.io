@@ -197,6 +197,8 @@ body.theme-dance .progress b{background:linear-gradient(90deg,#FF7EB6,#C86DD7,#7
 body.theme-dance .slotbtn,body.theme-dance .opt{border-radius:18px}
 body.theme-dance .datebar button,body.theme-dance .tools button,body.theme-dance .foot button{border-radius:22px}
 body.theme-dance .ord button{border-radius:50%;width:36px;height:36px;border-color:#D9B8EA;color:#8E44AD}
+.applink{display:inline-block;margin-top:8px;padding:10px 16px;border-radius:10px;background:var(--navy);color:#fff;font-weight:700;text-decoration:none;min-height:44px}
+.slotbtn.mech.filled small{font-weight:700}
 .kidswitch{display:flex;gap:8px;justify-content:center;margin:10px 0 4px;flex-wrap:wrap}
 .kidswitch button{min-height:44px;padding:0 20px;border-radius:22px;border:2px solid var(--navy);background:#fff;color:var(--navy);font-weight:700;font-size:16px;cursor:pointer}
 .kidswitch button[aria-pressed=true]{background:var(--navy);color:#fff}
@@ -770,7 +772,7 @@ const pad = n => String(n).padStart(2,'0');
 const keyOf = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const fromKey = k => { const [y,m,d]=k.split('-').map(Number); return new Date(y,m-1,d); };
 const shift = (k,n) => { const d=fromKey(k); d.setDate(d.getDate()+n); return keyOf(d); };
-const blank = () => ({checks:{}, slots:{}, order:{}, snack:[false,false,false,false,false,false,false,false]});
+const blank = () => ({checks:{}, slots:{}, order:{}, noMust:false, snack:[false,false,false,false,false,false,false,false]});
 const findTag = (kind,id) => (TAGS[kind]||[]).find(t=>t.id===id);
 const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
@@ -788,7 +790,7 @@ const lkey = key => S.kid==='main' ? key : S.kid+':'+key;      // this device's 
 function pickDay(doc){
   if(!doc) return null;
   const v = S.kid==='main' ? doc : doc[S.kid];
-  return v ? {checks:v.checks||{}, slots:v.slots||{}, order:v.order||{}, snack:Array.isArray(v.snack)?v.snack:blank().snack} : null;
+  return v ? {checks:v.checks||{}, slots:v.slots||{}, order:v.order||{}, noMust:!!v.noMust, snack:Array.isArray(v.snack)?v.snack:blank().snack} : null;
 }
 /* A child can have her own blocks and tags (Ruth). Otherwise she uses the first board's. */
 const OWN = () => { const k = S.kid!=='main' && CFG.kids && CFG.kids[S.kid]; return k && Array.isArray(k.blocks) && k.blocks.length ? k : null; };
@@ -975,6 +977,19 @@ function normalizeMain(d){
     [...c.blocks, ...(c.satBlocks||[]), ...(c.sunBlocks||[])].forEach(b=>b.items.forEach(i=>{ if(i.id==='math' && i.timer) i.clock=true; }));
     c.v = 17;
   }
+  if(c.v < 18){                       // the Math app (30 min) under Math Block; Dishes must be done every 3 days
+    for(const b of c.blocks){
+      const at=b.items.findIndex(i=>i.id==='math');
+      if(at<0) continue;
+      delete b.items[at].clock;       // the iPad timer reminder is for the Math app, where she leaves the board
+      if(!c.blocks.some(x=>x.items.some(i=>i.id==='mathapp')))
+        b.items.splice(at+1,0,{id:'mathapp', t:'Math App', d:'Trip Planner Math practice.', timer:1800, clock:true, url:'../math/', endMsg:'Math App time is finished. Great work!'});
+      break;
+    }
+    const dishes=(c.tags.mech||[]).find(t=>t.id==='dishes' || norm(t.name)==='dishes');
+    if(dishes && !dishes.must) dishes.must=3;
+    c.v = 18;
+  }
   return c;
 }
 const BOARD_OF_DAY = {6:'satBlocks', 0:'sunBlocks'};   // Saturday, Sunday; every other day uses "blocks"
@@ -1091,9 +1106,9 @@ function save(){
   cacheLocal(lkey(S.date), S.data);
   if(!S.db) return;
   clearTimeout(S.saveT);
-  const key=S.date, kid=S.kid, d=clone(S.data), mine={checks:d.checks||{}, slots:d.slots||{}, order:d.order||{}, snack:d.snack||blank().snack};
+  const key=S.date, kid=S.kid, d=clone(S.data), mine={checks:d.checks||{}, slots:d.slots||{}, order:d.order||{}, noMust:!!d.noMust, snack:d.snack||blank().snack};
   const doc = kid==='main' ? {...mine} : {[kid]:mine};
-  const fields = kid==='main' ? ['checks','slots','order','snack','date','savedAt'] : [kid,'date','savedAt'];
+  const fields = kid==='main' ? ['checks','slots','order','noMust','snack','date','savedAt'] : [kid,'date','savedAt'];
   setStatus('', 'Saving…');
   S.saveT=setTimeout(async()=>{
     try{ await S.db.doc(COL+'/'+key).set({...doc, date:key, savedAt:new Date().toISOString()}, {mergeFields:fields}); setStatus('ok','Saved'); }
@@ -1102,14 +1117,17 @@ function save(){
 }
 function loadYesterday(){
   const k=S.date;
-  const longest = Math.max(7, ...['fun','mech','mom','explore'].flatMap(x=>(TAGS[x]||[]).map(t=>+t.every||0)));
+  const longest = Math.max(7, ...['fun','mech','mom','explore'].flatMap(x=>(TAGS[x]||[]).map(t=>Math.max(+t.every||0, +t.must||0))));
   S.recent = {};                     // days back (1..N) -> that day's placed tags
+  const waits=[];
   for(let n=1;n<=Math.min(longest-1,31);n++){
     const dk=shift(k,-n);
     S.recent[n] = ((readLocal(lkey(dk))||{}).slots)||{};
     const kid=S.kid;
-    if(S.db) S.db.doc(COL+'/'+dk).get().then(s=>{ if(k===S.date && kid===S.kid && s.exists) S.recent[n]=((pickDay(s.data())||{}).slots)||{}; }).catch(()=>{});
+    if(S.db) waits.push(S.db.doc(COL+'/'+dk).get().then(s=>{ if(k===S.date && kid===S.kid && s.exists) S.recent[n]=((pickDay(s.data())||{}).slots)||{}; }).catch(()=>{}));
   }
+  const kid0=S.kid;
+  Promise.all(waits).then(()=>{ if(k===S.date && kid0===S.kid && S.ready){ S.ready.hist=true; tryMust(); } });
 }
 /* Running and paused timers are kept on this device, so they survive the iPad reloading the page */
 const tmKey = () => 'rhythm:tm:'+S.kid+':'+S.date;
@@ -1118,10 +1136,12 @@ function loadTimers(){ let o=null; try{ o=JSON.parse(localStorage.getItem(tmKey(
 function watchDay(){
   if(S.unsub){ S.unsub(); S.unsub=null; }
   loadTimers();
+  S.ready={hist:false, day:false};
+  useDay();
   loadYesterday();
   S.data = Object.assign(blank(), readLocal(lkey(S.date))||{});
   render();
-  if(!S.db){ setStatus('warn','Saving on this device only'); return; }
+  if(!S.db){ S.ready.day=true; tryMust(); setStatus('warn','Saving on this device only'); return; }
   const key=S.date, kid=S.kid;
   S.unsub = S.db.doc(COL+'/'+key).onSnapshot(snap=>{
     if(key!==S.date || kid!==S.kid) return;
@@ -1130,7 +1150,36 @@ function watchDay(){
     if(v){ S.data=Object.assign(blank(), v); cacheLocal(lkey(key),S.data); }
     setStatus('ok','Synced');
     render();
+    if(S.ready && !S.ready.day){ S.ready.day=true; tryMust(); }
   }, err=>{ console.error(err); setStatus('warn','Can\'t reach the database — saving on this device only'); });
+}
+
+/* ---------- must-do jobs ("Must do every __ days") ---------- */
+function lastDoneOf(t){
+  let last = (t.lastDone && t.lastDone < S.date) ? t.lastDone : '';
+  Object.entries(S.recent||{}).forEach(([n,o])=>{ if(Object.values(o||{}).includes(t.id)){ const dk=shift(S.date,-n); if(dk>last) last=dk; } });
+  return last;
+}
+function mustDue(t){
+  if(!(+t.must>1) || !tagToday(t, fromKey(S.date).getDay())) return false;
+  const l=lastDoneOf(t);
+  return !l || S.date >= shift(l, +t.must);
+}
+const mustTags = () => (TAGS.mech||[]).filter(mustDue);
+const isLocked = slotId => { const id=S.data.slots[slotId]; return !!id && !S.data.noMust && mustTags().some(t=>t.id===id); };
+/* Once today's history and today's board have both loaded, put any due must-do job on the board */
+function tryMust(){
+  if(!S.ready || !S.ready.hist || !S.ready.day) return;
+  if(S.date!==keyOf(new Date()) || S.data.noMust) return;
+  const D=S.data, slots=ALL_ITEMS.filter(i=>i.slot==='mech').map(i=>i.id);
+  let changed=false;
+  for(const t of mustTags()){
+    if(Object.values(D.slots).includes(t.id)) continue;
+    const open = slots.find(s=>!D.slots[s]) || slots.find(s=>!mustTags().some(m=>m.id===D.slots[s]));
+    if(!open) break;
+    D.slots[open]=t.id; changed=true;
+  }
+  if(changed){ save(); render(); }
 }
 
 /* ---------- board ---------- */
@@ -1194,7 +1243,7 @@ function rowHTML(i, ord){
   if(i.slot){
     const tag = D.slots[i.id] && findTag(i.slot, D.slots[i.id]);
     extra = `<div class="slot"><button class="slotbtn ${i.slot} ${tag?'filled':''}" data-slot="${esc(i.id)}">${
-      tag ? esc(tag.name)+(tag.sub?`<small>${esc(tag.sub)}</small>`:'') : (PICK_TEXT[i.slot]||'+ Pick a tag')
+      tag ? esc(tag.name)+(isLocked(i.id)?`<small>Today's must-do job</small>`:tag.sub?`<small>${esc(tag.sub)}</small>`:'') : (PICK_TEXT[i.slot]||'+ Pick a tag')
     }</button></div>`;
     if(tag && tag.snack) extra += snackBoxes(i.id);
     if(tag && tag.timer) extra += timerBox(i.id);
@@ -1202,6 +1251,7 @@ function rowHTML(i, ord){
     if(i.snack) extra += snackBoxes(i.id);
     if(i.timer) extra += timerBox(i.id);
   }
+  if(i.url) extra += `<a class="applink" href="${esc(i.url)}" target="_blank" rel="noopener">Open ${esc(i.t)}</a>`;
   const label = i.slot || !i.d ? `<b>${esc(i.t)}</b>` : `<b>${esc(i.t)}:</b> <span class="d">${esc(i.d)}</span>`;
   const arrows = ord ? `<span class="ord"><button data-ord="up" data-ob="${esc(ord.b)}" data-oid="${esc(i.id)}" aria-label="Move ${esc(i.t)} up" ${ord.first?'disabled':''}>▲</button><button data-ord="down" data-ob="${esc(ord.b)}" data-oid="${esc(i.id)}" aria-label="Move ${esc(i.t)} down" ${ord.last?'disabled':''}>▼</button></span>` : '';
   return `<div class="row ${on?'done':''} ${on&&S.just===i.id?'pop':''}">
@@ -1342,7 +1392,9 @@ $('#app').addEventListener('click', e=>{
     [ids[n],ids[m]]=[ids[m],ids[n]]; D.order=D.order||{}; D.order[b.id]=ids; save(); render(); return; }
   if(t.dataset.kid){ if(S.role!=='parent' || t.dataset.kid===S.kid) return;
     S.kid=t.dataset.kid; setKid(S.kid); S.timers={}; S.paused={}; paintKid(); watchDay(); paintTimer(); syncWake(); return; }
-  if(t.dataset.slot){ if(isChg(t.dataset.slot) && S.role!=='parent') return; openPicker(t.dataset.slot); return; }
+  if(t.dataset.slot){ if(isChg(t.dataset.slot) && S.role!=='parent') return;
+    if(isLocked(t.dataset.slot) && S.role!=='parent'){ toast(`${findTag('mech',D.slots[t.dataset.slot]).name} is today's must-do job.`, 3000); return; }
+    openPicker(t.dataset.slot); return; }
   if(t.dataset.tact){ const id=t.dataset.tid, a=t.dataset.tact, info=timerInfo(id); if(!info) return;
     if(a==='start'){ S.timers[id]=Date.now()+info.secs*1000; delete S.paused[id]; if(info.clock) clockTimer(info.secs*1000); }
     if(a==='pause'){ S.paused[id]=Math.max(0,S.timers[id]-Date.now()); delete S.timers[id]; }
@@ -1359,7 +1411,8 @@ $('#app').addEventListener('click', e=>{
     case 'copyTags': copyYesterday(); break;
     case 'clearTags':
       if(!Object.keys(D.slots).length){ toast('No tags placed yet today.'); break; }
-      if(confirm('Take all tags off today\'s board?')){ const keep={}; if(S.role!=='parent') CHG_IDS.forEach(k=>{ if(D.slots[k]) keep[k]=D.slots[k]; }); D.slots=keep; S.timers={}; S.paused={}; saveTimers(); save(); render(); }
+      if(confirm('Take all tags off today\'s board?')){ const keep={}; if(S.role!=='parent') CHG_IDS.forEach(k=>{ if(D.slots[k]) keep[k]=D.slots[k]; }); if(S.role!=='parent') Object.keys(D.slots).forEach(k=>{ if(isLocked(k)) keep[k]=D.slots[k]; }); else if(Object.keys(D.slots).some(isLocked)) D.noMust=true;
+        D.slots=keep; S.timers={}; S.paused={}; saveTimers(); save(); render(); }
       break;
     case 'editBtn': if(S.role==='parent') openEditor(); break;
     case 'logout': if(confirm('Log out on this device?')){ setRole(null); S.role=null; S.timers={}; S.paused={}; route(); } break;
@@ -1369,8 +1422,9 @@ $('#scrim').addEventListener('click', e=>{
   if(e.target.id==='scrim') return closePicker();
   const t=e.target.closest('button'); if(!t) return;
   const D=S.data;
-  if(t.dataset.pick){ if(D.slots[S.picking]!==t.dataset.pick){ delete S.timers[S.picking]; delete S.paused[S.picking]; saveTimers(); } D.slots[S.picking]=t.dataset.pick; closePicker(); save(); render(); return; }
-  if(t.id==='clearSlot'){ delete S.timers[S.picking]; delete S.paused[S.picking]; saveTimers(); delete D.slots[S.picking]; closePicker(); save(); render(); }
+  if(t.dataset.pick){ if(isLocked(S.picking) && D.slots[S.picking]!==t.dataset.pick) D.noMust=true;
+    if(D.slots[S.picking]!==t.dataset.pick){ delete S.timers[S.picking]; delete S.paused[S.picking]; saveTimers(); } D.slots[S.picking]=t.dataset.pick; closePicker(); save(); render(); return; }
+  if(t.id==='clearSlot'){ if(isLocked(S.picking)) D.noMust=true; delete S.timers[S.picking]; delete S.paused[S.picking]; saveTimers(); delete D.slots[S.picking]; closePicker(); save(); render(); }
   if(t.id==='closeSheet') closePicker();
 });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape' && !$('#scrim').hidden) closePicker(); });
@@ -1431,6 +1485,7 @@ function itemEd(it, bi, ii, len, R='blocks'){
   if(kind==='task'){
     more = `<div class="ed-row2">
       <input data-path="${p}.d" value="${esc(it.d)}" placeholder="Short description (optional)">
+      <input data-path="${p}.url" value="${esc(it.url)}" placeholder="App link (optional), e.g. ../math/" style="flex:1 1 180px">
       <label class="ed-min">Timer <input type="number" min="1" max="300" inputmode="numeric" data-path="${p}.timer" data-type="min" value="${it.timer?Math.round(it.timer/60):''}" placeholder="none"> min</label>
     </div>${it.timer?`<label class="ed-chk"><input type="checkbox" data-path="${p}.clock" data-type="bool" ${it.clock?'checked':''}> Remind her to start the iPad's Clock timer (for when she leaves the board, like Math)</label>`:''}${it.timer?`<div class="ed-row2"><input data-path="${p}.endMsg" value="${esc(it.endMsg)}" placeholder="Message when the timer ends, e.g. &quot;${esc(it.t||'Math')} time is finished!&quot;"></div>`:''}`;
   } else {
@@ -1462,6 +1517,7 @@ function tagsEd(k, title, help, hasSub, hasTimer, hasSnack){
       ${k!=='flag'?`<label class="ed-min" title="After she does it, it's greyed out until this many days have passed">Every <input type="number" min="2" max="60" inputmode="numeric" data-path="tags.${k}.${ti}.every" data-type="num" value="${t.every||''}" placeholder="any" style="width:64px!important"> days</label>`:''}
       ${k!=='flag'&&t.every?`<label class="ed-min" title="When it was last done. The board also remembers each time she picks it.">Last done <input type="date" data-path="tags.${k}.${ti}.lastDone" value="${esc(t.lastDone||'')}" style="width:auto!important"></label>`:''}
       ${hasTimer?`<label class="ed-min">Timer <input type="number" min="1" max="300" inputmode="numeric" data-path="tags.${k}.${ti}.timer" data-type="min" value="${t.timer?Math.round(t.timer/60):''}" placeholder="none"> min</label>`:''}
+      ${k==='mech'?`<label class="ed-min" title="If she hasn't done it in this many days, it goes on her board and she can't swap it">Must do every <input type="number" min="2" max="60" inputmode="numeric" data-path="tags.${k}.${ti}.must" data-type="num" value="${t.must||''}" placeholder="—" style="width:64px!important"> days</label>`:''}
       ${k!=='flag'?`<label class="ed-min">Shows on <select data-path="tags.${k}.${ti}.on" style="width:auto">${Object.entries(DAY_OPTS).map(([v,n])=>`<option value="${v}" ${(t.on||'all')===v?'selected':''}>${n}</option>`).join('')}</select></label>`:''}
       ${mv('tags.'+k, ti, list.length)}</div>`).join('')}
     <button class="ed-add" data-act="addtag" data-k="${k}">+ Add a tag</button></div>`;

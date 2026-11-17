@@ -245,25 +245,6 @@ details.backup textarea { font: .8rem/1.4 ui-monospace, Menlo, monospace; width:
 .break h2 { font-size: 1.6rem; }
 footer { color: var(--soft); font-size: .85rem; text-align: center; }
 @media (prefers-reduced-motion: reduce) { .blk { animation: none; } button, .meter span { transition: none; } }
-
-/* ---- 30-minute math timer (lives here so she never has to leave the app) ---- */
-.mt{display:inline-flex;align-items:center;gap:8px;border:2px solid var(--accent);background:var(--card);color:var(--ink);
-  border-radius:999px;padding:6px 8px 6px 14px;font:600 18px var(--font-body);min-height:48px}
-.mt .clk{font:700 22px var(--font-display);font-variant-numeric:tabular-nums;min-width:4.2ch;text-align:right}
-.mt button{border:0;border-radius:999px;background:var(--accent);color:var(--accent-ink);font:600 16px var(--font-body);min-height:38px;padding:0 16px;cursor:pointer}
-.mt button:hover:not(:disabled){background:var(--accent);filter:brightness(1.06)}
-.mt button{white-space:nowrap}
-.row > .mt{flex:0 0 auto}
-.mt.paused{border-style:dashed}
-.mt.low .clk{color:var(--look)}
-.mtdone{position:fixed;inset:0;background:rgba(20,30,28,.5);display:flex;align-items:center;justify-content:center;z-index:100;padding:16px}
-.mtdone[hidden]{display:none}
-.mtcard{background:var(--card);color:var(--ink);border-radius:24px;padding:28px 24px;max-width:420px;width:100%;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.25)}
-.mtcard .big{font-size:56px;line-height:1}
-.mtcard h2{font:700 30px var(--font-display);margin:8px 0 4px}
-.mtcard p{margin:0 0 20px;color:var(--soft);font-size:18px}
-.mtcard button:hover:not(:disabled){background:var(--accent)}
-.mtcard button{border:0;border-radius:16px;background:var(--accent);color:var(--accent-ink);font:700 22px var(--font-body);min-height:60px;width:100%;cursor:pointer}
 </style>
 </head>
 <body>
@@ -278,7 +259,6 @@ footer { color: var(--soft); font-size: .85rem; text-align: center; }
     <div class="row">
       <button class="quiet" id="homeBtn" type="button" hidden>Home</button>
       <button class="quiet" id="breakBtn" type="button">Take a break</button>
-      <div class="mt" id="mt" role="timer" aria-live="off"><span aria-hidden="true">⏱</span><span class="clk" id="mtClk">30:00</span><button type="button" id="mtBtn">Start</button></div>
     </div>
   </div>
 
@@ -288,62 +268,6 @@ footer { color: var(--soft); font-size: .85rem; text-align: center; }
 
   <footer id="tally"></footer>
 </div>
-<div class="mtdone" id="mtDone" hidden role="alertdialog" aria-modal="true" aria-labelledby="mtDoneT">
-  <div class="mtcard"><div class="big" aria-hidden="true">🎉</div><h2 id="mtDoneT">Math time is done!</h2>
-    <p>Great work. You can go back to your rhythm board now.</p><button type="button" id="mtOk">OK</button></div>
-</div>
-<script>
-/* 30-minute math timer. It is saved on this device, so it keeps going if the app reloads. */
-(function(){
-  const LEN = 30*60*1000, KEY = 'mathTimer';
-  const $ = id => document.getElementById(id);
-  let st = {}; try{ st = JSON.parse(localStorage.getItem(KEY)||'{}')||{}; }catch(e){}
-  // a timer from an earlier day starts fresh
-  const today = new Date().toDateString(); if(st.day && st.day!==today) st = {};
-  const keep = () => { st.day = today; try{ localStorage.setItem(KEY, JSON.stringify(st)); }catch(e){} };
-  let AC = null, ring = null, wake = null;
-  const unlock = () => { try{ AC = AC || new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==='suspended') AC.resume(); }catch(e){} };
-  document.addEventListener('pointerdown', unlock, {capture:true});
-  function chime(){
-    if(!AC) return;
-    const t0 = AC.currentTime + .02;
-    [[659.25,0],[783.99,.28],[1046.5,.56]].forEach(([f,dt])=>{
-      const o=AC.createOscillator(), g=AC.createGain(); o.type='sine'; o.frequency.value=f;
-      g.gain.setValueAtTime(0.0001,t0+dt); g.gain.exponentialRampToValueAtTime(0.35,t0+dt+.03); g.gain.exponentialRampToValueAtTime(0.0001,t0+dt+.9);
-      o.connect(g).connect(AC.destination); o.start(t0+dt); o.stop(t0+dt+1);
-    });
-  }
-  const left = () => st.end ? Math.max(0, st.end-Date.now()) : (st.paused!=null ? st.paused : LEN);
-  const fmt = ms => { const s=Math.ceil(ms/1000); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); };
-  async function setWake(on){ try{ if(on && !wake && navigator.wakeLock){ wake=await navigator.wakeLock.request('screen'); wake.addEventListener('release',()=>wake=null); } if(!on && wake){ wake.release(); wake=null; } }catch(e){} }
-  function paint(){
-    const ms = left();
-    $('mtClk').textContent = fmt(ms);
-    $('mt').classList.toggle('paused', st.paused!=null && !st.end);
-    $('mt').classList.toggle('low', !!st.end && ms<=60000);
-    $('mtBtn').textContent = st.end ? 'Pause' : st.paused!=null ? 'Resume' : st.finished ? 'Start again' : 'Start';
-    $('mt').setAttribute('aria-label', 'Math timer, '+fmt(ms)+' left');
-  }
-  function finish(){
-    st = {finished:true}; keep(); paint(); setWake(false);
-    $('mtDone').hidden = false; setTimeout(()=>$('mtOk').focus(),0);
-    let n = 0; chime(); clearInterval(ring);
-    ring = setInterval(()=>{ if(++n>=20){ clearInterval(ring); return; } chime(); }, 3000);   // every 3 seconds, up to 1 minute
-    try{ const u=new SpeechSynthesisUtterance('Math time is done. Great work!'); u.rate=.95; speechSynthesis.speak(u); }catch(e){}
-  }
-  $('mtBtn').addEventListener('click', ()=>{
-    unlock();
-    if(st.end){ st = {paused:left()}; setWake(false); }
-    else if(st.paused!=null){ st = {end:Date.now()+st.paused}; setWake(true); }
-    else { st = {end:Date.now()+LEN}; setWake(true); }
-    keep(); paint();
-  });
-  $('mtOk').addEventListener('click', ()=>{ clearInterval(ring); $('mtDone').hidden = true; try{ speechSynthesis.cancel(); }catch(e){} });
-  setInterval(()=>{ if(st.end && Date.now()>=st.end) finish(); else if(st.end) paint(); }, 500);
-  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ if(st.end) setWake(true); paint(); } });
-  if(st.end && Date.now()>=st.end) finish(); else { if(st.end) setWake(true); paint(); }
-})();
-</script>
 
 <script>
 /* ---------- shared ---------- */
@@ -373,8 +297,9 @@ const sections = {
 
 let state = { section: null, step: 0, onBreak: false, solved: { trip: 0, ops: 0, rate: 0, pip: 0, mean: 0, lcm: 0, eq: 0, tbl: 0, dec: 0, frac: 0, est: 0, mix: 0, fdp: 0, area: 0, fdiv: 0, d2f: 0 }, dfr: null, dfLevel: "hun", fv: null, fvLevel: "fw", ar: null, arKind: "see", fd: null, fdKind: "mix", mx: null, mixMode: "toImp", es: null, esLevel: "ten", t: null, dc: null, fr: null, frLevel: "easy", lc: null, lcSize: "easy", e: null, eqLevel: "pos",
   p: null, size: "small", q: null, level: "easy", r: null, pp: null, m: null };
-try { const s = JSON.parse(localStorage.getItem("mathPlanner")); if (s && s.solved) state.solved = Object.assign(state.solved, s.solved); } catch (e) {}
-function save() { try { localStorage.setItem("mathPlanner", JSON.stringify({ solved: state.solved })); } catch (e) {} }
+state.pipDone = {};
+try { const s = JSON.parse(localStorage.getItem("mathPlanner")); if (s && s.solved) state.solved = Object.assign(state.solved, s.solved); if (s && s.pipDone) state.pipDone = s.pipDone; } catch (e) {}
+function save() { try { localStorage.setItem("mathPlanner", JSON.stringify({ solved: state.solved, pipDone: state.pipDone })); } catch (e) {} }
 
 function setChrome() {
   const sec = sections[state.section];
@@ -443,7 +368,7 @@ function renderHome() {
 
 /* ---------- backup code (same idea as the science app) ---------- */
 function makeBackupCode() {
-  try { return btoa(unescape(encodeURIComponent(JSON.stringify({ app: "math", v: 1, saved: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }), solved: state.solved })))); }
+  try { return btoa(unescape(encodeURIComponent(JSON.stringify({ app: "math", v: 1, saved: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }), solved: state.solved, pipDone: state.pipDone })))); }
   catch (e) { return ""; }
 }
 function renderBackup() {
@@ -472,6 +397,7 @@ function renderBackup() {
     try { data = JSON.parse(decodeURIComponent(escape(atob(d.querySelector("#rs").value.trim())))); } catch (e) { msg.textContent = "That code isn't a valid backup. Check that the whole code was pasted."; return; }
     if (!data || data.app !== "math" || !data.solved) { msg.textContent = "That backup code is from a different app. Use a code copied from this math app."; return; }
     Object.keys(state.solved).forEach(k => { if (typeof data.solved[k] === "number") state.solved[k] = data.solved[k]; });
+    if (data.pipDone && typeof data.pipDone === "object") state.pipDone = data.pipDone;
     save(); render();
     const m = document.querySelector("#rsmsg");
     if (m) { document.querySelector("details.backup").open = true; m.textContent = `Restored from the backup saved ${data.saved || "earlier"}.`; }
@@ -1531,14 +1457,26 @@ const pipWork = (pp, fixed = false) => `<div><span class="label">Pip's work</spa
   `<div class="step${fixed ? " fixed" : ""}"><small>${s.label}</small><b>${s.math}</b></div>`).join("")}</div></div>`;
 const pipQ = pp => `<p class="story">${pp.q}</p>`;
 
+/* Pip offers the 2 topics she has helped with the least, so every topic comes around. */
+function pipOffer() {
+  if (state.pipOffer) return state.pipOffer;
+  const done = k => state.pipDone[k] || 0;
+  const keys = Object.keys(PIP_TOPICS).map(k => [k, done(k), Math.random()]).sort((a, b) => a[1] - b[1] || a[2] - b[2]).map(x => x[0]);
+  return (state.pipOffer = keys.slice(0, 2));
+}
 function pipMeet() {
+  const keys = Object.keys(PIP_TOPICS), counts = keys.map(k => state.pipDone[k] || 0), low = Math.min(...counts);
+  const round = low + 1, helped = counts.filter(n => n > low).length;
   const c = el(`<section class="card">
-    ${pipSay("Hi! I'm Pip. I'm still learning math, and sometimes my circuits get tangled. Will you be my teacher and check my work? What should I try?")}
+    ${pipSay("Hi! I'm Pip. I'm still learning math, and sometimes my circuits get tangled. Will you be my teacher and check my work? Which one should I try?")}
     <div class="tiles small" id="topics"></div>
+    <p class="sub">Round ${round}: you've helped Pip with ${helped} of ${keys.length} topics. When you've done them all, a new round starts.</p>
+    <div class="meter"><span style="width:${helped / keys.length * 100}%"></span></div>
   </section>`);
   stage.appendChild(c);
-  [...Object.entries(PIP_TOPICS).map(([k, t]) => [k, t.label, t.sym]), ["any", "Surprise me", "?!"]].forEach(([k, label, sym]) => {
-    const b = el(`<button class="tile" type="button" style="--c:var(--g-think)${k === "any" ? ";grid-column:1/-1" : ""}"><span class="sym">${sym}</span><span class="nm">${label}</span></button>`);
+  pipOffer().forEach(k => {
+    const t = PIP_TOPICS[k];
+    const b = el(`<button class="tile" type="button" style="--c:var(--g-think)"><span class="sym">${t.sym}</span><span class="nm">${t.label}</span></button>`);
     b.onclick = () => { pipStart(k); state.step = 1; render(); };
     c.querySelector("#topics").appendChild(b);
   });
@@ -1620,10 +1558,12 @@ function pipFix() {
 }
 function pipNextRow() {
   const row = el(`<div class="row" style="margin-top:10px"></div>`);
-  const again = el(`<button class="primary" type="button">Help Pip again</button>`), other = el(`<button type="button">Pick a different topic</button>`);
-  again.onclick = () => { state.solved.pip++; save(); pipStart(state.pp.topic); state.step = 1; render(); };
-  other.onclick = () => { state.solved.pip++; save(); state.step = 0; render(); };
-  row.append(again, other); return row;
+  const again = el(`<button class="primary" type="button">Help Pip again</button>`);
+  again.onclick = () => {
+    state.solved.pip++; state.pipDone[state.pp.key] = (state.pipDone[state.pp.key] || 0) + 1;
+    state.pipOffer = null; save(); state.step = 0; render();
+  };
+  row.append(again); return row;
 }
 
 /* ---------- what does it mean? (concept first) ---------- */

@@ -1185,5 +1185,6 @@ render();
 
 </script>
 <script src="../rhythm/report.js"></script>
+<script>setTimeout(()=>{ try{ const p=JSON.parse(localStorage.getItem('g6w-prog')||'{}'); rhythmCatchUp('writing6', Object.values(p).flatMap(s=>Object.values((s&&s.done)||{}))); }catch(e){} }, 1500);</script>
 </body>
 </html>

@@ -28,6 +28,12 @@
     writePend([...readPend().filter(x => !(x.app===app && x.day===r.day)), r]);
     flush();
   };
+  /* When the app opens: if a lesson was already finished today (for example in an older version of
+     the app that didn't send it), send it now. times: finish times (ms or date strings). */
+  window.rhythmCatchUp = function(app, times){
+    const k = dayKey(new Date());
+    if((times||[]).some(t => t && !isNaN(new Date(t)) && dayKey(new Date(t))===k)) window.rhythmReport(app);
+  };
   window.addEventListener('online', flush);
   document.addEventListener('visibilitychange', () => { if(!document.hidden) flush(); });
   flush();

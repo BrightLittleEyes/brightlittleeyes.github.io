@@ -498,5 +498,6 @@ render();
 </script>
 
 <script src="../rhythm/report.js"></script>
+<script>setTimeout(()=>{ try{ const p=JSON.parse(localStorage.getItem('otw-progress-v1')||'{}'); rhythmCatchUp('hist6', Object.values((p&&p.done)||{}).map(d=>d&&d.at)); }catch(e){} }, 1500);</script>
 </body>
 </html>

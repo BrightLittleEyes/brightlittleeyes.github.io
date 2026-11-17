@@ -2659,7 +2659,7 @@ function renderUnit(){
     if (step<5) return setStep(step+1);
     if (view.lesson<u.lessons.length-1) go({page:"unit", unit:u.id, lesson:view.lesson+1}); else startGame(u.id);
   };
-  const f=$("#finish"); if(f) f.onclick = () => { if (needStudent()) return; if (!P().done[key]){ P().done[key] = true; saveAll(); try{ window.rhythmReport && rhythmReport('science6'); }catch(e){} sfx.star(); confetti(); } render(); };
+  const f=$("#finish"); if(f) f.onclick = () => { if (needStudent()) return; if (!P().done[key]){ P().done[key] = Date.now(); saveAll(); try{ window.rhythmReport && rhythmReport('science6'); }catch(e){} sfx.star(); confetti(); } render(); };
   if (step===2 && F && F.init){ try{ const stop = F.init($("#fig")); if (stop) figStops.push(stop); }catch(e){ console.error(e); } }
   if (step===4) runFlash(L.vocab, () => { view.flashDone = true; const n = $("#snext"); if (n) n.disabled = false; });
 }
@@ -3214,5 +3214,6 @@ render();
 </script>
 
 <script src="../rhythm/report.js"></script>
+<script>setTimeout(()=>{ try{ const p=JSON.parse(localStorage.getItem('g6-prog')||'{}'); rhythmCatchUp('science6', Object.values(p).flatMap(s=>Object.values((s&&s.done)||{})).filter(v=>typeof v==='number')); }catch(e){} }, 1500);</script>
 </body>
 </html>

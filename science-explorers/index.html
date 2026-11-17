@@ -588,7 +588,7 @@ function renderLesson(){
   const doneBar = $('#donebar');
   let finished = false;
   const done = () => { if (finished) return; finished = true;
-    award(`${u.id}-L${i}`, 1); doneBar.classList.add('on'); if (!wasDone){ try{ window.rhythmReport && rhythmReport('sciexp'); }catch(e){} }
+    award(`${u.id}-L${i}`, 1); doneBar.classList.add('on'); if (!wasDone){ try{ localStorage.setItem('sciexp-lastdone', new Date().toISOString()); }catch(e){} try{ window.rhythmReport && rhythmReport('sciexp'); }catch(e){} }
     setTimeout(()=>doneBar.scrollIntoView({behavior:'smooth', block:'nearest'}), 150); };
   if ($('#nextL')) $('#nextL').onclick = () => go({page:'lesson', unit:u.id, lesson:i+1});
   $('#toGames').onclick = () => go({page:'unit', unit:u.id});
@@ -1477,5 +1477,6 @@ go({page: student ? 'home' : 'pick'});
 
 </script>
 <script src="../rhythm/report.js"></script>
+<script>setTimeout(()=>{ try{ rhythmCatchUp('sciexp', [localStorage.getItem('sciexp-lastdone')]); }catch(e){} }, 1500);</script>
 </body>
 </html>

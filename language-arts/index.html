@@ -1850,5 +1850,6 @@ go(student?"home":"pick");
   } else IDB.put(snapshot()); })();
 </script>
 <script src="../rhythm/report.js"></script>
+<script>setTimeout(()=>{ try{ const p=JSON.parse(localStorage.getItem('la3-prog')||'{}'); rhythmCatchUp('la3', Object.values(p).flatMap(s=>Object.values((s&&s.lessons)||{}).filter(l=>l&&l.done).map(l=>l.doneAt))); }catch(e){} }, 1500);</script>
 </body>
 </html>

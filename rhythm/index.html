@@ -813,7 +813,7 @@ function ruthBoard(c){
     {id:'r_morning', name:'Morning Warm-Up', sub:'This Is the Day · Psalm 118:24', color:'#D63384', icon:'sun',
       items:[take('breakfast','Breakfast & Morning Prep'), take('carpool_am','Carpool'), take('attendance','Mark Attendance'), take('bible','Bible Block')]},
     {id:'r_subjects', name:'My Subjects', sub:'You pick the order!', color:'#8E44AD', icon:'book', reorder:true,
-      items:[take('math','Math Block','Math lesson and practice.'), take('language','Language & Writing Block'), take('history','History Block'), take('science','Science Block')]},
+      items:[take('math','Math Block','Math lesson and practice.'), take('language','Language & Writing Block'), {id:'r_reading', t:'Reading Block', d:'Read on your own.', timer:1200, endMsg:'Reading time is finished. Great reading!'}, take('history','History Block'), take('science','Science Block')]},
     {id:'r_lunch', name:'Lunch Break', sub:'Make a Joyful Noise · Psalm 100:1', color:'#16A085', icon:'apple',
       items:[take('lunch','Lunch'), {id:'r_m1', t:'Helping Hands', slot:'mech'}]},
     {id:'r_momme', name:'Mom & Me', sub:'Just the two of us', color:'#C2185B', icon:'heart',

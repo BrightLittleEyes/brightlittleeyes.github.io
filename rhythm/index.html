@@ -209,6 +209,8 @@ body.theme-dance .slotbtn,body.theme-dance .opt{border-radius:18px}
 body.theme-dance .datebar button,body.theme-dance .tools button,body.theme-dance .foot button{border-radius:22px}
 body.theme-dance .ord button{border-radius:50%;width:36px;height:36px;border-color:#D9B8EA;color:#8E44AD}
 .remindbtn{border:2px solid var(--navy);background:var(--surface);color:var(--navy);border-radius:12px;min-height:48px;padding:0 16px;font-weight:700;font-size:16px;cursor:pointer}
+.slotbtn.nonepick{opacity:.75;font-style:italic}
+.opt.noneopt{border-style:dashed}
 .appnote{margin-top:6px;font-size:.88em;color:#5A6670;line-height:1.35}
 .appnote.ok{color:#1E7A43;font-weight:700}
 .row:not(.done) .check.bylesson{background:#F1F3F5;border-style:dashed}
@@ -307,7 +309,7 @@ window.FIREBASE_CONFIG = {
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
-const BUILD = '2026-11-17h';   // change this with every update, so open boards reload to the new version
+const BUILD = '2026-11-17i';   // change this with every update, so open boards reload to the new version
 const COL = 'rhythm_days', CFG_DOC = 'rhythm_config/main';
 
 /* ---------- the starting board (used until you save your own) ---------- */
@@ -792,6 +794,9 @@ const APP_OF_RUTH = {bible:'bible3', history:'hist3', language:'la3', science:'s
 function tieApps(blockLists, map){ blockLists.forEach(bl=>(bl||[]).forEach(b=>(b.items||[]).forEach(i=>{ if(!i.slot && map[i.id] && !('app' in i)) i.app=map[i.id]; }))); }
 const appDone = i => !!(i && i.app && APPS[i.app] && (S.apps||{})[i.app]);
 const isOn = i => !!S.data.checks[i.id] || appDone(i);
+/* "None today": a Fun Choice she chooses to skip. It counts as done. */
+const NONE = '__none';
+const noneOK = () => !!(S.kid==='main' ? CFG.funNone : ((CFG.kids||{})[S.kid]||{}).funNone);
 const DAY_OPTS = {all:'Every day', notsat:'Every day but Saturday', weekdays:'Weekdays', sat:'Saturdays', sun:'Sundays', weekend:'Weekends'};
 function tagToday(t, dow){
   switch(t.on||'all'){ case 'notsat': return dow!==6; case 'weekdays': return dow>=1&&dow<=5; case 'sat': return dow===6; case 'sun': return dow===0; case 'weekend': return dow===0||dow===6; default: return true; }
@@ -1089,6 +1094,10 @@ function normalizeMain(d){
       c.tags.fun.push({id:'mom_game', name:'Board Game with Mom', sub:'Pick a game to play together', timer:1800});
     c.v = 28;
   }
+  if(c.v < 29){                       // Bekah may choose "None today" for a Fun Choice
+    c.funNone = true;
+    c.v = 29;
+  }
   return c;
 }
 const BOARD_OF_DAY = {6:'satBlocks', 0:'sunBlocks'};   // Saturday, Sunday; every other day uses "blocks"
@@ -1367,9 +1376,10 @@ function rowHTML(i, ord){
   const D=S.data, on=isOn(i);
   let extra='';
   if(i.slot){
-    const tag = D.slots[i.id] && findTag(i.slot, D.slots[i.id]);
-    extra = `<div class="slot"><button class="slotbtn ${i.slot} ${tag?'filled':''}" data-slot="${esc(i.id)}">${
-      tag ? esc(tag.name)+(isLocked(i.id)?`<small>Today's must-do job</small>`:tag.sub?`<small>${esc(tag.sub)}</small>`:'') : (PICK_TEXT[i.slot]||'+ Pick a tag')
+    const none = D.slots[i.id]===NONE;
+    const tag = !none && D.slots[i.id] && findTag(i.slot, D.slots[i.id]);
+    extra = `<div class="slot"><button class="slotbtn ${i.slot} ${tag||none?'filled':''} ${none?'nonepick':''}" data-slot="${esc(i.id)}">${
+      none ? 'None today<small>Chose to skip this one</small>' : tag ? esc(tag.name)+(isLocked(i.id)?`<small>Today's must-do job</small>`:tag.sub?`<small>${esc(tag.sub)}</small>`:'') : (PICK_TEXT[i.slot]||'+ Pick a tag')
     }</button></div>`;
     if(tag && tag.snack) extra += snackBoxes(i.id);
     if(tag && tag.timer) extra += timerBox(i.id);
@@ -1506,6 +1516,8 @@ function openPicker(slotId){
                 : wk ? `<small>Back ${esc(fromKey(dueOn(t)).toLocaleDateString(undefined,{weekday:'short', month:'short', day:'numeric'}))}</small>` : rest ? `<small>You did this yesterday</small>` : (t.sub?`<small>${esc(t.sub)}</small>`:'');
     return `<button class="opt ${kind} ${cur?'cur':''}" data-pick="${esc(t.id)}" ${usedIn||rest||wk?'disabled':''}>${esc(t.name)}${where}</button>`;
   }).join('') || '<p>No tags yet. Add some in Edit board.</p>';
+  if(kind==='fun' && (noneOK() || D.slots[slotId]===NONE))
+    $('#opts').innerHTML += `<button class="opt fun noneopt ${D.slots[slotId]===NONE?'cur':''}" data-pick="${NONE}">None today<small>Skip this one. It still counts as done.</small></button>`;
   $('#clearSlot').hidden = !D.slots[slotId];
   $('#scrim').hidden=false;
 }
@@ -1557,8 +1569,12 @@ $('#scrim').addEventListener('click', e=>{
   const t=e.target.closest('button'); if(!t) return;
   const D=S.data;
   if(t.dataset.pick){ if(isLocked(S.picking) && D.slots[S.picking]!==t.dataset.pick) D.noMust=true;
+    const was=D.slots[S.picking], nowNone=t.dataset.pick===NONE;
+    if(nowNone && !D.checks[S.picking]){ D.checks[S.picking]=true; (S.ck=S.ck||{})[S.picking]=1; }
+    else if(!nowNone && was===NONE && D.checks[S.picking]){ delete D.checks[S.picking]; (S.ck=S.ck||{})[S.picking]=1; }
     if(D.slots[S.picking]!==t.dataset.pick){ delete S.timers[S.picking]; delete S.paused[S.picking]; saveTimers(); } D.slots[S.picking]=t.dataset.pick; closePicker(); save(); render(); return; }
-  if(t.id==='clearSlot'){ if(isLocked(S.picking)) D.noMust=true; delete S.timers[S.picking]; delete S.paused[S.picking]; saveTimers(); delete D.slots[S.picking]; closePicker(); save(); render(); }
+  if(t.id==='clearSlot'){ if(isLocked(S.picking)) D.noMust=true;
+    if(D.slots[S.picking]===NONE && D.checks[S.picking]){ delete D.checks[S.picking]; (S.ck=S.ck||{})[S.picking]=1; } delete S.timers[S.picking]; delete S.paused[S.picking]; saveTimers(); delete D.slots[S.picking]; closePicker(); save(); render(); }
   if(t.id==='closeSheet') closePicker();
 });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape' && !$('#scrim').hidden) closePicker(); });
@@ -1570,7 +1586,7 @@ async function copyYesterday(){
   if(!prev) prev=readLocal(lkey(y));
   if(!prev || !prev.slots || !Object.keys(prev.slots).filter(k=>!isChg(k)).length){ toast('No tags were placed yesterday.'); return; }
   const noRep = CFG.noRepeat!==false;
-  const fits = Object.keys(prev.slots).filter(k=>!isChg(k) && SLOT_IDS.includes(k) && !(noRep && (itemById(k)||{}).slot==='mech'));
+  const fits = Object.keys(prev.slots).filter(k=>!isChg(k) && prev.slots[k]!==NONE && SLOT_IDS.includes(k) && !(noRep && (itemById(k)||{}).slot==='mech'));
   if(!fits.length){ toast(noRep && Object.keys(prev.slots).some(k=>SLOT_IDS.includes(k)) ? 'Nothing to copy. Helping Hands jobs need new picks each day.' : 'Yesterday used a different board, so there are no tags to copy.', 3500); return; }
   const keep={}; CHG_IDS.forEach(k=>{ if(S.data.slots[k]) keep[k]=S.data.slots[k]; });
   const keepHH={}; if(noRep) Object.keys(S.data.slots).forEach(k=>{ if((itemById(k)||{}).slot==='mech') keepHH[k]=S.data.slots[k]; });

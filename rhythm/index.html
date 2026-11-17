@@ -307,7 +307,7 @@ window.FIREBASE_CONFIG = {
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
-const BUILD = '2026-11-17e';   // change this with every update, so open boards reload to the new version
+const BUILD = '2026-11-17f';   // change this with every update, so open boards reload to the new version
 const COL = 'rhythm_days', CFG_DOC = 'rhythm_config/main';
 
 /* ---------- the starting board (used until you save your own) ---------- */
@@ -847,6 +847,10 @@ function normalize(d){
   const ruth = c.kids && c.kids.ruth;
   if(ruth && !Array.isArray(ruth.blocks)) Object.assign(ruth, ruthBoard(c));
   if(ruth && !(ruth.appsV>=1)){ tieApps([ruth.blocks], APP_OF_RUTH); ruth.appsV=1; }
+  if(ruth && !(ruth.funV>=1)){        // Ruth: one fewer weekday Fun Choice from Nov 18, 2026, so her fun picks match Bekah's
+    (ruth.blocks||[]).forEach(b=>b.items.forEach(i=>{ if(i.id==='r_f1') i.until='2026-11-17'; }));
+    ruth.funV=1;
+  }
   return c;
 }
 /* Ruth's own board, made from Bekah's: no timers, she picks her subject order, Mom & Me time, Explore time, no red tags. */
@@ -1089,7 +1093,10 @@ function dayRoot(key){
 }
 function useDay(){
   const bc = BC();
-  BLOCKS = bc[dayRoot(S.date)]; TAGS = bc.tags;
+  /* an item with "until" (a date) stays on the board through that day, then comes off */
+  BLOCKS = bc[dayRoot(S.date)].map(b=>b.items.some(i=>i.until) ? {...b, items:b.items.filter(i=>!(i.until && S.date>i.until))} : b);
+  BLOCKS = BLOCKS.filter(b=>b.items.length || !bc[dayRoot(S.date)].find(x=>x.id===b.id).items.length);
+  TAGS = bc.tags;
   ALL_ITEMS = BLOCKS.flatMap(b=>b.items);
   SLOT_IDS = ALL_ITEMS.filter(i=>i.slot).map(i=>i.id);
 }

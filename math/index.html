@@ -290,12 +290,26 @@ footer { color: var(--soft); font-size: .85rem; text-align: center; }
 </div>
 <div class="mtdone" id="mtDone" hidden role="alertdialog" aria-modal="true" aria-labelledby="mtDoneT">
   <div class="mtcard"><div class="big" aria-hidden="true">🎉</div><h2 id="mtDoneT">Math time is done!</h2>
-    <p>Great work. You can go back to your rhythm board now.</p><button type="button" id="mtOk">OK</button></div>
+    <p id="mtDoneP">Great work. You can go back to your rhythm board now.</p><button type="button" id="mtOk">OK</button></div>
 </div>
 <script>
-/* Tells the Daily Rhythm board Math is done: the 30-minute timer finished and at least one problem was finished today */
-function mathReport(){ try{ const t=JSON.parse(localStorage.getItem('mathTimer')||'{}')||{}; const d=JSON.parse(localStorage.getItem('mathDaily')||'{}')||{}; const n=new Date(), k=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
-  if(t.finished && t.day===n.toDateString() && d[k] && d[k].probs>0 && localStorage.getItem('mathReported')!==k){ localStorage.setItem('mathReported',k); window.rhythmReport && rhythmReport('math6'); } }catch(e){} }
+/* Today's math goal (it checks off Math App on the rhythm board): 30 minutes of active work
+   and 10 problems right on the first try, with no hint and no fast guessing. */
+const GOAL_MIN = 30, GOAL_RIGHT = 10;
+function goalDayKey(){ const n=new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`; }
+function goalNow(){
+  const k=goalDayKey(); let d={}, log=[];
+  try{ d=JSON.parse(localStorage.getItem('mathDaily')||'{}')||{}; }catch(e){}
+  try{ log=JSON.parse(localStorage.getItem('mathLog')||'[]')||[]; }catch(e){}
+  const right = log.filter(r=>r.day===k && r.done && Object.values(r.steps||{}).every(st=>!st.miss && !st.hints && !st.fast)).length;
+  const min = Math.floor(((d[k]||{}).sec||0)/60);
+  return {min, right, met: min>=GOAL_MIN && right>=GOAL_RIGHT};
+}
+function goalLeft(g){ const a=[]; if(g.min<GOAL_MIN) a.push(`${GOAL_MIN-g.min} more minute${GOAL_MIN-g.min===1?'':'s'} of work`); if(g.right<GOAL_RIGHT) a.push(`${GOAL_RIGHT-g.right} more problem${GOAL_RIGHT-g.right===1?'':'s'} right on the first try`); return a.join(' and '); }
+function mathReport(){ try{ const g=goalNow(), k=goalDayKey();
+  if(g.met && localStorage.getItem('mathReported')!==k){ localStorage.setItem('mathReported',k); window.rhythmReport && rhythmReport('math6');
+    try{ const u=new SpeechSynthesisUtterance('You reached today\'s math goal. Great work!'); u.rate=.95; speechSynthesis.speak(u); }catch(e){} }
+  if(window.paintGoal) paintGoal(); }catch(e){} }
 /* 30-minute math timer. It is saved on this device, so it keeps going if the app reloads. */
 (function(){
   const LEN = 30*60*1000, KEY = 'mathTimer';
@@ -329,6 +343,8 @@ function mathReport(){ try{ const t=JSON.parse(localStorage.getItem('mathTimer')
   }
   function finish(){
     st = {finished:true}; keep(); paint(); setWake(false); mathReport();
+    { const g=goalNow(); $('mtDoneT').textContent = g.met ? 'Math time is done!' : 'The timer is done';
+      $('mtDoneP').textContent = g.met ? 'You reached today\'s goal. You can go back to your rhythm board now.' : `To finish math today, you still need ${goalLeft(g)}. Keep going!`; }
     $('mtDone').hidden = false; setTimeout(()=>$('mtOk').focus(),0);
     let n = 0; chime(); clearInterval(ring);
     ring = setInterval(()=>{ if(++n>=20){ clearInterval(ring); return; } chime(); }, 3000);   // every 3 seconds, up to 1 minute
@@ -394,7 +410,7 @@ function countSolved() { const t = sumSolved(); if (t > lastTotal) { today().pro
 /* time only counts while the app is on screen, not on a break, and touched in the last 3 minutes */
 setInterval(() => {
   if (document.hidden || state.onBreak || Date.now() - lastActive > 180000) return;
-  today().sec += 5; saveDaily();
+  today().sec += 5; saveDaily(); mathReport();
 }, 5000);
 /* ---------- problem log: time and accuracy for every problem and every step ---------- */
 let probLog = [];
@@ -444,19 +460,30 @@ setInterval(() => {
   curProb.time++; probStep().sec++;
 }, 1000);
 /* her own count, shown at the top of every activity: today's problems right on the first try vs. needing another try */
-const probClean = r => Object.values(r.steps).every(s => !s.miss);
+const probClean = r => Object.values(r.steps).every(s => !s.miss && !s.hints && !s.fast);   // same rule as today's goal
 function dayScore(k) { const rs = probLog.filter(r => r.day === k && r.done), ok = rs.filter(probClean).length; return [ok, rs.length - ok]; }
 (() => { const st = document.createElement("style"); st.textContent = `
   .score{display:flex;gap:8px 10px;flex-wrap:wrap;justify-content:center;align-items:center;font-weight:600;font-variant-numeric:tabular-nums}
   .score span{border-radius:99px;padding:6px 14px;font-size:1rem}
   .score .sc-ok{background:var(--accent-wash);color:var(--accent)}
   .score .sc-try{background:var(--look-wash);color:var(--ink)}
-  .score .sc-day{color:var(--soft);font-weight:500;padding:6px 0}`; document.head.appendChild(st); })();
+  .score .sc-day{color:var(--soft);font-weight:500;padding:6px 0}
+  .goal{display:flex;gap:6px 12px;flex-wrap:wrap;justify-content:center;align-items:center;margin:8px auto 0;padding:8px 14px;border-radius:12px;border:2px dashed var(--line);font-variant-numeric:tabular-nums;text-align:center}
+  .goal.met{border-style:solid;border-color:var(--accent);background:var(--accent-wash);font-weight:700}`; document.head.appendChild(st); })();
 function paintScore() {
   let s = document.getElementById("score");
   if (!s) { s = el(`<div id="score" class="score" aria-live="polite"></div>`); document.getElementById("route").after(s); }
   const [ok, again] = dayScore(dayKey());
-  s.innerHTML = `<span class="sc-day">Today:</span><span class="sc-ok">✓ ${ok} right first try</span><span class="sc-try">↻ ${again} needed another try</span>`;
+  s.innerHTML = `<span class="sc-day">Today:</span><span class="sc-ok">✓ ${ok} right first try</span><span class="sc-try">↻ ${again} needed help or another try</span>`;
+  paintGoal();
+}
+function paintGoal(){
+  let g = document.getElementById("goal");
+  if (!g) { g = el(`<div id="goal" class="goal" aria-live="polite"></div>`); (document.getElementById("score") || document.getElementById("route")).after(g); }
+  const n = goalNow();
+  g.classList.toggle("met", n.met);
+  g.innerHTML = n.met ? `🎉 Today's goal is done! It's checked off on your rhythm board.`
+    : `<b>Today's goal:</b><span>⏱ ${Math.min(n.min,GOAL_MIN)} of ${GOAL_MIN} minutes working</span><span>✓ ${Math.min(n.right,GOAL_RIGHT)} of ${GOAL_RIGHT} right first try (no hints, no guessing)</span>`;
 }
 { const r2 = render; render = function () { r2(); paintScore(); }; }
 

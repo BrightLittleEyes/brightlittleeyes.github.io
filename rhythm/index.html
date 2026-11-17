@@ -779,7 +779,7 @@ const APPS = {
   bible6:  {name:'Through the Word (Bible)',       how:'finish a Bible lesson'},
   hist6:   {name:'Through the Word (History)',     how:'finish a History lesson'},
   writing6:{name:'Grade 6 Writing',                how:'finish a Writing lesson'},
-  math6:   {name:'Trip Planner Math',              how:'finish the 30-minute timer and at least one problem'},
+  math6:   {name:'Trip Planner Math',              how:"reach today's goal (30 minutes of work and 10 problems right on the first try)"},
   science6:{name:'Grade 6 Science',                how:'finish a Science lesson'},
   bible3:  {name:'Through the Word 3 (Bible)',     how:'finish a Bible lesson'},
   hist3:   {name:'Through the Word 3 (History)',   how:'finish a History lesson'},
@@ -1055,6 +1055,17 @@ function normalizeMain(d){
     tieApps([c.blocks], APP_OF_MAIN);
     c.v = 25;
   }
+  if(c.v < 26){                       // ALEKS stays mid-morning; the Math App moves after lunch, with a daily goal
+    let it=null;
+    c.blocks.forEach(b=>{ const n=b.items.findIndex(i=>i.id==='mathapp'); if(n>=0) it=b.items.splice(n,1)[0]; });
+    if(it){
+      it.d='Open Math from its icon.';
+      const mid=c.blocks.find(b=>b.items.some(i=>i.id==='lunch')) || c.blocks.find(b=>/mid-?day/i.test(b.name||''));
+      if(mid){ const at=mid.items.findIndex(i=>i.id==='lunch'); mid.items.splice(at>=0?at+1:mid.items.length,0,it); }
+      else c.blocks[0].items.push(it);
+    }
+    c.v = 26;
+  }
   return c;
 }
 const BOARD_OF_DAY = {6:'satBlocks', 0:'sunBlocks'};   // Saturday, Sunday; every other day uses "blocks"
@@ -1172,13 +1183,19 @@ function save(){
   cacheLocal(lkey(S.date), S.data);
   if(!S.db) return;
   clearTimeout(S.saveT);
-  const key=S.date, kid=S.kid, d=clone(S.data), mine={checks:d.checks||{}, slots:d.slots||{}, order:d.order||{}, noMust:!!d.noMust, snack:d.snack||blank().snack};
-  const doc = kid==='main' ? {...mine} : {[kid]:mine};
-  const fields = kid==='main' ? ['checks','slots','order','noMust','snack','date','savedAt'] : [kid,'date','savedAt'];
+  const key=S.date, kid=S.kid;
   setStatus('', 'Saving…');
   S.saveT=setTimeout(async()=>{
+    /* Only the boxes tapped on this device are written, one by one, so a board open on
+       another device (Mom's) can't undo boxes she checked, and the other way around. */
+    const d=clone(S.data), ck=S.ck||{}; S.ck={};
+    const DEL=firebase.firestore.FieldValue.delete(), pre = kid==='main' ? '' : kid+'.';
+    const checks={}; Object.keys(ck).forEach(id=>{ checks[id] = d.checks[id] ? true : DEL; });
+    const mine={checks, slots:d.slots||{}, order:d.order||{}, noMust:!!d.noMust, snack:d.snack||blank().snack};
+    const doc = kid==='main' ? {...mine} : {[kid]:mine};
+    const fields = [...['slots','order','noMust','snack'].map(f=>pre+f), ...Object.keys(ck).map(id=>pre+'checks.'+id), 'date', 'savedAt'];
     try{ await S.db.doc(COL+'/'+key).set({...doc, date:key, savedAt:new Date().toISOString()}, {mergeFields:fields}); setStatus('ok','Saved'); }
-    catch(err){ console.error(err); setStatus('warn','Not saved online — kept on this device'); }
+    catch(err){ console.error(err); if(key===S.date && kid===S.kid) S.ck={...ck, ...(S.ck||{})}; setStatus('warn','Not saved online — kept on this device'); }
   }, 400);
 }
 function loadYesterday(){
@@ -1199,6 +1216,21 @@ function loadYesterday(){
 const tmKey = () => 'rhythm:tm:'+S.kid+':'+S.date;
 function saveTimers(){ try{ localStorage.setItem(tmKey(), JSON.stringify({t:S.timers, p:S.paused})); }catch(e){} }
 function loadTimers(){ let o=null; try{ o=JSON.parse(localStorage.getItem(tmKey())||'null'); }catch(e){} S.timers=(o&&o.t)||{}; S.paused=(o&&o.p)||{}; }
+/* A board left open (or an iPad waking up) can miss live updates, so it also asks the database directly. */
+function refreshDay(){
+  if(!S.db || !S.started || S.view!=='app' || S.saveT && Object.keys(S.ck||{}).length) return;
+  const key=S.date, kid=S.kid;
+  S.db.doc(COL+'/'+key).get({source:'server'}).then(snap=>{
+    if(key!==S.date || kid!==S.kid || Object.keys(S.ck||{}).length) return;
+    const v = snap.exists ? pickDay(snap.data()) : null;
+    const apps = (snap.exists && snap.data().apps) || {};
+    const changed = JSON.stringify(v ? Object.assign(blank(), v) : null) !== JSON.stringify(v ? S.data : null) || JSON.stringify(apps)!==JSON.stringify(S.apps||{});
+    if(v) S.data=Object.assign(blank(), v);
+    S.apps=apps; cacheLocal(lkey(key),S.data); cacheLocal('apps:'+key, S.apps);
+    setStatus('ok','Synced');
+    if(changed && !S.picking) render();
+  }).catch(()=>{});
+}
 function watchDay(){
   if(S.unsub){ S.unsub(); S.unsub=null; }
   loadTimers();
@@ -1460,7 +1492,7 @@ $('#app').addEventListener('click', e=>{
   if(t.dataset.check){ const k=t.dataset.check, it=ALL_ITEMS.find(x=>x.id===k);
     if(appDone(it)){ toast(`This was checked off when you finished a lesson in ${APPS[it.app].name}.`, 3200); return; }
     if(it && it.app && APPS[it.app] && S.role!=='parent'){ toast(`To check this off, ${APPS[it.app].how} in ${APPS[it.app].name}. It checks itself!`, 4200); return; }
-    if(D.checks[k]) delete D.checks[k]; else { D.checks[k]=true; S.just=k; } save(); render(); return; }
+    if(D.checks[k]) delete D.checks[k]; else { D.checks[k]=true; S.just=k; } (S.ck=S.ck||{})[k]=1; save(); render(); return; }
   if(t.dataset.remind){ clockTimer(+t.dataset.remind*60000); return; }
   if(t.dataset.ord){ const b=BLOCKS.find(x=>x.id===t.dataset.ob); if(!b) return;
     const ids=ordered(b).map(i=>i.id), n=ids.indexOf(t.dataset.oid), m=n+(t.dataset.ord==='up'?-1:1);
@@ -1478,7 +1510,7 @@ $('#app').addEventListener('click', e=>{
     if(a==='reset'){ delete S.timers[id]; delete S.paused[id]; }
     saveTimers(); paintTimer(); syncWake(); return; }
   if(t.dataset.snack){ const k=+t.dataset.snack, sid=t.dataset.sid; D.snack[k]=!D.snack[k];
-    if(D.snack.every(Boolean) && !D.checks[sid]){ D.checks[sid]=true; toast('All 8 compartments filled!'); }
+    if(D.snack.every(Boolean) && !D.checks[sid]){ D.checks[sid]=true; (S.ck=S.ck||{})[sid]=1; toast('All 8 compartments filled!'); }
     save(); render(); return; }
   switch(t.id){
     case 'prev': S.date=shift(S.date,-1); watchDay(); break;
@@ -1790,8 +1822,9 @@ async function saveEditor(){
   // roll over to the new day if the page is left open overnight
   S._last=keyOf(new Date());
   const rollover = ()=>{ const k=keyOf(new Date()); if(S._last!==k && S.date===S._last){ S.date=k; if(S.started){ closePicker(); watchDay(); } } S._last=k; };
-  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) rollover(); });
+  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ rollover(); refreshDay(); } });
   setInterval(rollover, 60000);   // also while the board sits open on screen overnight
+  setInterval(()=>{ if(!document.hidden) refreshDay(); }, 30000);
 })();
 </script>
 </body>

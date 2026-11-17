@@ -386,13 +386,125 @@ try { const d = JSON.parse(localStorage.getItem("mathDaily")); if (d && typeof d
 let lastTotal = sumSolved(), lastActive = Date.now();
 function today() { const k = dayKey(); return state.daily[k] || (state.daily[k] = { sec: 0, probs: 0 }); }
 function saveDaily() { try { localStorage.setItem("mathDaily", JSON.stringify(state.daily)); } catch (e) {} }
-function countSolved() { const t = sumSolved(); if (t > lastTotal) { today().probs += t - lastTotal; saveDaily(); } lastTotal = t; }
+function countSolved() { const t = sumSolved(); if (t > lastTotal) { today().probs += t - lastTotal; saveDaily(); logClose(true); } lastTotal = t; }
 ["pointerdown", "keydown", "scroll", "input"].forEach(ev => document.addEventListener(ev, () => { lastActive = Date.now(); }, { passive: true, capture: true }));
 /* time only counts while the app is on screen, not on a break, and touched in the last 3 minutes */
 setInterval(() => {
   if (document.hidden || state.onBreak || Date.now() - lastActive > 180000) return;
   today().sec += 5; saveDaily();
 }, 5000);
+/* ---------- problem log: time and accuracy for every problem and every step ---------- */
+let probLog = [];
+try { const l = JSON.parse(localStorage.getItem("mathLog")); if (Array.isArray(l)) probLog = l; } catch (e) {}
+function saveLog() { if (probLog.length > 2000) probLog = probLog.slice(-2000); try { localStorage.setItem("mathLog", JSON.stringify(probLog)); } catch (e) {} }
+let curProb = null, lastPress = 0;
+const stepName = (sec, i) => (sections[sec] && sections[sec].steps[i]) || `Step ${i + 1}`;
+function probStep() {
+  const k = stepName(curProb.sec, state.step);
+  return curProb.steps[k] || (curProb.steps[k] = { miss: 0, hints: 0, sec: 0, order: state.step });
+}
+function probLabel() {
+  const node = stage.querySelector(".story, .fx, .eqn, .expr");
+  if (!node) return "";
+  const n = node.cloneNode(true);
+  n.querySelectorAll(".fr").forEach(f => f.replaceWith(`${f.querySelector(".t").textContent}/${f.querySelector(".b").textContent}`));
+  return n.textContent.replace(/\s+/g, " ").trim().slice(0, 110);
+}
+function logClose(done) {
+  if (!curProb) return;
+  const p = curProb; curProb = null;
+  if (!done && p.time < 5) return;
+  probLog.push({ t0: p.t0, day: p.day, sec: p.sec, topic: p.topic, label: p.label, time: p.time, done, steps: p.steps });
+  saveLog();
+}
+const _render = render;
+render = function () {
+  if (curProb && state.section && (state.section !== curProb.sec || state.step === 0)) logClose(false);
+  _render();
+  if (state.section && state.step >= 1 && !state.onBreak && !curProb)
+    curProb = { t0: Date.now(), day: dayKey(), sec: state.section, topic: state.section === "pip" && state.pp ? state.pp.key : null, label: probLabel(), time: 0, steps: {} };
+  if (curProb && state.section === curProb.sec && !state.onBreak) probStep();
+};
+["pointerdown", "keydown"].forEach(ev => document.addEventListener(ev, () => { lastPress = Date.now(); }, { capture: true }));
+document.addEventListener("click", e => { if (curProb && state.section === curProb.sec && e.target.closest("#hintBtn")) probStep().hints++; }, true);
+/* a "look again" message right after she taps or types = one wrong try on this step */
+new MutationObserver(muts => {
+  if (!curProb || state.section !== curProb.sec || Date.now() - lastPress > 1500) return;
+  for (const m of muts) for (const n of m.addedNodes) {
+    if (n.nodeType !== 1) continue;
+    const look = n.matches(".note.look") ? n : n.querySelector(".note.look");
+    if (look && !/^(Type a number first|Tap the line to put your dot)/.test(look.textContent.trim())) { probStep().miss++; return; }
+  }
+}).observe(stage, { childList: true, subtree: true });
+setInterval(() => {
+  if (!curProb || state.section !== curProb.sec || document.hidden || state.onBreak || Date.now() - lastActive > 180000) return;
+  curProb.time++; probStep().sec++;
+}, 1000);
+/* her own count, shown at the top of every activity: today's problems right on the first try vs. needing another try */
+const probClean = r => Object.values(r.steps).every(s => !s.miss);
+function dayScore(k) { const rs = probLog.filter(r => r.day === k && r.done), ok = rs.filter(probClean).length; return [ok, rs.length - ok]; }
+(() => { const st = document.createElement("style"); st.textContent = `
+  .score{display:flex;gap:8px 10px;flex-wrap:wrap;justify-content:center;align-items:center;font-weight:600;font-variant-numeric:tabular-nums}
+  .score span{border-radius:99px;padding:6px 14px;font-size:1rem}
+  .score .sc-ok{background:var(--accent-wash);color:var(--accent)}
+  .score .sc-try{background:var(--look-wash);color:var(--ink)}
+  .score .sc-day{color:var(--soft);font-weight:500;padding:6px 0}`; document.head.appendChild(st); })();
+function paintScore() {
+  let s = document.getElementById("score");
+  if (!s) { s = el(`<div id="score" class="score" aria-live="polite"></div>`); document.getElementById("route").after(s); }
+  const [ok, again] = dayScore(dayKey());
+  s.innerHTML = `<span class="sc-day">Today:</span><span class="sc-ok">✓ ${ok} right first try</span><span class="sc-try">↻ ${again} needed another try</span>`;
+}
+{ const r2 = render; render = function () { r2(); paintScore(); }; }
+
+/* ---------- slow down: read first, read the feedback, no rapid guessing ---------- */
+(() => { const st = document.createElement("style"); st.textContent = `
+  #stage.locked button:not(.quiet), #stage.locked input { pointer-events:none; opacity:.45 }
+  .readbar{display:flex;flex-direction:column;gap:6px;align-items:center;font-weight:600;color:var(--soft);text-align:center}
+  .readbar[hidden]{display:none}
+  .readbar .trk{width:min(320px,100%);height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+  .readbar .trk i{display:block;height:100%;width:0;background:var(--accent)}
+  .readbar.slow{color:var(--ink);background:var(--look-wash);border-left:4px solid var(--look);border-radius:10px;padding:10px 14px}`;
+  document.head.appendChild(st); })();
+let lockKey = "", lockT = null, missTimes = [];
+function lockFor(ms, msg, slow) {
+  let bar = document.getElementById("readbar");
+  if (!bar) { bar = el(`<div id="readbar" class="readbar" role="status"><span></span><span class="trk"><i></i></span></div>`); document.getElementById("score").after(bar); }
+  bar.hidden = false; bar.classList.toggle("slow", !!slow); bar.querySelector("span").textContent = msg;
+  const i = bar.querySelector("i"); i.style.transition = "none"; i.style.width = "0"; void i.offsetWidth;
+  i.style.transition = `width ${ms}ms linear`; i.style.width = "100%";
+  stage.classList.add("locked"); clearTimeout(lockT);
+  lockT = setTimeout(() => {
+    stage.classList.remove("locked"); bar.hidden = true;
+    const inp = stage.querySelector("input:not([disabled])"); if (inp) inp.focus();
+  }, ms);
+}
+function unlockNow() { clearTimeout(lockT); stage.classList.remove("locked"); const b = document.getElementById("readbar"); if (b) b.hidden = true; }
+document.addEventListener("keydown", e => { if (stage.classList.contains("locked") && e.key === "Enter") { e.preventDefault(); e.stopPropagation(); } }, true);
+/* a new screen in a problem: read it first (2.5 to 6 seconds, longer for more words) */
+{ const r3 = render; render = function () {
+  r3();
+  if (!state.section || state.step < 1 || state.onBreak || !curProb) { unlockNow(); lockKey = ""; return; }
+  const k = `${curProb.t0}|${state.step}`;
+  if (k === lockKey) return;
+  lockKey = k;
+  const words = (stage.textContent || "").trim().split(/\s+/).length;
+  lockFor(Math.min(6000, Math.max(2500, words * 100)), "Read it first…");
+}; }
+/* a wrong answer: read the message (3 seconds). Two wrong answers within 8 seconds: slow down (10 seconds). */
+new MutationObserver(muts => {
+  if (!curProb || state.section !== curProb.sec || Date.now() - lastPress > 1500) return;
+  const looks = muts.flatMap(m => [...m.addedNodes]).filter(n => n.nodeType === 1)
+    .map(n => n.matches(".note.look") ? n : n.querySelector(".note.look")).filter(Boolean)
+    .filter(n => !/^(Type a number first|Tap the line to put your dot)/.test(n.textContent.trim()));
+  if (!looks.length) return;
+  const now = Date.now(); missTimes = missTimes.filter(t => now - t < 8000); missTimes.push(now);
+  if (missTimes.length >= 2) {
+    const s = probStep(); s.fast = (s.fast || 0) + 1; missTimes = [];
+    lockFor(10000, "Slow down. Read the problem again, out loud if it helps.", true);
+  } else lockFor(3000, "Read the message first…");
+}).observe(stage, { childList: true, subtree: true });
+
 
 function setChrome() {
   const sec = sections[state.section];
@@ -458,7 +570,48 @@ function renderHome() {
   stage.appendChild(c);
   c.querySelectorAll("[data-s]").forEach(b => b.onclick = () => { state.section = b.dataset.s; state.step = 0; render(); });
   renderDaily();
+  renderLog();
   renderBackup();
+}
+
+/* ---------- problem log card (for grown-ups) ---------- */
+function renderLog() {
+  const since = Date.now() - 30 * 864e5, rows = probLog.filter(r => r.t0 >= since);
+  const fmtS = s => s < 60 ? `${s} sec` : `${Math.floor(s / 60)} min ${String(s % 60).padStart(2, "0")} sec`;
+  const pct = (a, b) => b ? `${Math.round(a / b * 100)}%` : "–";
+  const nameOf = r => r.sec === "pip" ? `Help Pip: ${(PIP_TOPICS[r.topic] || {}).label || "mixed"}` : (sections[r.sec] || {}).title || r.sec;
+  const clean = r => Object.values(r.steps).every(s => !s.miss);
+  const groups = {};
+  rows.filter(r => r.done).forEach(r => (groups[nameOf(r)] = groups[nameOf(r)] || []).push(r));
+  const acts = Object.entries(groups).sort((a, b) => b[1].length - a[1].length).map(([name, rs]) => {
+    const steps = {};
+    rs.forEach(r => Object.entries(r.steps).forEach(([k, s]) => {
+      const o = steps[k] || (steps[k] = { n: 0, ok: 0, miss: 0, hints: 0, sec: 0, order: s.order });
+      o.n++; o.ok += s.miss ? 0 : 1; o.miss += s.miss; o.hints += s.hints; o.sec += s.sec;
+    }));
+    const avg = Math.round(rs.reduce((a, r) => a + r.time, 0) / rs.length);
+    return `<details style="border-top:1px solid var(--line);padding:10px 0 4px"><summary style="cursor:pointer"><b>${name}</b> · ${rs.length} done · ${pct(rs.filter(clean).length, rs.length)} right first try · ${fmtS(avg)} each</summary>
+      <div class="tbl-wrap" style="margin-top:8px"><table class="rt">
+        <tr><th scope="col">Step</th><th scope="col">Right first try</th><th scope="col">Wrong tries per problem</th><th scope="col">Hints used</th><th scope="col">Avg time</th></tr>
+        ${Object.entries(steps).sort((a, b) => a[1].order - b[1].order).map(([k, o]) =>
+          `<tr><th scope="row">${k}</th><td>${pct(o.ok, o.n)}</td><td>${+(o.miss / o.n).toFixed(1)}</td><td>${o.hints}</td><td>${fmtS(Math.round(o.sec / o.n))}</td></tr>`).join("")}
+      </table></div></details>`;
+  }).join("");
+  const when = t => new Date(t).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  const rushed = r => Object.values(r.steps).reduce((a, s) => a + (s.fast || 0), 0);
+  const result = r => (!r.done ? "Left unfinished" : clean(r) ? "Right first try"
+    : Object.entries(r.steps).filter(([, s]) => s.miss).map(([k, s]) => `${s.miss} wrong at ${k}`).join(", ")) + (rushed(r) ? ` · rushed ${rushed(r)}×` : "");
+  const recent = rows.slice(-25).reverse();
+  stage.appendChild(el(`<details class="card backup">
+    <summary>Problem log · accuracy and time, last 30 days</summary>
+    <p class="sub">Every problem she works on: how long it took, and whether each step was right on the first try. A wrong try is any time the app showed a "look again" message. Time pauses during breaks and when she isn't tapping. Tap an activity to see each step.</p>
+    ${acts || "<p>No finished problems yet.</p>"}
+    ${recent.length ? `<span class="label" style="margin-top:8px">Recent problems</span>
+    <div class="tbl-wrap"><table class="rt">
+      <tr><th scope="col">When</th><th scope="col">Activity</th><th scope="col">Problem</th><th scope="col">Time</th><th scope="col">Result</th></tr>
+      ${recent.map(r => `<tr><td style="font-size:.85rem">${when(r.t0)}</td><th scope="row">${nameOf(r)}</th><td style="font-size:.85rem;text-align:left">${r.label}</td><td style="font-size:.9rem">${fmtS(r.time)}</td><td style="font-size:.85rem;text-align:left">${result(r)}</td></tr>`).join("")}
+    </table></div>` : ""}
+  </details>`));
 }
 
 /* ---------- daily totals card (for grown-ups) ---------- */
@@ -474,15 +627,15 @@ function renderDaily() {
     <summary>Daily totals · Today: ${fmtT(t.sec)}, ${t.probs} problem${t.probs === 1 ? "" : "s"}</summary>
     <p class="sub">Time counts only while the app is open and being used. It pauses during breaks, when the app is in the background, and after 3 minutes with no tapping or typing.</p>
     ${days.length ? `<div class="tbl-wrap"><table class="rt">
-      <tr><th scope="col">Day</th><th scope="col">Time</th><th scope="col">Problems</th></tr>
-      ${days.map(k => `<tr><th scope="row">${label(k)}</th><td>${fmtT(state.daily[k].sec)}</td><td>${state.daily[k].probs}</td></tr>`).join("")}
+      <tr><th scope="col">Day</th><th scope="col">Time</th><th scope="col">Problems</th><th scope="col">Right first try</th><th scope="col">Needed another try</th></tr>
+      ${days.map(k => `<tr><th scope="row">${label(k)}</th><td>${fmtT(state.daily[k].sec)}</td><td>${state.daily[k].probs}</td><td>${dayScore(k)[0]}</td><td>${dayScore(k)[1]}</td></tr>`).join("")}
     </table></div>` : "<p>Nothing yet today.</p>"}
   </details>`));
 }
 
 /* ---------- backup code (same idea as the science app) ---------- */
 function makeBackupCode() {
-  try { return btoa(unescape(encodeURIComponent(JSON.stringify({ app: "math", v: 1, saved: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }), solved: state.solved, pipDone: state.pipDone, daily: state.daily })))); }
+  try { return btoa(unescape(encodeURIComponent(JSON.stringify({ app: "math", v: 1, saved: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }), solved: state.solved, pipDone: state.pipDone, daily: state.daily, log: probLog.slice(-200) })))); }
   catch (e) { return ""; }
 }
 function renderBackup() {
@@ -518,6 +671,11 @@ function renderBackup() {
       saveDaily();
     }
     lastTotal = sumSolved();
+    if (Array.isArray(data.log)) {
+      const seen = new Set(probLog.map(r => r.t0));
+      data.log.forEach(r => { if (r && r.t0 && r.steps && !seen.has(r.t0)) probLog.push(r); });
+      probLog.sort((a, b) => a.t0 - b.t0); saveLog();
+    }
     save(); render();
     const m = document.querySelector("#rsmsg");
     if (m) { document.querySelector("details.backup").open = true; m.textContent = `Restored from the backup saved ${data.saved || "earlier"}.`; }

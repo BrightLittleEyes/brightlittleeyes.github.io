@@ -857,7 +857,7 @@ function ruthBoard(c){
     {id:'r_morning', name:'Morning Warm-Up', sub:'This Is the Day · Psalm 118:24', color:'#D63384', icon:'sun',
       items:[take('breakfast','Breakfast & Morning Prep'), take('carpool_am','Carpool'), take('attendance','Mark Attendance'), take('bible','Bible Block')]},
     {id:'r_subjects', name:'My Subjects', sub:'You pick the order!', color:'#8E44AD', icon:'book', reorder:true,
-      items:[{...take('math','Math Block','Math lesson and practice.'), t:'Math Block'}, take('language','Language & Writing Block'), {id:'r_reading', t:'Reading Block', d:'Read on your own.', timer:1200, endMsg:'Reading time is finished. Great reading!'}, take('history','History Block'), take('science','Science Block')]},
+      items:[{...take('math','Math Block','Math lesson and practice.'), t:'Math Block'}, {...take('language','Language & Writing Block','Grammar, journaling, or writing assignments.'), t:'Language & Writing Block', d:'Grammar, journaling, or writing assignments.'}, {id:'r_reading', t:'Reading Block', d:'Read on your own.', timer:1200, endMsg:'Reading time is finished. Great reading!'}, take('history','History Block'), take('science','Science Block')]},
     {id:'r_lunch', name:'Lunch Break', sub:'Make a Joyful Noise · Psalm 100:1', color:'#16A085', icon:'apple',
       items:[take('lunch','Lunch'), {id:'r_m1', t:'Helping Hands', slot:'mech'}]},
     {id:'r_momme', name:'Mom & Me', sub:'Just the two of us', color:'#C2185B', icon:'heart',
@@ -1065,6 +1065,18 @@ function normalizeMain(d){
       else c.blocks[0].items.push(it);
     }
     c.v = 26;
+  }
+  if(c.v < 27){                       // Bekah: Language (her outside program) and Writing (the Writing app) are two blocks
+    c.blocks.forEach(b=>{ const n=b.items.findIndex(i=>i.id==='language'); if(n<0) return;
+      const it=b.items[n];
+      if(/language\s*&\s*writing/i.test(it.t||'')) it.t='Language Block';
+      if(!it.d || /grammar, journaling/i.test(it.d)) it.d='Your language program.';
+      if(it.app==='writing6') delete it.app;
+      if(!c.blocks.some(x=>x.items.some(i=>i.id==='writing')))
+        b.items.splice(n+1,0,{id:'writing', t:'Writing Block', d:'Open Writing from its icon.', app:'writing6'});
+      b.items.forEach(i=>{ if(i.endMsg) i.endMsg=i.endMsg.replace(/Language & Writing/,'Language'); });
+    });
+    c.v = 27;
   }
   return c;
 }

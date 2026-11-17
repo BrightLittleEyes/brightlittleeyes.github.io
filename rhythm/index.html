@@ -307,7 +307,7 @@ window.FIREBASE_CONFIG = {
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
-const BUILD = '2026-11-17f';   // change this with every update, so open boards reload to the new version
+const BUILD = '2026-11-17g';   // change this with every update, so open boards reload to the new version
 const COL = 'rhythm_days', CFG_DOC = 'rhythm_config/main';
 
 /* ---------- the starting board (used until you save your own) ---------- */
@@ -1575,9 +1575,12 @@ async function copyYesterday(){
 /* ---------- editor (parent only) ---------- */
 function openEditor(){
   const c=clone(CFG); delete c.pwKid; delete c.pwParent;
+  /* items whose last day ("until") has passed are left out, so saving takes them off for good */
+  const today=keyOf(new Date()), drop=bl=>(bl||[]).forEach(b=>{ b.items=(b.items||[]).filter(i=>!(i.until && i.until<today)); });
   const own=OWN();
   if(own){ c._main={blocks:c.blocks, satBlocks:c.satBlocks, sunBlocks:c.sunBlocks, tags:c.tags};
     c.blocks=clone(own.blocks); c.satBlocks=clone(own.satBlocks||[]); c.sunBlocks=clone(own.sunBlocks||[]); c.tags=clone(own.tags); }
+  [c, c._main, ...Object.values(c.kids||{})].forEach(k=>{ if(k) ['blocks','satBlocks','sunBlocks'].forEach(r=>drop(k[r])); });
   S.edit=c; S.edRoot = dayRoot(S.date); renderEditor(); show('editor');
   $('#editor .ed-top h2').textContent = `Edit ${kidLabel(S.kid)}'s board`;
 }

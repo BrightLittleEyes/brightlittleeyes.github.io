@@ -245,6 +245,25 @@ details.backup textarea { font: .8rem/1.4 ui-monospace, Menlo, monospace; width:
 .break h2 { font-size: 1.6rem; }
 footer { color: var(--soft); font-size: .85rem; text-align: center; }
 @media (prefers-reduced-motion: reduce) { .blk { animation: none; } button, .meter span { transition: none; } }
+
+/* ---- 30-minute math timer (lives here so she never has to leave the app) ---- */
+.mt{display:inline-flex;align-items:center;gap:8px;border:2px solid var(--accent);background:var(--card);color:var(--ink);
+  border-radius:999px;padding:6px 8px 6px 14px;font:600 18px var(--font-body);min-height:48px}
+.mt .clk{font:700 22px var(--font-display);font-variant-numeric:tabular-nums;min-width:4.2ch;text-align:right}
+.mt button{border:0;border-radius:999px;background:var(--accent);color:var(--accent-ink);font:600 16px var(--font-body);min-height:38px;padding:0 16px;cursor:pointer}
+.mt button:hover:not(:disabled){background:var(--accent);filter:brightness(1.06)}
+.mt button{white-space:nowrap}
+.row > .mt{flex:0 0 auto}
+.mt.paused{border-style:dashed}
+.mt.low .clk{color:var(--look)}
+.mtdone{position:fixed;inset:0;background:rgba(20,30,28,.5);display:flex;align-items:center;justify-content:center;z-index:100;padding:16px}
+.mtdone[hidden]{display:none}
+.mtcard{background:var(--card);color:var(--ink);border-radius:24px;padding:28px 24px;max-width:420px;width:100%;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.25)}
+.mtcard .big{font-size:56px;line-height:1}
+.mtcard h2{font:700 30px var(--font-display);margin:8px 0 4px}
+.mtcard p{margin:0 0 20px;color:var(--soft);font-size:18px}
+.mtcard button:hover:not(:disabled){background:var(--accent)}
+.mtcard button{border:0;border-radius:16px;background:var(--accent);color:var(--accent-ink);font:700 22px var(--font-body);min-height:60px;width:100%;cursor:pointer}
 </style>
 </head>
 <body>
@@ -259,6 +278,7 @@ footer { color: var(--soft); font-size: .85rem; text-align: center; }
     <div class="row">
       <button class="quiet" id="homeBtn" type="button" hidden>Home</button>
       <button class="quiet" id="breakBtn" type="button">Take a break</button>
+      <div class="mt" id="mt" role="timer" aria-live="off"><span aria-hidden="true">⏱</span><span class="clk" id="mtClk">30:00</span><button type="button" id="mtBtn">Start</button></div>
     </div>
   </div>
 
@@ -268,6 +288,62 @@ footer { color: var(--soft); font-size: .85rem; text-align: center; }
 
   <footer id="tally"></footer>
 </div>
+<div class="mtdone" id="mtDone" hidden role="alertdialog" aria-modal="true" aria-labelledby="mtDoneT">
+  <div class="mtcard"><div class="big" aria-hidden="true">🎉</div><h2 id="mtDoneT">Math time is done!</h2>
+    <p>Great work. You can go back to your rhythm board now.</p><button type="button" id="mtOk">OK</button></div>
+</div>
+<script>
+/* 30-minute math timer. It is saved on this device, so it keeps going if the app reloads. */
+(function(){
+  const LEN = 30*60*1000, KEY = 'mathTimer';
+  const $ = id => document.getElementById(id);
+  let st = {}; try{ st = JSON.parse(localStorage.getItem(KEY)||'{}')||{}; }catch(e){}
+  // a timer from an earlier day starts fresh
+  const today = new Date().toDateString(); if(st.day && st.day!==today) st = {};
+  const keep = () => { st.day = today; try{ localStorage.setItem(KEY, JSON.stringify(st)); }catch(e){} };
+  let AC = null, ring = null, wake = null;
+  const unlock = () => { try{ AC = AC || new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==='suspended') AC.resume(); }catch(e){} };
+  document.addEventListener('pointerdown', unlock, {capture:true});
+  function chime(){
+    if(!AC) return;
+    const t0 = AC.currentTime + .02;
+    [[659.25,0],[783.99,.28],[1046.5,.56]].forEach(([f,dt])=>{
+      const o=AC.createOscillator(), g=AC.createGain(); o.type='sine'; o.frequency.value=f;
+      g.gain.setValueAtTime(0.0001,t0+dt); g.gain.exponentialRampToValueAtTime(0.35,t0+dt+.03); g.gain.exponentialRampToValueAtTime(0.0001,t0+dt+.9);
+      o.connect(g).connect(AC.destination); o.start(t0+dt); o.stop(t0+dt+1);
+    });
+  }
+  const left = () => st.end ? Math.max(0, st.end-Date.now()) : (st.paused!=null ? st.paused : LEN);
+  const fmt = ms => { const s=Math.ceil(ms/1000); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); };
+  async function setWake(on){ try{ if(on && !wake && navigator.wakeLock){ wake=await navigator.wakeLock.request('screen'); wake.addEventListener('release',()=>wake=null); } if(!on && wake){ wake.release(); wake=null; } }catch(e){} }
+  function paint(){
+    const ms = left();
+    $('mtClk').textContent = fmt(ms);
+    $('mt').classList.toggle('paused', st.paused!=null && !st.end);
+    $('mt').classList.toggle('low', !!st.end && ms<=60000);
+    $('mtBtn').textContent = st.end ? 'Pause' : st.paused!=null ? 'Resume' : st.finished ? 'Start again' : 'Start';
+    $('mt').setAttribute('aria-label', 'Math timer, '+fmt(ms)+' left');
+  }
+  function finish(){
+    st = {finished:true}; keep(); paint(); setWake(false);
+    $('mtDone').hidden = false; setTimeout(()=>$('mtOk').focus(),0);
+    let n = 0; chime(); clearInterval(ring);
+    ring = setInterval(()=>{ if(++n>=20){ clearInterval(ring); return; } chime(); }, 3000);   // every 3 seconds, up to 1 minute
+    try{ const u=new SpeechSynthesisUtterance('Math time is done. Great work!'); u.rate=.95; speechSynthesis.speak(u); }catch(e){}
+  }
+  $('mtBtn').addEventListener('click', ()=>{
+    unlock();
+    if(st.end){ st = {paused:left()}; setWake(false); }
+    else if(st.paused!=null){ st = {end:Date.now()+st.paused}; setWake(true); }
+    else { st = {end:Date.now()+LEN}; setWake(true); }
+    keep(); paint();
+  });
+  $('mtOk').addEventListener('click', ()=>{ clearInterval(ring); $('mtDone').hidden = true; try{ speechSynthesis.cancel(); }catch(e){} });
+  setInterval(()=>{ if(st.end && Date.now()>=st.end) finish(); else if(st.end) paint(); }, 500);
+  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ if(st.end) setWake(true); paint(); } });
+  if(st.end && Date.now()>=st.end) finish(); else { if(st.end) setWake(true); paint(); }
+})();
+</script>
 
 <script>
 /* ---------- shared ---------- */
@@ -286,6 +362,7 @@ const sections = {
   tbl:  { title: "Fill the Table", sub: "Find the price for 1, then fill in every blank.", steps: ["Pick", "Price for 1", "Fill in", "Check"] },
   dec:  { title: "Decimal Times", sub: "Estimate, multiply without the dots, then put the dot back.", steps: ["Pick", "Estimate", "Multiply", "Dot", "Check"] },
   frac: { title: "Fraction Times", sub: "Estimate, multiply straight across, then simplify.", steps: ["Pick", "Estimate", "Multiply", "Simplify", "Check"] },
+  fof:  { title: "Fraction of a Number", sub: "Find 1 group, then take as many groups as the top number says.", steps: ["Pick", "Guess", "1 group", "Take groups", "Check"] },
   d2f:  { title: "Decimal to Fraction", sub: "Read the place, write it over 10, 100, or 1000, then simplify.", steps: ["Pick", "Read it", "Write it", "Simplify", "Check"] },
   fdiv: { title: "Fraction Divide", sub: "Guess first. Keep, change, flip. Then multiply and simplify.", steps: ["Pick", "Guess", "Flip", "Multiply", "Simplify", "Check"] },
   est:  { title: "Round & Estimate", sub: "Round each number first, then add or subtract.", steps: ["Pick", "Round", "Estimate", "Check"] },
@@ -295,11 +372,10 @@ const sections = {
   mean: { title: "What Does It Mean?", sub: "The math is already done. You find what each number means.", steps: ["Pick a story", "Find the numbers", "Match the math"] }
 };
 
-let state = { section: null, step: 0, onBreak: false, solved: { trip: 0, ops: 0, rate: 0, pip: 0, mean: 0, lcm: 0, eq: 0, tbl: 0, dec: 0, frac: 0, est: 0, mix: 0, fdp: 0, area: 0, fdiv: 0, d2f: 0 }, dfr: null, dfLevel: "hun", fv: null, fvLevel: "fw", ar: null, arKind: "see", fd: null, fdKind: "mix", mx: null, mixMode: "toImp", es: null, esLevel: "ten", t: null, dc: null, fr: null, frLevel: "easy", lc: null, lcSize: "easy", e: null, eqLevel: "pos",
+let state = { section: null, step: 0, onBreak: false, solved: { trip: 0, ops: 0, rate: 0, pip: 0, mean: 0, lcm: 0, eq: 0, tbl: 0, dec: 0, frac: 0, est: 0, mix: 0, fdp: 0, area: 0, fdiv: 0, d2f: 0, fof: 0 }, fo: null, foLevel: "small", dfr: null, dfLevel: "hun", fv: null, fvLevel: "fw", ar: null, arKind: "see", fd: null, fdKind: "mix", mx: null, mixMode: "toImp", es: null, esLevel: "ten", t: null, dc: null, fr: null, frLevel: "easy", lc: null, lcSize: "easy", e: null, eqLevel: "pos",
   p: null, size: "small", q: null, level: "easy", r: null, pp: null, m: null };
-state.pipDone = {};
-try { const s = JSON.parse(localStorage.getItem("mathPlanner")); if (s && s.solved) state.solved = Object.assign(state.solved, s.solved); if (s && s.pipDone) state.pipDone = s.pipDone; } catch (e) {}
-function save() { try { localStorage.setItem("mathPlanner", JSON.stringify({ solved: state.solved, pipDone: state.pipDone })); } catch (e) {} }
+try { const s = JSON.parse(localStorage.getItem("mathPlanner")); if (s && s.solved) state.solved = Object.assign(state.solved, s.solved); } catch (e) {}
+function save() { try { localStorage.setItem("mathPlanner", JSON.stringify({ solved: state.solved })); } catch (e) {} }
 
 function setChrome() {
   const sec = sections[state.section];
@@ -327,6 +403,7 @@ function render() {
   if (state.section === "tbl") return [tblPick, tblUnit, tblFill, tblCheck][state.step]();
   if (state.section === "dec") return [decPick, decEst, decMult, decDot, decCheck][state.step]();
   if (state.section === "frac") return [frPick, frEst, frMult, frSimp, frCheck][state.step]();
+  if (state.section === "fof") return [fofPick, fofGuess, fofOne, fofTake, fofCheck][state.step]();
   if (state.section === "d2f") return [dfPick, dfRead, dfWrite, dfSimp, dfCheck][state.step]();
   if (state.section === "fdiv") return [fdPick, fdGuess, fdFlip, fdMult, fdSimp, fdCheck][state.step]();
   if (state.section === "est") return [estPick, estRound, estAdd, estDone][state.step]();
@@ -341,7 +418,7 @@ const HOME_GROUPS = [["rate", "Rates & tables"], ["num", "Numbers"], ["frac", "F
 const HOME_TILES = [
   ["trip", "Trip Planner", "mph", "rate"], ["rate", "Who's Fastest?", "÷1", "rate"], ["tbl", "Fill the Table", "▦", "rate"],
   ["est", "Round & Estimate", "≈", "num"], ["dec", "Decimal Times", "0.1", "num"], ["fdp", "Fractions, Decimals & Percents", "%", "num"], ["lcm", "Least Common Multiple", "LCM", "num"], ["area", "Area", "ft²", "num"],
-  ["frac", "Fraction Times", "½×", "frac"], ["fdiv", "Fraction Divide", "½÷", "frac"], ["d2f", "Decimal to Fraction", ".5=½", "frac"], ["mix", "Mixed Numbers", "4⅝", "frac"],
+  ["frac", "Fraction Times", "½×", "frac"], ["fdiv", "Fraction Divide", "½÷", "frac"], ["d2f", "Decimal to Fraction", ".5=½", "frac"], ["fof", "Fraction of a Number", "⅚ of", "frac"], ["mix", "Mixed Numbers", "4⅝", "frac"],
   ["ops", "Order of Operations", "( )", "alg"], ["eq", "Solve & Plot", "x=", "alg"],
   ["mean", "What Does It Mean?", "?", "think"]
 ];
@@ -368,7 +445,7 @@ function renderHome() {
 
 /* ---------- backup code (same idea as the science app) ---------- */
 function makeBackupCode() {
-  try { return btoa(unescape(encodeURIComponent(JSON.stringify({ app: "math", v: 1, saved: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }), solved: state.solved, pipDone: state.pipDone })))); }
+  try { return btoa(unescape(encodeURIComponent(JSON.stringify({ app: "math", v: 1, saved: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }), solved: state.solved })))); }
   catch (e) { return ""; }
 }
 function renderBackup() {
@@ -397,7 +474,6 @@ function renderBackup() {
     try { data = JSON.parse(decodeURIComponent(escape(atob(d.querySelector("#rs").value.trim())))); } catch (e) { msg.textContent = "That code isn't a valid backup. Check that the whole code was pasted."; return; }
     if (!data || data.app !== "math" || !data.solved) { msg.textContent = "That backup code is from a different app. Use a code copied from this math app."; return; }
     Object.keys(state.solved).forEach(k => { if (typeof data.solved[k] === "number") state.solved[k] = data.solved[k]; });
-    if (data.pipDone && typeof data.pipDone === "object") state.pipDone = data.pipDone;
     save(); render();
     const m = document.querySelector("#rsmsg");
     if (m) { document.querySelector("details.backup").open = true; m.textContent = `Restored from the backup saved ${data.saved || "earlier"}.`; }
@@ -1446,8 +1522,72 @@ const PIP_TOPICS = {
            ["10", false, "That's what Pip did. 10 is for tenths, when there's 1 digit after the dot."],
            ["1000", false, "1000 is for thousandths, when there are 3 digits after the dot."]],
       fixed: `<b>${n}/${dn}.</b> ${s} = ${t}/100, and ${t} ÷ ${g} = ${n}, 100 ÷ ${g} = ${dn}. Same number on top and bottom, so the size stays ${s}.` };
+  } },
+  fof: { label: "Fraction of a number", sym: "⅚ of", make() {
+    let a, b, u;
+    do { b = rint(3, 8); a = rint(2, b - 1); u = rint(4, 30); } while (gcd(a, b) !== 1);
+    const N = b * u, ans = a * u, st = pick(FOF_STORIES), right = Math.random() < .25;
+    const kind = N % a === 0 ? pick(["one", "flip"]) : "one", flip = N / a * b;
+    const good = [{ label: "Step 1: Find 1 group", math: `${N} ÷ ${b} = ${u}` }, { label: `Step 2: Take ${a} groups`, math: `${a} × ${u} = ${ans}` }];
+    const steps = good.map(x => ({ ...x }));
+    let bad = ans, w = -1;
+    if (!right && kind === "one") { steps[1] = { label: "Step 2: The answer", math: `So it's ${u}` }; bad = u; w = 1; }
+    if (!right && kind === "flip") { steps[0] = { label: "Step 1: Find 1 group", math: `${N} ÷ ${a} = ${N / a}` }; steps[1] = { label: `Step 2: Take the groups`, math: `${b} × ${N / a} = ${flip}` }; bad = flip; w = 0; }
+    return { q: `${st.text(N, `${a}/${b}`)} ${st.q}`, good, steps, wrong: w,
+      claim: `I think the answer is <b>${bad} ${st.items}</b>.`,
+      offRight: w === 1 ? `Good eye. ${u} is only 1 of the ${b} groups. ${a}/${b} means ${a} groups, so the answer should be bigger.`
+                        : `Good eye. ${flip} is more than the ${N} ${st.items} there were in the first place! A part can't be bigger than the whole.`,
+      yesWrong: w === 1 ? `Let's check. ${N} ÷ ${b} = ${u} is the size of just 1 group. ${a}/${b} means ${a} of those groups. Is ${u} enough?`
+                        : `Let's check the size. There were only ${N} ${st.items}. Can ${a}/${b} of them be ${flip}?`,
+      yesRight: `You checked it. ${a}/${b} is ${2 * a > b ? "more" : "less"} than half, and ${ans} is ${2 * a > b ? "more" : "less"} than half of ${N}. ${b} groups of ${u} make ${N}, and ${a} of them make ${ans}.`,
+      offWrong: `Let's check together. ${N} ÷ ${b} = ${u} in each group. ${a} groups is ${a} × ${u} = ${ans}. Does that match Pip?`,
+      stepOk: i => i === 0 ? `Step 1 is right: ${b} groups of ${u} make ${N}. Look at the next step.` : `Step 2 did its math with the number from Step 1. Look at the step before it.`,
+      fixQ: w === 1 ? `I found 1 group: ${u}. But ${a}/${b} means more than 1 group. What should Step 2 be?`
+                    : `In Step 1 I divided by ${a}, the top number. The bottom number tells how many equal groups. What should I divide by?`,
+      fixes: w === 1
+        ? [[`${a} × ${u}: take ${a} groups`, true], [`Stop at ${u}`, false, `That's what Pip did. ${u} is just 1 group, and we need ${a}.`], [`${N} − ${u}`, false, `Let's test it: that takes away 1 group and keeps the other ${b - 1}. We want ${a} groups.`]]
+        : [[`÷ ${b}, the bottom number`, true], [`÷ ${a}, the top number`, false, `That's what Pip did. The top number tells how many groups to take, not how many to cut.`], [`× ${b}`, false, `Let's test it: that would make even more ${st.items} than we started with.`]],
+      fixed: `<b>${ans} ${st.items}.</b> ${N} ÷ ${b} = ${u} in each group, then ${a} × ${u} = ${ans}. It's ${2 * a > b ? "more" : "less"} than half of ${N}, so it fits.` };
   } }
 };
+
+/* Pip's decimal-to-fraction topic also uses thousandths, like 0.525 */
+function pipD2fThou() {
+  const t = pick([125, 175, 225, 275, 325, 375, 425, 475, 525, 575, 625, 675, 725, 775, 825, 875, 925, 975]);
+  const g = gcd(t, 1000), s = "0." + t, n = t / g, dn = 1000 / g, right = Math.random() < .25, kind = pick(["diff", "diff", "place"]);
+  const good = [{ label: "Step 1: Write it over the place", math: `${s} is ${t} thousandths, so ${s} = ${t}/1000` },
+    { label: "Step 2: Simplify", math: `${t} ÷ ${g} = ${n} on top, 1000 ÷ ${g} = ${dn} on the bottom` }];
+  const steps = good.map(x => ({ ...x }));
+  let bad = `${n}/${dn}`, w = -1, f2 = g, badVal = s;
+  if (!right && kind === "diff") {
+    f2 = pick([10, 20, 40, 100, 125, 200, 250].filter(x => x !== g)); w = 1;
+    bad = `${n}/${1000 / f2}`; badVal = String(+(n / (1000 / f2)).toFixed(3));
+    steps[1].math = `${t} ÷ ${g} = ${n} on top, 1000 ÷ ${f2} = ${1000 / f2} on the bottom`;
+  }
+  if (!right && kind === "place") {
+    const g1 = gcd(t, 100); w = 0; bad = `${t / g1}/${100 / g1}`; badVal = String(t / 100);
+    steps[0] = { label: "Step 1: Write it over the place", math: `${s} = ${t}/100` };
+    steps[1].math = `${t} ÷ ${g1} = ${t / g1} on top, 100 ÷ ${g1} = ${100 / g1} on the bottom`;
+  }
+  return { q: `Write <b>${s}</b> as a fraction in simplest form.`, good, steps, wrong: w,
+    claim: `I think ${s} = <b>${bad}</b>.`,
+    offRight: `Good eye. Let's test it: ${bad} is the same as ${badVal}, not ${s}. ${w === 0 ? "That's more than 1 whole, but " + s + " starts with 0!" : "The size changed somewhere!"}`,
+    yesWrong: w === 1 ? `Let's test it. ${bad} as a decimal is ${badVal}. Is that ${s}?` : `Let's check the size. ${s} starts with 0, so it's less than 1 whole. Is ${bad} less than 1?`,
+    yesRight: `You checked it. ${n}/${dn} = ${t}/1000 = ${s}. It comes right back, so it's the same amount.`,
+    offWrong: `Let's check together. Turn ${n}/${dn} back into thousandths: × ${g} on top and bottom gives ${t}/1000. Is that ${s}?`,
+    stepOk: i => i === 0 ? `Step 1 is right: 3 digits after the dot means thousandths, so ${s} = ${t}/1000.` : `Step 2 simplified the fraction Step 1 gave it. Look at the step before it.`,
+    fixQ: w === 1 ? `In Step 2 I divided the top by ${g} and the bottom by ${f2}. What should I divide the bottom by?`
+                  : `In Step 1 I put ${t} over 100. ${s} has 3 digits after the dot. What should the bottom be?`,
+    fixes: w === 1
+      ? [[`÷ ${g}, the same as the top`, true],
+         [`÷ ${f2}, like Pip did`, false, `That's what Pip did. Dividing the top and bottom by different numbers changes the size of the fraction.`],
+         [`Don't divide the bottom at all`, false, `Let's test it: ${n}/1000 is only ${n / 1000}. Whatever happens to the top has to happen to the bottom.`]]
+      : [["1000, because 3 digits means thousandths", true],
+         ["100", false, "That's what Pip did. 100 is for hundredths, when there are 2 digits after the dot."],
+         ["10", false, "10 is for tenths, when there's 1 digit after the dot."]],
+    fixed: `<b>${n}/${dn}.</b> ${s} = ${t}/1000, and ${t} ÷ ${g} = ${n}, 1000 ÷ ${g} = ${dn}. Same number on top and bottom, so the size stays ${s}.` };
+}
+{ const hun = PIP_TOPICS.d2f.make; PIP_TOPICS.d2f.make = () => Math.random() < .5 ? hun() : pipD2fThou(); }
 
 function pipStart(topic) {
   const key = topic === "any" ? pick(Object.keys(PIP_TOPICS)) : topic;
@@ -1457,26 +1597,14 @@ const pipWork = (pp, fixed = false) => `<div><span class="label">Pip's work</spa
   `<div class="step${fixed ? " fixed" : ""}"><small>${s.label}</small><b>${s.math}</b></div>`).join("")}</div></div>`;
 const pipQ = pp => `<p class="story">${pp.q}</p>`;
 
-/* Pip offers the 2 topics she has helped with the least, so every topic comes around. */
-function pipOffer() {
-  if (state.pipOffer) return state.pipOffer;
-  const done = k => state.pipDone[k] || 0;
-  const keys = Object.keys(PIP_TOPICS).map(k => [k, done(k), Math.random()]).sort((a, b) => a[1] - b[1] || a[2] - b[2]).map(x => x[0]);
-  return (state.pipOffer = keys.slice(0, 2));
-}
 function pipMeet() {
-  const keys = Object.keys(PIP_TOPICS), counts = keys.map(k => state.pipDone[k] || 0), low = Math.min(...counts);
-  const round = low + 1, helped = counts.filter(n => n > low).length;
   const c = el(`<section class="card">
-    ${pipSay("Hi! I'm Pip. I'm still learning math, and sometimes my circuits get tangled. Will you be my teacher and check my work? Which one should I try?")}
+    ${pipSay("Hi! I'm Pip. I'm still learning math, and sometimes my circuits get tangled. Will you be my teacher and check my work? What should I try?")}
     <div class="tiles small" id="topics"></div>
-    <p class="sub">Round ${round}: you've helped Pip with ${helped} of ${keys.length} topics. When you've done them all, a new round starts.</p>
-    <div class="meter"><span style="width:${helped / keys.length * 100}%"></span></div>
   </section>`);
   stage.appendChild(c);
-  pipOffer().forEach(k => {
-    const t = PIP_TOPICS[k];
-    const b = el(`<button class="tile" type="button" style="--c:var(--g-think)"><span class="sym">${t.sym}</span><span class="nm">${t.label}</span></button>`);
+  [...Object.entries(PIP_TOPICS).map(([k, t]) => [k, t.label, t.sym]), ["any", "Surprise me", "?!"]].forEach(([k, label, sym]) => {
+    const b = el(`<button class="tile" type="button" style="--c:var(--g-think)${k === "any" ? ";grid-column:1/-1" : ""}"><span class="sym">${sym}</span><span class="nm">${label}</span></button>`);
     b.onclick = () => { pipStart(k); state.step = 1; render(); };
     c.querySelector("#topics").appendChild(b);
   });
@@ -1558,12 +1686,10 @@ function pipFix() {
 }
 function pipNextRow() {
   const row = el(`<div class="row" style="margin-top:10px"></div>`);
-  const again = el(`<button class="primary" type="button">Help Pip again</button>`);
-  again.onclick = () => {
-    state.solved.pip++; state.pipDone[state.pp.key] = (state.pipDone[state.pp.key] || 0) + 1;
-    state.pipOffer = null; save(); state.step = 0; render();
-  };
-  row.append(again); return row;
+  const again = el(`<button class="primary" type="button">Help Pip again</button>`), other = el(`<button type="button">Pick a different topic</button>`);
+  again.onclick = () => { state.solved.pip++; save(); pipStart(state.pp.topic); state.step = 1; render(); };
+  other.onclick = () => { state.solved.pip++; save(); state.step = 0; render(); };
+  row.append(again, other); return row;
 }
 
 /* ---------- what does it mean? (concept first) ---------- */
@@ -3181,6 +3307,156 @@ function dfCheck() {
   c.querySelector("#chk").onclick = check;
   input.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
   input.focus();
+}
+
+/* ---------- fraction of a number (word problems) ---------- */
+const FOF_STORIES = [
+  { items: "copies", text: (N, f) => `A bookstore had <b>${N} copies</b> of a magazine. Yesterday the bookstore sold <b>${f}</b> of these copies.`, q: "How many copies were sold yesterday?" },
+  { items: "students", text: (N, f) => `A school has <b>${N} students</b>. <b>${f}</b> of them ride the bus.`, q: "How many students ride the bus?" },
+  { items: "cookies", text: (N, f) => `A baker made <b>${N} cookies</b>. <b>${f}</b> of them have sprinkles.`, q: "How many cookies have sprinkles?" },
+  { items: "apples", text: (N, f) => `A farmer picked <b>${N} apples</b>. <b>${f}</b> of them were red.`, q: "How many apples were red?" },
+  { items: "books", text: (N, f) => `A library shelf holds <b>${N} books</b>. <b>${f}</b> of them are checked out.`, q: "How many books are checked out?" },
+  { items: "flowers", text: (N, f) => `A garden has <b>${N} flowers</b>. <b>${f}</b> of them are tulips.`, q: "How many flowers are tulips?" }
+];
+function makeFof(level) {
+  for (let i = 0; i < 5000; i++) {
+    const b = level === "small" ? rint(3, 6) : rint(3, 12), a = rint(1, b - 1), u = level === "small" ? rint(2, 10) : rint(5, 30);
+    if (gcd(a, b) !== 1) continue;
+    const story = pick(FOF_STORIES), N = b * u;
+    return { level, a, b, u, N, ans: a * u, story, est: null, found: false };
+  }
+}
+const fofText = f => `<p class="story">${f.story.text(f.N, `${f.a}/${f.b}`)} ${f.story.q}</p>`;
+function fofBar(f) {
+  return `<div class="card" style="padding:14px;gap:8px">
+    <div class="bar-track" style="gap:4px">${Array.from({ length: f.b }, (_, i) =>
+      `<i style="width:auto;min-width:46px;height:42px;padding:0 6px;font-size:.85rem;${i < f.a ? "" : "background:var(--bg);color:var(--soft);outline:2px dashed var(--line);outline-offset:-2px"}">${f.found ? f.u : "?"}</i>`).join("")}</div>
+    <p class="sub" style="margin:0">All ${f.N} ${f.story.items}, cut into ${f.b} equal groups. The ${f.a} shaded ${f.a === 1 ? "group is" : "groups are"} ${f.a}/${f.b}.</p>
+  </div>`;
+}
+
+function fofPick() {
+  const c = el(`<section class="card">
+    <h2>Pick a level</h2>
+    <div class="choices">
+      <button class="home-pick" type="button" data-l="small"><strong>Smaller numbers</strong><span>Like 2/3 of 12</span></button>
+      <button class="home-pick" type="button" data-l="big"><strong>Bigger numbers</strong><span>Like 5/6 of 180</span></button>
+    </div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelectorAll("[data-l]").forEach(b => b.onclick = () => { state.foLevel = b.dataset.l; state.fo = makeFof(b.dataset.l); state.step = 1; render(); });
+}
+
+function fofGuess() {
+  const f = state.fo, more = 2 * f.a > f.b, half = f.N / 2;
+  const c = el(`<section class="card">
+    ${fofText(f)}
+    <h2>Before any math: is the answer more than half of ${f.N}, or less?</h2>
+    <p class="sub">Half of ${f.N} is ${half}. Is ${f.a}/${f.b} more than half or less than half?</p>
+    <div class="choices">
+      <button type="button" data-g="more">More than ${half}</button>
+      <button type="button" data-g="less">Less than ${half}</button>
+    </div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelectorAll("[data-g]").forEach(b => b.onclick = () => {
+    const fb = c.querySelector("#fb");
+    if ((b.dataset.g === "more") === more) {
+      f.est = more ? "more" : "less";
+      c.querySelectorAll("[data-g]").forEach(x => x.disabled = x !== b); b.classList.add("picked");
+      fb.innerHTML = `<div class="note ok">Yes. ${f.a} out of ${f.b} is ${more ? "more" : "less"} than half, so the answer is ${more ? "between" : "less than"} ${half}${more ? ` and ${f.N}` : ""}. And it counts ${f.story.items}, so it will be a whole number, not a fraction.</div>`;
+      fb.appendChild(nextBtn(() => { state.step = 2; render(); }));
+    } else {
+      fb.innerHTML = `<div class="note look">Let's look at ${f.a}/${f.b}. Half of ${f.b} is ${f.b / 2}. Is ${f.a} more or less than ${f.b / 2}? Pick again whenever you're ready.</div>`;
+    }
+  });
+}
+
+function fofOne() {
+  const f = state.fo;
+  const c = el(`<section class="card">
+    ${fofText(f)}
+    ${fofBar(f)}
+    <h2>First, find 1 group: split ${f.N} into ${f.b} equal groups. How many in each?</h2>
+    <div class="row" style="align-items:center">
+      <span class="ask">${f.N} ÷ ${f.b} =</span>
+      <input type="number" id="ans" inputmode="numeric" aria-label="${f.N} divided by ${f.b}">
+      <button class="primary" id="chk" type="button">Check</button>
+    </div>
+    <button class="quiet" id="hintBtn" type="button">Show me a hint</button>
+    <div id="hint"></div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  let hl = 0;
+  const hints = [`Think: ${f.b} × ? = ${f.N}.`, `Count by ${f.b}s until you reach ${f.N}: ${Array.from({ length: f.u }, (_, i) => f.b * (i + 1)).join(", ")}. How many numbers did you count?`];
+  c.querySelector("#hintBtn").onclick = e => { c.querySelector("#hint").innerHTML = `<div class="hint">${hints.slice(0, ++hl).join("<br>")}</div>`; if (hl >= hints.length) e.target.disabled = true; };
+  const input = c.querySelector("#ans");
+  const check = () => {
+    const fb = c.querySelector("#fb");
+    if (!input.value) { fb.innerHTML = `<div class="note look">Type a number first, then press Check.</div>`; return; }
+    const v = Number(input.value);
+    if (v === f.u) { f.found = true; state.step = 3; render(); return; }
+    if (v === f.N * f.b) fb.innerHTML = `<div class="note look">${v} in just 1 group? That's more than all ${f.N} put together! We're splitting ${f.N} into smaller groups.</div>`;
+    else fb.innerHTML = `<div class="note look">Let's test ${v}: ${f.b} groups of ${v} make ${f.b * v}. We need ${f.N}. ${f.b * v > f.N ? "That's too many, so try a smaller number." : "That's not enough, so try a bigger number."}</div>`;
+  };
+  c.querySelector("#chk").onclick = check;
+  input.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+  input.focus();
+}
+
+function fofTake() {
+  const f = state.fo;
+  const c = el(`<section class="card">
+    ${fofText(f)}
+    ${fofBar(f)}
+    <h2>Each group has ${f.u}. ${f.a}/${f.b} means ${f.a} of the groups. How many is that?</h2>
+    <div class="row" style="align-items:center">
+      <span class="ask">${f.a} × ${f.u} =</span>
+      <input type="number" id="ans" inputmode="numeric" aria-label="${f.a} times ${f.u}">
+      <button class="primary" id="chk" type="button">Check</button>
+    </div>
+    <button class="quiet" id="hintBtn" type="button">Show me a hint</button>
+    <div id="hint"></div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelector("#hintBtn").onclick = e => {
+    c.querySelector("#hint").innerHTML = `<div class="hint">${f.a === 1 ? `Just 1 group, so it's ${f.u}.` : `Add up the shaded groups: ${Array.from({ length: f.a }, () => f.u).join(" + ")}.`}</div>`;
+    e.target.disabled = true;
+  };
+  const input = c.querySelector("#ans");
+  const check = () => {
+    const fb = c.querySelector("#fb");
+    if (!input.value) { fb.innerHTML = `<div class="note look">Type a number first, then press Check.</div>`; return; }
+    const v = Number(input.value);
+    if (v === f.ans) { state.step = 4; render(); return; }
+    if (v === f.u && f.a > 1) fb.innerHTML = `<div class="note look">${f.u} is just 1 group. Count the shaded groups: there are ${f.a}.</div>`;
+    else if (v === f.N) fb.innerHTML = `<div class="note look">${f.N} is all ${f.b} groups. We only want the ${f.a} shaded ones.</div>`;
+    else fb.innerHTML = `<div class="note look">Let's test it: ${f.a} groups of ${f.u}. Count by ${f.u}s, ${f.a} times. Do you land on ${v}? The hint can count it with you.</div>`;
+  };
+  c.querySelector("#chk").onclick = check;
+  input.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+  input.focus();
+}
+
+function fofCheck() {
+  const f = state.fo, half = f.N / 2;
+  const c = el(`<section class="card">
+    ${fofText(f)}
+    ${fofBar(f)}
+    <h2>${f.a}/${f.b} of ${f.N} is ${f.ans} ${f.story.items}.</h2>
+    <div class="note ok">Sense check: you said it would be ${f.est} than half of ${f.N}, which is ${half}. ${f.ans} is ${f.ans > half ? "more" : "less"} than ${half}, so it fits. It's a whole number of ${f.story.items}, which makes sense: you can count them.</div>
+    <p class="sub">Watch out for answers like ${f.a * 5}/${f.b * 5} ${f.story.items}. That's just ${f.a}/${f.b} again with bigger numbers. The question asks how many ${f.story.items}, so the answer is a count.</p>
+    <div class="row">
+      <button class="primary" id="again" type="button">Another one</button>
+      <button id="pick" type="button">Change level</button>
+    </div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelector("#again").onclick = () => { state.solved.fof++; save(); state.fo = makeFof(state.foLevel); state.step = 1; render(); };
+  c.querySelector("#pick").onclick = () => { state.solved.fof++; save(); state.step = 0; render(); };
 }
 
 /* ---------- round & estimate ---------- */

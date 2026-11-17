@@ -1023,6 +1023,12 @@ function normalizeMain(d){
     if(!c.theme) c.theme='books';
     c.v = 23;
   }
+  if(c.v < 24){                       // new Helping Hands job
+    c.tags.mech = c.tags.mech||[];
+    if(!c.tags.mech.some(t=>t.id==='yard' || norm(t.name)==='yard work'))
+      c.tags.mech.push({id:'yard', name:'Yard Work', sub:'Pick up sticks, rake, or sweep outside', on:'notsat'});
+    c.v = 24;
+  }
   return c;
 }
 const BOARD_OF_DAY = {6:'satBlocks', 0:'sunBlocks'};   // Saturday, Sunday; every other day uses "blocks"

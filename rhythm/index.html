@@ -197,6 +197,7 @@ body.theme-dance .progress b{background:linear-gradient(90deg,#FF7EB6,#C86DD7,#7
 body.theme-dance .slotbtn,body.theme-dance .opt{border-radius:18px}
 body.theme-dance .datebar button,body.theme-dance .tools button,body.theme-dance .foot button{border-radius:22px}
 body.theme-dance .ord button{border-radius:50%;width:36px;height:36px;border-color:#D9B8EA;color:#8E44AD}
+.remindbtn{border:2px solid var(--navy);background:var(--surface);color:var(--navy);border-radius:12px;min-height:48px;padding:0 16px;font-weight:700;font-size:16px;cursor:pointer}
 .applink{display:inline-block;margin-top:8px;padding:10px 16px;border-radius:10px;background:var(--navy);color:#fff;font-weight:700;text-decoration:none;min-height:44px}
 .slotbtn.mech.filled small{font-weight:700}
 .kidswitch{display:flex;gap:8px;justify-content:center;margin:10px 0 4px;flex-wrap:wrap}
@@ -1003,6 +1004,10 @@ function normalizeMain(d){
     c.blocks.forEach(b=>b.items.forEach(i=>{ if(i.id==='math' && i.timer) i.clock=true; }));
     c.v = 21;
   }
+  if(c.v < 22){                       // no board countdown for ALEKS: a "Set my iPad timer" reminder button instead
+    c.blocks.forEach(b=>b.items.forEach(i=>{ if(i.id==='math'){ i.remind = Math.round((i.timer||2700)/60); delete i.timer; delete i.clock; delete i.endMsg; } }));
+    c.v = 22;
+  }
   return c;
 }
 const BOARD_OF_DAY = {6:'satBlocks', 0:'sunBlocks'};   // Saturday, Sunday; every other day uses "blocks"
@@ -1264,6 +1269,7 @@ function rowHTML(i, ord){
     if(i.snack) extra += snackBoxes(i.id);
     if(i.timer) extra += timerBox(i.id);
   }
+  if(i.remind) extra += `<div class="slot"><button class="remindbtn" data-remind="${+i.remind}">⏱ Set my iPad timer (${+i.remind} min)</button></div>`;
   if(i.url) extra += `<a class="applink" href="${esc(i.url)}" target="_blank" rel="noopener">Open ${esc(i.t)}</a>`;
   const label = i.slot || !i.d ? `<b>${esc(i.t)}</b>` : `<b>${esc(i.t)}:</b> <span class="d">${esc(i.d)}</span>`;
   const arrows = ord ? `<span class="ord"><button data-ord="up" data-ob="${esc(ord.b)}" data-oid="${esc(i.id)}" aria-label="Move ${esc(i.t)} up" ${ord.first?'disabled':''}>▲</button><button data-ord="down" data-ob="${esc(ord.b)}" data-oid="${esc(i.id)}" aria-label="Move ${esc(i.t)} down" ${ord.last?'disabled':''}>▼</button></span>` : '';
@@ -1399,6 +1405,7 @@ $('#app').addEventListener('click', e=>{
   const t=e.target.closest('button'); if(!t) return;
   const D=S.data;
   if(t.dataset.check){ const k=t.dataset.check; if(D.checks[k]) delete D.checks[k]; else { D.checks[k]=true; S.just=k; } save(); render(); return; }
+  if(t.dataset.remind){ clockTimer(+t.dataset.remind*60000); return; }
   if(t.dataset.ord){ const b=BLOCKS.find(x=>x.id===t.dataset.ob); if(!b) return;
     const ids=ordered(b).map(i=>i.id), n=ids.indexOf(t.dataset.oid), m=n+(t.dataset.ord==='up'?-1:1);
     if(n<0 || m<0 || m>=ids.length) return;
@@ -1499,8 +1506,9 @@ function itemEd(it, bi, ii, len, R='blocks'){
     more = `<div class="ed-row2">
       <input data-path="${p}.d" value="${esc(it.d)}" placeholder="Short description (optional)">
       <input data-path="${p}.url" value="${esc(it.url)}" placeholder="App link (optional), e.g. ../math/" style="flex:1 1 180px">
+      <label class="ed-min" title="Shows a 'Set my iPad timer' button (no countdown on the board), for apps like ALEKS">iPad timer reminder <input type="number" min="1" max="300" inputmode="numeric" data-path="${p}.remind" data-type="int" value="${it.remind||''}" placeholder="none"> min</label>
       <label class="ed-min">Timer <input type="number" min="1" max="300" inputmode="numeric" data-path="${p}.timer" data-type="min" value="${it.timer?Math.round(it.timer/60):''}" placeholder="none"> min</label>
-    </div>${it.timer?`<label class="ed-chk"><input type="checkbox" data-path="${p}.clock" data-type="bool" ${it.clock?'checked':''}> Remind her to start the iPad's Clock timer (for when she leaves the board, like Math)</label>`:''}${it.timer?`<div class="ed-row2"><input data-path="${p}.endMsg" value="${esc(it.endMsg)}" placeholder="Message when the timer ends, e.g. &quot;${esc(it.t||'Math')} time is finished!&quot;"></div>`:''}`;
+    </div>${it.timer?`<div class="ed-row2"><input data-path="${p}.endMsg" value="${esc(it.endMsg)}" placeholder="Message when the timer ends, e.g. &quot;${esc(it.t||'Math')} time is finished!&quot;"></div>`:''}`;
   } else {
     more = `<div class="ed-note">She picks a ${KIND_NAME[kind]||''} tag here.</div>`;
   }
@@ -1597,6 +1605,7 @@ function renderEditor(){
 function readField(el){
   if(el.dataset.type==='bool') return el.checked || undefined;
   if(el.dataset.type==='flag') return el.checked;
+  if(el.dataset.type==='int'){ const n=parseInt(el.value,10); return n>0 ? n : undefined; }
   if(el.dataset.type==='num'){ const n=parseInt(el.value,10); return n>1 ? n : undefined; }
   if(el.dataset.type==='min'){ const n=parseFloat(el.value); return n>0 ? Math.round(n*60) : undefined; }
   return el.value;

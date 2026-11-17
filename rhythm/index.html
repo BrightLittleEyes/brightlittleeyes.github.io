@@ -1099,8 +1099,13 @@ function loadYesterday(){
     if(S.db) S.db.doc(COL+'/'+dk).get().then(s=>{ if(k===S.date && kid===S.kid && s.exists) S.recent[n]=((pickDay(s.data())||{}).slots)||{}; }).catch(()=>{});
   }
 }
+/* Running and paused timers are kept on this device, so they survive the iPad reloading the page */
+const tmKey = () => 'rhythm:tm:'+S.kid+':'+S.date;
+function saveTimers(){ try{ localStorage.setItem(tmKey(), JSON.stringify({t:S.timers, p:S.paused})); }catch(e){} }
+function loadTimers(){ let o=null; try{ o=JSON.parse(localStorage.getItem(tmKey())||'null'); }catch(e){} S.timers=(o&&o.t)||{}; S.paused=(o&&o.p)||{}; }
 function watchDay(){
   if(S.unsub){ S.unsub(); S.unsub=null; }
+  loadTimers();
   loadYesterday();
   S.data = Object.assign(blank(), readLocal(lkey(S.date))||{});
   render();
@@ -1275,7 +1280,7 @@ document.addEventListener('visibilitychange', syncWake);
 
 setInterval(()=>{
   const ids=Object.keys(S.timers); if(!ids.length) return;
-  ids.forEach(id=>{ if(Date.now()>=S.timers[id]){ const info=timerInfo(id); delete S.timers[id]; showAlarm(info ? info.msg : 'Time is finished.'); } });
+  ids.forEach(id=>{ if(Date.now()>=S.timers[id]){ const info=timerInfo(id); delete S.timers[id]; saveTimers(); showAlarm(info ? info.msg : 'Time is finished.'); } });
   paintTimer(); syncWake();
 }, 500);
 
@@ -1329,7 +1334,7 @@ $('#app').addEventListener('click', e=>{
     if(a==='pause'){ S.paused[id]=Math.max(0,S.timers[id]-Date.now()); delete S.timers[id]; }
     if(a==='resume'){ S.timers[id]=Date.now()+S.paused[id]; clockTimer(S.paused[id]); delete S.paused[id]; }
     if(a==='reset'){ delete S.timers[id]; delete S.paused[id]; }
-    paintTimer(); syncWake(); return; }
+    saveTimers(); paintTimer(); syncWake(); return; }
   if(t.dataset.snack){ const k=+t.dataset.snack, sid=t.dataset.sid; D.snack[k]=!D.snack[k];
     if(D.snack.every(Boolean) && !D.checks[sid]){ D.checks[sid]=true; toast('All 8 compartments filled!'); }
     save(); render(); return; }
@@ -1340,7 +1345,7 @@ $('#app').addEventListener('click', e=>{
     case 'copyTags': copyYesterday(); break;
     case 'clearTags':
       if(!Object.keys(D.slots).length){ toast('No tags placed yet today.'); break; }
-      if(confirm('Take all tags off today\'s board?')){ const keep={}; if(S.role!=='parent') CHG_IDS.forEach(k=>{ if(D.slots[k]) keep[k]=D.slots[k]; }); D.slots=keep; S.timers={}; S.paused={}; save(); render(); }
+      if(confirm('Take all tags off today\'s board?')){ const keep={}; if(S.role!=='parent') CHG_IDS.forEach(k=>{ if(D.slots[k]) keep[k]=D.slots[k]; }); D.slots=keep; S.timers={}; S.paused={}; saveTimers(); save(); render(); }
       break;
     case 'editBtn': if(S.role==='parent') openEditor(); break;
     case 'logout': if(confirm('Log out on this device?')){ setRole(null); S.role=null; S.timers={}; S.paused={}; route(); } break;
@@ -1350,8 +1355,8 @@ $('#scrim').addEventListener('click', e=>{
   if(e.target.id==='scrim') return closePicker();
   const t=e.target.closest('button'); if(!t) return;
   const D=S.data;
-  if(t.dataset.pick){ if(D.slots[S.picking]!==t.dataset.pick){ delete S.timers[S.picking]; delete S.paused[S.picking]; } D.slots[S.picking]=t.dataset.pick; closePicker(); save(); render(); return; }
-  if(t.id==='clearSlot'){ delete S.timers[S.picking]; delete S.paused[S.picking]; delete D.slots[S.picking]; closePicker(); save(); render(); }
+  if(t.dataset.pick){ if(D.slots[S.picking]!==t.dataset.pick){ delete S.timers[S.picking]; delete S.paused[S.picking]; saveTimers(); } D.slots[S.picking]=t.dataset.pick; closePicker(); save(); render(); return; }
+  if(t.id==='clearSlot'){ delete S.timers[S.picking]; delete S.paused[S.picking]; saveTimers(); delete D.slots[S.picking]; closePicker(); save(); render(); }
   if(t.id==='closeSheet') closePicker();
 });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape' && !$('#scrim').hidden) closePicker(); });

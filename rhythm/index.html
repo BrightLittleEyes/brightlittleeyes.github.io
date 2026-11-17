@@ -983,7 +983,7 @@ function normalizeMain(d){
       if(at<0) continue;
       delete b.items[at].clock;       // the iPad timer reminder is for the Math app, where she leaves the board
       if(!c.blocks.some(x=>x.items.some(i=>i.id==='mathapp')))
-        b.items.splice(at+1,0,{id:'mathapp', t:'Math App', d:'Trip Planner Math practice.', timer:1800, clock:true, url:'../math/', endMsg:'Math App time is finished. Great work!'});
+        b.items.splice(at+1,0,{id:'mathapp', t:'Math App', d:'Trip Planner Math, from its own icon on the home screen.', timer:1800, clock:true, endMsg:'Math App time is finished. Great work!'});
       break;
     }
     const dishes=(c.tags.mech||[]).find(t=>t.id==='dishes' || norm(t.name)==='dishes');

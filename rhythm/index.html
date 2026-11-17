@@ -963,6 +963,10 @@ function normalizeMain(d){
     if(sb){ sb.every=8; if(!sb.lastDone) sb.lastDone='2026-11-06'; }   // 3 of 8 snacks eaten by Mon, Nov 9
     c.v = 16;
   }
+  if(c.v < 17){                       // only Math also starts the iPad's Clock timer
+    [...c.blocks, ...(c.satBlocks||[]), ...(c.sunBlocks||[])].forEach(b=>b.items.forEach(i=>{ if(i.id==='math' && i.timer) i.clock=true; }));
+    c.v = 17;
+  }
   return c;
 }
 const BOARD_OF_DAY = {6:'satBlocks', 0:'sunBlocks'};   // Saturday, Sunday; every other day uses "blocks"
@@ -1131,7 +1135,7 @@ function clockTimer(ms){
 }
 function timerInfo(id){
   const item=ALL_ITEMS.find(i=>i.id===id); if(!item) return null;
-  if(item.timer) return {secs:item.timer, msg:item.endMsg || `${item.t} time is finished.`};
+  if(item.timer) return {secs:item.timer, msg:item.endMsg || `${item.t} time is finished.`, clock:!!item.clock};
   const tag=item.slot && S.data.slots[id] && findTag(item.slot, S.data.slots[id]);
   return tag && tag.timer ? {secs:tag.timer, msg:`${tag.name} time is finished. Great job!`} : null;
 }
@@ -1330,9 +1334,9 @@ $('#app').addEventListener('click', e=>{
     S.kid=t.dataset.kid; setKid(S.kid); S.timers={}; S.paused={}; paintKid(); watchDay(); paintTimer(); syncWake(); return; }
   if(t.dataset.slot){ if(isChg(t.dataset.slot) && S.role!=='parent') return; openPicker(t.dataset.slot); return; }
   if(t.dataset.tact){ const id=t.dataset.tid, a=t.dataset.tact, info=timerInfo(id); if(!info) return;
-    if(a==='start'){ S.timers[id]=Date.now()+info.secs*1000; delete S.paused[id]; clockTimer(info.secs*1000); }
+    if(a==='start'){ S.timers[id]=Date.now()+info.secs*1000; delete S.paused[id]; if(info.clock) clockTimer(info.secs*1000); }
     if(a==='pause'){ S.paused[id]=Math.max(0,S.timers[id]-Date.now()); delete S.timers[id]; }
-    if(a==='resume'){ S.timers[id]=Date.now()+S.paused[id]; clockTimer(S.paused[id]); delete S.paused[id]; }
+    if(a==='resume'){ S.timers[id]=Date.now()+S.paused[id]; if(info.clock) clockTimer(S.paused[id]); delete S.paused[id]; }
     if(a==='reset'){ delete S.timers[id]; delete S.paused[id]; }
     saveTimers(); paintTimer(); syncWake(); return; }
   if(t.dataset.snack){ const k=+t.dataset.snack, sid=t.dataset.sid; D.snack[k]=!D.snack[k];
@@ -1418,7 +1422,7 @@ function itemEd(it, bi, ii, len, R='blocks'){
     more = `<div class="ed-row2">
       <input data-path="${p}.d" value="${esc(it.d)}" placeholder="Short description (optional)">
       <label class="ed-min">Timer <input type="number" min="1" max="300" inputmode="numeric" data-path="${p}.timer" data-type="min" value="${it.timer?Math.round(it.timer/60):''}" placeholder="none"> min</label>
-    </div>${it.timer?`<div class="ed-row2"><input data-path="${p}.endMsg" value="${esc(it.endMsg)}" placeholder="Message when the timer ends, e.g. &quot;${esc(it.t||'Math')} time is finished!&quot;"></div>`:''}`;
+    </div>${it.timer?`<label class="ed-chk"><input type="checkbox" data-path="${p}.clock" data-type="bool" ${it.clock?'checked':''}> Also start the iPad's Clock timer (for when she leaves the board, like Math)</label>`:''}${it.timer?`<div class="ed-row2"><input data-path="${p}.endMsg" value="${esc(it.endMsg)}" placeholder="Message when the timer ends, e.g. &quot;${esc(it.t||'Math')} time is finished!&quot;"></div>`:''}`;
   } else {
     more = `<div class="ed-note">She picks a ${KIND_NAME[kind]||''} tag here.</div>`;
   }
@@ -1490,7 +1494,7 @@ function renderEditor(){
     <div class="ed-sec" style="margin-top:-8px"><label class="ed-chk" style="font-weight:700;color:var(--ink)"><input type="checkbox" data-path="noRepeat" data-type="flag" ${E.noRepeat!==false?'checked':''}> No repeats: a Helping Hands job she did yesterday is greyed out today ("You did this yesterday")</label></div>
     ${E._main?'':tagsEd('flag','Change of Routine tags','The red tags for "Anything different today?"',false,false)}
     <div class="ed-sec"><h3>Timer sound</h3><p class="help">What plays when a timer runs out. A "Time's up!" card also pops up until she taps OK.</p>
-      <label class="ed-chk" style="font-weight:700;color:var(--ink)"><input type="checkbox" id="clockTimerOn" ${useClock()?'checked':''}> On this iPad, also start the iPad's Clock timer, so it rings even when she's in another app</label>
+      <label class="ed-chk" style="font-weight:700;color:var(--ink)"><input type="checkbox" id="clockTimerOn" ${useClock()?'checked':''}> On this iPad, timers marked "Also start the iPad's Clock timer" (Math) start it too, so they ring even when she's in another app. Other timers use the board's own sound.</label>
       <p class="help">Needs a shortcut named <b>Rhythm Timer</b> in the iPad's Shortcuts app (one action: <i>Start Timer</i> for <i>Shortcut Input</i> minutes). This setting is saved on this iPad only.</p>
       <div class="ed-grid" style="align-items:center">
         <label class="ed-f" style="flex:0 1 220px">Sound<select data-path="sound">

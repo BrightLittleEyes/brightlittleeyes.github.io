@@ -309,7 +309,7 @@ window.FIREBASE_CONFIG = {
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
-const BUILD = '2026-11-17i';   // change this with every update, so open boards reload to the new version
+const BUILD = '2026-11-17j';   // change this with every update, so open boards reload to the new version
 const COL = 'rhythm_days', CFG_DOC = 'rhythm_config/main';
 
 /* ---------- the starting board (used until you save your own) ---------- */
@@ -796,6 +796,12 @@ const appDone = i => !!(i && i.app && APPS[i.app] && (S.apps||{})[i.app]);
 const isOn = i => !!S.data.checks[i.id] || appDone(i);
 /* "None today": a Fun Choice she chooses to skip. It counts as done. */
 const NONE = '__none';
+/* Lock in: once she checks "Mark Attendance/Make Choices", her picks are set for the day (Mom can still change them). */
+const LOCK_ID = 'attendance';
+const hasLock = () => ALL_ITEMS.some(i=>i.id===LOCK_ID);
+const lockedIn = () => S.role!=='parent' && hasLock() && !!S.data.checks[LOCK_ID];
+const LOCK_MSG = 'Your choices are locked in for today. Ask Mom if something needs to change.';
+const openPicks = () => ALL_ITEMS.filter(i=>i.slot && !S.data.slots[i.id]);
 const noneOK = () => !!(S.kid==='main' ? CFG.funNone : ((CFG.kids||{})[S.kid]||{}).funNone);
 const DAY_OPTS = {all:'Every day', notsat:'Every day but Saturday', weekdays:'Weekdays', sat:'Saturdays', sun:'Sundays', weekend:'Weekends'};
 function tagToday(t, dow){
@@ -1305,7 +1311,7 @@ const isLocked = slotId => { const id=S.data.slots[slotId]; return !!id && !S.da
 /* Once today's history and today's board have both loaded, put any due must-do job on the board */
 function tryMust(){
   if(!S.ready || !S.ready.hist || !S.ready.day) return;
-  if(S.date!==keyOf(new Date()) || S.data.noMust) return;
+  if(S.date!==keyOf(new Date()) || S.data.noMust || (hasLock() && S.data.checks[LOCK_ID])) return;
   const D=S.data, slots=ALL_ITEMS.filter(i=>i.slot==='mech').map(i=>i.id);
   let changed=false;
   for(const t of mustTags()){
@@ -1389,6 +1395,9 @@ function rowHTML(i, ord){
   }
   if(i.remind) extra += `<div class="slot"><button class="remindbtn" data-remind="${+i.remind}">⏱ Set my iPad timer (${+i.remind} min)</button></div>`;
   if(i.url) extra += `<a class="applink" href="${esc(i.url)}" target="_blank" rel="noopener">Open ${esc(i.t)}</a>`;
+  if(i.id===LOCK_ID && !i.slot) extra += D.checks[LOCK_ID]
+    ? `<div class="appnote ok">🔒 Today's choices are locked in</div>`
+    : `<div class="appnote">Make all your choices first. Checking this locks them in for today.</div>`;
   if(i.app && APPS[i.app]) extra += appDone(i)
     ? `<div class="appnote ok">✓ Finished in ${esc(APPS[i.app].name)}</div>`
     : `<div class="appnote">🔒 Checks itself off when you ${esc(APPS[i.app].how)} in <b>${esc(APPS[i.app].name)}</b>.</div>`;
@@ -1528,6 +1537,11 @@ $('#app').addEventListener('click', e=>{
   const t=e.target.closest('button'); if(!t) return;
   const D=S.data;
   if(t.dataset.check){ const k=t.dataset.check, it=ALL_ITEMS.find(x=>x.id===k);
+    if(k===LOCK_ID && S.role!=='parent'){
+      if(D.checks[k]){ toast(LOCK_MSG, 3500); return; }
+      const miss=openPicks();
+      if(miss.length){ toast(`Make all your choices first. Still to pick: ${miss.map(i=>i.t.replace(/ Slot /,' ')).join(', ')}.`, 4500); return; }
+      D.checks[k]=true; S.just=k; (S.ck=S.ck||{})[k]=1; save(); render(); toast('Locked in! Have a great day.', 2600); return; }
     if(appDone(it)){ toast(`This was checked off when you finished a lesson in ${APPS[it.app].name}.`, 3200); return; }
     if(it && it.app && APPS[it.app] && S.role!=='parent'){ toast(`To check this off, ${APPS[it.app].how} in ${APPS[it.app].name}. It checks itself!`, 4200); return; }
     if(D.checks[k]) delete D.checks[k]; else { D.checks[k]=true; S.just=k; } (S.ck=S.ck||{})[k]=1; save(); render(); return; }
@@ -1539,6 +1553,7 @@ $('#app').addEventListener('click', e=>{
   if(t.dataset.kid){ if(S.role!=='parent' || t.dataset.kid===S.kid) return;
     S.kid=t.dataset.kid; setKid(S.kid); S.timers={}; S.paused={}; paintKid(); watchDay(); paintTimer(); syncWake(); return; }
   if(t.dataset.slot){ if(isChg(t.dataset.slot) && S.role!=='parent') return;
+    if(lockedIn()){ toast(LOCK_MSG, 3500); return; }
     if(isLocked(t.dataset.slot) && S.role!=='parent'){ toast(`${findTag('mech',D.slots[t.dataset.slot]).name} is today's must-do job.`, 3000); return; }
     openPicker(t.dataset.slot); return; }
   if(t.dataset.tact){ const id=t.dataset.tid, a=t.dataset.tact, info=timerInfo(id); if(!info) return;
@@ -1554,8 +1569,9 @@ $('#app').addEventListener('click', e=>{
     case 'prev': S.date=shift(S.date,-1); watchDay(); break;
     case 'next': S.date=shift(S.date,1); watchDay(); break;
     case 'today': S.date=keyOf(new Date()); watchDay(); break;
-    case 'copyTags': copyYesterday(); break;
+    case 'copyTags': if(lockedIn()){ toast(LOCK_MSG, 3500); break; } copyYesterday(); break;
     case 'clearTags':
+      if(lockedIn()){ toast(LOCK_MSG, 3500); break; }
       if(!Object.keys(D.slots).length){ toast('No tags placed yet today.'); break; }
       if(confirm('Take all tags off today\'s board?')){ const keep={}; if(S.role!=='parent') CHG_IDS.forEach(k=>{ if(D.slots[k]) keep[k]=D.slots[k]; }); if(S.role!=='parent') Object.keys(D.slots).forEach(k=>{ if(isLocked(k)) keep[k]=D.slots[k]; }); else if(Object.keys(D.slots).some(isLocked)) D.noMust=true;
         D.slots=keep; S.timers={}; S.paused={}; saveTimers(); save(); render(); }

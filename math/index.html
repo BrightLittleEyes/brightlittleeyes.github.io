@@ -277,7 +277,6 @@ footer { color: var(--soft); font-size: .85rem; text-align: center; }
     </div>
     <div class="row">
       <button class="quiet" id="homeBtn" type="button" hidden>Home</button>
-      <button class="quiet" id="breakBtn" type="button">Take a break</button>
       <button class="quiet" id="parentBtn" type="button">Parent</button>
       <div class="mt" id="mt" role="timer" aria-live="off"><span aria-hidden="true">⏱</span><span class="clk" id="mtClk">30:00</span><button type="button" id="mtBtn">Start</button></div>
     </div>
@@ -815,7 +814,7 @@ function nextBtn(fn, text = "Next step") {
   b.onclick = fn; return b;
 }
 
-document.getElementById("breakBtn").onclick = () => { state.onBreak = !state.onBreak; render(); };
+/* (the "Take a break" button was removed) */
 document.getElementById("homeBtn").onclick = () => { state.section = null; state.step = 0; state.onBreak = false; render(); };
 
 /* ---------- trip planner ---------- */

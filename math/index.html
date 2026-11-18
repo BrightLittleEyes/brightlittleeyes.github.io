@@ -542,6 +542,67 @@ new MutationObserver(muts => {
   } else lockFor(3000, "Read the message first…");
 }).observe(stage, { childList: true, subtree: true });
 
+/* ---------- parent PIN for the grown-up sections (daily totals, problem log, backup) ---------- */
+(() => { const st = document.createElement("style"); st.textContent = `
+  .pinscrim{position:fixed;inset:0;background:rgba(20,30,28,.5);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px}
+  .pincard{background:var(--card);color:var(--ink);border-radius:20px;padding:22px;width:min(340px,100%);text-align:center;display:grid;gap:10px}
+  .pincard h2{font-family:var(--font-display);margin:0}
+  .pindots{display:flex;justify-content:center;gap:14px;min-height:24px;align-items:center}
+  .pindots span{width:18px;height:18px;border-radius:50%;border:2px solid var(--soft)}
+  .pindots span.on{background:var(--accent);border-color:var(--accent)}
+  .pinpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .pinpad button{font-size:1.4rem;padding:14px 0}`; document.head.appendChild(st); })();
+const PIN_KEY = "mathParentPin";
+let pinOkUntil = 0;
+async function pinHash(s) {
+  try { const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("ble-math:" + s)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, "0")).join(""); }
+  catch (e) { return "p" + s; }
+}
+function askPin(onOk) {
+  let saved = null; try { saved = localStorage.getItem(PIN_KEY); } catch (e) {}
+  const creating = !saved; let first = null, entry = "";
+  const d = el(`<div class="pinscrim" role="dialog" aria-modal="true" aria-labelledby="pinT"><div class="pincard">
+    <h2 id="pinT"></h2><p class="sub" id="pinMsg" style="margin:0"></p><div class="pindots" id="pinDots"></div>
+    <div class="pinpad">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `<button type="button" data-k="${n}">${n}</button>`).join("")}
+      <button type="button" class="quiet" data-k="x" style="font-size:1rem">Cancel</button><button type="button" data-k="0">0</button><button type="button" class="quiet" data-k="b" aria-label="Delete">⌫</button></div>
+  </div></div>`);
+  document.body.appendChild(d);
+  const title = d.querySelector("#pinT"), msg = d.querySelector("#pinMsg");
+  const say = (t, m) => { title.textContent = t; msg.textContent = m; };
+  const dots = () => { d.querySelector("#pinDots").innerHTML = [0, 1, 2, 3].map(i => `<span class="${i < entry.length ? "on" : ""}"></span>`).join(""); };
+  const restart = m => { entry = ""; msg.textContent = m; setTimeout(dots, 200); };
+  say(creating ? "Create a parent PIN" : "Grown-ups only", creating ? "Pick 4 numbers. You'll use them to open the daily totals, problem log, and backups." : "Enter the parent PIN.");
+  dots();
+  const done = () => { d.remove(); pinOkUntil = Date.now() + 10 * 60000; onOk(); };
+  d.querySelectorAll("[data-k]").forEach(b => b.onclick = async () => {
+    const k = b.dataset.k;
+    if (k === "x") return d.remove();
+    if (k === "b") { entry = entry.slice(0, -1); return dots(); }
+    if (entry.length >= 4) return;
+    entry += k; dots();
+    if (entry.length < 4) return;
+    if (creating && first === null) { first = entry; return restart("Type the same 4 numbers again."); }
+    if (creating) {
+      if (entry !== first) { first = null; return restart("Those didn't match. Pick 4 numbers again."); }
+      try { localStorage.setItem(PIN_KEY, await pinHash(entry)); } catch (e) {}
+      return done();
+    }
+    if (await pinHash(entry) === saved) return done();
+    restart("That PIN isn't right. Try again.");
+  });
+}
+/* tapping a grown-up section asks for the PIN first; it stays open for 10 minutes on the home screen */
+document.addEventListener("click", e => {
+  const sum = e.target.closest("details.backup > summary");
+  if (!sum) return;
+  const det = sum.parentElement;
+  if (det.open || Date.now() < pinOkUntil) return;
+  e.preventDefault();
+  askPin(() => { det.open = true; });
+}, true);
+/* going into any activity locks the grown-up sections again */
+{ const r4 = render; render = function () { if (state.section) pinOkUntil = 0; r4(); }; }
+
 
 function setChrome() {
   const sec = sections[state.section];

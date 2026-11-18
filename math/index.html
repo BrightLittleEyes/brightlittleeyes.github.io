@@ -278,6 +278,7 @@ footer { color: var(--soft); font-size: .85rem; text-align: center; }
     <div class="row">
       <button class="quiet" id="homeBtn" type="button" hidden>Home</button>
       <button class="quiet" id="breakBtn" type="button">Take a break</button>
+      <button class="quiet" id="parentBtn" type="button">Parent</button>
       <div class="mt" id="mt" role="timer" aria-live="off"><span aria-hidden="true">⏱</span><span class="clk" id="mtClk">30:00</span><button type="button" id="mtBtn">Start</button></div>
     </div>
   </div>
@@ -372,6 +373,7 @@ const el = (html) => { const d = document.createElement("div"); d.innerHTML = ht
 const stage = document.getElementById("stage");
 
 const sections = {
+  parent: { title: "Parent area", sub: "Daily totals, the problem log, and backups.", steps: [] },
   trip: { title: "Trip Planner", sub: "You're the planner. You pick the trip.", steps: ["Pick a trip", "Guess", "One hour", "Build it"] },
   ops:  { title: "Order of Operations", sub: "Solve it one step at a time, like a recipe.", steps: ["Pick a level", "Solve step by step", "Answer"] },
   rate: { title: "Who's Fastest?", sub: "Use a table to compare how fast people work.", steps: ["Pick a job", "Guess", "Time for one", "Compare"] },
@@ -552,10 +554,10 @@ new MutationObserver(muts => {
   .pindots span.on{background:var(--accent);border-color:var(--accent)}
   .pinpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
   .pinpad button{font-size:1.4rem;padding:14px 0}`; document.head.appendChild(st); })();
-const PIN_KEY = "mathParentPin";
+const PIN_KEY = "bleParentPin";  /* shared with the Bible & history apps on this website */
 let pinOkUntil = 0;
 async function pinHash(s) {
-  try { const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("ble-math:" + s)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, "0")).join(""); }
+  try { const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("ble-parent:" + s)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, "0")).join(""); }
   catch (e) { return "p" + s; }
 }
 function askPin(onOk) {
@@ -571,7 +573,7 @@ function askPin(onOk) {
   const say = (t, m) => { title.textContent = t; msg.textContent = m; };
   const dots = () => { d.querySelector("#pinDots").innerHTML = [0, 1, 2, 3].map(i => `<span class="${i < entry.length ? "on" : ""}"></span>`).join(""); };
   const restart = m => { entry = ""; msg.textContent = m; setTimeout(dots, 200); };
-  say(creating ? "Create a parent PIN" : "Grown-ups only", creating ? "Pick 4 numbers. You'll use them to open the daily totals, problem log, and backups." : "Enter the parent PIN.");
+  say(creating ? "Create a parent PIN" : "Grown-ups only", creating ? "Pick 4 numbers. The same PIN opens the parent areas in all your apps on this device." : "Enter the parent PIN.");
   dots();
   const done = () => { d.remove(); pinOkUntil = Date.now() + 10 * 60000; onOk(); };
   d.querySelectorAll("[data-k]").forEach(b => b.onclick = async () => {
@@ -600,8 +602,28 @@ document.addEventListener("click", e => {
   e.preventDefault();
   askPin(() => { det.open = true; });
 }, true);
-/* going into any activity locks the grown-up sections again */
-{ const r4 = render; render = function () { if (state.section) pinOkUntil = 0; r4(); }; }
+/* going into any activity locks the parent area again */
+{ const r4 = render; render = function () { if (state.section && state.section !== "parent") pinOkUntil = 0; r4(); }; }
+
+/* ---------- parent area (behind the PIN): daily totals, problem log, backup ---------- */
+function renderParent() {
+  pinOkUntil = Date.now() + 10 * 60000;
+  const tabs = [["daily", "Daily totals", renderDaily], ["log", "Problem log", renderLog], ["backup", "Backup & restore", renderBackup]];
+  const cur = tabs.find(t => t[0] === state.parentTab) || tabs[0];
+  const bar = el(`<section class="card" style="margin-bottom:14px"><div class="choices" role="tablist">${tabs.map(([k, n]) =>
+    `<button type="button" role="tab" data-t="${k}" aria-selected="${k === cur[0]}" class="${k === cur[0] ? "picked" : ""}">${n}</button>`).join("")}</div></section>`);
+  stage.appendChild(bar);
+  bar.querySelectorAll("[data-t]").forEach(b => b.onclick = () => { state.parentTab = b.dataset.t; render(); });
+  cur[2]();
+  const d = stage.querySelector("details.backup"); if (d) d.open = true;
+  const lock = el(`<div style="text-align:center;margin-top:14px"><button class="quiet" type="button">Lock parent area</button></div>`);
+  lock.firstElementChild.onclick = () => { pinOkUntil = 0; state.section = null; state.step = 0; render(); };
+  stage.appendChild(lock);
+}
+document.getElementById("parentBtn").onclick = () => {
+  const go = () => { state.section = "parent"; state.step = 0; state.onBreak = false; render(); };
+  if (Date.now() < pinOkUntil) go(); else askPin(go);
+};
 
 
 function setChrome() {
@@ -622,6 +644,7 @@ function render() {
   stage.innerHTML = "";
   if (state.onBreak) return renderBreak();
   if (!state.section) return renderHome();
+  if (state.section === "parent") return renderParent();
   if (state.section === "trip") return [tripPick, tripGuess, tripUnit, tripBuild][state.step]();
   if (state.section === "rate") return [ratePick, rateGuess, rateUnit, rateCompare][state.step]();
   if (state.section === "pip") return [pipMeet, pipSense, pipFind, pipFix][state.step]();
@@ -667,9 +690,6 @@ function renderHome() {
   </section>`);
   stage.appendChild(c);
   c.querySelectorAll("[data-s]").forEach(b => b.onclick = () => { state.section = b.dataset.s; state.step = 0; render(); });
-  renderDaily();
-  renderLog();
-  renderBackup();
 }
 
 /* ---------- problem log card (for grown-ups) ---------- */

@@ -11,6 +11,7 @@
 <link rel="icon" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.json">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+<script src="../parent-pin.js"></script>
 </head><body>
 <title>Guitar Studio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1970,6 +1971,7 @@ function renderProgress(){
 /* ---------- parent area (PIN) ---------- */
 function renderParent(){
   if (!parentOK){
+    if (window.BLEPin) { const ok = () => { parentOK = true; render(); }; app.innerHTML = BLEPin.waitHTML(); BLEPin.bindAgain(app, ok); BLEPin.ask(ok); return; }  /* one parent PIN for every app */
     const creating = !pin;
     app.innerHTML = `<div class="pinbox">
       <span class="eyebrow">Parent area</span>
@@ -1980,7 +1982,7 @@ function renderParent(){
     $("#pinin").focus();
     $("#pinform").onsubmit = e => { e.preventDefault(); const v = $("#pinin").value.trim();
       if (!/^\d{4}$/.test(v)){ $("#pinerr").textContent = "Use exactly 4 digits."; return; }
-      if (creating){ pin = v; LS.set("gtr-pin", pin); parentOK = true; render(); }
+      if (creating){ pin = v; LS.set("gtr-pin", pin); window.BLEPin&&BLEPin.setPin(v); parentOK = true; render(); }
       else if (v===pin){ parentOK = true; render(); }
       else { $("#pinerr").textContent = "That PIN doesn't match. Try again."; $("#pinin").value = ""; } };
     return;
@@ -2043,7 +2045,7 @@ function renderParent(){
       roster = d.roster||[]; results = d.results; prog = d.prog||{}; inprog = d.inprog||{}; practice = d.practice||{}; saveAll(); renderRoster();
       $("#rsmsg").textContent = "Restored."; armed = false; $("#rsgo").textContent = "Restore";
     };
-    $("#pinsave").onclick = () => { const v = $("#newpin").value.trim(); if (!/^\d{4}$/.test(v)){ $("#pinmsg").textContent = "Use exactly 4 digits."; return; } pin = v; LS.set("gtr-pin", pin); $("#pinmsg").textContent = "PIN changed."; $("#newpin").value=""; };
+    $("#pinsave").onclick = () => { const v = $("#newpin").value.trim(); if (!/^\d{4}$/.test(v)){ $("#pinmsg").textContent = "Use exactly 4 digits."; return; } pin = v; LS.set("gtr-pin", pin); window.BLEPin&&BLEPin.setPin(v); $("#pinmsg").textContent = "PIN changed."; $("#newpin").value=""; };
     app.querySelectorAll("[data-reset]").forEach(b => b.onclick = () => {
       const n = b.dataset.reset;
       if (b.dataset.armed!=="1"){ b.dataset.armed = "1"; b.textContent = `Yes, erase ${n}'s scores`; $("#resetmsg").textContent = `This erases all of ${n}'s scores, stars, practice log, and lesson checkmarks.`; return; }

@@ -1704,11 +1704,11 @@ document.addEventListener('dragstart',function(e){e.preventDefault();});})();</s
   }
 
   // ---------- Grown-up PIN: asked once each time I Can Talk opens (finger or mouse only; looking can't type it) ----------
-  const PIN_KEY = 'bleTalkPin';
+  const PIN_KEY = 'bleParentPin';   /* one parent PIN for every app on this website */
   let pinUnlocked = false, pinMode = null, pinDone = null, pinEntry = '';
   const hasPin = () => { try { return !!localStorage.getItem(PIN_KEY); } catch (e) { return false; } };
   async function pinHash(d) {
-    const txt = 'ble-talk-pin:' + d;
+    const txt = 'ble-parent:' + d;
     try { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(txt)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join(''); }
     catch (e) { let h = 0; for (const ch of txt) h = (h * 31 + ch.charCodeAt(0)) | 0; return 'h' + h; }
   }

@@ -224,6 +224,7 @@ ol.steps li::before{content:counter(st);width:30px;height:30px;border-radius:50%
 @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.6}}
 @media(max-width:560px){.sec-b{padding:14px}.story{font-size:19px}.artcard{grid-template-columns:1fr}.frame{display:none}}
 </style>
+<script src="../parent-pin.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -1762,7 +1763,8 @@ const fmtDate=t=>{ try{ return new Date(t).toLocaleDateString([], {month:"short"
 function scoreTxt(s){ return s&&s.done?(s.total?`${s.score}/${s.total}`:"✓"):"–"; }
 function renderParent(){
   const box=$("parentBox");
-  if(!parentOK){ const creating=!pin;
+  if(!parentOK){ if (window.BLEPin) { const ok = () => { parentOK = true; renderParent(); }; box.innerHTML = BLEPin.waitHTML(); BLEPin.bindAgain(box, ok); BLEPin.ask(ok); return; }  /* one parent PIN for every app */
+    const creating=!pin;
     box.innerHTML=`<div class="pinbox"><div style="font-size:52px">👪</div><h1 style="font-size:28px">${creating?"Create a parent PIN":"Enter your parent PIN"}</h1>
       <p class="note">${creating?"Pick 4 numbers. You'll need this PIN to see progress and change settings.":"Progress and settings are behind this PIN."}</p>
       <form id="pinform"><input id="pinin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="PIN"><br><br><button class="btn" type="submit">${creating?"Save PIN":"Unlock"}</button></form><p class="err" id="pinerr"></p>
@@ -1770,7 +1772,7 @@ function renderParent(){
     $("pinin").focus();
     $("pinform").onsubmit=e=>{ e.preventDefault(); const v=$("pinin").value.trim();
       if(!/^\d{4}$/.test(v)){ $("pinerr").textContent="Use exactly 4 numbers."; return; }
-      if(creating){ pin=v; LS.set("la3-pin",pin); parentOK=true; renderParent(); } else if(v===pin){ parentOK=true; renderParent(); } else { $("pinerr").textContent="That PIN doesn't match. Try again."; $("pinin").value=""; } };
+      if(creating){ pin=v; LS.set("la3-pin",pin); window.BLEPin&&BLEPin.setPin(v); parentOK=true; renderParent(); } else if(v===pin){ parentOK=true; renderParent(); } else { $("pinerr").textContent="That PIN doesn't match. Try again."; $("pinin").value=""; } };
     return; }
   const who=roster.includes(pview.who)?pview.who:(roster.includes(student)?student:roster[0]||""); pview.who=who;
   const tabs=[["progress","📊 Progress"],["scores","📝 Scores"],["writing","✍️ Writing"],["reading","📚 Reading log"],["art","🎨 Art gallery"],["guide","🌼 How it works"],["settings","⚙️ Backup & settings"]];
@@ -1829,7 +1831,7 @@ function renderParent(){
       if(!d||d.app!=="wildflower-la3"||!Array.isArray(d.roster)){ $("rsmsg").textContent="That code isn't a backup for this app."; return; }
       if(!armed){ armed=true; $("rsgo").textContent="Yes, replace everything"; $("rsmsg").textContent="This replaces all progress on this device."; return; }
       roster=d.roster; prog=d.prog||{}; if(!roster.includes(student)) student=""; saveAll(); renderParent(); };
-    $("pinsave").onclick=()=>{ const v=$("newpin").value.trim(); if(!/^\d{4}$/.test(v)){ $("pinmsg").textContent="Use exactly 4 numbers."; return; } pin=v; LS.set("la3-pin",pin); $("pinmsg").textContent="PIN changed."; $("newpin").value=""; };
+    $("pinsave").onclick=()=>{ const v=$("newpin").value.trim(); if(!/^\d{4}$/.test(v)){ $("pinmsg").textContent="Use exactly 4 numbers."; return; } pin=v; LS.set("la3-pin",pin); window.BLEPin&&BLEPin.setPin(v); $("pinmsg").textContent="PIN changed."; $("newpin").value=""; };
     const twoTap=(b,label,act)=>b.onclick=()=>{ if(b.dataset.armed){ act(); return; } const orig=b.textContent; b.dataset.armed="1"; b.textContent=label; setTimeout(()=>{ if(b.isConnected){ delete b.dataset.armed; b.textContent=orig; } },4000); };
     box.querySelectorAll("[data-reset]").forEach(b=>twoTap(b,"Tap again to reset",()=>{ const n=b.dataset.reset; delete prog[n]; P(n); saveAll(); renderParent(); $("stumsg").textContent=`${n}'s progress was reset.`; }));
     box.querySelectorAll("[data-remove]").forEach(b=>twoTap(b,"Tap again to remove",()=>{ const n=b.dataset.remove; roster=roster.filter(x=>x!==n); delete prog[n]; if(student===n) student=""; saveAll(); renderParent(); $("stumsg").textContent=`${n} was removed.`; }));

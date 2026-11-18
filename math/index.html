@@ -393,6 +393,13 @@ const sections = {
 
 let state = { section: null, step: 0, onBreak: false, solved: { trip: 0, ops: 0, rate: 0, pip: 0, mean: 0, lcm: 0, eq: 0, tbl: 0, dec: 0, frac: 0, est: 0, mix: 0, fdp: 0, area: 0, fdiv: 0, d2f: 0, fof: 0 }, fo: null, foLevel: "small", dfr: null, dfLevel: "hun", fv: null, fvLevel: "fw", ar: null, arKind: "see", fd: null, fdKind: "mix", mx: null, mixMode: "toImp", es: null, esLevel: "ten", t: null, dc: null, fr: null, frLevel: "easy", lc: null, lcSize: "easy", e: null, eqLevel: "pos",
   p: null, size: "small", q: null, level: "easy", r: null, pp: null, m: null };
+/* one-time fresh start: wipe all saved progress once, so every count starts Nov 18, 2026 */
+try {
+  if (localStorage.getItem("mathFreshStart") !== "2026-11-18") {
+    ["mathPlanner", "mathDaily", "mathLog", "mathTimer"].forEach(k => localStorage.removeItem(k));
+    localStorage.setItem("mathFreshStart", "2026-11-18");
+  }
+} catch (e) {}
 state.pipDone = {};
 try { const s = JSON.parse(localStorage.getItem("mathPlanner")); if (s && s.solved) state.solved = Object.assign(state.solved, s.solved); if (s && s.pipDone) state.pipDone = s.pipDone; } catch (e) {}
 function save() { try { localStorage.setItem("mathPlanner", JSON.stringify({ solved: state.solved, pipDone: state.pipDone })); } catch (e) {} countSolved(); }

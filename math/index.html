@@ -382,6 +382,9 @@ const sections = {
   tbl:  { title: "Fill the Table", sub: "Find the price for 1, then fill in every blank.", steps: ["Pick", "Price for 1", "Fill in", "Check"] },
   dec:  { title: "Decimal Times", sub: "Estimate, multiply without the dots, then put the dot back.", steps: ["Pick", "Estimate", "Multiply", "Dot", "Check"] },
   frac: { title: "Fraction Times", sub: "Estimate, multiply straight across, then simplify.", steps: ["Pick", "Estimate", "Multiply", "Simplify", "Check"] },
+  prop: { title: "Proportions", sub: "Set it up, find the change, then do the same change to the other number.", steps: ["Pick", "Set up", "Find the change", "Same change", "Check"] },
+  cv:   { title: "Center & Spread", sub: "Mean for \"on average\". Range for \"variability.\"", steps: ["Pick", "(a) Number", "(a) Answer", "(b) Number", "(b) Answer", "Check"] },
+  mixw: { title: "Mixed × Whole", sub: "Split it: multiply the wholes, multiply the pieces, then add.", steps: ["Pick", "Estimate", "Wholes", "Pieces", "Add", "Check"] },
   fof:  { title: "Fraction of a Number", sub: "Find 1 group, then take as many groups as the top number says.", steps: ["Pick", "Guess", "1 group", "Take groups", "Check"] },
   d2f:  { title: "Decimal to Fraction", sub: "Read the place, write it over 10, 100, or 1000, then simplify.", steps: ["Pick", "Read it", "Write it", "Simplify", "Check"] },
   fdiv: { title: "Fraction Divide", sub: "Guess first. Keep, change, flip. Then multiply and simplify.", steps: ["Pick", "Guess", "Flip", "Multiply", "Simplify", "Check"] },
@@ -392,7 +395,7 @@ const sections = {
   mean: { title: "What Does It Mean?", sub: "The math is already done. You find what each number means.", steps: ["Pick a story", "Find the numbers", "Match the math"] }
 };
 
-let state = { section: null, step: 0, onBreak: false, solved: { trip: 0, ops: 0, rate: 0, pip: 0, mean: 0, lcm: 0, eq: 0, tbl: 0, dec: 0, frac: 0, est: 0, mix: 0, fdp: 0, area: 0, fdiv: 0, d2f: 0, fof: 0 }, fo: null, foLevel: "small", dfr: null, dfLevel: "hun", fv: null, fvLevel: "fw", ar: null, arKind: "see", fd: null, fdKind: "mix", mx: null, mixMode: "toImp", es: null, esLevel: "ten", t: null, dc: null, fr: null, frLevel: "easy", lc: null, lcSize: "easy", e: null, eqLevel: "pos",
+let state = { section: null, step: 0, onBreak: false, solved: { trip: 0, ops: 0, rate: 0, pip: 0, mean: 0, lcm: 0, eq: 0, tbl: 0, dec: 0, frac: 0, est: 0, mix: 0, fdp: 0, area: 0, fdiv: 0, d2f: 0, fof: 0, mixw: 0, cv: 0, prop: 0 }, pr: null, prKey: "any", cv: null, cvKey: "any", mw: null, mwLevel: "small", fo: null, foLevel: "small", dfr: null, dfLevel: "hun", fv: null, fvLevel: "fw", ar: null, arKind: "see", fd: null, fdKind: "mix", mx: null, mixMode: "toImp", es: null, esLevel: "ten", t: null, dc: null, fr: null, frLevel: "easy", lc: null, lcSize: "easy", e: null, eqLevel: "pos",
   p: null, size: "small", q: null, level: "easy", r: null, pp: null, m: null };
 /* one-time fresh start: wipe all saved progress once, so every count starts Nov 18, 2026 */
 try {
@@ -609,7 +612,7 @@ document.addEventListener("click", e => {
 /* ---------- parent area (behind the PIN): daily totals, problem log, backup ---------- */
 function renderParent() {
   pinOkUntil = Date.now() + 10 * 60000;
-  const tabs = [["daily", "Daily totals", renderDaily], ["log", "Problem log", renderLog], ["backup", "Backup & restore", renderBackup]];
+  const tabs = [["daily", "Daily totals", renderDaily], ["log", "Problem log", renderLog], ["backup", "Backup & restore", renderBackup], ["settings", "Settings", () => { renderSettingsCard(); renderSelfCard(); }]];
   const cur = tabs.find(t => t[0] === state.parentTab) || tabs[0];
   const bar = el(`<section class="card" style="margin-bottom:14px"><div class="choices" role="tablist">${tabs.map(([k, n]) =>
     `<button type="button" role="tab" data-t="${k}" aria-selected="${k === cur[0]}" class="${k === cur[0] ? "picked" : ""}">${n}</button>`).join("")}</div></section>`);
@@ -621,6 +624,60 @@ function renderParent() {
   lock.firstElementChild.onclick = () => { pinOkUntil = 0; state.section = null; state.step = 0; render(); };
   stage.appendChild(lock);
 }
+/* ---------- Help Pip limit: after some Pip problems, Pip rests until she finishes problems in other activities ---------- */
+let pipRule = { pip: 3, other: 3 }, pipGate = { pipRun: 0, others: 0, resting: false };
+try { const r = JSON.parse(localStorage.getItem("mathPipRule")); if (r && r.pip > 0 && r.other > 0) pipRule = r; } catch (e) {}
+try { const g = JSON.parse(localStorage.getItem("mathPipGate")); if (g) pipGate = Object.assign(pipGate, g); } catch (e) {}
+let gateSnap = { pip: state.solved.pip || 0, all: sumSolved() };
+function saveGate() { try { localStorage.setItem("mathPipGate", JSON.stringify(pipGate)); } catch (e) {} }
+function gateCount() {
+  const pip = state.solved.pip || 0, all = sumSolved(), dp = pip - gateSnap.pip, dOther = (all - pip) - (gateSnap.all - gateSnap.pip);
+  gateSnap = { pip, all };
+  if (dp < 0 || dOther < 0 || dp + dOther > 5) return;   // a restore or reset, not real work
+  if (dp > 0) { pipGate.pipRun += dp; if (pipGate.pipRun >= pipRule.pip) { pipGate.resting = true; pipGate.others = 0; } }
+  if (dOther > 0) { pipGate.others += dOther; if (pipGate.others >= pipRule.other) { pipGate.resting = false; pipGate.pipRun = 0; pipGate.others = 0; } }
+  saveGate();
+}
+{ const s0 = save; save = function () { s0(); gateCount(); }; }
+{ const pm0 = pipMeet; pipMeet = function () {
+  if (!pipGate.resting) return pm0();
+  const left = pipRule.other - pipGate.others;
+  const c = el(`<section class="card">
+    ${pipSay(`My batteries need a recharge! 🔋 Go solve ${left} more ${left === 1 ? "problem" : "problems"} in other activities, and I'll be ready to learn again.`)}
+    <div class="meter"><span style="width:${pipGate.others / pipRule.other * 100}%"></span></div>
+    <p class="sub" style="margin:0">${pipGate.others} of ${pipRule.other} done</p>
+    <button class="primary" type="button" id="pipHome">Pick another activity</button>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelector("#pipHome").onclick = () => { state.section = null; state.step = 0; render(); };
+}; }
+{ const rh0 = renderHome; renderHome = function () {
+  rh0();
+  const t = stage.querySelector('[data-s="pip"] .ct');
+  if (t && pipGate.resting) { const left = pipRule.other - pipGate.others; t.textContent = `Pip is recharging 🔋 Finish ${left} more ${left === 1 ? "problem" : "problems"} in other activities to wake him.`; }
+}; }
+function renderSettingsCard() {
+  const d = el(`<details class="card backup" open><summary>Settings</summary>
+    <h3 style="margin:8px 0 0">Help Pip limit</h3>
+    <p class="sub">After this many Help Pip problems, Pip rests until she finishes problems in other activities.</p>
+    <div class="row" style="align-items:center">
+      <label>Help Pip problems before a rest <input type="number" id="rp" min="1" max="20" value="${pipRule.pip}" style="width:80px"></label>
+      <label>Other problems to wake Pip <input type="number" id="ro" min="1" max="20" value="${pipRule.other}" style="width:80px"></label>
+    </div>
+    <div class="row" style="align-items:center"><button class="primary" type="button" id="rsave">Save</button><span class="sub" id="rmsg" style="margin:0"></span></div>
+    <p class="sub">Right now: ${pipGate.resting ? `Pip is resting. ${pipGate.others} of ${pipRule.other} other problems done.` : `${pipGate.pipRun} of ${pipRule.pip} Help Pip problems used.`}</p>
+    <div><button class="quiet" type="button" id="rwake">Wake Pip now</button></div>
+  </details>`);
+  stage.appendChild(d);
+  d.querySelector("#rsave").onclick = () => {
+    const a = Math.max(1, Math.min(20, Math.round(+d.querySelector("#rp").value) || 3)), b = Math.max(1, Math.min(20, Math.round(+d.querySelector("#ro").value) || 3));
+    pipRule = { pip: a, other: b }; try { localStorage.setItem("mathPipRule", JSON.stringify(pipRule)); } catch (e) {}
+    if (pipGate.pipRun >= a) pipGate.resting = true; saveGate();
+    d.querySelector("#rmsg").textContent = `Saved: ${a} Help Pip, then ${b} other problems.`;
+  };
+  d.querySelector("#rwake").onclick = () => { pipGate = { pipRun: 0, others: 0, resting: false }; saveGate(); render(); };
+}
+
 document.getElementById("parentBtn").onclick = () => {
   const go = () => { state.section = "parent"; state.step = 0; state.onBreak = false; render(); };
   if (Date.now() < pinOkUntil) go(); else askPin(go);
@@ -654,6 +711,9 @@ function render() {
   if (state.section === "tbl") return [tblPick, tblUnit, tblFill, tblCheck][state.step]();
   if (state.section === "dec") return [decPick, decEst, decMult, decDot, decCheck][state.step]();
   if (state.section === "frac") return [frPick, frEst, frMult, frSimp, frCheck][state.step]();
+  if (state.section === "prop") return [propPick, propSetup, propChange, propSame, propCheck][state.step]();
+  if (state.section === "cv") return [cvPick, cvNum, cvFind, cvNum, cvFind, cvCheck][state.step]();
+  if (state.section === "mixw") return [mwPick, mwEst, mwWhole, mwPiece, mwAdd, mwCheck][state.step]();
   if (state.section === "fof") return [fofPick, fofGuess, fofOne, fofTake, fofCheck][state.step]();
   if (state.section === "d2f") return [dfPick, dfRead, dfWrite, dfSimp, dfCheck][state.step]();
   if (state.section === "fdiv") return [fdPick, fdGuess, fdFlip, fdMult, fdSimp, fdCheck][state.step]();
@@ -667,9 +727,9 @@ function render() {
 
 const HOME_GROUPS = [["rate", "Rates & tables"], ["num", "Numbers"], ["frac", "Fractions"], ["alg", "Equations"], ["think", "Thinking games"]];
 const HOME_TILES = [
-  ["trip", "Trip Planner", "mph", "rate"], ["rate", "Who's Fastest?", "÷1", "rate"], ["tbl", "Fill the Table", "▦", "rate"],
-  ["est", "Round & Estimate", "≈", "num"], ["dec", "Decimal Times", "0.1", "num"], ["fdp", "Fractions, Decimals & Percents", "%", "num"], ["lcm", "Least Common Multiple", "LCM", "num"], ["area", "Area", "ft²", "num"],
-  ["frac", "Fraction Times", "½×", "frac"], ["fdiv", "Fraction Divide", "½÷", "frac"], ["d2f", "Decimal to Fraction", ".5=½", "frac"], ["fof", "Fraction of a Number", "⅚ of", "frac"], ["mix", "Mixed Numbers", "4⅝", "frac"],
+  ["trip", "Trip Planner", "mph", "rate"], ["rate", "Who's Fastest?", "÷1", "rate"], ["tbl", "Fill the Table", "▦", "rate"], ["prop", "Proportions", "a/b=c/d", "rate"],
+  ["est", "Round & Estimate", "≈", "num"], ["dec", "Decimal Times", "0.1", "num"], ["fdp", "Fractions, Decimals & Percents", "%", "num"], ["lcm", "Least Common Multiple", "LCM", "num"], ["area", "Area", "ft²", "num"], ["cv", "Center & Spread", "x̄↔", "num"],
+  ["frac", "Fraction Times", "½×", "frac"], ["fdiv", "Fraction Divide", "½÷", "frac"], ["d2f", "Decimal to Fraction", ".5=½", "frac"], ["fof", "Fraction of a Number", "⅚ of", "frac"], ["mixw", "Mixed × Whole", "2⅓×5", "frac"], ["mix", "Mixed Numbers", "4⅝", "frac"],
   ["ops", "Order of Operations", "( )", "alg"], ["eq", "Solve & Plot", "x=", "alg"],
   ["mean", "What Does It Mean?", "?", "think"]
 ];
@@ -691,6 +751,84 @@ function renderHome() {
   </section>`);
   stage.appendChild(c);
   c.querySelectorAll("[data-s]").forEach(b => b.onclick = () => { state.section = b.dataset.s; state.step = 0; render(); });
+}
+
+/* ---------- home: Help Pip, or "Do it yourself" with the same rotation as Pip ----------
+   She picks between the 2 activities she has done the least, does 3 problems there, then picks again. */
+let selfRule = { per: 3 }, selfState = { done: {}, set: null, offer: null };
+try { const r = JSON.parse(localStorage.getItem("mathSelfRule")); if (r && r.per > 0) selfRule = r; } catch (e) {}
+try { const s = JSON.parse(localStorage.getItem("mathSelf")); if (s) selfState = Object.assign(selfState, s); } catch (e) {}
+function saveSelf() { try { localStorage.setItem("mathSelf", JSON.stringify(selfState)); } catch (e) {} }
+const SELF_KEYS = HOME_TILES.map(t => t[0]);
+const tileFor = k => HOME_TILES.find(t => t[0] === k);
+let selfSnap = Object.assign({}, state.solved);
+function selfCount() {
+  const diffs = SELF_KEYS.map(k => [k, (state.solved[k] || 0) - (selfSnap[k] || 0)]).filter(([, d]) => d);
+  selfSnap = Object.assign({}, state.solved);
+  if (diffs.some(([, d]) => d < 0 || d > 5)) return;   // a restore or reset, not real work
+  diffs.forEach(([k, d]) => {
+    selfState.done[k] = (selfState.done[k] || 0) + d;
+    if (selfState.set && selfState.set.key === k) { selfState.set.n += d; if (selfState.set.n >= selfRule.per) { selfState.set = null; selfState.offer = null; } }
+  });
+  saveSelf();
+}
+{ const s1 = save; save = function () { s1(); selfCount(); }; }
+function selfOffer() {
+  if (selfState.offer && selfState.offer.length === 2 && selfState.offer.every(k => SELF_KEYS.includes(k))) return selfState.offer;
+  const keys = SELF_KEYS.map(k => [k, selfState.done[k] || 0, Math.random()]).sort((a, b) => a[1] - b[1] || a[2] - b[2]).map(x => x[0]);
+  selfState.offer = keys.slice(0, 2); saveSelf();
+  return selfState.offer;
+}
+renderHome = function () {
+  if (selfState.set && !SELF_KEYS.includes(selfState.set.key)) selfState.set = null;
+  const set = selfState.set, offer = set ? [set.key] : selfOffer(), leftPip = pipRule.other - pipGate.others;
+  const counts = SELF_KEYS.map(k => selfState.done[k] || 0), round = Math.floor(Math.min(...counts) / selfRule.per);
+  const doneRound = counts.filter(n => n >= (round + 1) * selfRule.per).length;
+  const tile = k => { const [key, n, sym, g] = tileFor(k);
+    return `<button class="tile" type="button" data-s="${key}" style="--c:var(--g-${g})"><span class="sym">${sym}</span><span class="nm">${n.replace("&", "&amp;")}</span>
+      <span class="ct">${set ? `Keep going: ${set.n} of ${selfRule.per} done` : `${selfRule.per} problems`}</span></button>`; };
+  const c = el(`<section class="card">
+    <h2>What do you want to do?</h2>
+    <div class="tiles">
+      <button class="tile wide" type="button" data-s="pip" style="--c:var(--g-think)">
+        <span class="sym">${pipFace}</span>
+        <span><span class="nm">Help Pip</span><span class="ct" style="display:block">${pipGate.resting
+          ? `Pip is recharging 🔋 Finish ${leftPip} more ${leftPip === 1 ? "problem" : "problems"} on your own to wake him.`
+          : "Pip's math got tangled again. Be the teacher!"}</span></span>
+      </button>
+    </div>
+    <h2 style="margin-top:6px">Or do it yourself: ${set ? "finish what you started" : "pick one"}</h2>
+    <div class="tiles">${offer.map(tile).join("")}</div>
+    <p class="sub" style="margin:0">Round ${round + 1}: you've finished ${doneRound} of ${SELF_KEYS.length} activities. When you've done them all, a new round starts.</p>
+    <div class="meter"><span style="width:${doneRound / SELF_KEYS.length * 100}%"></span></div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelectorAll("[data-s]").forEach(b => b.onclick = () => {
+    const k = b.dataset.s;
+    if (k !== "pip" && !selfState.set) { selfState.set = { key: k, n: 0 }; selfState.offer = null; saveSelf(); }
+    state.section = k; state.step = 0; render();
+  });
+};
+/* Parent → Settings: the rotation, how much she has done in each activity, and a way in to any activity */
+function renderSelfCard() {
+  const cur = selfState.set ? `working on ${tileFor(selfState.set.key)[1]}, ${selfState.set.n} of ${selfRule.per} done` : `choosing between ${selfOffer().map(k => tileFor(k)[1]).join(" and ")}`;
+  const d = el(`<details class="card backup" open style="margin-top:14px"><summary>Do it yourself</summary>
+    <p class="sub">On the home screen she picks between the 2 activities she has done the least, then does this many problems there before picking again.</p>
+    <div class="row" style="align-items:center"><label>Problems per activity <input type="number" id="sp" min="1" max="10" value="${selfRule.per}" style="width:80px"></label>
+      <button class="primary" type="button" id="ssave">Save</button><span class="sub" id="smsg" style="margin:0"></span></div>
+    <p class="sub">Right now she's ${cur}.</p>
+    <div class="tbl-wrap"><table class="rt"><tr><th scope="col">Activity</th><th scope="col">Problems done</th><th></th></tr>
+      ${SELF_KEYS.map(k => `<tr><th scope="row">${tileFor(k)[1]}</th><td>${selfState.done[k] || 0}</td><td><button class="quiet" type="button" data-open="${k}" style="padding:6px 10px">Open</button></td></tr>`).join("")}
+    </table></div>
+    <p class="sub">"Open" takes you into any activity yourself, to show her or try it. Problems you finish there count like hers.</p>
+  </details>`);
+  stage.appendChild(d);
+  d.querySelector("#ssave").onclick = () => {
+    const v = Math.max(1, Math.min(10, Math.round(+d.querySelector("#sp").value) || 3));
+    selfRule = { per: v }; try { localStorage.setItem("mathSelfRule", JSON.stringify(selfRule)); } catch (e) {}
+    d.querySelector("#smsg").textContent = `Saved: ${v} problems per activity.`;
+  };
+  d.querySelectorAll("[data-open]").forEach(b => b.onclick = () => { state.section = b.dataset.open; state.step = 0; render(); });
 }
 
 /* ---------- problem log card (for grown-ups) ---------- */
@@ -1869,6 +2007,84 @@ const PIP_TOPICS = {
         ? [[`${a} × ${u}: take ${a} groups`, true], [`Stop at ${u}`, false, `That's what Pip did. ${u} is just 1 group, and we need ${a}.`], [`${N} − ${u}`, false, `Let's test it: that takes away 1 group and keeps the other ${b - 1}. We want ${a} groups.`]]
         : [[`÷ ${b}, the bottom number`, true], [`÷ ${a}, the top number`, false, `That's what Pip did. The top number tells how many groups to take, not how many to cut.`], [`× ${b}`, false, `Let's test it: that would make even more ${st.items} than we started with.`]],
       fixed: `<b>${ans} ${st.items}.</b> ${N} ÷ ${b} = ${u} in each group, then ${a} × ${u} = ${ans}. It's ${2 * a > b ? "more" : "less"} than half of ${N}, so it fits.` };
+  } },
+  mixw: { label: "Mixed × whole", sym: "2⅓×5", make() {
+    let W, n, d, w, p, extra, r;
+    do { d = rint(2, 8); n = rint(1, d - 1); W = rint(1, 6); w = rint(2, 6); p = n * w; extra = Math.floor(p / d); r = p % d; }
+    while (gcd(n, d) !== 1 || r === 0 || gcd(r, d) !== 1 || extra === 0);
+    const A = W * w + extra, base = W * w, right = Math.random() < .25, kind = pick(["forget", "bottom"]);
+    const mix = `${W} ${n}/${d}`, ans = `${A} ${r}/${d}`, bad = `${base} ${n}/${d}`;
+    const good = [{ label: "Step 1: Split it", math: `${mix} × ${w} = (${W} × ${w}) + (${n}/${d} × ${w})` }, { label: "Step 2: Wholes", math: `${W} × ${w} = ${base}` },
+      { label: "Step 3: Pieces", math: `${n}/${d} × ${w} = ${p}/${d} = ${extra} ${r}/${d}` }, { label: "Step 4: Add", math: `${base} + ${extra} ${r}/${d} = ${ans}` }];
+    const steps = good.map(s => ({ ...s }));
+    if (!right) {
+      steps[2] = kind === "forget" ? { label: "Step 3: Pieces", math: `The ${n}/${d} stays ${n}/${d}` } : { label: "Step 3: Pieces", math: `${n}/${d} × ${w} = ${n * w}/${d * w} = ${n}/${d}` };
+      steps[3] = { label: "Step 4: Add", math: `${base} + ${n}/${d} = ${bad}` };
+    }
+    return { q: `Multiply. Write your answer as a mixed number in simplest form: <b>${mix} × ${w}</b>`, good, steps, wrong: right ? -1 : 2,
+      claim: `I think ${mix} × ${w} = <b>${right ? ans : bad}</b>.`,
+      offRight: `Good eye. ${mix} × ${w} means ${w} groups of ${mix}. The ${w} copies of ${n}/${d} make ${p}/${d}, which is more than 1 whole. Pip only kept ${n}/${d}.`,
+      yesWrong: `Let's check by adding. ${w} groups of ${mix}: the ${W}s make ${base}, and ${w} groups of ${n}/${d} make ${p}/${d}. That's more than 1 whole. Is Pip's answer bigger than ${base + 1}?`,
+      yesRight: `You checked it. The ${W}s make ${base}, and ${w} groups of ${n}/${d} make ${p}/${d} = ${extra} ${r}/${d}. Together that's ${ans}.`,
+      offWrong: `Let's check together. ${W} × ${w} = ${base}, and ${n}/${d} × ${w} = ${p}/${d} = ${extra} ${r}/${d}. Add them. Does it match Pip?`,
+      stepOk: i => i === 0 ? `Step 1 is right: split ${mix} into ${W} and ${n}/${d}, and multiply both by ${w}.` : i === 1 ? `Step 2 is right: ${W} × ${w} = ${base}.` : `Step 4 added what Step 3 gave it. Look at the step before it.`,
+      fixQ: kind === "forget" ? `In Step 3 I left the ${n}/${d} alone. What should happen to it?` : `In Step 3 I multiplied the top and the bottom by ${w}. What should I multiply?`,
+      fixes: kind === "forget"
+        ? [[`Multiply it by ${w} too: ${n}/${d} × ${w}`, true], [`Leave it as ${n}/${d}`, false, `That's what Pip did. All of ${mix} gets multiplied by ${w}, the ${n}/${d} too.`], [`Add ${w} to it`, false, `Let's test it: ${w} groups of ${n}/${d} is ${Array.from({ length: w }, () => `${n}/${d}`).join(" + ")}. That's ${p}/${d}, not ${w} ${n}/${d}.`]]
+        : [[`Only the top: ${n} × ${w} = ${p}, so ${p}/${d}`, true], [`Top and bottom by ${w}`, false, `That's what Pip did. ${n * w}/${d * w} is the same size as ${n}/${d}, so nothing got bigger.`], [`Only the bottom`, false, `Let's test it: 1/${d * w} is smaller than ${n}/${d}. Multiplying by ${w} should make it bigger.`]],
+      fixed: `<b>${ans}.</b> ${W} × ${w} = ${base}, and ${n}/${d} × ${w} = ${p}/${d} = ${extra} ${r}/${d}. Add them: ${ans}.` };
+  } },
+  cv: { label: "Mean or range?", sym: "x̄↔", make() {
+    const ctx = pick(CV_CTX), d = makeCvData(ctx), q = pick(d.qs), x = ctx, col = cvCol(q), wcol = col === "mean" ? "range" : "mean";
+    const vals = col === "mean" ? d.means : d.ranges, other = col === "mean" ? d.ranges : d.means;
+    const right = Math.random() < .25, kind = pick(["col", "col", "dir"]);
+    const T = i => `${x.Who} ${CV_L[i]}`, why = q.kind === "center" ? `"On average"` : `"Variability"`;
+    const good = [{ label: "Step 1: Which number?", math: `${why} → look at the ${col}` }, { label: "Step 2: Find it", math: `The ${cvWord(q)} is ${vals[q.ans]}: ${T(q.ans)}` }];
+    const steps = good.map(s => ({ ...s }));
+    let pipI = q.ans, w = -1;
+    if (!right && kind === "col") { pipI = cvExt(other, q.dir); w = 0; steps[0].math = `${why} → look at the ${wcol}`; steps[1].math = `The ${q.dir > 0 ? "biggest" : "smallest"} ${wcol} is ${other[pipI]}: ${T(pipI)}`; }
+    if (!right && kind === "dir") { pipI = cvExt(vals, -q.dir); w = 1; steps[1].math = `The ${cvWord(q, -q.dir)} is ${vals[pipI]}: ${T(pipI)}`; }
+    return { q: `${x.intro}<br>${cvLines(d).join("<br>").replace(/<\/?b>/g, "")}<br><b>${q.text}</b>`, good, steps, wrong: w,
+      claim: `I think the answer is <b>${T(pipI)}</b>.`,
+      offRight: w === 0 ? `Good eye. Pip looked at the ${wcol}. ${wcol === "range" ? `The range tells how spread out the ${x.many} are, not the average.` : `The mean is the average ${x.one}, not how spread out they are.`}`
+                        : `Good eye. ${T(pipI)} has the ${cvWord(q, -q.dir)}. The question needs the ${cvWord(q)}.`,
+      yesWrong: w === 0 ? `Let's check. The question says ${why.toLowerCase()}. Which number tells that: the mean or the range? Pip used the ${wcol}.`
+                        : `Let's check. ${T(pipI)}'s ${col} is ${vals[pipI]}. Is that the ${cvWord(q)}?`,
+      yesRight: `You checked it. ${why} → the ${col}. The ${cvWord(q)} is ${vals[q.ans]}, so it's ${T(q.ans)}.`,
+      offWrong: `Let's check together. ${why} means look at the ${col}. The ${cvWord(q)} is ${vals[q.ans]}. Whose is it?`,
+      stepOk: i => i === 0 ? `Step 1 is right: ${why.toLowerCase()} means look at the ${col}. Look at the next step.` : `Step 2 found the ${q.dir > 0 ? "biggest" : "smallest"} number in the column Step 1 picked. Look at which number Step 1 picked.`,
+      fixQ: w === 0 ? `In Step 1 I used the ${wcol}. Which number should I use?` : `In Step 2 I picked the ${cvWord(q, -q.dir)}. Which should I pick?`,
+      fixes: w === 0
+        ? [[`The ${col}`, true], [`The ${wcol}`, false, `That's what Pip did. ${wcol === "range" ? "The range is about spread, not average." : "The mean is the average, not the spread."}`], ["Add the mean and the range", false, "Let's test that idea: adding them mixes two different things. The question needs just one of them."]]
+        : [[`The ${cvWord(q)}`, true], [`The ${cvWord(q, -q.dir)}`, false, `That's what Pip did. That's the other end.`], [`The ${col} in the middle`, false, `The question asks for the most or least, so the answer is at one end.`]],
+      fixed: `<b>${T(q.ans)}.</b> ${why} → look at the ${col}. The ${cvWord(q)} is ${vals[q.ans]}.` };
+  } },
+  prop: { label: "Proportions", sym: "a/b=c/d", make() {
+    const p = makePropData(pick(PROP_STORIES)), s = p.st, unit = p.unkBot ? s.bot : s.top, other = p.unkBot ? p.G[1] : p.G[0];
+    const kFrom = p.unkBot ? p.G[0] : p.G[1], op = p.down ? "÷" : "×", opp = p.down ? "×" : "÷";
+    const right = Math.random() < .25, kind = pick(["stop", "stop", "opp"]);
+    const eq = `${p.G[0]}/${p.G[1]} = ${p.unkBot ? `${p.N[0]}/${p.v}` : `${p.v}/${p.N[1]}`}`;
+    const good = [{ label: "Step 1: Set it up", math: eq }, { label: "Step 2: Find the change", math: `${kFrom} ${op} ${p.k} = ${p.known}` }, { label: `Step 3: Same change to the ${unit}`, math: `${other} ${op} ${p.k} = ${p.ans}` }];
+    const steps = good.map(x => ({ ...x }));
+    const oppV = p.down ? other * p.k : other / p.k;
+    let bad = p.ans, w = -1;
+    if (!right && kind === "stop") { steps[2] = { label: "Step 3: The answer", math: `${p.v} = ${p.k}` }; bad = p.k; w = 2; }
+    if (!right && kind === "opp" && Number.isInteger(oppV)) { steps[2].math = `${other} ${opp} ${p.k} = ${oppV}`; bad = oppV; w = 2; }
+    const cross = v => p.unkBot ? [p.G[0] * v, p.G[1] * p.N[0]] : [p.G[0] * p.N[1], p.G[1] * v];
+    const [cl, cr] = cross(bad);
+    return { q: `${p.q.replace(/<\/?b>/g, "")} <b>Use a proportion.</b>`, good, steps, wrong: w,
+      claim: `I think the answer is <b>${bad} ${unit}</b>.`,
+      offRight: bad === p.k ? `Good eye. ${p.k} is the change Pip found in Step 2. It isn't the ${unit}! The change still has to be used on ${other}.`
+                            : `Good eye. The ${p.unkBot ? s.top : s.bot} got ${p.down ? "smaller" : "bigger"}, so the ${unit} should get ${p.down ? "smaller" : "bigger"} too. ${bad} went the wrong way.`,
+      yesWrong: `Let's cross-check: ${p.unkBot ? `${p.G[0]} × ${bad} = ${cl} and ${p.G[1]} × ${p.N[0]} = ${cr}` : `${p.G[0]} × ${p.N[1]} = ${cl} and ${p.G[1]} × ${bad} = ${cr}`}. Do they match?`,
+      yesRight: `You checked it. ${p.down ? "Smaller" : "Bigger"} ${p.unkBot ? s.top : s.bot} means ${p.down ? "fewer" : "more"} ${unit}, and the cross products match.`,
+      offWrong: `Let's check together: ${p.unkBot ? `${p.G[0]} × ${p.ans} = ${p.G[0] * p.ans} and ${p.G[1]} × ${p.N[0]} = ${p.G[1] * p.N[0]}` : `${p.G[0]} × ${p.N[1]} = ${p.G[0] * p.N[1]} and ${p.G[1]} × ${p.ans} = ${p.G[1] * p.ans}`}. Do they match?`,
+      stepOk: i => i === 0 ? `Step 1 is right: ${s.top} on top, ${s.bot} on the bottom, on both sides.` : `Step 2 is right: ${kFrom} ${op} ${p.k} = ${p.known}. Look at the next step.`,
+      fixQ: bad === p.k ? `In Step 3 I said ${p.v} = ${p.k}. What should I do with the ${p.k}?` : `In Step 3 I did ${other} ${opp} ${p.k}. What should I do?`,
+      fixes: bad === p.k
+        ? [[`Use it on ${other}: ${other} ${op} ${p.k}`, true], [`Nothing, ${p.v} = ${p.k}`, false, `That's what Pip did. ${p.k} is how much things changed, not the ${unit}.`], [`Add it: ${other} + ${p.k}`, false, `Let's test that: the change was ${op} ${p.k}, so the ${unit} change the same way, by ${op} ${p.k}.`]]
+        : [[`The same change: ${other} ${op} ${p.k}`, true], [`The opposite: ${other} ${opp} ${p.k}`, false, `That's what Pip did. Both numbers have to change the same way.`], [`Leave it as ${other}`, false, `The ${p.unkBot ? s.top : s.bot} changed, so the ${unit} change too.`]],
+      fixed: `<b>${p.ans} ${unit}.</b> ${kFrom} ${op} ${p.k} = ${p.known}, so do the same to the ${unit}: ${other} ${op} ${p.k} = ${p.ans}.` };
   } }
 };
 
@@ -3801,6 +4017,467 @@ function fofCheck() {
   stage.appendChild(c);
   c.querySelector("#again").onclick = () => { state.solved.fof++; save(); state.fo = makeFof(state.foLevel); state.step = 1; render(); };
   c.querySelector("#pick").onclick = () => { state.solved.fof++; save(); state.step = 0; render(); };
+}
+
+/* ---------- mixed number × whole number (split it: wholes, then pieces, then add) ---------- */
+function makeMixw(level) {
+  for (let i = 0; i < 5000; i++) {
+    const d = level === "small" ? rint(2, 6) : rint(3, 10), n = rint(1, d - 1);
+    const W = level === "small" ? rint(1, 4) : rint(2, 9), w = level === "small" ? rint(2, 5) : rint(3, 9);
+    if (gcd(n, d) !== 1) continue;
+    const p = n * w, extra = Math.floor(p / d), r = p % d;
+    if (r === 0 || gcd(r, d) !== 1 || (level === "big" && extra === 0)) continue;
+    return { level, W, n, d, w, p, extra, r, A: W * w + extra, phase: 0 };
+  }
+}
+const MX = (W, n, d, cls = "") => `<span style="display:inline-flex;align-items:center;gap:6px"><span>${W}</span>${FR(n, d, cls)}</span>`;
+const mwProb = m => `<div class="fx">${MX(m.W, m.n, m.d)}<span>×</span><span>${m.w}</span></div>`;
+const mwTxt = m => `${m.W} ${m.n}/${m.d}`;
+
+function mwPick() {
+  const c = el(`<section class="card">
+    <h2>Pick a level</h2>
+    <div class="choices">
+      <button class="home-pick" type="button" data-l="small"><strong>Smaller numbers</strong><span>Like 2 1/3 × 5</span></button>
+      <button class="home-pick" type="button" data-l="big"><strong>Bigger numbers</strong><span>Like 6 3/8 × 7</span></button>
+    </div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelectorAll("[data-l]").forEach(b => b.onclick = () => { state.mwLevel = b.dataset.l; state.mw = makeMixw(b.dataset.l); state.step = 1; render(); });
+}
+
+function mwEst() {
+  const m = state.mw, lo = m.W * m.w, hi = (m.W + 1) * m.w;
+  const opts = [[Math.max(0, lo - m.w), lo, false], [lo, hi, true], [hi, hi + m.w, false]];
+  const c = el(`<section class="card">
+    ${mwProb(m)}
+    <h2>Before any math: about how big will the answer be?</h2>
+    <div class="choices" id="opts"></div>
+    <button class="quiet" id="hintBtn" type="button">Show me a hint</button>
+    <div id="hint"></div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelector("#hintBtn").onclick = e => {
+    c.querySelector("#hint").innerHTML = `<div class="hint">${mwTxt(m)} is more than ${m.W} but less than ${m.W + 1}. What are ${m.W} × ${m.w} and ${m.W + 1} × ${m.w}?</div>`;
+    e.target.disabled = true;
+  };
+  opts.forEach(([a, b, ok]) => {
+    const btn = el(`<button type="button">Between ${a} and ${b}</button>`);
+    btn.onclick = () => {
+      const fb = c.querySelector("#fb");
+      if (ok) {
+        c.querySelectorAll("#opts button").forEach(x => x.disabled = x !== btn); btn.classList.add("picked");
+        fb.innerHTML = `<div class="note ok">Yes. ${mwTxt(m)} is between ${m.W} and ${m.W + 1}, so × ${m.w} lands between ${lo} and ${hi}. Keep that in your pocket for the end.</div>`;
+        fb.appendChild(nextBtn(() => { state.step = 2; render(); }));
+      } else {
+        fb.innerHTML = `<div class="note look">Let's look at ${mwTxt(m)}. It's more than ${m.W} and less than ${m.W + 1}. So the answer is more than ${m.W} × ${m.w} and less than ${m.W + 1} × ${m.w}. Pick again whenever you're ready.</div>`;
+      }
+    };
+    c.querySelector("#opts").appendChild(btn);
+  });
+}
+
+function mwWhole() {
+  const m = state.mw;
+  const c = el(`<section class="card">
+    ${mwProb(m)}
+    <h2>Split it: ${mwTxt(m)} is ${m.W} + ${m.n}/${m.d}. Multiply each part by ${m.w}.</h2>
+    <div class="fx" style="font-size:1.4rem"><span>(</span><span>${m.W}</span><span>+</span>${FR(m.n, m.d)}<span>)</span><span>×</span><span>${m.w}</span></div>
+    <p>First the wholes:</p>
+    <div class="row" style="align-items:center">
+      <span class="ask">${m.W} × ${m.w} =</span>
+      <input type="number" id="ans" inputmode="numeric" aria-label="${m.W} times ${m.w}">
+      <button class="primary" id="chk" type="button">Check</button>
+    </div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  const input = c.querySelector("#ans");
+  const check = () => {
+    const fb = c.querySelector("#fb");
+    if (!input.value) { fb.innerHTML = `<div class="note look">Type a number first, then press Check.</div>`; return; }
+    const v = Number(input.value);
+    if (v === m.W * m.w) { state.step = 3; render(); return; }
+    fb.innerHTML = v === m.W + m.w
+      ? `<div class="note look">Let's test ${v}: that's ${m.W} + ${m.w}. Peek at the sign. It's ×! What is ${m.W} × ${m.w}?</div>`
+      : `<div class="note look">Let's test it: ${m.W} × ${m.w} means ${m.W} groups of ${m.w}. Count by ${m.w}s, ${m.W} times: ${Array.from({ length: m.W }, (_, i) => m.w * (i + 1)).join(", ")}.</div>`;
+  };
+  c.querySelector("#chk").onclick = check;
+  input.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+  input.focus();
+}
+
+function mwPiece() {
+  const m = state.mw, k = m.phase;
+  const pieces = `<div class="bar-track" style="gap:4px">${Array.from({ length: m.w }, () => `<i style="width:auto;min-width:44px;height:38px;padding:0 6px">${m.n}/${m.d}</i>`).join("")}</div>`;
+  const ask = k === 0
+    ? { q: `Now the pieces: ${m.n}/${m.d} × ${m.w}. That's ${m.w} groups of ${m.n}/${m.d}. How many ${m.d === 2 ? "halves" : `${m.d}ths`} is that?`, pre: `${FR(m.n, m.d)}<span>×</span><span>${m.w}</span><span>=</span>${FR("?", m.d)}`, ans: m.p, label: `${m.n} × ${m.w} =` }
+    : { q: `${m.p}/${m.d} is more than 1 whole. Every ${m.d} pieces make 1 whole. How many wholes are in ${m.p}/${m.d}?`, pre: `${FR(m.p, m.d)}<span>=</span><span>?</span>${FR(m.r, m.d)}`, ans: m.extra, label: "Wholes =" };
+  const c = el(`<section class="card">
+    ${mwProb(m)}
+    <p class="sub">Wholes: ${m.W} × ${m.w} = <b>${m.W * m.w}</b></p>
+    ${pieces}
+    <h2>${ask.q}</h2>
+    <div class="fx" style="font-size:1.4rem">${ask.pre}</div>
+    <div class="row" style="align-items:center">
+      <span class="ask">${ask.label}</span>
+      <input type="number" id="ans" inputmode="numeric" aria-label="${ask.label}">
+      <button class="primary" id="chk" type="button">Check</button>
+    </div>
+    <button class="quiet" id="hintBtn" type="button">Show me a hint</button>
+    <div id="hint"></div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelector("#hintBtn").onclick = e => {
+    c.querySelector("#hint").innerHTML = `<div class="hint">${k === 0 ? `Only the top changes. The pieces are still ${m.d === 2 ? "halves" : `${m.d}ths`}, so the bottom stays ${m.d}. Count the tops: ${m.n} × ${m.w}.` : `Count by ${m.d}s without going past ${m.p}: ${Array.from({ length: m.extra }, (_, i) => m.d * (i + 1)).join(", ")}. How many did you count?`}</div>`;
+    e.target.disabled = true;
+  };
+  const input = c.querySelector("#ans");
+  const check = () => {
+    const fb = c.querySelector("#fb");
+    if (!input.value) { fb.innerHTML = `<div class="note look">Type a number first, then press Check.</div>`; return; }
+    const v = Number(input.value);
+    if (v === ask.ans) {
+      if (k === 0 && m.p >= m.d) { m.phase = 1; render(); return; }
+      state.step = 4; render(); return;
+    }
+    if (k === 0) fb.innerHTML = v === m.n
+      ? `<div class="note look">${m.n}/${m.d} is just 1 group. There are ${m.w} groups. Count the pieces above.</div>`
+      : `<div class="note look">Let's test it: ${m.w} groups of ${m.n}/${m.d}. Add up the tops: ${Array.from({ length: m.w }, () => m.n).join(" + ")}. Do you get ${v}? The bottom stays ${m.d}.</div>`;
+    else fb.innerHTML = `<div class="note look">Let's test ${v}: ${v} wholes is ${v} × ${m.d} = ${v * m.d} pieces. We have ${m.p}. ${v * m.d > m.p ? "That's too many." : `There are still ${m.p - v * m.d} pieces left, enough for another whole.`}</div>`;
+  };
+  c.querySelector("#chk").onclick = check;
+  input.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+  input.focus();
+}
+
+function mwAdd() {
+  const m = state.mw, base = m.W * m.w;
+  const part = m.extra ? MX(m.extra, m.r, m.d) : FR(m.r, m.d);
+  const c = el(`<section class="card">
+    ${mwProb(m)}
+    <h2>Add the parts: ${base} + ${m.extra ? `${m.extra} ${m.r}/${m.d}` : `${m.r}/${m.d}`}</h2>
+    <div class="fx" style="font-size:1.4rem"><span>${base}</span><span>+</span>${part}<span>=</span>${MX("?", m.r, m.d)}</div>
+    <div class="row" style="align-items:center">
+      <span class="ask">Whole number part =</span>
+      <input type="number" id="ans" inputmode="numeric" aria-label="Whole number part">
+      <button class="primary" id="chk" type="button">Check</button>
+    </div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  const input = c.querySelector("#ans");
+  const check = () => {
+    const fb = c.querySelector("#fb");
+    if (!input.value) { fb.innerHTML = `<div class="note look">Type a number first, then press Check.</div>`; return; }
+    const v = Number(input.value);
+    if (v === m.A) { state.step = 5; render(); return; }
+    fb.innerHTML = v === base && m.extra
+      ? `<div class="note look">${base} is the wholes from the first part. The pieces made ${m.extra} more ${m.extra === 1 ? "whole" : "wholes"}. Add them too: ${base} + ${m.extra}.</div>`
+      : `<div class="note look">Let's test it: ${base} + ${m.extra} = ? The ${m.r}/${m.d} just comes along at the end.</div>`;
+  };
+  c.querySelector("#chk").onclick = check;
+  input.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+  input.focus();
+}
+
+function mwCheck() {
+  const m = state.mw, lo = m.W * m.w, hi = (m.W + 1) * m.w;
+  const c = el(`<section class="card">
+    <div class="fx">${MX(m.W, m.n, m.d)}<span>×</span><span>${m.w}</span><span>=</span>${MX(m.A, m.r, m.d, "hi")}</div>
+    <h2>The answer is ${m.A} ${m.r}/${m.d}.</h2>
+    <div class="note ok">Sense check: you said it would be between ${lo} and ${hi}. ${m.A} ${m.r}/${m.d} is between them, so it fits.</div>
+    <ol class="trail"><li>Wholes: ${m.W} × ${m.w} = ${lo}</li><li>Pieces: ${m.n}/${m.d} × ${m.w} = ${m.p}/${m.d}${m.extra ? ` = ${m.extra} ${m.r}/${m.d}` : ""}</li><li>Add: ${lo} + ${m.extra ? `${m.extra} ${m.r}/${m.d}` : `${m.r}/${m.d}`} = ${m.A} ${m.r}/${m.d}</li></ol>
+    <p class="sub">Watch out: the fraction part gets multiplied too. If you only do ${m.W} × ${m.w} and keep the ${m.n}/${m.d}, you'd get ${lo} ${m.n}/${m.d}, which is too small.</p>
+    <div class="row">
+      <button class="primary" id="again" type="button">Another one</button>
+      <button id="pick" type="button">Change level</button>
+    </div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelector("#again").onclick = () => { state.solved.mixw++; save(); state.mw = makeMixw(state.mwLevel); state.step = 1; render(); };
+  c.querySelector("#pick").onclick = () => { state.solved.mixw++; save(); state.step = 0; render(); };
+}
+
+/* ---------- center & spread: which number answers the question, the mean or the range? ---------- */
+const CV_CTX = [
+  { who: "team", Who: "Team", intro: "The ages of the members of four teams are summarized below.", one: "age", many: "ages", center: [["youngest members on average", -1], ["oldest members on average", 1]], base: [25, 45], spread: [3, 15], label: "Team ages" },
+  { who: "class", Who: "Class", intro: "The test scores of the students in four classes are summarized below.", one: "score", many: "scores", center: [["highest scores on average", 1], ["lowest scores on average", -1]], base: [70, 120], spread: [20, 45], label: "Class test scores" },
+  { who: "garden", Who: "Garden", intro: "The heights of the sunflowers (in inches) in four gardens are summarized below.", one: "height", many: "heights", center: [["tallest sunflowers on average", 1], ["shortest sunflowers on average", -1]], base: [40, 80], spread: [6, 25], label: "Sunflower heights" },
+  { who: "bowler", Who: "Bowler", intro: "Four bowlers' scores from last month are summarized below.", one: "score", many: "scores", center: [["highest scores on average", 1], ["lowest scores on average", -1]], base: [100, 180], spread: [15, 60], label: "Bowling scores" }
+];
+const CV_L = "ABCD";
+const cvExt = (arr, dir) => arr.indexOf(dir > 0 ? Math.max(...arr) : Math.min(...arr));
+function makeCvData(ctx) {
+  for (let t = 0; t < 5000; t++) {
+    const means = [], ranges = [];
+    while (means.length < 4) { const v = rint(...ctx.base); if (!means.includes(v)) means.push(v); }
+    while (ranges.length < 4) { const v = rint(...ctx.spread); if (!ranges.includes(v)) ranges.push(v); }
+    const [cq, cdir] = pick(ctx.center), [sq, sdir] = pick([["the most variability", 1], ["the least variability", -1]]);
+    const cAns = cvExt(means, cdir), sAns = cvExt(ranges, sdir);
+    /* the traps: using the other number, or the other end, must give a different answer */
+    if (cvExt(ranges, cdir) === cAns || cvExt(means, sdir) === sAns || cAns === sAns || cvExt(means, -cdir) === cAns) continue;
+    return { ctx, means, ranges,
+      qs: [{ kind: "center", text: `Which ${ctx.who} has the ${cq}?`, phrase: cq, dir: cdir, ans: cAns },
+           { kind: "spread", text: `Which ${ctx.who}'s ${ctx.many} have ${sq}?`, phrase: sq, dir: sdir, ans: sAns }] };
+  }
+}
+function makeCv(key) {
+  const ctx = key === "any" ? pick(CV_CTX) : CV_CTX.find(c => c.who === key);
+  const d = makeCvData(ctx);
+  if (Math.random() < .5) d.qs.reverse();
+  return Object.assign(d, { key });
+}
+const cvLines = c => c.means.map((m, i) => `${c.ctx.Who} ${CV_L[i]}: The range of ${c.ctx.many} is <b>${c.ranges[i]}</b> and the mean ${c.ctx.one} is <b>${m}</b>.`);
+const cvCol = q => q.kind === "center" ? "mean" : "range";
+const cvWord = (q, dir = q.dir) => q.kind === "center" ? (dir > 0 ? "biggest mean" : "smallest mean") : (dir > 0 ? "biggest range" : "smallest range");
+function cvTable(c, col) {
+  const cell = (v, k) => `<td class="${col === k ? "now" : ""}" style="${col && col !== k ? "opacity:.45" : ""}">${v}</td>`;
+  return `<div class="tbl-wrap"><table class="rt"><tr><th></th><th scope="col">Range</th><th scope="col">Mean</th></tr>
+    ${c.means.map((m, i) => `<tr><th scope="row">${c.ctx.Who} ${CV_L[i]}</th>${cell(c.ranges[i], "range")}${cell(m, "mean")}</tr>`).join("")}</table></div>`;
+}
+const cvStory = c => `<p class="story">${c.ctx.intro}</p><p style="line-height:1.9">${cvLines(c).join("<br>")}</p>`;
+
+function cvPick() {
+  const c = el(`<section class="card">
+    <h2>What do you want to compare?</h2>
+    <div class="choices" id="ctx"></div>
+  </section>`);
+  stage.appendChild(c);
+  [...CV_CTX.map(x => [x.who, x.label]), ["any", "Surprise me"]].forEach(([k, label]) => {
+    const b = el(`<button type="button">${label}</button>`);
+    b.onclick = () => { state.cvKey = k; state.cv = makeCv(k); state.step = 1; render(); };
+    c.querySelector("#ctx").appendChild(b);
+  });
+}
+
+function cvNum() {
+  const c = state.cv, qi = state.step === 1 ? 0 : 1, q = c.qs[qi], x = c.ctx;
+  const card = el(`<section class="card">
+    ${cvStory(c)}
+    <span class="label">Question ${qi === 0 ? "(a)" : "(b)"}</span>
+    <p class="ask">${q.text}</p>
+    <h2>Before picking a ${x.who}: which number answers this question?</h2>
+    <div class="choices" id="opts">
+      <button type="button" data-n="mean">The mean (the average ${x.one})</button>
+      <button type="button" data-n="range">The range (how spread out the ${x.many} are)</button>
+    </div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(card);
+  card.querySelectorAll("[data-n]").forEach(b => b.onclick = () => {
+    const fb = card.querySelector("#fb");
+    if (b.dataset.n === cvCol(q)) {
+      card.querySelectorAll("[data-n]").forEach(y => y.disabled = y !== b); b.classList.add("picked");
+      fb.innerHTML = `<div class="note ok">Yes. ${q.kind === "center" ? `"On average" means we look at the mean.` : `"Variability" means how spread out the ${x.many} are. That's the range.`}</div>`;
+      fb.appendChild(nextBtn(() => { state.step++; render(); }, `Find the ${x.who}`));
+    } else {
+      fb.innerHTML = `<div class="note look">${q.kind === "center"
+        ? `The range tells how spread out the ${x.many} are, from the smallest to the biggest. This question says "on average." Which number is the average?`
+        : `The mean is the average ${x.one}. This question asks about variability: how spread out the ${x.many} are. Which number tells that?`}</div>`;
+    }
+  });
+}
+
+function cvFind() {
+  const c = state.cv, qi = state.step === 2 ? 0 : 1, q = c.qs[qi], x = c.ctx, col = cvCol(q), vals = col === "mean" ? c.means : c.ranges, other = col === "mean" ? c.ranges : c.means;
+  const card = el(`<section class="card">
+    <span class="label">Question ${qi === 0 ? "(a)" : "(b)"}</span>
+    <p class="ask">${q.text}</p>
+    ${cvTable(c, col)}
+    <h2>Look only at the ${col} column. ${q.kind === "center" ? `The ${q.phrase.split(" on average")[0]}` : (q.dir > 0 ? "The most variability" : "The least variability")} means the ${cvWord(q)}. Which ${x.who}?</h2>
+    <div class="choices" id="opts">${CV_L.split("").map((L, i) => `<button type="button" data-i="${i}">${x.Who} ${L}</button>`).join("")}</div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(card);
+  card.querySelectorAll("[data-i]").forEach(b => b.onclick = () => {
+    const i = +b.dataset.i, fb = card.querySelector("#fb");
+    if (i === q.ans) {
+      q.done = true;
+      card.querySelectorAll("[data-i]").forEach(y => y.disabled = y !== b); b.classList.add("picked");
+      fb.innerHTML = `<div class="note ok">Yes. ${x.Who} ${CV_L[i]} has the ${cvWord(q)}: ${vals[i]}.</div>`;
+      fb.appendChild(nextBtn(() => { state.step++; render(); }, qi === 0 ? "Next question" : "See both answers"));
+    } else if (i === cvExt(vals, -q.dir)) {
+      fb.innerHTML = `<div class="note look">${x.Who} ${CV_L[i]} has the ${cvWord(q, -q.dir)}: ${vals[i]}. That's the other end. We need the ${cvWord(q)}.</div>`;
+    } else if (i === cvExt(other, q.dir)) {
+      fb.innerHTML = `<div class="note look">${x.Who} ${CV_L[i]} has the ${q.dir > 0 ? "biggest" : "smallest"} ${col === "mean" ? "range" : "mean"}. That's the other number! Use only the ${col} column.</div>`;
+    } else {
+      fb.innerHTML = `<div class="note look">${x.Who} ${CV_L[i]}'s ${col} is ${vals[i]}. Look down the ${col} column again. Which number is the ${q.dir > 0 ? "biggest" : "smallest"}?</div>`;
+    }
+  });
+}
+
+function cvCheck() {
+  const c = state.cv, x = c.ctx;
+  const card = el(`<section class="card">
+    <h2>Both answers</h2>
+    ${c.qs.map((q, k) => { const vals = cvCol(q) === "mean" ? c.means : c.ranges;
+      return `<div class="note ok"><b>${k === 0 ? "(a)" : "(b)"} ${q.text}</b><br>${x.Who} ${CV_L[q.ans]}: the ${cvWord(q)}, ${vals[q.ans]}.</div>`; }).join("")}
+    <div class="hint"><b>Remember:</b> "on average" → look at the <b>mean</b>. "Variability," "spread out," or "consistent" → look at the <b>range</b>. Most variability = biggest range.</div>
+    <div class="row">
+      <button class="primary" id="again" type="button">Another one like this</button>
+      <button id="pick" type="button">Pick something different</button>
+    </div>
+  </section>`);
+  stage.appendChild(card);
+  card.querySelector("#again").onclick = () => { state.solved.cv++; save(); state.cv = makeCv(c.key); state.step = 1; render(); };
+  card.querySelector("#pick").onclick = () => { state.solved.cv++; save(); state.step = 0; render(); };
+}
+
+/* ---------- proportions: set it up, find the change, do the same change to the other number ---------- */
+const PROP_STORIES = [
+  { label: "Flying duck", top: "kilometers", bot: "minutes", time: true, small: [[2, 12], [2, 9]],
+    say: (a, b) => `A duck flies <b>${a} kilometers</b> in <b>${b} minutes</b>.`, askBot: x => `How many minutes would it take the duck to fly ${x} kilometers?`, askTop: y => `How many kilometers could the duck fly in ${y} minutes?` },
+  { label: "Printer", top: "pages", bot: "minutes", time: true, small: [[3, 15], [1, 6]],
+    say: (a, b) => `A printer prints <b>${a} pages</b> in <b>${b} minutes</b>.`, askBot: x => `How many minutes would it take to print ${x} pages?`, askTop: y => `How many pages could it print in ${y} minutes?` },
+  { label: "Bike ride", top: "miles", bot: "hours", time: true, small: [[6, 15], [1, 3]],
+    say: (a, b) => `Ana bikes <b>${a} miles</b> in <b>${b} hours</b> at a steady speed.`, askBot: x => `How many hours would it take her to bike ${x} miles?`, askTop: y => `How many miles could she bike in ${y} hours?` },
+  { label: "Water pump", top: "gallons", bot: "minutes", time: true, small: [[2, 12], [1, 8]],
+    say: (a, b) => `A pump moves <b>${a} gallons</b> of water in <b>${b} minutes</b>.`, askBot: x => `How many minutes would it take to move ${x} gallons?`, askTop: y => `How many gallons could it move in ${y} minutes?` }
+];
+function makePropData(st) {
+  for (let i = 0; i < 2000; i++) {
+    const x = rint(...st.small[0]), y = rint(...st.small[1]), k = rint(3, 9);
+    if (x === y) continue;
+    const down = Math.random() < .6, unkBot = Math.random() < .6;
+    const G = down ? [x * k, y * k] : [x, y], N = down ? [x, y] : [x * k, y * k];   // given pair, new pair [top, bottom]
+    const known = unkBot ? N[0] : N[1], ans = unkBot ? N[1] : N[0];
+    if (ans === k || known === k) continue;   // the change and the answer must look different
+    return { st, G, N, k, down, unkBot, known, ans, v: unkBot ? (st.time ? "t" : "x") : "x",
+      q: `${st.say(G[0], G[1])} ${unkBot ? st.askBot(N[0]) : st.askTop(N[1])}` };
+  }
+}
+function makeProp(key) {
+  const st = key === "any" ? pick(PROP_STORIES) : PROP_STORIES.find(s => s.label === key);
+  return Object.assign(makePropData(st), { key });
+}
+const propRight = p => p.unkBot ? FR(p.N[0], p.v) : FR(p.v, p.N[1]);
+const propEq = (p, right = propRight(p)) => `<div class="fx">${FR(p.G[0], p.G[1])}<span>=</span>${right}</div>`;
+const propUnits = p => `<p class="sub" style="text-align:center;margin:0">Tops: ${p.st.top} · Bottoms: ${p.st.bot}</p>`;
+
+function propPick() {
+  const c = el(`<section class="card">
+    <h2>Pick a story</h2>
+    <div class="choices" id="ctx"></div>
+  </section>`);
+  stage.appendChild(c);
+  [...PROP_STORIES.map(s => [s.label, s.label]), ["any", "Surprise me"]].forEach(([k, label]) => {
+    const b = el(`<button type="button">${label}</button>`);
+    b.onclick = () => { state.prKey = k; state.pr = makeProp(k); state.step = 1; render(); };
+    c.querySelector("#ctx").appendChild(b);
+  });
+}
+
+function propSetup() {
+  const p = state.pr, s = p.st;
+  const good = propRight(p), flipR = p.unkBot ? FR(p.v, p.N[0]) : FR(p.N[1], p.v);
+  const opts = [[`${FR(p.G[0], p.G[1])}<span>=</span>${good}`, "ok"], [`${FR(p.G[0], p.G[1])}<span>=</span>${flipR}`, "right"], [`${FR(p.G[1], p.G[0])}<span>=</span>${good}`, "left"]].sort(() => Math.random() - .5);
+  const c = el(`<section class="card">
+    <p class="story">${p.q}</p>
+    <h2>Let ${p.v} be the ${p.unkBot ? s.bot : s.top} we don't know. Which proportion matches the story?</h2>
+    <p class="sub">Keep the same units in the same places: ${s.top} on top, ${s.bot} on the bottom, on both sides.</p>
+    <div class="choices" id="opts"></div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  opts.forEach(([html, why]) => {
+    const b = el(`<button type="button" style="padding:10px 6px"><span class="fx" style="background:none;padding:4px;font-size:1.3rem">${html}</span></button>`);
+    b.onclick = () => {
+      const fb = c.querySelector("#fb");
+      if (why === "ok") {
+        c.querySelectorAll("#opts button").forEach(x => x.disabled = x !== b); b.classList.add("picked");
+        fb.innerHTML = `<div class="note ok">Yes. ${s.top} over ${s.bot} on both sides: ${p.G[0]} ${s.top} in ${p.G[1]} ${s.bot}, and ${p.unkBot ? `${p.N[0]} ${s.top} in ${p.v} ${s.bot}` : `${p.v} ${s.top} in ${p.N[1]} ${s.bot}`}.</div>`;
+        fb.appendChild(nextBtn(() => { state.step = 2; render(); }, "Find the change"));
+      } else {
+        fb.innerHTML = `<div class="note look">Look at the ${why === "right" ? "right" : "left"} side. Its top is ${why === "right" ? (p.unkBot ? p.v : p.N[1]) + " " + (p.unkBot ? s.bot : s.bot) : p.G[1] + " " + s.bot}. ${s.top[0].toUpperCase() + s.top.slice(1)} go on top on both sides.</div>`;
+      }
+    };
+    c.querySelector("#opts").appendChild(b);
+  });
+}
+
+function propChange() {
+  const p = state.pr, s = p.st, kTop = p.unkBot, from = kTop ? p.G[0] : p.G[1], to = p.known, unit = kTop ? s.top : s.bot, op = p.down ? "÷" : "×";
+  const c = el(`<section class="card">
+    <p class="story">${p.q}</p>
+    ${propEq(p)}${propUnits(p)}
+    <h2>Find the change. The ${unit} went from ${from} to ${to}. What number did they get ${p.down ? "divided" : "multiplied"} by?</h2>
+    <div class="row" style="align-items:center">
+      <span class="ask">${from} ${op} ? = ${to}</span>
+      <input type="number" id="ans" inputmode="numeric" aria-label="What number">
+      <button class="primary" id="chk" type="button">Check</button>
+    </div>
+    <button class="quiet" id="hintBtn" type="button">Show me a hint</button>
+    <div id="hint"></div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelector("#hintBtn").onclick = e => {
+    c.querySelector("#hint").innerHTML = `<div class="hint">${p.down ? `Think: ${to} × ? = ${from}.` : `Think: ${from} × ? = ${to}.`} Count by ${p.down ? to : from}s: ${Array.from({ length: p.k }, (_, i) => (p.down ? to : from) * (i + 1)).join(", ")}.</div>`;
+    e.target.disabled = true;
+  };
+  const input = c.querySelector("#ans");
+  const check = () => {
+    const fb = c.querySelector("#fb");
+    if (!input.value) { fb.innerHTML = `<div class="note look">Type a number first, then press Check.</div>`; return; }
+    const v = Number(input.value);
+    if (v === p.k) { state.step = 3; render(); return; }
+    fb.innerHTML = `<div class="note look">Let's test ${v}: ${from} ${op} ${v} = ${+(p.down ? from / v : from * v).toFixed(2)}. We need ${to}. ${(p.down ? from / v : from * v) > to ? "Too big" : "Too small"}, so try ${(p.down ? from / v : from * v) > to === p.down ? "a bigger" : "a smaller"} number.</div>`;
+  };
+  c.querySelector("#chk").onclick = check;
+  input.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+  input.focus();
+}
+
+function propSame() {
+  const p = state.pr, s = p.st, other = p.unkBot ? p.G[1] : p.G[0], unit = p.unkBot ? s.bot : s.top, op = p.down ? "÷" : "×";
+  const c = el(`<section class="card">
+    <p class="story">${p.q}</p>
+    ${propEq(p)}${propUnits(p)}
+    <div class="note ok">The ${p.unkBot ? s.top : s.bot} got ${p.down ? "divided" : "multiplied"} by ${p.k}.</div>
+    <h2>Do the same change to the ${unit}: ${other} ${op} ${p.k}. That's ${p.v}.</h2>
+    <div class="row" style="align-items:center">
+      <span class="ask">${p.v} = ${other} ${op} ${p.k} =</span>
+      <input type="number" id="ans" inputmode="numeric" aria-label="${p.v}">
+      <button class="primary" id="chk" type="button">Check</button>
+    </div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  const input = c.querySelector("#ans");
+  const check = () => {
+    const fb = c.querySelector("#fb");
+    if (!input.value) { fb.innerHTML = `<div class="note look">Type a number first, then press Check.</div>`; return; }
+    const v = Number(input.value);
+    if (v === p.ans) { state.step = 4; render(); return; }
+    if (v === p.k) fb.innerHTML = `<div class="note look">${p.k} is how much we ${p.down ? "divided" : "multiplied"} by. That's the change, not the answer! Now use it on the ${unit}: ${other} ${op} ${p.k}.</div>`;
+    else if (v === (p.down ? other * p.k : other / p.k)) fb.innerHTML = `<div class="note look">That's the opposite change. The ${p.unkBot ? s.top : s.bot} got ${p.down ? "smaller, so the " + unit + " get smaller too" : "bigger, so the " + unit + " get bigger too"}. Use ${op} ${p.k}.</div>`;
+    else fb.innerHTML = `<div class="note look">Let's test it: ${p.down ? `${v} × ${p.k} = ${v * p.k}. We need ${other}.` : `${other} × ${p.k} means ${p.k} groups of ${other}.`}</div>`;
+  };
+  c.querySelector("#chk").onclick = check;
+  input.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+  input.focus();
+}
+
+function propCheck() {
+  const p = state.pr, s = p.st, unit = p.unkBot ? s.bot : s.top, left = p.G[0] * p.N[1], right = p.G[1] * p.N[0];
+  const c = el(`<section class="card">
+    <p class="story">${p.q}</p>
+    ${propEq(p, FR(p.N[0], p.N[1], "hi"))}
+    <h2>${p.v} = ${p.ans} ${unit}.</h2>
+    <div class="note ok">Sense check: ${p.down ? `${p.known} is less than ${p.unkBot ? p.G[0] : p.G[1]}, so the ${unit} should be less than ${p.unkBot ? p.G[1] : p.G[0]} too` : `${p.known} is more than ${p.unkBot ? p.G[0] : p.G[1]}, so the ${unit} should be more than ${p.unkBot ? p.G[1] : p.G[0]} too`}. ${p.ans} fits.<br>
+      Cross-check: ${p.G[0]} × ${p.N[1]} = ${left} and ${p.G[1]} × ${p.N[0]} = ${right}. They match, so the proportion is true.</div>
+    <p class="sub">Watch out: ${p.k} is the change, not the answer. Always use the change on the other number.</p>
+    <div class="row">
+      <button class="primary" id="again" type="button">Another one</button>
+      <button id="pick" type="button">Pick a different story</button>
+    </div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelector("#again").onclick = () => { state.solved.prop++; save(); state.pr = makeProp(p.key); state.step = 1; render(); };
+  c.querySelector("#pick").onclick = () => { state.solved.prop++; save(); state.step = 0; render(); };
 }
 
 /* ---------- round & estimate ---------- */

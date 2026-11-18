@@ -254,6 +254,16 @@ footer { color: var(--soft); font-size: .85rem; text-align: center; }
 .mt button:hover:not(:disabled){background:var(--accent);filter:brightness(1.06)}
 .mt button{white-space:nowrap}
 .row > .mt{flex:0 0 auto}
+/* compact header: small Home and Parent buttons with the timer beside them on one line */
+.top{align-items:center}
+.top .row{flex-wrap:nowrap;align-items:center;gap:8px}
+.top .row > *{flex:0 0 auto}
+.top .row > button.quiet{padding:6px 14px;font-size:.85rem;border-radius:999px}
+.top .mt{min-height:40px;padding:4px 6px 4px 12px;font-size:16px}
+.top .mt .clk{font-size:19px}
+.top .mt button{min-height:32px;padding:0 12px;font-size:14px}
+@media (max-width:520px){ .top .row{flex-wrap:wrap} }
+.wrap{gap:12px}
 .mt.paused{border-style:dashed}
 .mt.low .clk{color:var(--look)}
 .mtdone{position:fixed;inset:0;background:rgba(20,30,28,.5);display:flex;align-items:center;justify-content:center;z-index:100;padding:16px}
@@ -503,7 +513,7 @@ function paintGoal(){
 (() => { const st = document.createElement("style"); st.textContent = `
   #stage.locked button:not(.quiet), #stage.locked input { pointer-events:none; opacity:.45 }
   .readbar{display:flex;flex-direction:column;gap:6px;align-items:center;justify-content:center;font-weight:600;color:var(--soft);text-align:center;
-    padding:10px 14px;border-left:4px solid transparent;border-radius:10px;min-height:64px;box-sizing:border-box}
+    padding:6px 14px;border-left:4px solid transparent;border-radius:10px;min-height:50px;box-sizing:border-box}
   .readbar.idle{visibility:hidden}   /* keeps its space, so the page doesn't jump when it finishes */
   .readbar[hidden]{display:none}
   .readbar .trk{width:min(320px,100%);height:8px;border-radius:99px;background:var(--line);overflow:hidden}

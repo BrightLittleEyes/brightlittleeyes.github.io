@@ -360,7 +360,9 @@ tr:last-child td{border-bottom:0}
 .rvdots{display:flex;align-items:center;gap:6px;margin:0 0 12px;font-size:14px;color:var(--muted)}
 .rvdots i{width:14px;height:14px;border-radius:50%;border:2px solid #E0A800}.rvdots i.on{background:#F2B705}
 .mastered{color:#B7860F;font-weight:700}
+.passed{color:#2E7D4F;font-weight:700}
 .mtag{position:absolute;top:8px;right:8px;font-family:var(--mono);font-size:11px;font-weight:700;background:#F2B705;color:#15252A;border-radius:99px;padding:2px 8px}
+.mtag.ptag{background:#DDF1E4;color:#1F5E3A}
 
 .climbsvg{width:100%;max-width:460px;display:block;margin:0 auto 10px}
 .climber{transition:transform .5s cubic-bezier(.3,1.4,.6,1)}
@@ -2484,7 +2486,8 @@ function badges(stu){
     ["Summit","Plant the flag in a Fact Climb game", mine.some(r=>r.kind==="climb" && r.top)],
     ["Hot Streak","Answer 5 practice questions in a row correctly", mine.some(r=>(r.bestStreak||0)>=5)],
     ["Star Collector","Earn 30 stars", st>=30],
-    ["First Mastery","Master your first unit (80%+ on two days, review cleared)", UNITS.some(u=>mastered(stu,u.id))],
+    ["First Pass","Pass your first unit (every step done, 80%+ on the test)", UNITS.some(u=>passed(stu,u.id))],
+    ["First Mastery","Master your first unit (passed, and its review questions cleared)", UNITS.some(u=>mastered(stu,u.id))],
     ["Memory Master","Clear 10 questions from your review box", ((prog[stu]||{}).cleared||0)>=10],
     ["Graduate","Score 80%+ on Final Exam 1 (units 1–5)", (best(stu,"final","final")||0)>=80],
     ["Graduate II","Score 80%+ on Final Exam 2 (units 6–15)", (best(stu,"final2","final")||0)>=80]
@@ -2562,7 +2565,9 @@ function testDays(stu, u){ return [...new Set(rs(stu,u,"test").filter(r=>r.pct>=
 function reviewLeft(stu, u){ return Object.values(review[stu]||{}).filter(it => it.u===u).length; }
 function fixLeft(stu, u){ return ((fix[stu]||{})[u]||[]).length; }
 function lastTestDay(stu, u){ const a = rs(stu,u,"test"); return a.length ? dayOf(a[a.length-1].at) : null; }
-function mastered(stu, u){ return testDays(stu,u).length>=2 && reviewLeft(stu,u)===0 && fixLeft(stu,u)===0; }
+function stepsDone(stu, u){ const un = unitById(u); return lessonsDone(stu,un)===un.lessons.length && ["game","quiz","climb"].every(k => rs(stu,u,k).length>0); }
+function passed(stu, u){ return stepsDone(stu,u) && (best(stu,u,"test")||0)>=80 && fixLeft(stu,u)===0; }
+function mastered(stu, u){ return passed(stu,u) && reviewLeft(stu,u)===0; }
 function dueList(){ const t = today(); return Object.entries(RV()).filter(([k,it]) => it.due <= t).sort((a,b)=>a[1].due.localeCompare(b[1].due)).map(([k])=>k); }
 function testLock(u){ if (fixLeft(student,u)) return "fix"; const lt = lastTestDay(student,u); return lt === today() ? "tomorrow" : null; }
 
@@ -2575,8 +2580,8 @@ function unitPath(u){
   items.push({label:"Fact Climb game", done: rs(student,u.id,"climb").length>0, go:()=>startClimb(u.id)});
   items.push({label:"Unit test", done: tests.length>0, go:()=>startQuiz(u.id,"test")});
   items.push({label:"Fix up missed test questions", done: tests.length>0 && fixLeft(student,u.id)===0, go:()=>startFix(u.id)});
-  items.push({label:"Score 80%+ on the test on 2 different days", done: testDays(student,u.id).length>=2, sub:`${testDays(student,u.id).length} of 2 days`, go:()=>startQuiz(u.id,"test")});
-  items.push({label:"Clear this unit's review questions", done: tests.length>0 && reviewLeft(student,u.id)===0, sub: reviewLeft(student,u.id) ? `${reviewLeft(student,u.id)} left` : "", go:()=>startReview()});
+  items.push({label:"Score 80%+ on the unit test", done: (best(student,u.id,"test")||0)>=80, sub:"A retake opens the next day", go:()=>startQuiz(u.id,"test")});
+  items.push({label:"Clear this unit's review questions (for ★ Mastered)", done: tests.length>0 && reviewLeft(student,u.id)===0, sub: reviewLeft(student,u.id) ? `${reviewLeft(student,u.id)} left` : "", go:()=>startReview()});
   return items;
 }
 function nextStep(){
@@ -2630,7 +2635,7 @@ function renderUnit(){
   <button class="back" id="back">← All units</button>
   <div class="unithead" style="--c:var(${u.color})">
     <div class="badge" style="--c:var(${u.color})">${u.sym}</div>
-    <div><span class="eyebrow">Unit ${u.n}${isM?` · <span class="mastered">★ Mastered</span>`:""}</span><h1>${esc(u.name)}</h1><p>${esc(u.blurb)}</p></div>
+    <div><span class="eyebrow">Unit ${u.n}${isM?` · <span class="mastered">★ Mastered</span>`:(student && passed(student,u.id)?` · <span class="passed">✓ Passed</span>`:"")}</span><h1>${esc(u.name)}</h1><p>${esc(u.blurb)}</p></div>
   </div>
   <div class="cols" style="--c:var(${u.color})">
     <nav class="lessonlist" aria-label="Unit steps">
@@ -2710,8 +2715,8 @@ function finishQuiz(){
 function afterResultHTML(r, missedN){
   if (r.kind==="test"){
     const days = testDays(student,r.unit).length;
-    if (missedN) return `<div class="nextbox"><b>What happens next</b><ol><li>Fix up the ${missedN} question${missedN>1?"s":""} you missed (right now).</li><li>Review them on the next few days.</li><li>Take this test again <b>tomorrow or later</b>. It will have a different mix of questions.</li></ol><button class="btn" id="gofix">Start fix-up →</button></div>`;
-    return `<div class="nextbox"><b>Perfect, nothing to fix!</b><p>${days>=2 ? "You scored 80%+ on two different days." : "Take this test again on another day and score 80%+ to prove it's in your long-term memory."}</p></div>`;
+    if (missedN) return `<div class="nextbox"><b>What happens next</b><ol><li>Fix up the ${missedN} question${missedN>1?"s":""} you missed (right now).</li><li>Review them on the next few days.</li>${r.pct>=80 ? `<li>You passed (${r.pct}%)! After the fix-up, clear these from your review box to make this unit ★ Mastered.</li>` : `<li>Take this test again <b>tomorrow or later</b>. It will have a different mix of questions.</li>`}</ol><button class="btn" id="gofix">Start fix-up →</button></div>`;
+    return `<div class="nextbox"><b>Perfect, nothing to fix!</b><p>${r.pct>=80 ? "You passed this test! Finish every step and the unit is ✓ Passed. Clear its review questions to make it ★ Mastered." : "Take this test again tomorrow or later."}</p></div>`;
   }
   if (missedN) return `<div class="nextbox"><b>What happens next</b><p>The ${missedN} question${missedN>1?"s":""} you missed went into your review box. You'll see ${missedN>1?"them":"it"} again tomorrow.</p></div>`;
   return "";
@@ -2895,7 +2900,7 @@ function render(){
 function tileHTML(u){
   const d = student ? lessonsDone(student,u) : 0;
   return `<button class="tile" style="--c:var(${u.color})" data-unit="${u.id}">
-    <span class="num">${u.n}</span>${student && mastered(student,u.id) ? `<span class="mtag">★ Mastered</span>` : ""}<span class="sym">${u.sym}</span><span class="nm">${esc(u.name)}</span>
+    <span class="num">${u.n}</span>${student && mastered(student,u.id) ? `<span class="mtag">★ Mastered</span>` : (student && passed(student,u.id) ? `<span class="mtag ptag">✓ Passed</span>` : "")}<span class="sym">${u.sym}</span><span class="nm">${esc(u.name)}</span>
     <span class="checks" aria-label="${d} of ${u.lessons.length} lessons done">${u.lessons.map((_,i)=>`<i class="${i<d?"on":""}"></i>`).join("")}<small>${d}/${u.lessons.length} lessons</small></span>
     <span class="mass"><span>Quiz ${starStr(student?bestStars(student,u.id,"quiz"):0)}</span><span>Test ${starStr(student?bestStars(student,u.id,"test"):0)}</span></span>
   </button>`;
@@ -2914,7 +2919,7 @@ function renderHome(){
     <span class="eyebrow">Sixth grade · ${UNITS.length} units · ${UNITS.reduce((a,u)=>a+u.lessons.length,0)} lessons</span>
     <h1>${student ? `Hi ${esc(student)}! You have ${st} of ${STAR_MAX} stars.` : "Pick a unit to study."}</h1>
     ${student ? `<div class="starbar" aria-hidden="true"><i style="width:${pct(st,STAR_MAX)}%"></i></div>` : ""}
-    <p>Every lesson has the same 6 steps: Words to Know, Read, See It, Watch, Remember, Try It. Every unit has the same path: 3 lessons, vocab game, practice quiz, Fact Climb game, test, fix-up, and review until it's mastered.</p>
+    <p>Every lesson has the same 6 steps: Words to Know, Read, See It, Watch, Remember, Try It. Every unit has the same path: 3 lessons, vocab game, practice quiz, Fact Climb game, test, and fix-up. Do all of that with 80%+ on the test and the unit is ✓ Passed. Clear its review questions and it's ★ Mastered.</p>
   </section>
   ${student ? nextStepCard() : `<button class="cont" id="addfirst"><span class="eyebrow">First</span><b>Add your name to start earning stars</b><span class="arrow">→</span></button>`}
   <div class="section-h"><h2>Set 1: Units 1–5</h2></div>
@@ -3086,9 +3091,9 @@ function renderProgress(){
   <div class="badges">${bs.map(b=>`<div class="bdg ${b.got?"got":""}" style="--c:var(${b.color||"--accent"})"><span class="medal">${b.got?"★":"?"}</span><b>${esc(b.name)}</b><small>${esc(b.how)}</small></div>`).join("")}</div>
   <div class="section-h"><h2>By unit</h2></div>
   <div class="tblwrap"><table>
-    <thead><tr><th>Unit</th><th>Lessons</th><th>Vocab game</th><th>Quiz</th><th>Test</th><th>Mastered</th></tr></thead>
+    <thead><tr><th>Unit</th><th>Lessons</th><th>Vocab game</th><th>Quiz</th><th>Test</th><th>Status</th></tr></thead>
     <tbody>${UNITS.map(u=>`<tr><td>${u.n}. ${esc(u.name)}</td><td class="n">${lessonsDone(student,u)}/${u.lessons.length}</td>
-      <td>${starStr(bestStars(student,u.id,"game"))}</td><td>${starStr(bestStars(student,u.id,"quiz"))}</td><td>${starStr(bestStars(student,u.id,"test"))}</td><td>${mastered(student,u.id)?'<span class="pill g">★ Yes</span>':`<span class="note">${testDays(student,u.id).length}/2 days${reviewLeft(student,u.id)?` · ${reviewLeft(student,u.id)} to review`:""}</span>`}</td></tr>`).join("")}
+      <td>${starStr(bestStars(student,u.id,"game"))}</td><td>${starStr(bestStars(student,u.id,"quiz"))}</td><td>${starStr(bestStars(student,u.id,"test"))}</td><td>${mastered(student,u.id)?'<span class="pill g">★ Mastered</span>':passed(student,u.id)?`<span class="note">✓ Passed · ${reviewLeft(student,u.id)} to review</span>`:'<span class="note">Not yet</span>'}</td></tr>`).join("")}
       <tr><td>Final Exam 1</td><td></td><td></td><td></td><td>${starStr(bestStars(student,"final","final"))}</td></tr><tr><td>Final Exam 2</td><td></td><td></td><td></td><td>${starStr(bestStars(student,"final2","final"))}</td></tr></tbody></table></div>
   <div class="section-h"><h2>History</h2></div>
   <div class="tblwrap">${mine.length ? `<table><thead><tr><th>When</th><th>What</th><th>Score</th><th>Stars</th></tr></thead>
@@ -3135,7 +3140,7 @@ function renderParent(){
     const mine = results.filter(r=>r.student===who).sort((a,b)=>b.at.localeCompare(a.at));
     body = `<div class="chips" style="margin-bottom:14px">${roster.map(n=>`<button class="chip" data-who="${esc(n)}" aria-pressed="${n===who}">${esc(n)}</button>`).join("")}</div>
     ${who ? `<p class="note" style="margin-top:0">${esc(who)}: <span class="st">★</span> ${starTotal(who)} stars · ${(n=>n+(n===1?" lesson":" lessons"))(Object.keys((prog[who]||{}).done||{}).length)} finished${inprog[who]?` · has an unfinished ${kindLabel(inprog[who].kind).toLowerCase()}`:""}</p>` : ""}
-    ${who ? `<div class="tblwrap" style="margin-bottom:14px"><table><thead><tr><th>Unit</th><th>Lessons</th><th>Test 80%+ days</th><th>Fix-up left</th><th>Review left</th><th>Mastered</th></tr></thead><tbody>${UNITS.map(u=>`<tr><td>${u.n}. ${esc(u.name)}</td><td class="n">${lessonsDone(who,u)}/3</td><td class="n">${testDays(who,u.id).length}/2</td><td class="n">${fixLeft(who,u.id)}</td><td class="n">${reviewLeft(who,u.id)}</td><td>${mastered(who,u.id)?'<span class="pill g">Yes</span>':"No"}</td></tr>`).join("")}</tbody></table></div>` : ""}
+    ${who ? `<div class="tblwrap" style="margin-bottom:14px"><table><thead><tr><th>Unit</th><th>Lessons</th><th>Steps done</th><th>Best test</th><th>Fix-up left</th><th>Review left</th><th>Status</th></tr></thead><tbody>${UNITS.map(u=>`<tr><td>${u.n}. ${esc(u.name)}</td><td class="n">${lessonsDone(who,u)}/3</td><td class="n">${stepsDone(who,u.id)?"Yes":"No"}</td><td class="n">${best(who,u.id,"test")!=null?best(who,u.id,"test")+"%":"–"}</td><td class="n">${fixLeft(who,u.id)}</td><td class="n">${reviewLeft(who,u.id)}</td><td>${mastered(who,u.id)?'<span class="pill g">★ Mastered</span>':passed(who,u.id)?"✓ Passed":"Not yet"}</td></tr>`).join("")}</tbody></table></div>` : ""}
     ${mine.length ? mine.map(r=>`<details class="att"><summary><span class="n">${fmtDate(r.at)}</span><span>${esc(kindLabel(r.kind))} · ${esc(titleOf(r.unit))}</span><span class="pill ${pillClass(r.pct)}">${r.pct}%${r.kind==="game"?"":" "+grade(r.pct)}</span>${starStr(r.stars??starsFor(r.pct))}</summary>
       ${r.items ? `<ol class="ans">${r.items.map(Q=>{ const ok = Q.picked===Q.answer;
         return `<li class="${ok?"ok":"no"}"><b>${esc(Q.q)}</b><span>${ok?"✓":"✗"} Picked: ${esc(Q.choices[Q.picked]??"(no answer)")}</span>${ok?"":`<span>Correct: <b>${esc(Q.choices[Q.answer])}</b></span>`}</li>`; }).join("")}</ol>`

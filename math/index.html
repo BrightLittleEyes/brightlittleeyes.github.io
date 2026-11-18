@@ -498,22 +498,24 @@ function paintGoal(){
 /* ---------- slow down: read first, read the feedback, no rapid guessing ---------- */
 (() => { const st = document.createElement("style"); st.textContent = `
   #stage.locked button:not(.quiet), #stage.locked input { pointer-events:none; opacity:.45 }
-  .readbar{display:flex;flex-direction:column;gap:6px;align-items:center;font-weight:600;color:var(--soft);text-align:center}
+  .readbar{display:flex;flex-direction:column;gap:6px;align-items:center;justify-content:center;font-weight:600;color:var(--soft);text-align:center;
+    padding:10px 14px;border-left:4px solid transparent;border-radius:10px;min-height:64px;box-sizing:border-box}
+  .readbar.idle{visibility:hidden}   /* keeps its space, so the page doesn't jump when it finishes */
   .readbar[hidden]{display:none}
   .readbar .trk{width:min(320px,100%);height:8px;border-radius:99px;background:var(--line);overflow:hidden}
   .readbar .trk i{display:block;height:100%;width:0;background:var(--accent)}
-  .readbar.slow{color:var(--ink);background:var(--look-wash);border-left:4px solid var(--look);border-radius:10px;padding:10px 14px}`;
+  .readbar.slow{color:var(--ink);background:var(--look-wash);border-left-color:var(--look)}`;
   document.head.appendChild(st); })();
 let lockKey = "", lockT = null, missTimes = [];
 function lockFor(ms, msg, slow) {
   let bar = document.getElementById("readbar");
   if (!bar) { bar = el(`<div id="readbar" class="readbar" role="status"><span></span><span class="trk"><i></i></span></div>`); document.getElementById("score").after(bar); }
-  bar.hidden = false; bar.classList.toggle("slow", !!slow); bar.querySelector("span").textContent = msg;
+  bar.hidden = false; bar.classList.remove("idle"); bar.classList.toggle("slow", !!slow); bar.querySelector("span").textContent = msg;
   const i = bar.querySelector("i"); i.style.transition = "none"; i.style.width = "0"; void i.offsetWidth;
   i.style.transition = `width ${ms}ms linear`; i.style.width = "100%";
   stage.classList.add("locked"); clearTimeout(lockT);
   lockT = setTimeout(() => {
-    stage.classList.remove("locked"); bar.hidden = true;
+    stage.classList.remove("locked"); bar.classList.add("idle");
     const inp = stage.querySelector("input:not([disabled])"); if (inp) inp.focus();
   }, ms);
 }
@@ -1912,7 +1914,16 @@ function pipStart(topic) {
   const key = topic === "any" ? pick(Object.keys(PIP_TOPICS)) : topic;
   state.pp = { ...PIP_TOPICS[key].make(), topic, key };
 }
-const pipWork = (pp, fixed = false) => `<div><span class="label">Pip's work</span><div class="work">${(fixed ? pp.good : pp.steps).map(s =>
+/* the whole problem with its final answer, shown big once the problem is solved */
+function pipAnswer(pp) {
+  const strip = s => s.replace(/<[^>]+>/g, "").trim();
+  const m = /<b>(.*?)<\/b>/.exec(pp.fixed || ""), ans = m ? strip(m[1]).replace(/\.$/, "") : "";
+  const bolds = [...pp.q.matchAll(/<b>(.*?)<\/b>/g)].map(x => strip(x[1]));
+  const expr = bolds.length === 1 && !/[=<>]/.test(bolds[0]) && !/[=<>]/.test(ans) && !/[a-z]{3,}/i.test(ans) ? bolds[0] : "";
+  const line = (expr ? `${expr} ${pp.key === "round" ? "≈" : "="} ${ans}` : ans).replace(/</g, "&lt;");
+  return ans ? `<div><span class="label">The answer</span><div class="fx" style="font-size:1.6rem">${line}</div></div>` : "";
+}
+const pipWork = (pp, fixed = false) => `<div><span class="label">${fixed ? "Pip's work, fixed" : "Pip's work"}</span><div class="work">${(fixed ? pp.good : pp.steps).map(s =>
   `<div class="step${fixed ? " fixed" : ""}"><small>${s.label}</small><b>${s.math}</b></div>`).join("")}</div></div>`;
 const pipQ = pp => `<p class="story">${pp.q}</p>`;
 
@@ -1959,7 +1970,7 @@ function pipSense() {
     const fb = c.querySelector("#fb"), saysOk = b.dataset.a === "yes";
     if (pp.wrong < 0) {
       if (saysOk) {
-        fb.innerHTML = `<div class="note ok">${pp.yesRight}</div>${pipSay("Phew! Thanks for checking my work, teacher.")}`;
+        fb.innerHTML = `${pipAnswer(pp)}<div class="note ok">${pp.yesRight}</div>${pipSay("Phew! Thanks for checking my work, teacher.")}`;
         fb.appendChild(pipNextRow());
         c.querySelectorAll("[data-a]").forEach(x => x.disabled = true);
       } else fb.innerHTML = `<div class="note look">${pp.offWrong}</div>`;
@@ -2009,7 +2020,7 @@ function pipFix() {
       if (!ok) { fb.innerHTML = `<div class="note look">${why}</div>`; return; }
       c.querySelectorAll("#opts button").forEach(x => x.disabled = x !== b);
       b.classList.add("picked");
-      fb.innerHTML = `${pipWork(pp, true)}<div class="note ok">${pp.fixed}</div>${pipSay("Oh! I see it now. Thank you, teacher. My circuits feel much better.")}`;
+      fb.innerHTML = `${pipAnswer(pp)}${pipWork(pp, true)}<div class="note ok">${pp.fixed}</div>${pipSay("Oh! I see it now. Thank you, teacher. My circuits feel much better.")}`;
       fb.appendChild(pipNextRow());
     };
     c.querySelector("#opts").appendChild(b);

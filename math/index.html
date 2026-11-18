@@ -382,6 +382,7 @@ const sections = {
   tbl:  { title: "Fill the Table", sub: "Find the price for 1, then fill in every blank.", steps: ["Pick", "Price for 1", "Fill in", "Check"] },
   dec:  { title: "Decimal Times", sub: "Estimate, multiply without the dots, then put the dot back.", steps: ["Pick", "Estimate", "Multiply", "Dot", "Check"] },
   frac: { title: "Fraction Times", sub: "Estimate, multiply straight across, then simplify.", steps: ["Pick", "Estimate", "Multiply", "Simplify", "Check"] },
+  dist: { title: "Distance on a Grid", sub: "Find the same number, check the sides of 0, then add or subtract.", steps: ["Pick", "Same number", "Think first", "Sides of 0", "Distance", "Check"] },
   prop: { title: "Proportions", sub: "Set it up, find the change, then do the same change to the other number.", steps: ["Pick", "Set up", "Find the change", "Same change", "Check"] },
   cv:   { title: "Center & Spread", sub: "Mean for \"on average\". Range for \"variability.\"", steps: ["Pick", "(a) Number", "(a) Answer", "(b) Number", "(b) Answer", "Check"] },
   mixw: { title: "Mixed × Whole", sub: "Split it: multiply the wholes, multiply the pieces, then add.", steps: ["Pick", "Estimate", "Wholes", "Pieces", "Add", "Check"] },
@@ -395,7 +396,7 @@ const sections = {
   mean: { title: "What Does It Mean?", sub: "The math is already done. You find what each number means.", steps: ["Pick a story", "Find the numbers", "Match the math"] }
 };
 
-let state = { section: null, step: 0, onBreak: false, solved: { trip: 0, ops: 0, rate: 0, pip: 0, mean: 0, lcm: 0, eq: 0, tbl: 0, dec: 0, frac: 0, est: 0, mix: 0, fdp: 0, area: 0, fdiv: 0, d2f: 0, fof: 0, mixw: 0, cv: 0, prop: 0 }, pr: null, prKey: "any", cv: null, cvKey: "any", mw: null, mwLevel: "small", fo: null, foLevel: "small", dfr: null, dfLevel: "hun", fv: null, fvLevel: "fw", ar: null, arKind: "see", fd: null, fdKind: "mix", mx: null, mixMode: "toImp", es: null, esLevel: "ten", t: null, dc: null, fr: null, frLevel: "easy", lc: null, lcSize: "easy", e: null, eqLevel: "pos",
+let state = { section: null, step: 0, onBreak: false, solved: { trip: 0, ops: 0, rate: 0, pip: 0, mean: 0, lcm: 0, eq: 0, tbl: 0, dec: 0, frac: 0, est: 0, mix: 0, fdp: 0, area: 0, fdiv: 0, d2f: 0, fof: 0, mixw: 0, cv: 0, prop: 0, dist: 0 }, ds: null, dsLevel: "mix", pr: null, prKey: "any", cv: null, cvKey: "any", mw: null, mwLevel: "small", fo: null, foLevel: "small", dfr: null, dfLevel: "hun", fv: null, fvLevel: "fw", ar: null, arKind: "see", fd: null, fdKind: "mix", mx: null, mixMode: "toImp", es: null, esLevel: "ten", t: null, dc: null, fr: null, frLevel: "easy", lc: null, lcSize: "easy", e: null, eqLevel: "pos",
   p: null, size: "small", q: null, level: "easy", r: null, pp: null, m: null };
 /* one-time fresh start: wipe all saved progress once, so every count starts Nov 18, 2026 */
 try {
@@ -711,6 +712,7 @@ function render() {
   if (state.section === "tbl") return [tblPick, tblUnit, tblFill, tblCheck][state.step]();
   if (state.section === "dec") return [decPick, decEst, decMult, decDot, decCheck][state.step]();
   if (state.section === "frac") return [frPick, frEst, frMult, frSimp, frCheck][state.step]();
+  if (state.section === "dist") return [distPick, distSame, distGuess, distSides, distFind, distCheck][state.step]();
   if (state.section === "prop") return [propPick, propSetup, propChange, propSame, propCheck][state.step]();
   if (state.section === "cv") return [cvPick, cvNum, cvFind, cvNum, cvFind, cvCheck][state.step]();
   if (state.section === "mixw") return [mwPick, mwEst, mwWhole, mwPiece, mwAdd, mwCheck][state.step]();
@@ -730,7 +732,7 @@ const HOME_TILES = [
   ["trip", "Trip Planner", "mph", "rate"], ["rate", "Who's Fastest?", "÷1", "rate"], ["tbl", "Fill the Table", "▦", "rate"], ["prop", "Proportions", "a/b=c/d", "rate"],
   ["est", "Round & Estimate", "≈", "num"], ["dec", "Decimal Times", "0.1", "num"], ["fdp", "Fractions, Decimals & Percents", "%", "num"], ["lcm", "Least Common Multiple", "LCM", "num"], ["area", "Area", "ft²", "num"], ["cv", "Center & Spread", "x̄↔", "num"],
   ["frac", "Fraction Times", "½×", "frac"], ["fdiv", "Fraction Divide", "½÷", "frac"], ["d2f", "Decimal to Fraction", ".5=½", "frac"], ["fof", "Fraction of a Number", "⅚ of", "frac"], ["mixw", "Mixed × Whole", "2⅓×5", "frac"], ["mix", "Mixed Numbers", "4⅝", "frac"],
-  ["ops", "Order of Operations", "( )", "alg"], ["eq", "Solve & Plot", "x=", "alg"],
+  ["ops", "Order of Operations", "( )", "alg"], ["eq", "Solve & Plot", "x=", "alg"], ["dist", "Distance on a Grid", "↕ 10", "alg"],
   ["mean", "What Does It Mean?", "?", "think"]
 ];
 function renderHome() {
@@ -830,6 +832,129 @@ function renderSelfCard() {
   };
   d.querySelectorAll("[data-open]").forEach(b => b.onclick = () => { state.section = b.dataset.open; state.step = 0; render(); });
 }
+
+/* ---------- a Steps card on every activity: what to do, one step at a time, with a short "why" under the current step ----------
+   She thinks in steps. The steps are the path in; the "why" lines are there so she starts to see the reason behind them. */
+const RECIPES = {
+  trip: [["Guess: longer trip = more hours. Shorter trip = fewer hours.", "Going farther at the same speed takes more time."],
+         ["Find 1 hour: miles ÷ hours.", "Splitting the miles into equal hour-pieces tells how far each hour goes."],
+         ["Add 1-hour blocks until you reach the new miles. Count the blocks.", "Each block is the same distance, so counting blocks counts hours."]],
+  ops:  [["Do ( ) first, then small raised numbers, then × and ÷, then + and −. Left to right. One at a time.", "Everyone uses the same order, so everyone gets the same answer."],
+         ["Write the last number left.", "When only one number is left, the problem is done."]],
+  rate: [["Guess who's fastest. Any guess is OK.", "Guessing first makes you look for the answer later."],
+         ["For each person: total minutes ÷ how many made = minutes for 1.", "Now everyone is measured the same way: time for just one."],
+         ["Fastest = fewest minutes for 1.", "Less time for each one means working faster."]],
+  pip:  [["Read Pip's answer. Test it or estimate it.", "A quick check catches answers that are way too big or too small."],
+         ["Tap Pip's steps in order. Find the first one that's wrong.", "One wrong step makes every step after it wrong too."],
+         ["Pick the right way to do that step.", "Fix the first mistake, and the rest of the work can be redone right."]],
+  lcm:  [["Guess.", "A guess gives you something to check."],
+         ["Count by the first number. Count by the second. Stop at the first number in both lists.", "That's the first place where both counts meet."],
+         ["That number is the answer.", "It's the smallest number both counts share."]],
+  eq:   [["Find what is done to x. Do the opposite to both sides.", "Doing the same to both sides keeps them equal, and the opposite undoes it."],
+         ["Work out the number side.", "Now x is alone, so the number side is what x equals."],
+         ["Put a dot on that number on the line.", "Right of 0 is positive. Left of 0 is negative."],
+         ["Put your answer back in. Both sides must match.", "If both sides match, the answer is right."]],
+  tbl:  [["Price for 1 = total ÷ how many.", "Once you know 1, you can build any amount."],
+         ["Bottom row: × price for 1. Top row: ÷ price for 1.", "More items cost more (×). Splitting money into price-for-1 pieces counts items (÷)."],
+         ["Check: every column gives the same price for 1.", "That's what \"same rate\" means."]],
+  dec:  [["Round each number to a whole number. Multiply. That's about the answer.", "Rounded numbers are easy, and they show roughly how big the answer is."],
+         ["Hide the dots. Multiply like whole numbers.", "The digits are the same with or without the dots."],
+         ["Count the digits after the dots in both numbers. Put the dot that many places from the right.", "Each digit after a dot made the number smaller. The dot puts that back."],
+         ["Compare with your estimate.", "If it's far off, a dot or a carry slipped."]],
+  frac: [["Estimate: more than 1 or less than 1?", "Taking part of something makes it smaller."],
+         ["Top × top. Bottom × bottom.", "The tops count pieces. The bottoms say how big each piece is."],
+         ["Divide the top and bottom by the same number. Repeat until nothing works.", "The same number on both keeps the size the same, with smaller numbers."],
+         ["Check with your estimate.", "The answer should match your more-or-less guess."]],
+  est:  [["Look at the digit just right of the place. 0–4: round down. 5–9: round up.", "You're finding the closest ten (or hundred)."],
+         ["Add or subtract the rounded numbers.", "Round numbers are quick to work with."],
+         ["Compare with the exact answer.", "An estimate should be close, not exact."]],
+  mix:  [["Mixed → improper: wholes × bottom number. Improper → mixed: top ÷ bottom number.", "Each whole is made of \"bottom number\" pieces."],
+         ["Mixed → improper: add the top number, keep the bottom. Improper → mixed: the remainder is the new top.", "Leftover pieces that don't make a whole stay as a fraction."],
+         ["Check it goes back the other way.", "Both ways should give the same amount."]],
+  fdp:  [["Fraction → decimal: top ÷ bottom.", "A fraction bar means divide."],
+         ["Percent → decimal: move the dot 2 places left.", "Percent means \"out of 100\", so divide by 100."],
+         ["Put each decimal on the number line.", "Now they're all the same kind of number."],
+         ["Farther right = bigger.", "Numbers grow as you go right."]],
+  area: [["Find the length and the width.", "Those are the two sides of the rectangle."],
+         ["Fill rows of squares.", "Area counts the squares inside."],
+         ["Area = length × width.", "Rows × squares in each row = all the squares."],
+         ["Packs = area ÷ how much 1 pack covers.", "Split the whole area into pack-sized pieces."]],
+  mean: [["Tap each number and say what it counts.", "Every number in a story stands for something."],
+         ["Match each step of the math to what it means.", "Math steps are the story told with numbers."]],
+  fdiv: [["÷ a whole number → smaller. ÷ a fraction less than 1 → bigger.", "Sharing makes pieces smaller. Small pieces fit many times."],
+         ["Keep the first number. Change ÷ to ×. Flip the second.", "Dividing by a number is the same as multiplying by its flip."],
+         ["Top × top. Bottom × bottom.", "Now it's a multiplying problem."],
+         ["Divide the top and bottom by the same number until nothing works.", "Same number on both keeps the size the same."],
+         ["Check with your guess.", "Bigger or smaller should match."]],
+  d2f:  [["Count the digits after the dot. 1 = tenths, 2 = hundredths, 3 = thousandths.", "That's the place of the last digit."],
+         ["Top = the digits after the dot. Bottom = 10, 100, or 1000.", "0.35 is read \"35 hundredths\", which is 35/100."],
+         ["Divide the top and bottom by the SAME number until nothing works.", "Different numbers would change the size."],
+         ["Multiply back to check.", "It should come back to the decimal you started with."]],
+  fof:  [["More than half? Top more than half the bottom = yes.", "It tells you about how big the answer will be."],
+         ["Whole amount ÷ bottom number = 1 group.", "The bottom number says how many equal groups."],
+         ["1 group × top number = the answer.", "The top number says how many groups to take."],
+         ["The answer is a count, not a fraction.", "You can count copies, students, or cookies."]],
+  mixw: [["Wholes × number, and (wholes + 1) × number. The answer is between.", "The mixed number is between those two wholes."],
+         ["Wholes × number.", "Multiply the whole part first."],
+         ["Top × number. Keep the bottom. Turn extra pieces into wholes.", "Every part of the mixed number gets multiplied, the fraction too."],
+         ["Add the two parts.", "Wholes part + pieces part = the whole answer."],
+         ["Check it's between your estimate.", "If it's outside, a part got skipped."]],
+  cv:   [["\"On average\" → mean. \"Variability\" → range.", "Mean is the typical value. Range is how spread out."],
+         ["Look at that column only. Pick the biggest or smallest.", "The other column answers a different question."],
+         ["\"On average\" → mean. \"Variability\" → range.", "Mean is the typical value. Range is how spread out."],
+         ["Look at that column only. Pick the biggest or smallest.", "The other column answers a different question."],
+         ["Read both answers and the reminder.", "Mean and range answer different questions about the same numbers."]],
+  prop: [["Same units on top on both sides. Same units on the bottom.", "Both fractions describe the same speed, so they must line up."],
+         ["Find what the known number was ÷ or × by.", "That's how much the trip changed."],
+         ["Do the SAME to the other number. That's the answer.", "Same speed means both numbers change the same way."],
+         ["Cross-check: multiply across both ways. They must match.", "Equal fractions always cross-multiply to the same number."]],
+  dist: [["Find the number that's the same in both points.", "Same x = straight up and down. Same y = straight across."],
+         ["Think first: will the distance be more or less than the bigger number?", "If you have to walk past 0, the distance is longer than either number alone."],
+         ["Look at the other two numbers. Same side of 0, or different sides?", "That decides if you add or subtract."],
+         ["Different sides → add (ignore the minus). Same side → subtract smaller from bigger.", "Across 0 you walk to 0 and then past it. On one side you only walk the gap."],
+         ["Count on the number line to check.", "Counting steps is what distance means."]]
+};
+(() => { const st = document.createElement("style"); st.textContent = `
+  .recipe{padding:12px 16px;gap:8px}
+  .recipe summary{cursor:pointer;font-weight:700;font-family:var(--font-display);font-size:1.05rem}
+  .recipe ol{margin:6px 0 0;padding:0;list-style:none;display:grid;gap:6px}
+  .recipe li{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:start;padding:6px 8px;border-radius:10px;color:var(--soft);font-size:.95rem}
+  .recipe li .n{width:24px;height:24px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:.8rem;font-weight:700}
+  .recipe li.done .n{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+  .recipe li.now{background:var(--look-wash);color:var(--ink);font-weight:600}
+  .recipe li.now .n{border-color:var(--look);color:var(--ink)}
+  .recipe .why{display:block;font-weight:400;font-size:.88rem;color:var(--soft);margin-top:2px}`; document.head.appendChild(st); })();
+/* The card starts closed: she opens it only if she wants the steps (her choice, not handed to her).
+   After a wrong try, the button gently offers itself but never opens on its own. The numbered dots stay as they always were. */
+let recipeOpen = false, recipeFor = null;
+(() => { const st = document.createElement("style"); st.textContent = `
+  .recipe:not([open]){padding:8px 14px;align-self:flex-start}
+  .recipe:not([open]) summary{font-size:.95rem;color:var(--soft)}
+  .recipe.nudge:not([open]){border-color:var(--look);box-shadow:0 0 0 3px var(--look-wash)}
+  .recipe.nudge:not([open]) summary{color:var(--ink)}`; document.head.appendChild(st); })();
+{ const r6 = render; render = function () {
+  r6();
+  const R = RECIPES[state.section];
+  if (!R || state.step < 1 || state.onBreak) return;
+  const id = curProb ? curProb.t0 : null;
+  if (id !== recipeFor) { recipeFor = id; recipeOpen = false; }   // each new problem starts with the steps closed
+  const cur = state.step - 1, first = (sections[state.section].steps || [])[0] || "Pick";
+  const card = el(`<details class="card recipe" ${recipeOpen ? "open" : ""}><summary>📋 Steps</summary>
+    <ol><li class="done"><span class="n">✓</span><span>${first}</span></li>
+    ${R.map(([d, why], i) => `<li class="${i < cur ? "done" : i === cur ? "now" : ""}"><span class="n">${i < cur ? "✓" : i + 2}</span><span>${d}${i === cur ? `<span class="why">Why: ${why}</span>` : ""}</span></li>`).join("")}</ol>
+  </details>`);
+  card.addEventListener("toggle", () => { recipeOpen = card.open; card.classList.remove("nudge"); card.querySelector("summary").textContent = "📋 Steps"; });
+  stage.prepend(card);
+}; }
+/* a wrong try: the closed Steps button lights up softly and asks, once */
+new MutationObserver(muts => {
+  if (Date.now() - lastPress > 1500) return;
+  const card = stage.querySelector(".recipe");
+  if (!card || card.open || card.classList.contains("nudge")) return;
+  const wrong = muts.some(m => [...m.addedNodes].some(n => n.nodeType === 1 && (n.matches(".note.look") || n.querySelector(".note.look"))));
+  if (!wrong) return;
+  card.classList.add("nudge"); card.querySelector("summary").textContent = "📋 Want to see the steps?";
+}).observe(stage, { childList: true, subtree: true });
 
 /* ---------- problem log card (for grown-ups) ---------- */
 function renderLog() {
@@ -2085,6 +2210,29 @@ const PIP_TOPICS = {
         ? [[`Use it on ${other}: ${other} ${op} ${p.k}`, true], [`Nothing, ${p.v} = ${p.k}`, false, `That's what Pip did. ${p.k} is how much things changed, not the ${unit}.`], [`Add it: ${other} + ${p.k}`, false, `Let's test that: the change was ${op} ${p.k}, so the ${unit} change the same way, by ${op} ${p.k}.`]]
         : [[`The same change: ${other} ${op} ${p.k}`, true], [`The opposite: ${other} ${opp} ${p.k}`, false, `That's what Pip did. Both numbers have to change the same way.`], [`Leave it as ${other}`, false, `The ${p.unkBot ? s.top : s.bot} changed, so the ${unit} change too.`]],
       fixed: `<b>${p.ans} ${unit}.</b> ${kFrom} ${op} ${p.k} = ${p.known}, so do the same to the ${unit}: ${other} ${op} ${p.k} = ${p.ans}.` };
+  } },
+  dist: { label: "Distance on a grid", sym: "↕ 10", make() {
+    const g = makeDist("mix"), A = Math.abs(g.a), B = Math.abs(g.b), big = Math.max(A, B), small = Math.min(A, B), right = Math.random() < .25;
+    const which = g.sx ? "x" : "y", other = g.sx ? "y" : "x";
+    const good = [{ label: "Step 1: Which number is the same?", math: `Both ${which}'s are ${g.same}. Look at the ${other}'s: ${g.a} and ${g.b}` },
+      { label: "Step 2: Same side of 0?", math: g.across ? `${g.a} and ${g.b} are on different sides of 0` : `${g.a} and ${g.b} are on the same side of 0` },
+      { label: "Step 3: Distance", math: g.across ? `Add: ${A} + ${B} = ${g.d}` : `Subtract: ${big} − ${small} = ${g.d}` }];
+    const steps = good.map(s => ({ ...s }));
+    const bad = g.across ? big - small : A + B, w = right ? -1 : 2;
+    if (!right) steps[2].math = g.across ? `Subtract: ${big} − ${small} = ${bad}` : `Add: ${A} + ${B} = ${bad}`;
+    const lo = Math.min(g.a, g.b), hi = Math.max(g.a, g.b);
+    return { q: `Find the distance between the points <b>${ptTxt(g.P)}</b> and <b>${ptTxt(g.Q)}</b>.`, good, steps, wrong: w,
+      claim: `I think the distance is <b>${right ? g.d : bad}</b>.`,
+      offRight: g.across ? `Good eye. ${lo} is below 0 and ${hi} is above 0. Pip subtracted, but on different sides of 0 you have to add.` : `Good eye. ${g.a} and ${g.b} are on the same side of 0. Pip added, but the distance is only the gap between them.`,
+      yesWrong: `Let's count on a number line. From ${lo} to ${hi}: ${g.across ? `${-lo} steps to reach 0, then ${hi} more` : `${g.d} steps`}. Is that ${bad}?`,
+      yesRight: `You checked it. From ${lo} to ${hi} is ${g.d} steps on a number line.`,
+      offWrong: `Let's count together: from ${lo} to ${hi} on a number line is ${g.d} steps. Does that match Pip?`,
+      stepOk: i => i === 0 ? `Step 1 is right: both ${which}'s are ${g.same}, so only the ${other}'s matter.` : `Step 2 is right: ${g.across ? "one is negative and one is positive" : "both are on the same side of 0"}. Look at the next step.`,
+      fixQ: g.across ? `In Step 3 I subtracted ${big} − ${small}. They're on different sides of 0. What should I do?` : `In Step 3 I added ${A} + ${B}. They're on the same side of 0. What should I do?`,
+      fixes: g.across
+        ? [[`Add them: ${A} + ${B}`, true], [`Subtract: ${big} − ${small}`, false, `That's what Pip did. Subtracting only works when both are on the same side of 0.`], [`Use the ${which}'s: ${g.same} − ${g.same}`, false, `Those are the same, so they don't change. Use the ${other}'s.`]]
+        : [[`Subtract: ${big} − ${small}`, true], [`Add them: ${A} + ${B}`, false, `That's what Pip did. Adding is for when they're on different sides of 0.`], [`Use the ${which}'s: ${g.same} − ${g.same}`, false, `Those are the same, so they don't change. Use the ${other}'s.`]],
+      fixed: `<b>${g.d}.</b> ${g.across ? `Different sides of 0, so add: ${A} + ${B} = ${g.d}.` : `Same side of 0, so subtract: ${big} − ${small} = ${g.d}.`}` };
   } }
 };
 
@@ -4478,6 +4626,194 @@ function propCheck() {
   stage.appendChild(c);
   c.querySelector("#again").onclick = () => { state.solved.prop++; save(); state.pr = makeProp(p.key); state.step = 1; render(); };
   c.querySelector("#pick").onclick = () => { state.solved.prop++; save(); state.step = 0; render(); };
+}
+
+/* ---------- distance on a grid: points that share a coordinate ---------- */
+function makeDist(level) {
+  for (let i = 0; i < 3000; i++) {
+    const same = rint(-8, 8), a = rint(-9, 9), b = rint(-9, 9);
+    if (a === b || a === 0 || b === 0) continue;
+    const across = (a < 0) !== (b < 0);
+    if (level === "across" && !across) continue;
+    if (level === "same" && across) continue;
+    const sx = Math.random() < .5;   // true: the x's match (up and down); false: the y's match (side to side)
+    const P = sx ? [same, a] : [a, same], Q = sx ? [same, b] : [b, same];
+    return { level, same, a, b, sx, P, Q, across, d: Math.abs(a - b), phase: 0 };
+  }
+}
+const ptTxt = p => `(${p[0]}, ${p[1]})`;
+const distProb = g => `<div class="fx" style="font-size:1.5rem"><span>${ptTxt(g.P)}</span><span style="font-size:1.1rem;font-weight:500">and</span><span>${ptTxt(g.Q)}</span></div>`;
+function distLine(g, jump) {
+  const X = n => 20 + (n + 10) * 30, lo = Math.min(g.a, g.b), hi = Math.max(g.a, g.b);
+  let s = `<svg viewBox="0 0 640 100" style="width:100%;display:block" role="img" aria-label="Number line with ${g.a} and ${g.b}">
+    <line x1="10" y1="50" x2="630" y2="50" style="stroke:var(--ink);stroke-width:2"/>`;
+  for (let n = -10; n <= 10; n++) {
+    s += `<line x1="${X(n)}" y1="${n ? 44 : 38}" x2="${X(n)}" y2="${n ? 56 : 62}" style="stroke:var(--ink);stroke-width:${n ? 1.2 : 2.5}"/>`;
+    if (n % 2 === 0 || n === g.a || n === g.b) s += `<text x="${X(n)}" y="82" text-anchor="middle" style="fill:${n === g.a || n === g.b ? "var(--accent)" : "var(--soft)"};font:${n === g.a || n === g.b ? 700 : 500} 14px var(--font-body)">${n}</text>`;
+  }
+  if (jump) {
+    if (g.across) {
+      s += `<path d="M${X(lo)} 40 Q${(X(lo) + X(0)) / 2} 8 ${X(0)} 40" style="fill:none;stroke:var(--look);stroke-width:3"/><text x="${(X(lo) + X(0)) / 2}" y="18" text-anchor="middle" style="fill:var(--ink);font:700 15px var(--font-body)">${-lo}</text>`;
+      s += `<path d="M${X(0)} 40 Q${(X(0) + X(hi)) / 2} 8 ${X(hi)} 40" style="fill:none;stroke:var(--accent);stroke-width:3"/><text x="${(X(0) + X(hi)) / 2}" y="18" text-anchor="middle" style="fill:var(--ink);font:700 15px var(--font-body)">${hi}</text>`;
+    } else s += `<path d="M${X(lo)} 40 Q${(X(lo) + X(hi)) / 2} 6 ${X(hi)} 40" style="fill:none;stroke:var(--accent);stroke-width:3"/><text x="${(X(lo) + X(hi)) / 2}" y="16" text-anchor="middle" style="fill:var(--ink);font:700 15px var(--font-body)">${hi - lo}</text>`;
+  }
+  [g.a, g.b].forEach(n => { s += `<circle cx="${X(n)}" cy="50" r="7" style="fill:var(--accent)"/>`; });
+  return s + `</svg>`;
+}
+const DIST_RULE = `<div class="hint"><b>The rule</b> (ignore the minus signs):<br>Different sides of 0 → <b>add</b> them.<br>Same side of 0 → <b>subtract</b> the smaller from the bigger.</div>`;
+
+function distPick() {
+  const c = el(`<section class="card">
+    <h2>Pick a level</h2>
+    <div class="choices">
+      <button class="home-pick" type="button" data-l="same"><strong>Same side of 0</strong><span>Like (2, 3) and (2, 8)</span></button>
+      <button class="home-pick" type="button" data-l="across"><strong>Across 0</strong><span>Like (3, −4) and (3, 6)</span></button>
+      <button class="home-pick" type="button" data-l="mix"><strong>Mix them up</strong><span>Some of each</span></button>
+    </div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelectorAll("[data-l]").forEach(b => b.onclick = () => { state.dsLevel = b.dataset.l; state.ds = makeDist(b.dataset.l); state.step = 1; render(); });
+}
+
+function distSame() {
+  const g = state.ds;
+  const c = el(`<section class="card">
+    <h2>Find the distance between the points.</h2>
+    ${distProb(g)}
+    <p class="ask">Step 2: Which number is the same in both points?</p>
+    <div class="choices">
+      <button type="button" data-c="x">The first number (x): ${g.P[0]} and ${g.Q[0]}</button>
+      <button type="button" data-c="y">The second number (y): ${g.P[1]} and ${g.Q[1]}</button>
+    </div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelectorAll("[data-c]").forEach(b => b.onclick = () => {
+    const fb = c.querySelector("#fb");
+    if ((b.dataset.c === "x") === g.sx) {
+      c.querySelectorAll("[data-c]").forEach(y => y.disabled = y !== b); b.classList.add("picked");
+      fb.innerHTML = `<div class="note ok">Yes. Both ${g.sx ? "x's" : "y's"} are ${g.same}, so the points are ${g.sx ? "straight up and down" : "straight across"} from each other. Only the ${g.sx ? "y's" : "x's"} matter now: <b>${g.a}</b> and <b>${g.b}</b>.</div>`;
+      fb.appendChild(nextBtn(() => { state.step = 2; render(); }));
+    } else {
+      fb.innerHTML = `<div class="note look">Look closely: ${b.dataset.c === "x" ? `${g.P[0]} and ${g.Q[0]}` : `${g.P[1]} and ${g.Q[1]}`} are different numbers. Which pair is exactly the same?</div>`;
+    }
+  });
+}
+
+function distGuess() {
+  const g = state.ds, big = Math.max(Math.abs(g.a), Math.abs(g.b)), lo = Math.min(g.a, g.b), hi = Math.max(g.a, g.b);
+  const c = el(`<section class="card">
+    ${distProb(g)}
+    <p class="ask">Step 3: Think first, before any math. The numbers that change are <b>${g.a}</b> and <b>${g.b}</b>.</p>
+    ${distLine(g, false)}
+    <h2>Will the distance be more than ${big}, or less than ${big}?</h2>
+    <p class="sub">${big} is how far the farther dot is from 0.</p>
+    <div class="choices">
+      <button type="button" data-g="more">More than ${big}</button>
+      <button type="button" data-g="less">Less than ${big}</button>
+    </div>
+    <button class="quiet" id="hintBtn" type="button">Show me a hint</button>
+    <div id="hint"></div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelector("#hintBtn").onclick = e => {
+    c.querySelector("#hint").innerHTML = `<div class="hint">Picture walking along the line from ${lo} to ${hi}. Do you have to walk past 0 on the way?</div>`;
+    e.target.disabled = true;
+  };
+  c.querySelectorAll("[data-g]").forEach(b => b.onclick = () => {
+    const fb = c.querySelector("#fb");
+    if ((b.dataset.g === "more") === g.across) {
+      g.est = g.across ? "more" : "less";
+      c.querySelectorAll("[data-g]").forEach(y => y.disabled = y !== b); b.classList.add("picked");
+      fb.innerHTML = `<div class="note ok">Yes. ${g.across
+        ? `To get from ${lo} to ${hi} you walk all the way to 0, and then past it to ${hi}. That's farther than ${big}.`
+        : `Both dots are on the same side of 0. You only walk the gap between them, and that's shorter than ${big}.`} Keep that in your pocket for the end.</div>`;
+      fb.appendChild(nextBtn(() => { state.step = 3; render(); }));
+    } else {
+      fb.innerHTML = `<div class="note look">Picture it on the line. Walk from ${lo} to ${hi}. ${g.across ? `You have to cross 0 on the way, and then keep going.` : `You never reach 0. You start partway out.`} Is that more or less than ${big} steps? Pick again whenever you're ready.</div>`;
+    }
+  });
+}
+
+function distSides() {
+  const g = state.ds;
+  const c = el(`<section class="card">
+    ${distProb(g)}
+    <p class="ask">Step 4: The numbers that change are <b>${g.a}</b> and <b>${g.b}</b>. Are they on the same side of 0, or different sides?</p>
+    ${distLine(g, false)}
+    <div class="choices">
+      <button type="button" data-s="diff">Different sides (one negative, one positive)</button>
+      <button type="button" data-s="same">Same side (both ${g.a > 0 ? "positive" : "negative"}${g.across ? " or both negative" : ""})</button>
+    </div>
+    <div id="fb"></div>
+  </section>`);
+  if (g.across) c.querySelector('[data-s="same"]').textContent = "Same side (both positive or both negative)";
+  stage.appendChild(c);
+  c.querySelectorAll("[data-s]").forEach(b => b.onclick = () => {
+    const fb = c.querySelector("#fb");
+    if ((b.dataset.s === "diff") === g.across) {
+      c.querySelectorAll("[data-s]").forEach(y => y.disabled = y !== b); b.classList.add("picked");
+      fb.innerHTML = `<div class="note ok">Yes. ${g.across ? `One is below 0 and one is above 0, so we <b>add</b>.` : `They're both on the same side of 0, so we <b>subtract</b>.`}</div>${DIST_RULE}`;
+      fb.appendChild(nextBtn(() => { state.step = 4; render(); }));
+    } else {
+      fb.innerHTML = `<div class="note look">Look at the dots on the number line. ${g.across ? `${Math.min(g.a, g.b)} has a minus sign, so it's below 0. ${Math.max(g.a, g.b)} is above 0.` : `Both have ${g.a > 0 ? "no minus sign" : "a minus sign"}, so both are ${g.a > 0 ? "above" : "below"} 0.`}</div>`;
+    }
+  });
+}
+
+function distFind() {
+  const g = state.ds, A = Math.abs(g.a), B = Math.abs(g.b), big = Math.max(A, B), small = Math.min(A, B);
+  const c = el(`<section class="card">
+    ${distProb(g)}
+    <p class="ask">Step 5: ${g.across ? `Different sides, so add. Ignore the minus sign: ${A} + ${B}.` : `Same side, so subtract. Ignore the minus signs: ${big} − ${small}.`}</p>
+    ${distLine(g, false)}
+    ${DIST_RULE}
+    <div class="row" style="align-items:center">
+      <span class="ask">Distance =</span>
+      <input type="number" id="ans" inputmode="numeric" aria-label="Distance">
+      <button class="primary" id="chk" type="button">Check</button>
+    </div>
+    <div id="fb"></div>
+  </section>`);
+  stage.appendChild(c);
+  const input = c.querySelector("#ans");
+  const check = () => {
+    const fb = c.querySelector("#fb");
+    if (!input.value) { fb.innerHTML = `<div class="note look">Type a number first, then press Check.</div>`; return; }
+    const v = Number(input.value);
+    if (v === g.d) { state.step = 5; render(); return; }
+    if (g.across && v === big - small) fb.innerHTML = `<div class="note look">That's ${big} − ${small}. But ${Math.min(g.a, g.b)} is on the other side of 0! Count it: from ${Math.min(g.a, g.b)} up to 0 is ${Math.abs(Math.min(g.a, g.b))}, and from 0 up to ${Math.max(g.a, g.b)} is ${Math.max(g.a, g.b)} more. Add them.</div>`;
+    else if (!g.across && v === A + B) fb.innerHTML = `<div class="note look">That's ${A} + ${B}. These are on the same side of 0, so the distance is only the gap between them: ${big} − ${small}.</div>`;
+    else if (v < 0) fb.innerHTML = `<div class="note look">A distance is never negative. It's how many steps apart the dots are.</div>`;
+    else fb.innerHTML = `<div class="note look">Let's count on the number line. Start at ${Math.min(g.a, g.b)} and count steps up to ${Math.max(g.a, g.b)}.</div>`;
+  };
+  c.querySelector("#chk").onclick = check;
+  input.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+  input.focus();
+}
+
+function distCheck() {
+  const g = state.ds, A = Math.abs(g.a), B = Math.abs(g.b);
+  const c = el(`<section class="card">
+    ${distProb(g)}
+    <h2>The distance is ${g.d}.</h2>
+    ${distLine(g, true)}
+    <ol class="trail">
+      <li>Same number: both ${g.sx ? "x's" : "y's"} are ${g.same}.</li>
+      <li>The others: ${g.a} and ${g.b}, ${g.across ? "different sides of 0" : "same side of 0"}.</li>
+      <li>${g.across ? `Add: ${A} + ${B} = ${g.d}` : `Subtract: ${Math.max(A, B)} − ${Math.min(A, B)} = ${g.d}`}</li>
+    </ol>
+    ${g.est ? `<div class="note ok">Your thinking: you said it would be ${g.est} than ${Math.max(A, B)}. ${g.d} is ${g.d > Math.max(A, B) ? "more" : "less"} than ${Math.max(A, B)}, so it fits.</div>` : ""}
+    <div class="note ok">Check by counting the jumps on the number line: ${g.across ? `${Math.abs(Math.min(g.a, g.b))} to get to 0, then ${Math.max(g.a, g.b)} more` : `${g.d} steps from ${Math.min(g.a, g.b)} to ${Math.max(g.a, g.b)}`}. That's ${g.d}.</div>
+    <div class="row">
+      <button class="primary" id="again" type="button">Another one</button>
+      <button id="pick" type="button">Change level</button>
+    </div>
+  </section>`);
+  stage.appendChild(c);
+  c.querySelector("#again").onclick = () => { state.solved.dist++; save(); state.ds = makeDist(state.dsLevel); state.step = 1; render(); };
+  c.querySelector("#pick").onclick = () => { state.solved.dist++; save(); state.step = 0; render(); };
 }
 
 /* ---------- round & estimate ---------- */

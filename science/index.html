@@ -364,6 +364,8 @@ table.grouped .gcount{font-size:13px;color:var(--muted,#5b6770);font-weight:500;
 .mastered{color:#B7860F;font-weight:700}
 .passed{color:#2E7D4F;font-weight:700}
 .mtag{position:absolute;top:8px;right:8px;font-family:var(--mono);font-size:11px;font-weight:700;background:#F2B705;color:#15252A;border-radius:99px;padding:2px 8px}
+.mtag.ltag{background:#E4E7EA;color:#46525b}
+.tile.lockt{opacity:.6}
 .mtag.ptag{background:#DDF1E4;color:#1F5E3A}
 
 .climbsvg{width:100%;max-width:460px;display:block;margin:0 auto 10px}
@@ -2575,6 +2577,17 @@ function passed(stu, u){ return stepsDone(stu,u) && (best(stu,u,"test")||0)>=80 
 function mastered(stu, u){ return passed(stu,u) && reviewLeft(stu,u)===0; }
 function dueList(){ const t = today(); return Object.entries(RV()).filter(([k,it]) => it.due <= t).sort((a,b)=>a[1].due.localeCompare(b[1].due)).map(([k])=>k); }
 function testLock(u){ if (fixLeft(student,u)) return "fix"; const lt = lastTestDay(student,u); return lt === today() ? "tomorrow" : null; }
+/* ---------- sets and finals: master every unit in a set, then pass its final (80%+) to open the next set ---------- */
+const finalOf = u => u.set===2 ? "final2" : "final";
+const setUnits = f => UNITS.filter(u => f==="final2" ? u.set===2 : u.set!==2);
+const finalPassed = (stu, f) => (best(stu,f,"final")||0) >= 80;
+function unitOpen(stu, u){ return u.set!==2 || finalPassed(stu,"final"); }
+function finalLock(f){
+  if (f==="final2" && !finalPassed(student,"final")) return "set";
+  if (!setUnits(f).every(u => mastered(student,u.id))) return "units";
+  const a = rs(student,f,"final"); if (a.length && dayOf(a[a.length-1].at)===today()) return "finaltomorrow";
+  return null;
+}
 
 /* ---------- parent summary: units grouped by status ---------- */
 function unitStatus(stu, u){
@@ -2631,7 +2644,7 @@ function nextStep(){
   if (fu) return {eye:"Fix-up", title:`Fix up ${fu[1].length} missed question${fu[1].length>1?"s":""} from the Unit ${unitById(fu[0]).n} test`, sub:"Read why each answer is right, then answer it again.", go:()=>startFix(fu[0])};
   const due = dueList().length;
   if (due) return {eye:"Daily review", title:`Review ${Math.min(due,10)} question${due>1?"s":""} you missed before`, sub:"Getting it right on 3 different days moves it into long-term memory.", go:()=>startReview()};
-  const lastU = P().last ? UNITS.findIndex(x=>x.id===P().last.unit) : 0, order = UNITS.slice(Math.max(0,lastU)).concat(UNITS.slice(0,Math.max(0,lastU)));
+  const lastU = P().last ? UNITS.findIndex(x=>x.id===P().last.unit) : 0, order = UNITS.slice(Math.max(0,lastU)).concat(UNITS.slice(0,Math.max(0,lastU))).filter(u => unitOpen(student,u));
   let waiting = null;
   for (const u of order){
     if (mastered(student,u.id)) continue;
@@ -2644,7 +2657,17 @@ function nextStep(){
       return {eye: waiting ? `Unit ${waiting.n} test unlocks tomorrow, so next:` : `Unit ${u.n}: ${u.name}`, title:s.label, sub: isLesson ? `Step ${st+1} of 6: ${STEPS[st]}` : (s.sub||""), go:s.go};
     }
   }
-  return {eye:"Amazing", title:"Every unit is mastered or waiting for review!", sub:"Try a final exam.", go:()=>startQuiz("final","final")};
+  if (waiting) return {eye:"Come back tomorrow", title:`The Unit ${waiting.n} test opens again tomorrow`, sub:"Study the questions you missed today.", go:()=>go({page:"unit", unit:waiting.id, lesson:0})};
+  for (const f of ["final","final2"]){
+    if (finalPassed(student,f)) continue;
+    const lk = finalLock(f);
+    if (lk==="set") break;
+    if (lk===null) return {eye:"Final exam", title:`Take Final Exam ${f==="final"?1:2}: ${titleOf(f)}`, sub:`Score 80% or better${f==="final"?" to open Set 2":""}.`, go:()=>startQuiz(f,"final")};
+    if (lk==="finaltomorrow") return {eye:"Final exam", title:`Final Exam ${f==="final"?1:2} opens again tomorrow`, sub:"Study the questions you missed. They're in your review box.", go:()=>go({page:"home"})};
+    const m = setUnits(f).filter(u=>mastered(student,u.id)).length;
+    return {eye:"Almost there", title:`Every open unit is passed. Keep reviewing to master them.`, sub:`${m} of ${setUnits(f).length} units ★ Mastered. Final Exam ${f==="final"?1:2} opens when all of them are.`, go:()=>go({page:"home"})};
+  }
+  return {eye:"Amazing", title:"You finished every unit and both finals!", sub:"Keep doing your daily review.", go:()=>go({page:"home"})};
 }
 function nextStepCard(){
   const n = nextStep(); if (!n) return "";
@@ -2655,6 +2678,7 @@ function nextStepCard(){
 
 /* ---------- lessons: the same 6 steps every time ---------- */
 function renderUnit(){
+  if (student && !unitOpen(student, unitById(view.unit))) { view = {page:"locked", unit:view.unit, why:"set"}; return renderLocked(); }
   const u = unitById(view.unit), L = u.lessons[view.lesson], key = u.id+"-"+view.lesson, F = FIG[key], W = WATCH[key];
   if (student){ P().last = {unit:u.id, lesson:view.lesson}; saveAll(); }
   const step = student ? Math.min(5, LST()[key]||0) : (view.step||0);
@@ -2730,6 +2754,8 @@ function startQuiz(unitId, kind, fresh){
   if (needStudent()) return;
   const saved = inprog[student];
   if (!fresh && saved && saved.unit===unitId && saved.kind===kind){ view = Object.assign({page:"quiz", resumed:true}, saved); render(); window.scrollTo({top:0}); return; }
+  if (kind==="final"){ const lock = finalLock(unitId); if (lock) return go({page:"locked", unit:unitId, why:lock}); }
+  else if (!unitOpen(student, unitById(unitId))) return go({page:"locked", unit:unitId, why:"set"});
   if (kind==="test"){ const lock = testLock(unitId); if (lock) return go({page:"locked", unit:unitId, why:lock}); }
   let list;
   if (kind==="final") list = shuffle(UNITS.filter(u => unitId==="final2" ? u.set===2 : u.set!==2).flatMap(u => shuffle(u.quiz.concat(u.test)).slice(0, unitId==="final2" ? 2 : 4).map(q=>[q,u.id])));
@@ -2763,7 +2789,17 @@ function afterResultHTML(r, missedN){
 
 /* ---------- locked test page ---------- */
 function renderLocked(){
-  const u = unitById(view.unit), why = view.why;
+  const why = view.why;
+  if (isFinal(view.unit) || why==="set"){
+    const f = isFinal(view.unit) ? view.unit : "final", us = setUnits(f), m = us.filter(u=>mastered(student,u.id)).length;
+    const msg = why==="set" ? ["Set 2 is locked", "Score 80% or better on <b>Final Exam 1</b> (units 1–5) to open Set 2."]
+      : why==="units" ? [`${titleOf(f)} final is locked`, `Master every unit in this set first. You have <b>${m} of ${us.length}</b> ★ Mastered. Units that say ✓ Passed still have review questions to clear.`]
+      : ["The final opens again tomorrow", `You took this final today. Study the questions you missed (they're in your review box) and try again on <b>${niceDay(addDays(1))}</b>.`];
+    app.innerHTML = `<div class="quiz" style="--c:var(--u6)"><div class="lockbox"><span class="eyebrow">🔒 Locked</span><h1>${msg[0]}</h1><p>${msg[1]}</p>
+      <div class="qfoot" style="justify-content:center"><button class="btn" id="home">See my next step →</button></div></div></div>`;
+    $("#home").onclick = () => go({page:"home"}); return;
+  }
+  const u = unitById(view.unit);
   app.innerHTML = `<div class="quiz" style="--c:var(${u.color})"><div class="lockbox">
     <span class="eyebrow">Unit ${u.n} test</span>
     <h1>${why==="fix" ? "First, fix up your missed questions" : "This test opens again tomorrow"}</h1>
@@ -2937,17 +2973,19 @@ function render(){
 }
 
 function tileHTML(u){
-  const d = student ? lessonsDone(student,u) : 0;
-  return `<button class="tile" style="--c:var(${u.color})" data-unit="${u.id}">
+  const d = student ? lessonsDone(student,u) : 0, lk = student && !unitOpen(student,u);
+  return `<button class="tile ${lk?"lockt":""}" style="--c:var(${u.color})" data-unit="${u.id}">${lk?`<span class="mtag ltag">🔒 Locked</span>`:""}
     <span class="num">${u.n}</span>${student && mastered(student,u.id) ? `<span class="mtag">★ Mastered</span>` : (student && passed(student,u.id) ? `<span class="mtag ptag">✓ Passed</span>` : "")}<span class="sym">${u.sym}</span><span class="nm">${esc(u.name)}</span>
     <span class="checks" aria-label="${d} of ${u.lessons.length} lessons done">${u.lessons.map((_,i)=>`<i class="${i<d?"on":""}"></i>`).join("")}<small>${d}/${u.lessons.length} lessons</small></span>
     <span class="mass"><span>Quiz ${starStr(student?bestStars(student,u.id,"quiz"):0)}</span><span>Test ${starStr(student?bestStars(student,u.id,"test"):0)}</span></span>
   </button>`;
 }
 function finalTile(id, sym, name){
-  return `<button class="tile" style="--c:var(--u6)" data-final="${id}">
+  const lk = student ? finalLock(id) : null, us = setUnits(id), m = student ? us.filter(u=>mastered(student,u.id)).length : 0;
+  const note = finalPassed(student,id) ? "✓ Passed" : lk==="set" ? "Pass Final Exam 1 first" : lk==="units" ? `${m} of ${us.length} units mastered` : lk==="finaltomorrow" ? "Opens again tomorrow" : "Ready! Score 80%+";
+  return `<button class="tile ${lk&&!finalPassed(student,id)?"lockt":""}" style="--c:var(--u6)" data-final="${id}">${lk&&!finalPassed(student,id)?`<span class="mtag ltag">🔒 Locked</span>`:""}
       <span class="num">★</span><span class="sym">${sym}</span><span class="nm">${name}</span>
-      <span class="checks"><small>20 questions</small></span>
+      <span class="checks"><small>${student ? note : "20 questions"}</small></span>
       <span class="mass"><span>Best</span>${starStr(student?bestStars(student,id,"final"):0)}</span>
     </button>`;
 }
@@ -2958,7 +2996,7 @@ function renderHome(){
     <span class="eyebrow">Sixth grade · ${UNITS.length} units · ${UNITS.reduce((a,u)=>a+u.lessons.length,0)} lessons</span>
     <h1>${student ? `Hi ${esc(student)}! You have ${st} of ${STAR_MAX} stars.` : "Pick a unit to study."}</h1>
     ${student ? `<div class="starbar" aria-hidden="true"><i style="width:${pct(st,STAR_MAX)}%"></i></div>` : ""}
-    <p>Every lesson has the same 6 steps: Words to Know, Read, See It, Watch, Remember, Try It. Every unit has the same path: 3 lessons, vocab game, practice quiz, Fact Climb game, test, and fix-up. Do all of that with 80%+ on the test and the unit is ✓ Passed. Clear its review questions and it's ★ Mastered.</p>
+    <p>Every lesson has the same 6 steps: Words to Know, Read, See It, Watch, Remember, Try It. Every unit has the same path: 3 lessons, vocab game, practice quiz, Fact Climb game, test, and fix-up. Do all of that with 80%+ on the test and the unit is ✓ Passed. Clear its review questions and it's ★ Mastered. Master every unit in a set to open its final exam. Score 80%+ on Final Exam 1 to open Set 2.</p>
   </section>
   ${student ? nextStepCard() : `<button class="cont" id="addfirst"><span class="eyebrow">First</span><b>Add your name to start earning stars</b><span class="arrow">→</span></button>`}
   <div class="section-h"><h2>Set 1: Units 1–5</h2></div>
@@ -2966,7 +3004,7 @@ function renderHome(){
     ${UNITS.filter(u=>u.set!==2).map(tileHTML).join("")}
     ${finalTile("final","F1","Final Exam 1: units 1–5")}
   </div>
-  <div class="section-h"><h2>Set 2: Units 6–15 <span class="newtag">New</span></h2></div>
+  <div class="section-h"><h2>Set 2: Units 6–15 ${student && !finalPassed(student,"final") ? `<span class="newtag">🔒 Opens after 80%+ on Final Exam 1</span>` : ""}</h2></div>
   <div class="table">
     ${UNITS.filter(u=>u.set===2).map(tileHTML).join("")}
     ${finalTile("final2","F2","Final Exam 2: units 6–15")}

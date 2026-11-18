@@ -220,6 +220,16 @@ ol.steps li::before{content:counter(st);width:30px;height:30px;border-radius:50%
 .bkbar{height:10px;background:var(--cream);border-radius:999px;overflow:hidden;margin-top:8px;max-width:260px;border:1px solid var(--line)}
 .bkbar i{display:block;height:100%;background:var(--book)}
 .unit-book{display:inline-flex;gap:6px;align-items:center;font-size:14px;color:var(--soft)}
+.scorebig{display:grid;justify-items:center;text-align:center;gap:6px;background:linear-gradient(160deg,#FFF8E1,#FFF1C9);border:3px solid var(--gold);border-radius:22px;padding:20px 16px 18px;margin:4px 0 16px;box-shadow:0 4px 0 #E7C774}
+.scorebig .sstars{font-size:clamp(26px,5vw,38px);letter-spacing:2px;line-height:1.2}
+.scorebig .sstars .off{opacity:.22;filter:grayscale(1)}
+.scorebig .snum{font-family:"Lora",serif;font-weight:700;font-size:clamp(38px,7vw,56px);line-height:1.05;color:#7A5410}
+.scorebig .smsg{font-size:clamp(20px,3.2vw,25px);font-weight:700}
+.scorebig .swhen{font-size:15px;color:var(--soft)}
+.scorebig.fresh{animation:popin .5s ease}
+@keyframes popin{0%{transform:scale(.85);opacity:0}70%{transform:scale(1.04)}100%{transform:scale(1);opacity:1}}
+.sec.wasdone .practice{display:none}
+.sec-h .chk{font-size:16px!important}
 .confetti{position:fixed;top:-20px;font-size:26px;pointer-events:none;animation:fall 1.9s linear forwards;z-index:9}
 @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.6}}
 @media(max-width:560px){.sec-b{padding:14px}.story{font-size:19px}.artcard{grid-template-columns:1fr}.frame{display:none}}
@@ -1461,17 +1471,24 @@ function renderHome(){
 
 /* ================= lesson ================= */
 function secDone(i,k){ const l=LP(i); return !!(l.sec[k]&&l.sec[k].done); }
+function showFresh(k){ const s=LP(curLesson).sec[k]; if(!s||!s.total) return; const sec=$("sec-"+k); if(!sec) return;
+  sec.querySelectorAll(".scorebig.fresh").forEach(x=>x.remove());
+  const pr=sec.querySelector(".practice"); if(pr){ pr.insertAdjacentHTML("afterend",bigScore(k,s,true)); const el=sec.querySelector(".scorebig.fresh"); el&&el.scrollIntoView({behavior:"smooth",block:"center"}); }
+  const chk=sec.querySelector(".chk"); if(chk) chk.textContent=`⭐ ${s.score}/${s.total}`;
+  confetti(s.score===s.total?22:10); }
 function markSec(k,data={}){
   const i=curLesson, l=LP(i); l.sec[k]=Object.assign({},l.sec[k]||{},data,{done:true,at:Date.now()});
   P().last=Date.now(); addStar(`L${i}-${k}`); saveAll();
   const secs=secsOf(LESSONS[i]);
   if(!l.done && secs.every(s=>secDone(i,s))){ l.done=true; l.doneAt=Date.now(); addStar(`L${i}-done`); saveAll(); try{ window.rhythmReport && rhythmReport('la3'); }catch(e){} renderLesson(i,true); return; }
-  refreshDots(); paintSecHead(k);
+  refreshDots(); paintSecHead(k); if(data.total) showFresh(k);
 }
-function paintSecHead(k){ const el=document.querySelector(`#sec-${k} .chk`); if(el) el.textContent=secDone(curLesson,k)?"✓ Done":""; }
+function paintSecHead(k){ const el=document.querySelector(`#sec-${k} .chk`); const s=LP(curLesson).sec[k]; if(el) el.textContent=secDone(curLesson,k)?(s&&s.total?`⭐ ${s.score}/${s.total}`:"✓ Done"):""; }
 function refreshDots(){ const el=$("dots"); if(!el) return; const L=LESSONS[curLesson];
   el.innerHTML=secsOf(L).map(k=>`<a class="dot ${secDone(curLesson,k)?"done":""}" href="#sec-${k}" onclick="event.preventDefault();document.getElementById('sec-${k}').scrollIntoView({behavior:'smooth'})" style="text-decoration:none;color:inherit"><i style="background:${SEC[k].c}">${secDone(curLesson,k)?"":SEC[k].ic}</i>${SEC[k].n}</a>`).join(""); }
-function secShell(k,title,body){ return `<section class="card sec" id="sec-${k}"><div class="sec-h" style="background:${SEC[k].c}"><span class="ic">${SEC[k].ic}</span><h2>${title||SEC[k].n}</h2><span class="chk">${secDone(curLesson,k)?"✓ Done":""}</span></div><div class="sec-b">${body}</div></section>`; }
+function secShell(k,title,body){ const sd=LP(curLesson).sec[k], scored=!!(sd&&sd.done&&sd.total);
+  if(scored) body=bigScore(k,sd,false)+body;
+  return `<section class="card sec ${scored?"wasdone":""}" id="sec-${k}"><div class="sec-h" style="background:${SEC[k].c}"><span class="ic">${SEC[k].ic}</span><h2>${title||SEC[k].n}</h2><span class="chk">${secDone(curLesson,k)?(scored?`⭐ ${sd.score}/${sd.total}`:"✓ Done"):""}</span></div><div class="sec-b">${body}</div></section>`; }
 
 function renderLesson(i,finished){
   curLesson=i; const L=LESSONS[i], U=UNITS[L.u-1];
@@ -1479,12 +1496,13 @@ function renderLesson(i,finished){
     confetti(30);
     $("lesson").innerHTML=`<div class="card finish"><div class="big">🌼</div><span class="stamp">Lesson ${lessonNo(i)} complete</span>
       <h2>Wonderful work, ${esc(student)}!</h2><p class="lead">${L.review?`You finished the Unit ${L.u} review.`:`You read “${esc(L.story.title)}” and finished every part of the lesson.`} You earned ${secsOf(L).length+2} stars.</p>
+      ${(()=>{ const sc=secsOf(L).map(k=>[k,LP(i).sec[k]]).filter(([,x])=>x&&x.total); return sc.length?`<div class="scorebig" style="max-width:520px;margin:6px auto 18px">${sc.map(([k,x])=>`<div style="display:flex;justify-content:space-between;gap:18px;width:100%;font-size:21px"><span>${SEC[k].ic} ${SEC[k].n}</span><b style="font-family:Lora,serif;font-size:24px;color:#7A5410">${x.score} / ${x.total} ${x.score===x.total?"⭐":""}</b></div>`).join("")}</div>`:""; })()}
       <div class="row" style="justify-content:center">${i<LESSONS.length-1?`<button class="btn" onclick="go('lesson',${i+1})">Next lesson ➜</button>`:""}<button class="btn ghost" onclick="go('home')">Back to lessons</button></div></div>`;
     return;
   }
   let h=`<div class="lhead"><div class="kicker" style="color:${U.color}">Unit ${U.n} · ${U.title} · Lesson ${lessonNo(i)} of ${LESSONS.length}</div>
     <h1>${L.review?`Unit ${U.n} Review & Check`:esc(L.story.title)}</h1>
-    <div class="row" style="margin-top:8px"><button class="btn ghost small" ${i===0?"disabled":""} onclick="go('lesson',${i-1})">‹ Lesson ${i}</button><button class="btn ghost small" ${i===LESSONS.length-1?"disabled":""} onclick="go('lesson',${i+1})">Lesson ${i+2} ›</button>${lessonDone(i)?`<span class="complete-badge">✓ Finished</span>`:""}</div>
+    <div class="row" style="margin-top:8px">${i===0?"":`<button class="btn ghost small" onclick="go('lesson',${i-1})">‹ Lesson ${i}</button>`}<button class="btn ghost small" ${i===LESSONS.length-1?"disabled":""} onclick="go('lesson',${i+1})">Lesson ${i+2} ›</button>${lessonDone(i)?`<span class="complete-badge">✓ Finished</span>`:""}</div>
     <div class="dots" id="dots"></div></div>`;
   secsOf(L).forEach(k=>{ h+=BUILD[k](L,i,U); });
   $("lesson").innerHTML=h; refreshDots();
@@ -1527,7 +1545,15 @@ function wireQs(root,items,onAll){
     }
   });
 }
-const doneNote=(i,k)=>{ const s=LP(i).sec[k]; return s&&s.done&&s.total?`<p class="note">Last time: ${s.score} of ${s.total} correct. You can try again any time.</p>`:""; };
+const doneNote=()=>"";
+function praise(sc,t){ const r=sc/t; return r===1?"Perfect! You got every one right! 🎉":r>=.75?"Great job! 🌟":r>=.5?"Good work! Keep it up! 💪":"You finished! Every try helps you learn. 🌱"; }
+function bigScore(k,s,fresh){ const t=s.total, sc=s.score;
+  const stars=Array.from({length:t},(_,j)=>`<span class="${j<sc?"":"off"}">⭐</span>`).join("");
+  return `<div class="scorebig ${fresh?"fresh":""}" data-score="${k}"><div class="sstars" aria-hidden="true">${stars}</div>
+    <div class="snum">${sc} out of ${t}!</div>${k==="spell"||k==="test"?`<div class="swhen" style="font-size:16px;margin-top:-2px">spelled right on the first try</div>`:""}<div class="smsg">${praise(sc,t)}</div>
+    ${fresh?"":`<div class="swhen">You finished this part${s.at?` on ${fmtDate(s.at)}`:""}.</div>`}
+    ${fresh?"":`<button class="btn ghost small" data-again="${k}" style="margin-top:6px">↻ Practice again</button>`}</div>`; }
+document.addEventListener("click",e=>{ const b=e.target.closest("[data-again]"); if(!b) return; const sec=$("sec-"+b.dataset.again); if(sec) sec.classList.remove("wasdone"); b.remove(); });
 
 const BUILD={}, WIRE={};
 /* ---- reading ---- */
@@ -1538,7 +1564,7 @@ BUILD.read=(L,i)=>{ const S=L.story;
     <p class="note">${L.review?"Read this passage out loud. Then answer the questions.":"Read the story out loud to a parent, or read it quietly to yourself. Then answer the questions."}</p>
     <div class="story"><h3>${esc(S.title)}</h3>${S.text.map((p,j)=>`<p>${p}</p>`).join("")}</div>
     ${S.vocab?`<div class="vocab"><div style="font-weight:700;color:var(--read)">Words to know</div>${S.vocab.map(([w,d])=>`<div><b>${w}</b>: ${d}</div>`).join("")}</div>`:""}
-    <div id="rdQs"><h3 style="font-size:20px;margin-top:14px">Think about the story</h3>${S.q.map((q,j)=>mcHTML("r"+j,q[0],q[1],q[2],q[3])).join("")}</div>
+    <div id="rdQs" class="practice"><h3 style="font-size:20px;margin-top:14px">Think about the story</h3>${S.q.map((q,j)=>mcHTML("r"+j,q[0],q[1],q[2],q[3])).join("")}</div>
     ${S.verse?`<div class="verse">“${S.verse.text}”<small>${S.verse.ref} · Thought to keep</small></div>`:""}
     ${doneNote(i,"read")}`); };
 WIRE.read=(L,i)=>{ const S=L.story;
@@ -1552,13 +1578,13 @@ BUILD.spell=(L,i)=>{ const S=L.spell;
     <p><b>This lesson’s words.</b> Tap a word to hear it. Read each one out loud.</p>
     <div class="words">${S.words.map(w=>`<button class="word" data-say="${esc(w)}">${esc(w)}</button>`).join("")}</div>
     <p><b>Letter tiles.</b> Listen to each word, then build it with the tiles. Try to spell it without peeking!</p>
-    <div id="tb-spell"></div>${doneNote(i,"spell")}`); };
+    <div id="tb-spell" class="practice"></div>${doneNote(i,"spell")}`); };
 WIRE.spell=(L,i)=>{ document.querySelectorAll("#sec-spell [data-say]").forEach(b=>b.onclick=()=>say(sayFor(L.spell,b.dataset.say)));
   tileBox($("tb-spell"),L.spell.words,L.spell,true,(sc,t)=>markSec("spell",{score:sc,total:t})); };
 const sayFor=(S,w)=> (S&&S.say&&S.say[w]) ? S.say[w] : w;
 
 /* ---- review spelling check ---- */
-BUILD.test=(L,i)=> secShell("test","Spelling Check",`<p>Here are 8 words from this unit. Listen to each word and build it with the letter tiles. No peeking this time. Do your best!</p><div id="tb-test"></div>${doneNote(i,"test")}`);
+BUILD.test=(L,i)=> secShell("test","Spelling Check",`<p>Here are 8 words from this unit. Listen to each word and build it with the letter tiles. No peeking this time. Do your best!</p><div id="tb-test" class="practice"></div>${doneNote(i,"test")}`);
 WIRE.test=(L,i)=>{ const pool=[]; unitLessons(L.u).forEach(([X])=>{ if(X.spell) X.spell.words.forEach(w=>pool.push([w,X.spell])); });
   const pick=shuffle(pool).slice(0,8); const tiles=[...new Set(pick.flatMap(([,S])=>S.tiles))].slice(0,10);
   const S={tiles,say:Object.fromEntries(pick.map(([w,X])=>[w,sayFor(X,w)]))};
@@ -1573,7 +1599,7 @@ function tileBox(root,words,S,allowPeek,onDone){
   const vowels="aeiou";
   const tileHTML=(t,cls)=>`<button class="tile ${cls}" data-t="${esc(t)}" aria-label="${t==="'"?"apostrophe":esc(t)}">${esc(t)}</button>`;
   function draw(){
-    if(k>=words.length){ root.innerHTML=`<div class="tilebox" style="text-align:center"><div class="big" style="font-size:54px">🎉</div><p style="font-size:20px"><b>All done!</b> You spelled ${first} of ${words.length} on the first try.</p><button class="btn ghost small" id="tbAgain">Practice again</button></div>`; root.querySelector("#tbAgain").onclick=()=>tileBox(root,shuffle(words),S,allowPeek,()=>{}); return; }
+    if(k>=words.length){ root.innerHTML=`<div class="tilebox" style="text-align:center"><p style="font-size:20px;margin:0 0 8px"><b>All ${words.length} words are done!</b></p><button class="btn ghost small" id="tbAgain">Practice again</button></div>`; root.querySelector("#tbAgain").onclick=()=>tileBox(root,shuffle(words),S,allowPeek,()=>{}); return; }
     const w=words[k];
     root.innerHTML=`<div class="tilebox">
       <div class="tb-top"><span class="tb-count">Word ${k+1} of ${words.length}</span><div class="row"><button class="listen" data-a="hear">🔈 Hear the word</button>${allowPeek?`<button class="listen" data-a="peek">👀 Peek</button>`:""}</div></div>
@@ -1611,7 +1637,7 @@ function tileBox(root,words,S,allowPeek,onDone){
 BUILD.gram=(L,i)=>{ const G=L.review?{title:"Grammar Check",items:L.gram}:L.gram;
   return secShell("gram",L.review?"Grammar Check":`Grammar: ${G.title}`,`
     ${L.review?`<p>Show what you remember from this unit.</p>`:`<div class="rule">${G.rule}<span class="ex">${G.ex}</span></div>`}
-    <div id="grQs">${G.items.map((it,j)=>it.type==="tap"?tapHTML("g"+j,it):mcHTML("g"+j,it.q,it.o,it.a,it.why)).join("")}</div>${doneNote(i,"gram")}`); };
+    <div id="grQs" class="practice">${G.items.map((it,j)=>it.type==="tap"?tapHTML("g"+j,it):mcHTML("g"+j,it.q,it.o,it.a,it.why)).join("")}</div>${doneNote(i,"gram")}`); };
 WIRE.gram=(L,i)=>{ const items=L.review?L.gram:L.gram.items; wireQs($("grQs"),items,(sc,t)=>markSec("gram",{score:sc,total:t})); };
 
 /* ---- writing ---- */
@@ -1671,7 +1697,7 @@ BUILD.geo=(L,i)=>{ const G=L.extra;
   return secShell("geo",`Geography: ${G.title}`,`${G.text.map(p=>`<p>${p}</p>`).join("")}
     ${G.svg?`<div class="mapbox">${MAPS[G.svg]()}</div>`:""}
     <div class="task"><span class="ti">🧭</span><div><b>Try it:</b> ${G.task}</div></div>
-    <div id="geoQs">${G.q.map((q,j)=>mcHTML("geo"+j,q[0],q[1],q[2],q[3])).join("")}</div>${doneNote(i,"geo")}`); };
+    <div id="geoQs" class="practice">${G.q.map((q,j)=>mcHTML("geo"+j,q[0],q[1],q[2],q[3])).join("")}</div>${doneNote(i,"geo")}`); };
 WIRE.geo=(L,i)=>{ wireQs($("geoQs"),L.extra.q.map(()=>({type:"mc"})),(sc,t)=>markSec("geo",{score:sc,total:t})); };
 
 /* ---- book time (classic chapter books, scheduled lesson by lesson) ---- */

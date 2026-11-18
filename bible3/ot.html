@@ -596,13 +596,16 @@ render();
     c.querySelectorAll("p,h1,h2,h3,dt,dd,li,blockquote,div").forEach(function(x){ x.insertAdjacentText("beforeend",". "); });
     return c.textContent.replace(/\s+/g," ").replace(/(\.\s*){2,}/g,". ").trim();
   }
+  try{ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged=function(){ speechSynthesis.getVoices(); }; }catch(e){}
   function speak(btn,card){
     if(current===btn){ stop(); return; }
     stop();
     var u=new SpeechSynthesisUtterance(textOf(card));
     u.rate=0.9;
-    var vs=speechSynthesis.getVoices().filter(function(v){return /^en(-|_)US/i.test(v.lang);});
-    if(vs.length) u.voice=vs.find(function(v){return /samantha|google us english|aria|jenny/i.test(v.name);})||vs[0];
+    var all=speechSynthesis.getVoices();
+    var vs=all.filter(function(v){return /^en(-|_)/i.test(v.lang);});
+    var pick=vs.find(function(v){return /joelle/i.test(v.name) && /premium|enhanced/i.test(v.name+v.voiceURI);})||vs.find(function(v){return /joelle/i.test(v.name);})||vs.find(function(v){return v.default;})||vs.find(function(v){return /samantha|google us english|aria|jenny/i.test(v.name);})||vs[0];
+    if(pick){ u.voice=pick; u.lang=pick.lang; }
     u.onend=u.onerror=function(){ if(current===btn) stop(); };
     current=btn; btn.setAttribute("aria-pressed","true"); btn.lastChild.textContent="Stop";
     speechSynthesis.speak(u);

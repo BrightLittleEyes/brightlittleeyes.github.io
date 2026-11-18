@@ -159,6 +159,8 @@ tr:last-child td{border-bottom:0}
 .pill.g{background:var(--good-bg);color:var(--good)}
 .pill.m{background:var(--soft);color:var(--ink)}
 .pill.b{background:var(--bad-bg);color:var(--bad)}
+table.grouped tr.grp th{background:var(--soft);text-align:left;padding-top:12px;font-weight:600}
+table.grouped .gcount{font-size:13px;color:var(--muted,#5b6770);font-weight:500;margin-left:6px}
 .note{font-size:14px;color:var(--muted);margin-top:10px}
 .empty{padding:28px;text-align:center;color:var(--muted)}
 .addform{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
@@ -2571,6 +2573,39 @@ function mastered(stu, u){ return passed(stu,u) && reviewLeft(stu,u)===0; }
 function dueList(){ const t = today(); return Object.entries(RV()).filter(([k,it]) => it.due <= t).sort((a,b)=>a[1].due.localeCompare(b[1].due)).map(([k])=>k); }
 function testLock(u){ if (fixLeft(student,u)) return "fix"; const lt = lastTestDay(student,u); return lt === today() ? "tomorrow" : null; }
 
+/* ---------- parent summary: units grouped by status ---------- */
+function unitStatus(stu, u){
+  if (mastered(stu,u.id)) return "mastered";
+  if (passed(stu,u.id)) return "passed";
+  const started = lessonsDone(stu,u)>0 || ["game","quiz","climb","test"].some(k => rs(stu,u.id,k).length);
+  return started ? "working" : "none";
+}
+function unitLeft(stu, u){
+  const st = unitStatus(stu,u), left = [], b = best(stu,u.id,"test"), rl = reviewLeft(stu,u.id), fl = fixLeft(stu,u.id);
+  if (st==="mastered") return "Done";
+  if (st==="none") return "–";
+  const ld = u.lessons.length - lessonsDone(stu,u); if (ld) left.push(`${ld} lesson${ld>1?"s":""}`);
+  [["game","vocab game"],["quiz","practice quiz"],["climb","Fact Climb"]].forEach(([k,n]) => { if (!rs(stu,u.id,k).length) left.push(n); });
+  if (fl) left.push(`fix-up (${fl})`);
+  if ((b||0) < 80) left.push(b==null ? "unit test" : `pass the test (best ${b}%)`);
+  if (st==="passed") return `Review ${rl} question${rl>1?"s":""}`;
+  return left.join(", ");
+}
+function parentUnitTable(who){
+  const groups = [
+    ["working","Working on it","Started but not passed yet","b"],
+    ["passed","✓ Passed","Clearing review questions to master","m"],
+    ["mastered","★ Mastered","Passed and review cleared","g"],
+    ["none","Not started","","m"]];
+  const rows = groups.map(([key,label,sub,cls]) => {
+    const us = UNITS.filter(u => unitStatus(who,u)===key);
+    if (!us.length) return "";
+    return `<tr class="grp"><th colspan="5"><span class="pill ${cls}">${label}</span> <span class="gcount">${us.length} unit${us.length>1?"s":""}${sub?` · ${sub}`:""}</span></th></tr>` +
+      us.map(u => `<tr><td>${u.n}. ${esc(u.name)}</td><td class="n">${lessonsDone(who,u)}/${u.lessons.length}</td><td class="n">${best(who,u.id,"test")!=null?best(who,u.id,"test")+"%":"–"}</td><td class="n">${reviewLeft(who,u.id)}</td><td>${esc(unitLeft(who,u))}</td></tr>`).join("");
+  }).join("");
+  return `<div class="tblwrap" style="margin-bottom:14px"><table class="grouped"><thead><tr><th>Unit</th><th>Lessons</th><th>Best test</th><th>Review left</th><th>What's left</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
 /* ---------- the same path for every unit ---------- */
 function unitPath(u){
   const d = P().done, tests = rs(student,u.id,"test");
@@ -3140,7 +3175,7 @@ function renderParent(){
     const mine = results.filter(r=>r.student===who).sort((a,b)=>b.at.localeCompare(a.at));
     body = `<div class="chips" style="margin-bottom:14px">${roster.map(n=>`<button class="chip" data-who="${esc(n)}" aria-pressed="${n===who}">${esc(n)}</button>`).join("")}</div>
     ${who ? `<p class="note" style="margin-top:0">${esc(who)}: <span class="st">★</span> ${starTotal(who)} stars · ${(n=>n+(n===1?" lesson":" lessons"))(Object.keys((prog[who]||{}).done||{}).length)} finished${inprog[who]?` · has an unfinished ${kindLabel(inprog[who].kind).toLowerCase()}`:""}</p>` : ""}
-    ${who ? `<div class="tblwrap" style="margin-bottom:14px"><table><thead><tr><th>Unit</th><th>Lessons</th><th>Steps done</th><th>Best test</th><th>Fix-up left</th><th>Review left</th><th>Status</th></tr></thead><tbody>${UNITS.map(u=>`<tr><td>${u.n}. ${esc(u.name)}</td><td class="n">${lessonsDone(who,u)}/3</td><td class="n">${stepsDone(who,u.id)?"Yes":"No"}</td><td class="n">${best(who,u.id,"test")!=null?best(who,u.id,"test")+"%":"–"}</td><td class="n">${fixLeft(who,u.id)}</td><td class="n">${reviewLeft(who,u.id)}</td><td>${mastered(who,u.id)?'<span class="pill g">★ Mastered</span>':passed(who,u.id)?"✓ Passed":"Not yet"}</td></tr>`).join("")}</tbody></table></div>` : ""}
+    ${who ? parentUnitTable(who) : ""}
     ${mine.length ? mine.map(r=>`<details class="att"><summary><span class="n">${fmtDate(r.at)}</span><span>${esc(kindLabel(r.kind))} · ${esc(titleOf(r.unit))}</span><span class="pill ${pillClass(r.pct)}">${r.pct}%${r.kind==="game"?"":" "+grade(r.pct)}</span>${starStr(r.stars??starsFor(r.pct))}</summary>
       ${r.items ? `<ol class="ans">${r.items.map(Q=>{ const ok = Q.picked===Q.answer;
         return `<li class="${ok?"ok":"no"}"><b>${esc(Q.q)}</b><span>${ok?"✓":"✗"} Picked: ${esc(Q.choices[Q.picked]??"(no answer)")}</span>${ok?"":`<span>Correct: <b>${esc(Q.choices[Q.answer])}</b></span>`}</li>`; }).join("")}</ol>`

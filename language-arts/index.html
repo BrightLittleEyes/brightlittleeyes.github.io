@@ -1306,13 +1306,59 @@ const UNIT_BOOKS = {
 };
 const MORE_BOXCAR = ["Surprise Island","The Yellow House Mystery","Mystery Ranch","Mike’s Mystery","Blue Bay Mystery","The Woodshed Mystery","The Lighthouse Mystery","Mountain Top Mystery"];
 
+/* ---- prompts checked against each book's chapter list (Nov 2026) ---- */
+UNIT_BOOKS[1].tell=[
+ "Tell who Henry, Jessie, Violet, and Benny are, why they are on their own, and what happened at the bakery.",
+ "Tell how the children found the boxcar, and what Henry’s two surprises were.",
+ "Tell what treasures the children found, and what the queer noise in the night turned out to be.",
+ "Tell how the children made a big meal from very little, and how they made their swimming pool.",
+ "Tell about picking cherries, and what happened to Henry at the free-for-all.",
+ "Tell what happened when one of the children got sick, and how the story ends. What happened to the boxcar?"];
+UNIT_BOOKS[1].talk=[
+ "Jessie takes charge and makes a plan. How is she like a big sister or a mother to the others?",
+ "The children make a home out of almost nothing. What would you need to make a home in the woods?",
+ "The children are very thankful for small things they find. Which small thing would you be most thankful for?",
+ "The children liked hard work. What hard job have you done that turned out to be fun?",
+ "Henry works hard and is honest. How does that help his brother and sisters?",
+ "Why do you think the children were afraid of their grandfather at first? Were they right?"];
+UNIT_BOOKS[2].tell=[
+ "Tell about Laura’s family and their little log house in the woods, and how they got ready for winter.",
+ "Tell about Pa’s long rifle, and what happened at Christmas.",
+ "Tell what the family did on Sundays, and tell about the two big bears.",
+ "Tell about the sugar snow and the dance at Grandpa’s house.",
+ "Tell about the trip to town, and what summertime was like.",
+ "Tell about the harvest, the wonderful machine, and the deer in the wood."];
+UNIT_BOOKS[3].chapters=11;
+UNIT_BOOKS[3].plan=[[1,2],[3,4],[5,6],[7,7],[8,9],[10,11]];
+UNIT_BOOKS[3].tell=[
+ "Tell where Sarah and her father are going, why Sarah came along, and what happened at the settlement.",
+ "Tell about the last part of the journey and the night in the cave. How did Sarah help her father be brave?",
+ "Tell how Sarah met the Indian children, and how they became friends.",
+ "Tell what Sarah’s father had to do, and why Sarah stayed with Tall John’s family.",
+ "Tell what life was like in the Indian house, and what made the night of fear frightening.",
+ "Tell how Sarah went home, and how she felt when her family was together in the log house."];
+UNIT_BOOKS[3].talk=[
+ "Sarah’s mother told her, “Keep up your courage.” What does that mean?",
+ "Sarah holds her cloak when she is afraid. What helps you when you are afraid?",
+ "Sarah makes friends with children who speak a different language. How do they understand each other?",
+ "Was it brave for Sarah to stay? Why?",
+ "Sarah prays for her family and for Tall John’s family too. How did Tall John’s family take care of her?",
+ "What did Sarah learn about being brave? Can a person be afraid and brave at the same time?"];
+UNIT_BOOKS[4].tell=[
+ "Tell who Mr. Popper is, what he dreams about, and what surprise came for him.",
+ "Tell how the Popper family takes care of Captain Cook, and what troubles he caused.",
+ "Tell about Captain Cook’s nest, his walk through town, and the barber shop. What was wrong with Captain Cook at the end?",
+ "Tell how Greta came, how the penguin family grew, and Mr. Popper’s idea for earning money.",
+ "Tell about Mr. Greenbaum, the first show, and the penguins’ adventures on the road.",
+ "Tell how the story ends. Was it the right choice for the penguins?"];
+
 /* ---- book plan per lesson (Unit 1 starts with Cam Jansen, then The Boxcar Children) ---- */
 const BOOKDB={
   cam:{title:"Cam Jansen and the Mystery at the Monkey House", short:"Cam Jansen", author:"David A. Adler", total:2, unit:"half", color:"#D08A2E",
        note:"Cam Jansen mystery #10, a short (about 56 pages) chapter book. Read it in two halves."},
   boxcar:{title:UNIT_BOOKS[1].title, author:UNIT_BOOKS[1].author, total:13, unit:"chapter", color:UNIT_BOOKS[1].color, note:UNIT_BOOKS[1].note},
   house:{title:UNIT_BOOKS[2].title, author:UNIT_BOOKS[2].author, total:13, unit:"chapter", color:UNIT_BOOKS[2].color, note:UNIT_BOOKS[2].note},
-  sarah:{title:UNIT_BOOKS[3].title, author:UNIT_BOOKS[3].author, total:8, unit:"chapter", color:UNIT_BOOKS[3].color, note:UNIT_BOOKS[3].note},
+  sarah:{title:UNIT_BOOKS[3].title, author:UNIT_BOOKS[3].author, total:11, unit:"chapter", color:UNIT_BOOKS[3].color, note:UNIT_BOOKS[3].note},
   popper:{title:UNIT_BOOKS[4].title, author:UNIT_BOOKS[4].author, total:20, unit:"chapter", color:UNIT_BOOKS[4].color, note:UNIT_BOOKS[4].note},
   charlotte:{title:UNIT_BOOKS[5].title, author:UNIT_BOOKS[5].author, total:22, unit:"chapter", color:UNIT_BOOKS[5].color, note:UNIT_BOOKS[5].note}
 };
@@ -1321,10 +1367,10 @@ const PLAN={};
 [[2,"house"],[3,"sarah"],[4,"popper"],[5,"charlotte"]].forEach(([u,k])=>{ const B=UNIT_BOOKS[u]; PLAN[u]=B.plan.map((r,j)=>({b:k,r,tell:B.tell[j],talk:B.talk[j]})); });
 PLAN[1]=[
  {b:"cam",r:[1,1],label:"The first half (to about page 28)",
-  tell:"Tell who Cam Jansen is and how she got her nickname. Then tell what happened at the monkey house.",
+  tell:"Tell who Cam Jansen is and how she got her nickname. Then tell who went to the zoo with her, and what happened at the monkey house.",
   talk:"Cam says “Click!” when she wants to remember something. Look at a picture in your book for 30 seconds, close your eyes, and see how much you can remember. Then let a parent try!"},
  {b:"cam",r:[2,2],label:"The second half, to the end",
-  tell:"Tell how Cam solved the mystery. What clues did she notice and remember?",
+  tell:"Tell how Cam figured out what happened to the monkeys. What did she remember seeing again and again at the zoo?",
   talk:"Cam noticed small things that other people missed. Why is paying close attention a good habit? When could it help you?"},
  {b:"boxcar",r:[1,3],
   tell:"Tell who Henry, Jessie, Violet, and Benny are, why they are on their own, and how they found the boxcar.",
@@ -1396,25 +1442,25 @@ const SEC = {
 const secsOf=L=> L.review ? ["read","test","gram","poem","book"] : ["read","spell","gram",L.extra.kind,"write","book"];
 /* ---- reading plan: one continuous list of reading days. Lessons 1–30 use the first 30; the rest are extra Reading Days. ---- */
 BOOKDB.hardy={title:"The Hardy Boys: The House on the Cliff", short:"The Hardy Boys", author:"Franklin W. Dixon", total:20, unit:"chapter", color:"#2F5D8A",
-  note:"Hardy Boys #2. Use the revised edition (20 chapters, the blue hardcover most libraries have). The 1927 original tells a different version of the story."};
+  note:"Hardy Boys #2. Use the revised edition (20 chapters, first chapter “Spying by Telescope”), the blue hardcover most libraries have. The 1927 original tells a different version of the story. The story has smugglers, an exploding boat, and the boys being captured at gunpoint, so you may want to preview it."};
 BOOK_ORDER.splice(BOOK_ORDER.indexOf("cam")+1,0,"hardy");
 const HARDY_SLOTS=[
- {b:"hardy",r:[1,3],tell:"Tell who Frank and Joe Hardy are, who their father is, and what made the house on the cliff seem strange.",
+ {b:"hardy",r:[1,3],tell:"Tell who Frank and Joe Hardy are, what job their father gave them, and what strange things happened at the house on the cliff.",
   talk:"Frank and Joe are brothers and a good team. How are they alike, and how are they different? How do you work as a team with your brothers or sisters?"},
- {b:"hardy",r:[4,5],tell:"Tell what the boys saw or found when they went near the house on the cliff.",
-  talk:"The house seems spooky. Do you think something strange is really going on? What clues make you think so?"},
- {b:"hardy",r:[6,8],tell:"Tell what clues the boys have found so far about the smugglers.",
-  talk:"A good detective notices small things, just like Cam Jansen. What small clue would you have noticed?"},
- {b:"hardy",r:[9,10],tell:"Tell what happened to Mr. Hardy, and what the boys decided to do.",
+ {b:"hardy",r:[4,5],tell:"Tell how the boys rescued the man in the bay. Then tell who Pretzel Pete is and why the boys went to see him.",
+  talk:"The boys jumped in to save a stranger in danger. Why is it right to help someone you don’t even know? Can you think of a Bible story about that?"},
+ {b:"hardy",r:[6,8],tell:"Tell about the strange message and the cap on the peg. What do these clues tell the boys?",
+  talk:"A good detective notices small things, just like Cam Jansen. Which clue would you have noticed first?"},
+ {b:"hardy",r:[9,10],tell:"Tell the boys’ plan, and what they found when they searched the bottom of the cliff.",
   talk:"The boys are worried about their dad. What can you do when you are worried about someone you love?"},
- {b:"hardy",r:[11,13],tell:"Tell how the boys’ friends helped, and what new trouble came up.",
-  talk:"Chet and Biff stick with the Hardy boys. What makes someone a loyal friend?"},
- {b:"hardy",r:[14,15],tell:"Tell about the boys’ search. What did they discover?",
-  talk:"Being brave is good, and being wise matters too. When should the boys ask grown-ups for help?"},
- {b:"hardy",r:[16,18],tell:"Tell what happened when the boys got close to the smugglers.",
+ {b:"hardy",r:[11,13],tell:"Tell how the boys and their friends watched the cliff, how they found the secret passage, and what startling discovery they made.",
+  talk:"Chet, Biff, and Tony stick with the Hardy boys. What makes someone a loyal friend?"},
+ {b:"hardy",r:[14,15],tell:"Tell how Frank and Joe were captured, and what the smugglers said they would do.",
+  talk:"Being brave is good, and being wise matters too. Were the boys wise to go in by themselves? When should they ask grown-ups for help?"},
+ {b:"hardy",r:[16,18],tell:"Tell how the boys’ friends got help, and what the Coast Guard did.",
   talk:"Make a prediction! How do you think the mystery will end? Write your guess down before you read the last chapters."},
- {b:"hardy",r:[19,20],tell:"Tell how the mystery was solved. Was your prediction right?",
-  talk:"Which detectives did you like better, Cam Jansen or the Hardy Boys? Why?"}
+ {b:"hardy",r:[19,20],tell:"Tell about the chase and how the smugglers were caught. What did Snattman ask for at the end?",
+  talk:"Snattman was sorry for what he did and asked for something good to come from his house. Can a person who did wrong change? Was your prediction right?"}
 ];
 const BOXCAR_SLOTS=UNIT_BOOKS[1].plan.map((r,j)=>({b:"boxcar",r,tell:UNIT_BOOKS[1].tell[j],talk:UNIT_BOOKS[1].talk[j]}));
 const READ_SLOTS=[PLAN[1][0],PLAN[1][1],...HARDY_SLOTS,...BOXCAR_SLOTS,...PLAN[2],...PLAN[3],...PLAN[4],...PLAN[5]];

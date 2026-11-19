@@ -99,6 +99,9 @@ h2{font-size:clamp(21px,3.4vw,26px);margin:26px 0 10px}
 .vthumb .play{position:absolute;inset:0;margin:auto;width:56px;height:56px;border-radius:50%;background:rgba(255,0,0,.88);color:#fff;font-size:24px;display:grid;place-items:center;padding-left:4px}
 .wtext{display:grid;gap:2px;font-size:18px;flex:1;min-width:180px}
 .wtext small{color:#5b6785;font-size:15px}
+.watchcard .vframe{position:relative;width:100%;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#000}
+.watchcard .vframe iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.vhelp{color:#5b6785;font-size:15px}
 .home-try{background:#fff8e0;border-radius:18px;padding:14px 16px;font-size:18px}
 .home-try b{display:block;margin-bottom:2px}
 .sec-t{font-size:15px;font-weight:600;color:var(--soft);text-transform:uppercase;letter-spacing:.06em;margin:0 0 6px}
@@ -612,7 +615,7 @@ function renderLesson(){
         <div class="donebar" id="donebar"><span>✅ Lesson complete!${wasDone?'':' You earned a ⭐'}</span>
           <span style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">${i<2?`<button class="btn small" id="nextL">Next lesson ➜</button>`:''}<button class="btn small ghost" id="toGames">🎮 Play the games</button></span></div>
       </div>
-      ${VIDS[L.t]?`<div class="watchcard"><button class="vthumb" data-vid="${VIDS[L.t].id}" aria-label="Play video: ${esc(VIDS[L.t].t)}"><img src="https://i.ytimg.com/vi/${VIDS[L.t].id}/hqdefault.jpg" alt="" loading="lazy" onerror="this.remove()"><span class="play">▶</span></button><div class="wtext"><b>📺 Watch a video</b><span>${esc(VIDS[L.t].t)}</span>${VIDS[L.t].by?`<small>${esc(VIDS[L.t].by)}</small>`:''}</div></div>`:''}
+      ${VIDS[L.t]?`<div class="watchcard"><div class="wtext"><b>📺 Watch a video</b><span>${esc(VIDS[L.t].t)}</span>${VIDS[L.t].by?`<small>${esc(VIDS[L.t].by)}</small>`:''}</div><div class="vframe"><iframe src="https://www.youtube-nocookie.com/embed/${VIDS[L.t].id}?rel=0&modestbranding=1&playsinline=1" title="${esc(VIDS[L.t].t)}" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" loading="lazy"></iframe></div><small class="vhelp">If the video doesn't play, ask a parent for help.</small></div>`:''}
       <div class="home-try"><b>🏡 Try it at home</b>${esc(L.home)}</div>
     </div></div>`;
   app.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go({page:b.dataset.go, unit:u.id}));
@@ -624,7 +627,6 @@ function renderLesson(){
     setTimeout(()=>doneBar.scrollIntoView({behavior:'smooth', block:'nearest'}), 150); };
   if ($('#nextL')) $('#nextL').onclick = () => go({page:'lesson', unit:u.id, lesson:i+1});
   $('#toGames').onclick = () => go({page:'unit', unit:u.id});
-  app.querySelectorAll('.vthumb').forEach(b=>b.onclick=()=>{ const V=VIDS[L.t]; window.bleOpenVideo && bleOpenVideo(V.id, V.t, 'https://www.youtube.com/watch?v='+V.id); });
   const A = ACTS[L.act];
   $('#act').innerHTML = A.html;
   cleanup = A.init($('#act'), done) || null;
@@ -1528,7 +1530,7 @@ go({page: student ? 'home' : 'pick'});
 <div id="vplay" role="dialog" aria-modal="true" aria-label="Video"><div class="vbox">
   <div class="vtop"><span id="vptitle">Video</span><button class="vclose" id="vpclose">✕ Close</button></div>
   <div class="vwrap" id="vpwrap"></div>
-  <div class="vfoot">If the video won’t play here, <a id="vpout" href="#" target="_blank" rel="noopener">open it on YouTube</a>.</div>
+  <div class="vfoot">If the video doesn’t play, ask a parent for help.</div>
 </div></div>
 <script>
 (function(){
@@ -1544,8 +1546,8 @@ go({page: student ? 'home' : 'pick'});
   function open(id,title,href){
     try{ speechSynthesis.cancel(); }catch(e){}
     document.getElementById("vptitle").textContent=title||"Video";
-    document.getElementById("vpout").href=href;
-    wrap.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+id+'?autoplay=1&rel=0&modestbranding=1&playsinline=1" title="'+String(title||"Video").replace(/"/g,"&quot;")+'" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>';
+    
+    wrap.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+id+'?rel=0&modestbranding=1&playsinline=1" title="'+String(title||"Video").replace(/"/g,"&quot;")+'" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>';
     box.classList.add("on"); document.body.style.overflow="hidden";
   }
   document.addEventListener("click",function(e){

@@ -93,6 +93,12 @@ h2{font-size:clamp(21px,3.4vw,26px);margin:26px 0 10px}
 .goal .tag{background:var(--c);color:#fff;border-radius:999px;padding:3px 12px;font-size:14px;white-space:nowrap;margin-top:2px}
 .donebar{display:none;margin-top:14px;background:#e9fbf0;border-radius:16px;padding:14px;align-items:center;gap:12px;flex-wrap:wrap;font-size:19px;font-weight:600}
 .donebar.on{display:flex}
+.watchcard{display:flex;gap:14px;align-items:center;background:#eef6ff;border-radius:18px;padding:12px 14px;flex-wrap:wrap}
+.vthumb{position:relative;width:200px;max-width:100%;aspect-ratio:16/9;border-radius:12px;overflow:hidden;padding:0;background:#000;flex:none;box-shadow:0 4px 0 #cfe3f5}
+.vthumb img{width:100%;height:100%;object-fit:cover;display:block}
+.vthumb .play{position:absolute;inset:0;margin:auto;width:56px;height:56px;border-radius:50%;background:rgba(255,0,0,.88);color:#fff;font-size:24px;display:grid;place-items:center;padding-left:4px}
+.wtext{display:grid;gap:2px;font-size:18px;flex:1;min-width:180px}
+.wtext small{color:#5b6785;font-size:15px}
 .home-try{background:#fff8e0;border-radius:18px;padding:14px 16px;font-size:18px}
 .home-try b{display:block;margin-bottom:2px}
 .sec-t{font-size:15px;font-weight:600;color:var(--soft);text-transform:uppercase;letter-spacing:.06em;margin:0 0 6px}
@@ -564,6 +570,30 @@ function renderUnit(){
 }
 
 /* ============ LESSON ============ */
+/* ---------- one short video per lesson (plays inside the app) ---------- */
+const VIDS = {
+  'Six Days of Creation':     {id:'teu7BCZTgDs', t:'Creation (Genesis 1–2)', by:'Saddleback Kids'},
+  'Created Kinds':            {id:'9WzjdmIzTIc', t:'Types of Dogs! Learn about Dog Breeds for Kids', by:''},
+  'Fossils and the Flood':    {id:'Ya3o29MuWI4', t:'Billions of Dead Things (song)', by:'Buddy Davis, Answers in Genesis'},
+  'Parts of a Plant':         {id:'18amLZ9vfG8', t:'Plant Parts and Functions', by:'Homeschool Pop'},
+  "A Plant's Life Cycle":   {id:'3xNZG8nvZ-8', t:'Life Cycle of Plants for Kids', by:'Learning Junction'},
+  'What Plants Need':         {id:'u46A0WKp2nk', t:'How Plants Grow for Kids', by:''},
+  'Animal Groups':            {id:'HQdiSMUZEDA', t:'Vertebrate Animals for Kids', by:'Smile and Learn'},
+  'Animal Life Cycles':       {id:'XuYZEqyQYBQ', t:'Life Cycles of Frogs and Butterflies', by:''},
+  'Designed for Their Homes': {id:'D9Ys-mwIffw', t:'Animal Habitats', by:'STEM and Beyond'},
+  'Solids, Liquids, and Gases':{id:'JQ4WduVp9k4', t:'States of Matter for Kids: Solid, Liquid, and Gas', by:'Smile and Learn'},
+  'Heating and Cooling':      {id:'vNvElea-124', t:'States of Matter and Changes of State', by:'Smile and Learn'},
+  'Sink or Float?':           {id:'eQuW8G2QV_Q', t:'Sink or Float?', by:'SciShow Kids'},
+  'Pushes and Pulls':         {id:'ZLDUrPaLQWE', t:'Push and Pull for Kids', by:'Homeschool Pop'},
+  'Friction':                 {id:'1ZxkwKPHluU', t:'Forces: Friction for Kids!', by:''},
+  'Magnets':                  {id:'7HHs98PBgk0', t:'Magnets for Kids', by:''},
+  'The Water Cycle':          {id:'vD-ZwMjRDPU', t:'Water’s Amazing Journey', by:'SciShow Kids'},
+  'Weather':                  {id:'Uo8lbeVVb4M', t:'Be a Weather Watcher', by:'SciShow Kids'},
+  'The Four Seasons':         {id:'b25g4nZTHvM', t:'Seasons and the Sun', by:'Crash Course Kids'},
+  'The Solar System':         {id:'d8y8kc317EE', t:'Planets of Our Solar System for Kids', by:'Homeschool Pop'},
+  'Day and Night':            {id:'yo53v51bIi4', t:'What Causes Day and Night?', by:''},
+  'Phases of the Moon':       {id:'67hY4tB8jsY', t:'Phases of the Moon for Kids', by:'Smile and Learn'}
+};
 function renderLesson(){
   const u = unitById(view.unit), i = view.lesson, L = u.lessons[i];
   const wasDone = lessonDone(student,u.id,i);
@@ -582,6 +612,7 @@ function renderLesson(){
         <div class="donebar" id="donebar"><span>✅ Lesson complete!${wasDone?'':' You earned a ⭐'}</span>
           <span style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">${i<2?`<button class="btn small" id="nextL">Next lesson ➜</button>`:''}<button class="btn small ghost" id="toGames">🎮 Play the games</button></span></div>
       </div>
+      ${VIDS[L.t]?`<div class="watchcard"><button class="vthumb" data-vid="${VIDS[L.t].id}" aria-label="Play video: ${esc(VIDS[L.t].t)}"><img src="https://i.ytimg.com/vi/${VIDS[L.t].id}/hqdefault.jpg" alt="" loading="lazy" onerror="this.remove()"><span class="play">▶</span></button><div class="wtext"><b>📺 Watch a video</b><span>${esc(VIDS[L.t].t)}</span>${VIDS[L.t].by?`<small>${esc(VIDS[L.t].by)}</small>`:''}</div></div>`:''}
       <div class="home-try"><b>🏡 Try it at home</b>${esc(L.home)}</div>
     </div></div>`;
   app.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go({page:b.dataset.go, unit:u.id}));
@@ -593,6 +624,7 @@ function renderLesson(){
     setTimeout(()=>doneBar.scrollIntoView({behavior:'smooth', block:'nearest'}), 150); };
   if ($('#nextL')) $('#nextL').onclick = () => go({page:'lesson', unit:u.id, lesson:i+1});
   $('#toGames').onclick = () => go({page:'unit', unit:u.id});
+  app.querySelectorAll('.vthumb').forEach(b=>b.onclick=()=>{ const V=VIDS[L.t]; window.bleOpenVideo && bleOpenVideo(V.id, V.t, 'https://www.youtube.com/watch?v='+V.id); });
   const A = ACTS[L.act];
   $('#act').innerHTML = A.html;
   cleanup = A.init($('#act'), done) || null;
@@ -1480,5 +1512,51 @@ go({page: student ? 'home' : 'pick'});
 </script>
 <script src="../rhythm/report.js"></script>
 <script>setTimeout(()=>{ try{ rhythmCatchUp('sciexp', [localStorage.getItem('sciexp-lastdone')]); }catch(e){} }, 1500);</script>
+<!-- In-app video player: YouTube links play here instead of leaving the app -->
+<style>
+#vplay{position:fixed;inset:0;z-index:9999;background:rgba(10,12,16,.88);display:none;align-items:center;justify-content:center;padding:16px}
+#vplay.on{display:flex}
+#vplay .vbox{width:min(960px,100%);background:#111;border-radius:16px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+#vplay .vtop{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px 10px 16px;color:#fff;font:600 16px/1.3 system-ui,-apple-system,sans-serif}
+#vplay .vtop span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#vplay .vclose{flex:none;border:0;border-radius:999px;background:#fff;color:#111;font:700 16px system-ui,sans-serif;padding:9px 16px;cursor:pointer}
+#vplay .vwrap{position:relative;width:100%;aspect-ratio:16/9;background:#000}
+#vplay iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+#vplay .vfoot{padding:8px 16px 12px;color:#bbb;font:14px system-ui,sans-serif}
+#vplay .vfoot a{color:#ddd}
+</style>
+<div id="vplay" role="dialog" aria-modal="true" aria-label="Video"><div class="vbox">
+  <div class="vtop"><span id="vptitle">Video</span><button class="vclose" id="vpclose">✕ Close</button></div>
+  <div class="vwrap" id="vpwrap"></div>
+  <div class="vfoot">If the video won’t play here, <a id="vpout" href="#" target="_blank" rel="noopener">open it on YouTube</a>.</div>
+</div></div>
+<script>
+(function(){
+  function ytId(href){ try{ var u=new URL(href, location.href);
+      if(/(^|\.)youtu\.be$/i.test(u.hostname)) return u.pathname.slice(1,12);
+      if(/(^|\.)youtube(-nocookie)?\.com$/i.test(u.hostname)){
+        if(u.pathname==="/watch") return u.searchParams.get("v");
+        var m=u.pathname.match(/^\/(embed|shorts|live)\/([A-Za-z0-9_-]{11})/); if(m) return m[2]; }
+    }catch(e){} return null; }
+  var box=document.getElementById("vplay"), wrap=document.getElementById("vpwrap");
+  function close(){ wrap.innerHTML=""; box.classList.remove("on"); document.body.style.overflow=""; }
+  window.bleOpenVideo=function(id,title,href){ open(id,title,href); };
+  function open(id,title,href){
+    try{ speechSynthesis.cancel(); }catch(e){}
+    document.getElementById("vptitle").textContent=title||"Video";
+    document.getElementById("vpout").href=href;
+    wrap.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+id+'?autoplay=1&rel=0&modestbranding=1&playsinline=1" title="'+String(title||"Video").replace(/"/g,"&quot;")+'" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>';
+    box.classList.add("on"); document.body.style.overflow="hidden";
+  }
+  document.addEventListener("click",function(e){
+    var a=e.target.closest&&e.target.closest("a[href]"); if(!a||a.id==="vpout") return;
+    var id=ytId(a.getAttribute("href")); if(!id||id.length!==11) return;
+    e.preventDefault(); open(id,(a.textContent||"").trim(),a.href);
+  },true);
+  document.getElementById("vpclose").onclick=close;
+  box.addEventListener("click",function(e){ if(e.target===box) close(); });
+  document.addEventListener("keydown",function(e){ if(e.key==="Escape"&&box.classList.contains("on")) close(); });
+})();
+</script>
 </body>
 </html>

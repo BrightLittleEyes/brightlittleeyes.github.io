@@ -1939,8 +1939,9 @@ function renderParent(){
   else if(pview.tab==="settings"){ let code=""; try{ code=btoa(unescape(encodeURIComponent(JSON.stringify({app:"wildflower-la3",roster,prog})))); }catch(e){}
     body=`<h3 style="font-size:20px">🔈 Reading voice</h3>
       <p class="note">This voice reads stories, poems, and spelling words. The setting is saved on this device and is shared with the 3rd grade Bible and history apps.</p>
-      <div class="row"><select id="vsel" style="font-size:17px;padding:9px 12px;border-radius:12px;border:2px solid var(--line);max-width:100%"></select><button class="btn ghost small" id="vtest">▶ Test</button></div>
-      <p class="note" id="vnote"></p>
+      <div class="row"><select id="vsel" style="font-size:17px;padding:9px 12px;border-radius:12px;border:2px solid var(--line);max-width:100%"></select><button class="btn ghost small" id="vtest">▶ Test</button><button class="btn ghost small" id="vrefresh">↻ Refresh list</button></div>
+      <p class="note" id="vnote">Loading this device’s voices…</p>
+      <details style="margin-top:4px"><summary class="note" style="cursor:pointer">See every voice this device shares with web apps</summary><p class="note" id="vall" style="margin-top:6px"></p></details>
       <h3 style="font-size:20px;margin-top:20px">Back up all progress</h3><p class="note">Progress is saved in this browser on this device. If the browser's data is cleared, it's lost. Copy this code somewhere safe so you can restore it later or move it to another device.</p>
       <textarea id="bk" readonly rows="4" style="width:100%;font-size:13px;font-family:ui-monospace,monospace">${code}</textarea>
       <div class="row" style="margin-top:8px"><button class="btn small" id="bkcopy">Copy backup code</button><span class="note" id="bkmsg"></span></div>
@@ -1956,15 +1957,25 @@ function renderParent(){
   $("lockBtn").onclick=()=>{ parentOK=false; go(student?"home":"pick"); };
   if(pview.tab==="art"&&who) galleryHTML(who).then(g=>{ const el=$("pGallery"); if(el) el.innerHTML=g; });
   if(pview.tab==="settings"){
-    const fillVoices=()=>{ const sel=$("vsel"); if(!sel) return; let vs=[]; try{ vs=speechSynthesis.getVoices().filter(v=>/^en(-|_)/i.test(v.lang)); }catch(e){}
+    const allVoices=()=>{ try{ return speechSynthesis.getVoices()||[]; }catch(e){ return []; } };
+    const fillVoices=()=>{ const sel=$("vsel"); if(!sel) return 0; const all=allVoices();
+      const vs=all.filter(v=>/^en(-|_)/i.test(v.lang)).sort((a,b)=>(/joelle/i.test(b.name)-/joelle/i.test(a.name))||a.name.localeCompare(b.name));
       const cur=(()=>{ try{ return localStorage.getItem("ble-voice")||""; }catch(e){ return ""; } })();
       const jo=vs.filter(v=>/joelle/i.test(v.name));
       sel.innerHTML=`<option value="">Automatic: Joelle if available, otherwise the device’s own voice</option><option value="system">The device’s own voice (from Settings)</option>`+
-        vs.map(v=>`<option value="${esc(v.voiceURI)}">${esc(v.name)} · ${esc(v.lang)}${/premium/i.test(v.name+v.voiceURI)?" · Premium":/enhanced/i.test(v.name+v.voiceURI)?" · Enhanced":""}</option>`).join("");
+        vs.map(v=>`<option value="${esc(v.voiceURI)}">${/joelle/i.test(v.name)?"⭐ ":""}${esc(v.name)} · ${esc(v.lang)}${/premium/i.test(v.name+v.voiceURI)?" · Premium":/enhanced/i.test(v.name+v.voiceURI)?" · Enhanced":""}</option>`).join("");
       sel.value=[...sel.options].some(o=>o.value===cur)?cur:"";
       const now=bleVoice();
-      $("vnote").innerHTML=(jo.length?`✓ This device shares <b>Joelle</b> with web apps.`:`Joelle isn’t in this device’s list for web apps, so “Automatic” uses the device’s own voice. On an iPad, set that in Settings → Accessibility → Spoken Content → Voices → English.`)+`<br>Reading with: <b>${now?esc(now.name):"the device’s own voice"}</b>.`; };
-    fillVoices(); try{ speechSynthesis.onvoiceschanged=()=>{ speechSynthesis.getVoices(); fillVoices(); }; }catch(e){}
+      $("vnote").innerHTML=(!all.length?`This device hasn’t shared its voices yet. Tap <b>↻ Refresh list</b> in a moment.`
+        : jo.length?`✓ This device shares <b>Joelle</b> with web apps. Pick “⭐ ${esc(jo[0].name)}” to use it for sure.`
+        : `<b>Joelle isn’t in this device’s list for web apps</b> (${vs.length} English voices are). On an iPad, choose “The device’s own voice,” then set Joelle in Settings → Accessibility → Spoken Content → Voices → English, and download it there if needed. Then close this app fully, reopen it, and tap ↻ Refresh list.`)
+        +`<br>Reading with: <b>${now?esc(now.name):"the device’s own voice"}</b>.`;
+      const va=$("vall"); if(va) va.innerHTML=all.length?all.map(v=>`${/joelle/i.test(v.name)?"<b>":""}${esc(v.name)} (${esc(v.lang)})${/joelle/i.test(v.name)?"</b>":""}`).join(" · "):"None yet.";
+      return all.length; };
+    let tries=0; const poll=()=>{ if(!$("vsel")) return; const n=fillVoices(); if((!n||tries<3) && tries++<15) setTimeout(poll,400); };
+    poll(); try{ speechSynthesis.onvoiceschanged=()=>{ fillVoices(); }; }catch(e){}
+    $("vrefresh").onclick=()=>{ try{ const u=new SpeechSynthesisUtterance(" "); u.volume=0; speechSynthesis.speak(u); }catch(e){} tries=0; poll(); };
+    $("vsel").onfocus=()=>{ if(!allVoices().length) fillVoices(); };
     $("vsel").onchange=e=>{ try{ localStorage.setItem("ble-voice",e.target.value); }catch(err){} fillVoices(); };
     $("vtest").onclick=()=>say("Hello! This is the voice that will read your lessons.");
     $("bkcopy").onclick=()=>{ const ta=$("bk"); try{ navigator.clipboard.writeText(ta.value).then(()=>{$("bkmsg").textContent="Copied.";},()=>{ta.select();$("bkmsg").textContent="Selected. Press copy.";}); }catch(e){ ta.select(); $("bkmsg").textContent="Selected. Press copy."; } };

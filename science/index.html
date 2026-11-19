@@ -2581,7 +2581,13 @@ function testLock(u){ if (fixLeft(student,u)) return "fix"; const lt = lastTestD
 const finalOf = u => u.set===2 ? "final2" : "final";
 const setUnits = f => UNITS.filter(u => f==="final2" ? u.set===2 : u.set!==2);
 const finalPassed = (stu, f) => (best(stu,f,"final")||0) >= 80;
-function unitOpen(stu, u){ return u.set!==2 || finalPassed(stu,"final"); }
+/* one unit at a time: a unit opens when the unit before it (in the same set) is ✓ Passed */
+function prevUnit(u){ const i = UNITS.indexOf(u), p = UNITS[i-1]; return p && (p.set===2) === (u.set===2) ? p : null; }
+function unitLockWhy(stu, u){
+  if (u.set===2 && !finalPassed(stu,"final")) return "set";
+  const p = prevUnit(u); return p && !passed(stu,p.id) ? "prev" : null;
+}
+function unitOpen(stu, u){ return !unitLockWhy(stu,u); }
 function finalLock(f){
   if (f==="final2" && !finalPassed(student,"final")) return "set";
   if (!setUnits(f).every(u => mastered(student,u.id))) return "units";
@@ -2678,7 +2684,7 @@ function nextStepCard(){
 
 /* ---------- lessons: the same 6 steps every time ---------- */
 function renderUnit(){
-  if (student && !unitOpen(student, unitById(view.unit))) { view = {page:"locked", unit:view.unit, why:"set"}; return renderLocked(); }
+  if (student && !unitOpen(student, unitById(view.unit))) { view = {page:"locked", unit:view.unit, why:unitLockWhy(student, unitById(view.unit))}; return renderLocked(); }
   const u = unitById(view.unit), L = u.lessons[view.lesson], key = u.id+"-"+view.lesson, F = FIG[key], W = WATCH[key];
   if (student){ P().last = {unit:u.id, lesson:view.lesson}; saveAll(); }
   const step = student ? Math.min(5, LST()[key]||0) : (view.step||0);
@@ -2753,15 +2759,16 @@ function tagQs(list){ return list.map(([q,u]) => Object.assign(prepQ(q), {u})); 
 function startQuiz(unitId, kind, fresh){
   if (needStudent()) return;
   const saved = inprog[student];
-  if (!fresh && saved && saved.unit===unitId && saved.kind===kind){ view = Object.assign({page:"quiz", resumed:true}, saved); render(); window.scrollTo({top:0}); return; }
+  if (saved){ view = Object.assign({page:"quiz", resumed:true}, saved); render(); window.scrollTo({top:0}); return; }  /* no abandoning: finish what you started */
   if (kind==="final"){ const lock = finalLock(unitId); if (lock) return go({page:"locked", unit:unitId, why:lock}); }
-  else if (!unitOpen(student, unitById(unitId))) return go({page:"locked", unit:unitId, why:"set"});
+  else if (!unitOpen(student, unitById(unitId))) return go({page:"locked", unit:unitId, why:unitLockWhy(student, unitById(unitId))});
   if (kind==="test"){ const lock = testLock(unitId); if (lock) return go({page:"locked", unit:unitId, why:lock}); }
   let list;
   if (kind==="final") list = shuffle(UNITS.filter(u => unitId==="final2" ? u.set===2 : u.set!==2).flatMap(u => shuffle(u.quiz.concat(u.test)).slice(0, unitId==="final2" ? 2 : 4).map(q=>[q,u.id])));
   else { const u = unitById(unitId);
     list = (kind==="test" && rs(student,unitId,"test").length) ? shuffle(u.quiz.concat(u.test)).slice(0, u.test.length).map(q=>[q,unitId]) : shuffle(u[kind]).map(q=>[q,unitId]); }
   go({page:"quiz", unit:unitId, kind, qs:tagQs(list), i:0, picks:[], checked:false, streak:0, bestStreak:0, retake: kind==="test" && rs(student,unitId,"test").length>0});
+  saveQuiz();  /* saved from the first question, so leaving can't throw it away */
 }
 function finishQuiz(){
   const v = view;
@@ -2787,9 +2794,27 @@ function afterResultHTML(r, missedN){
   return "";
 }
 
+/* ---------- an unfinished quiz/test/final blocks everything else ---------- */
+function renderPaused(){
+  const s = inprog[student]; if (!s) { view = {page:"home"}; return render(); }
+  const done = (s.picks||[]).filter(x => x!=null).length;
+  app.innerHTML = `<div class="quiz" style="--c:var(${colorOf(s.unit)})"><div class="lockbox"><span class="eyebrow">Saved</span>
+    <h1>Finish your ${kindLabel(s.kind).toLowerCase()} first</h1>
+    <p><b>${esc(kindLabel(s.kind))}: ${esc(titleOf(s.unit))}</b>. You've answered ${done} of ${s.qs.length}. Your answers are saved. You need to finish it before you can do lessons, games, review, or anything else.</p>
+    <div class="qfoot" style="justify-content:center"><button class="btn" id="resume">Keep going →</button></div></div></div>`;
+  $("#resume").onclick = () => startQuiz(s.unit, s.kind);
+}
+
 /* ---------- locked test page ---------- */
 function renderLocked(){
   const why = view.why;
+  if (why==="prev"){
+    const u = unitById(view.unit), p = prevUnit(u);
+    app.innerHTML = `<div class="quiz" style="--c:var(${u.color})"><div class="lockbox"><span class="eyebrow">🔒 Unit ${u.n} is locked</span><h1>Pass Unit ${p.n} first</h1>
+      <p>Units open one at a time. Finish every step of <b>Unit ${p.n}: ${esc(p.name)}</b> and score 80% or better on its test, and Unit ${u.n} opens.</p>
+      <div class="qfoot" style="justify-content:center"><button class="btn" id="gop">Go to Unit ${p.n} →</button></div></div></div>`;
+    $("#gop").onclick = () => go({page:"unit", unit:p.id, lesson:0}); return;
+  }
   if (isFinal(view.unit) || why==="set"){
     const f = isFinal(view.unit) ? view.unit : "final", us = setUnits(f), m = us.filter(u=>mastered(student,u.id)).length;
     const msg = why==="set" ? ["Set 2 is locked", "Score 80% or better on <b>Final Exam 1</b> (units 1–5) to open Set 2."]
@@ -2954,6 +2979,7 @@ function finishClimb(){
 /* ============ VIEWS ============ */
 function render(){
   stopFigs();
+  if (student && inprog[student] && !["quiz","progress","parent","paused"].includes(view.page)) view = {page:"paused"};
   const pg = view.page;
   $("#nav-units").setAttribute("aria-current", String(!["progress","parent"].includes(pg)));
   $("#nav-progress").setAttribute("aria-current", String(pg==="progress"));
@@ -2967,6 +2993,7 @@ function render(){
   if (pg==="progress") return renderProgress();
   if (pg==="parent") return renderParent();
   if (pg==="locked") return renderLocked();
+  if (pg==="paused") return renderPaused();
   if (pg==="fix") return renderFix();
   if (pg==="review") return renderReview();
   if (pg==="climb") return renderClimb();
@@ -2996,7 +3023,7 @@ function renderHome(){
     <span class="eyebrow">Sixth grade · ${UNITS.length} units · ${UNITS.reduce((a,u)=>a+u.lessons.length,0)} lessons</span>
     <h1>${student ? `Hi ${esc(student)}! You have ${st} of ${STAR_MAX} stars.` : "Pick a unit to study."}</h1>
     ${student ? `<div class="starbar" aria-hidden="true"><i style="width:${pct(st,STAR_MAX)}%"></i></div>` : ""}
-    <p>Every lesson has the same 6 steps: Words to Know, Read, See It, Watch, Remember, Try It. Every unit has the same path: 3 lessons, vocab game, practice quiz, Fact Climb game, test, and fix-up. Do all of that with 80%+ on the test and the unit is ✓ Passed. Clear its review questions and it's ★ Mastered. Master every unit in a set to open its final exam. Score 80%+ on Final Exam 1 to open Set 2.</p>
+    <p>Every lesson has the same 6 steps: Words to Know, Read, See It, Watch, Remember, Try It. Every unit has the same path: 3 lessons, vocab game, practice quiz, Fact Climb game, test, and fix-up. Do all of that with 80%+ on the test and the unit is ✓ Passed. Clear its review questions and it's ★ Mastered. Master every unit in a set to open its final exam. Score 80%+ on Final Exam 1 to open Set 2. Units open one at a time: pass a unit to open the next one.</p>
   </section>
   ${student ? nextStepCard() : `<button class="cont" id="addfirst"><span class="eyebrow">First</span><b>Add your name to start earning stars</b><span class="arrow">→</span></button>`}
   <div class="section-h"><h2>Set 1: Units 1–5</h2></div>
@@ -3024,7 +3051,7 @@ function renderQuiz(){
   const practice = v.kind==="quiz", locked = practice && v.checked;
   app.innerHTML = `
   <div class="quiz" style="--c:var(${colorOf(v.unit)})">
-    ${v.resumed ? `<p class="resumed">Welcome back! Your answers were saved. <button class="linkbtn" id="restart">Start over instead</button></p>` : ""}
+    ${v.resumed ? `<p class="resumed">Welcome back! Your answers were saved. Finish this ${kindLabel(v.kind).toLowerCase()} before doing anything else.</p>` : ""}
     <div class="qhead"><span class="kind">${kindLabel(v.kind)} · ${esc(titleOf(v.unit))}</span><span class="eyebrow">Question ${v.i+1} of ${v.qs.length}</span></div>
     <div class="meter"><i style="width:${pct(v.i+(locked||(!practice&&picked!=null)?1:0), v.qs.length)}%"></i></div>
     ${practice && (v.streak||0)>=2 ? `<p class="streak">${v.streak} in a row!</p>` : ""}
@@ -3049,8 +3076,7 @@ function renderQuiz(){
     </div>
   </div>`;
   app.querySelectorAll("[data-c]").forEach(b => b.onclick = () => { v.picks[v.i] = +b.dataset.c; v.resumed = false; saveQuiz(); renderQuiz(); });
-  $("#quit").onclick = () => { saveQuiz(); go(isFinal(v.unit) ? {page:"home"} : {page:"unit", unit:v.unit, lesson:0}); };
-  const rsb=$("#restart"); if(rsb) rsb.onclick = () => { delete inprog[student]; saveAll(); startQuiz(v.unit, v.kind, true); };
+  $("#quit").onclick = () => { saveQuiz(); go({page:"paused"}); };
   const ch=$("#check"); if(ch) ch.onclick = () => {
     v.checked = true;
     if (v.picks[v.i]===Q.answer){ v.streak=(v.streak||0)+1; v.bestStreak=Math.max(v.bestStreak||0,v.streak); sfx.right(); } else { v.streak=0; sfx.wrong(); }

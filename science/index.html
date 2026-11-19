@@ -3123,8 +3123,9 @@ function renderDone(){
     </div>
     ${view.missed!=null ? afterResultHTML(r, view.missed) : ""}
     <div class="qfoot" style="margin-bottom:18px">
-      <button class="btn ghost" id="back">${isFinal(r.unit)?"Back to units":"Back to unit"}</button>
-      <button class="btn" id="again">Play again</button>
+      <button class="btn ghost" id="back">${isFinal(r.unit)?"Back to units":"Back to Unit "+unitById(r.unit).n}</button>
+      <button class="btn ghost" id="again">${isGame||r.kind==="climb" ? "Play again" : "Retake"}</button>
+      <button class="btn" id="gonext">Next step →</button>
     </div>
     ${items.length ? `<div class="section-h"><h2>Review</h2></div>
     <div class="review">${items.map((Q,i)=>{ const ok = Q.picked===Q.answer;
@@ -3136,7 +3137,8 @@ function renderDone(){
   $("#back").onclick = () => go(isFinal(r.unit) ? {page:"home"} : {page:"unit", unit:r.unit, lesson:0});
   $("#again").onclick = () => isGame ? startGame(r.unit) : r.kind==="climb" ? startClimb(r.unit) : startQuiz(r.unit, r.kind, true);
   const gf = $("#gofix"); if (gf) gf.onclick = () => startFix(r.unit);
-  if (r.kind==="test") $("#again").hidden = true;
+  if (r.kind==="test" || r.kind==="final") $("#again").hidden = true;
+  $("#gonext").onclick = () => { const n = nextStep(); if (n) n.go(); else go({page:"home"}); };
 }
 
 /* ---------- vocab match game ---------- */

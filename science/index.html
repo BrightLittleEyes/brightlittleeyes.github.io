@@ -3281,6 +3281,10 @@ function renderParent(){
     body = `<div class="chips" style="margin-bottom:14px">${roster.map(n=>`<button class="chip" data-who="${esc(n)}" aria-pressed="${n===who}">${esc(n)}</button>`).join("")}</div>
     ${who ? `<p class="note" style="margin-top:0">${esc(who)}: <span class="st">★</span> ${starTotal(who)} stars · ${(n=>n+(n===1?" lesson":" lessons"))(Object.keys((prog[who]||{}).done||{}).length)} finished${inprog[who]?` · has an unfinished ${kindLabel(inprog[who].kind).toLowerCase()}`:""}</p>` : ""}
     ${who ? parentUnitTable(who) : ""}
+    ${who ? `<div class="card" style="margin:0 0 16px;padding:12px 14px"><b>Start a unit over</b>
+      <p class="note" style="margin:4px 0 8px">Erases ${esc(who)}'s lessons, quizzes, games, tests, fix-ups, and review questions for one unit, as if she never started it. Other units are not touched.</p>
+      <div class="ctrl"><select id="ureset-u">${UNITS.map(u=>`<option value="${u.id}">Unit ${u.n}: ${esc(u.name)}</option>`).join("")}</select>
+      <button class="btn small" id="ureset-go" type="button">Start this unit over</button></div><p class="note" id="ureset-msg"></p></div>` : ""}
     ${mine.length ? mine.map(r=>`<details class="att"><summary><span class="n">${fmtDate(r.at)}</span><span>${esc(kindLabel(r.kind))} · ${esc(titleOf(r.unit))}</span><span class="pill ${pillClass(r.pct)}">${r.pct}%${r.kind==="game"?"":" "+grade(r.pct)}</span>${starStr(r.stars??starsFor(r.pct))}</summary>
       ${r.items ? `<ol class="ans">${r.items.map(Q=>{ const ok = Q.picked===Q.answer;
         return `<li class="${ok?"ok":"no"}"><b>${esc(Q.q)}</b><span>${ok?"✓":"✗"} Picked: ${esc(Q.choices[Q.picked]??"(no answer)")}</span>${ok?"":`<span>Correct: <b>${esc(Q.choices[Q.answer])}</b></span>`}</li>`; }).join("")}</ol>`
@@ -3340,6 +3344,26 @@ function renderParent(){
       $("#resetmsg").textContent = `${n}'s progress was reset.`; b.textContent = `Reset ${n}`; b.dataset.armed = "";
     });
   }
+  const ug = $("#ureset-go");
+  if (ug){
+    $("#ureset-u").onchange = () => { ug.dataset.armed = ""; ug.textContent = "Start this unit over"; $("#ureset-msg").textContent = ""; };
+    ug.onclick = () => {
+      const u = unitById($("#ureset-u").value);
+      if (ug.dataset.armed!=="1"){ ug.dataset.armed = "1"; ug.textContent = `Yes, erase Unit ${u.n}`; $("#ureset-msg").textContent = `Tap again to erase all of ${who}'s work in Unit ${u.n}. This can't be undone (a backup code from Settings can restore it).`; return; }
+      resetUnit(who, u.id); renderStarChip(); render();
+      const m = $("#ureset-msg"); if (m) m.textContent = `Unit ${u.n} was reset for ${who}.`;
+    };
+  }
+}
+/* erase one student's work in one unit, as if never started */
+function resetUnit(who, uid){
+  results = results.filter(r => !(r.student===who && r.unit===uid));
+  const d = (prog[who]||{}).done || {}; Object.keys(d).forEach(k => { if (k.startsWith(uid+"-")) delete d[k]; });
+  const ls = lstep[who] || {}; Object.keys(ls).forEach(k => { if (k.startsWith(uid+"-")) delete ls[k]; });
+  const rv = review[who] || {}; Object.keys(rv).forEach(k => { if (rv[k].u===uid) delete rv[k]; });
+  if (fix[who]) delete fix[who][uid];
+  if (inprog[who] && inprog[who].unit===uid) delete inprog[who];
+  saveAll();
 }
 
 renderRoster();

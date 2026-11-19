@@ -2533,7 +2533,7 @@ function pillClass(p){ return p>=80?"g":p>=60?"m":"b"; }
 function shuffle(a){ a = a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 function prepQ(q){ const order = shuffle(q[1].map((_,i)=>i)); return { q:q[0], choices: order.map(i=>q[1][i]), answer: order.indexOf(q[2]), why:q[3] }; }
 function go(v){ view = v; render(); window.scrollTo({top:0}); }
-function kindLabel(k){ return k==="quiz"?"Practice quiz":k==="test"?"Unit test":k==="game"?"Vocab match":k==="climb"?"Fact Climb":"Final exam"; }
+function kindLabel(k){ return k==="lesson"?"Lesson quiz":k==="quiz"?"Practice quiz":k==="test"?"Unit test":k==="game"?"Vocab match":k==="climb"?"Fact Climb":"Final exam"; }
 const isFinal = id => id==="final" || id==="final2";
 function colorOf(unitId){ return isFinal(unitId) ? "--u6" : unitById(unitId).color; }
 function titleOf(unitId){ return unitId==="final" ? "Units 1–5" : unitId==="final2" ? "Units 6–15" : `Unit ${unitById(unitId).n}: ${unitById(unitId).name}`; }
@@ -2547,6 +2547,225 @@ $("#brand").onclick = () => go({page:"home"});
 $("#nav-units").onclick = () => go({page:"home"});
 $("#nav-progress").onclick = () => go({page:"progress"});
 $("#nav-parent").onclick = () => go({page:"parent", tab:"scores"});
+
+/* ============ LESSON QUIZZES: 4 questions per lesson, written from each lesson ============ */
+const LESSON_Q = {
+matter:[
+ [["Which of these is the best definition of matter?",["Anything that gives off light","Anything that has mass and takes up space","Anything that is alive","Anything you can see"],1,"Matter is anything that has mass and takes up space, even air you can't see."],
+  ["About how many elements have scientists found?",["12","50","118","1,000"],2,"Scientists have found about 118 elements."],
+  ["What is the symbol for iron?",["I","Ir","Fe","In"],2,"Iron's symbol is Fe. Some symbols come from older names for the element."],
+  ["Sodium is a metal and chlorine is a poisonous gas, but together they make…",["sugar","table salt","water","rust"],1,"Sodium and chlorine form table salt. A compound can act very differently from its elements."]],
+ [["What decides whether matter is a solid, liquid, or gas?",["Its color","How its particles move and how close they are","How heavy it is","Its smell"],1,"The state depends on how the particles move and how close together they are."],
+  ["Which state keeps its own shape AND its own volume?",["Solid","Liquid","Gas","All of them"],0,"In a solid the particles are packed tightly, so it keeps its shape and volume."],
+  ["Juice poured from a tall glass into a wide bowl changes shape but keeps the same amount. Juice is a…",["solid","liquid","gas","compound"],1,"A liquid has a fixed volume but takes the shape of its container."],
+  ["At sea level, pure water freezes at…",["0 °C (32 °F)","10 °C (50 °F)","32 °C (90 °F)","100 °C (212 °F)"],0,"Pure water freezes at 0 °C, which equals 32 °F."]],
+ [["Which is a physical change?",["Burning wood","Baking a cake","Cutting paper","Iron rusting"],2,"Cutting paper changes its size and shape, but it's still paper."],
+  ["A chemical change always…",["changes the shape only","makes one or more new substances","can be undone easily","happens only in liquids"],1,"A chemical change produces new substances."],
+  ["Which is a clue that a chemical change happened?",["The material was cut into pieces","Ice melted","A new smell appeared","Sugar dissolved in tea"],2,"A new smell is one of the clues of a chemical change."],
+  ["Which is usually true of a physical change?",["It makes a new substance","It can often be undone","It always gives off light","It destroys atoms"],1,"Physical changes can often be undone, like freezing melted water again."]]
+],
+motion:[
+ [["Energy is the ability to…",["take up space","do work or cause change","stay still","make matter"],1,"Energy is the ability to do work or cause change."],
+  ["A stretched rubber band has…",["kinetic energy","potential energy","no energy","sound energy only"],1,"A stretched rubber band stores energy, so it has potential energy."],
+  ["Which two things make an object have MORE kinetic energy?",["Being colder and smaller","Being faster and heavier","Being higher and stiller","Being darker and softer"],1,"The faster and heavier an object is, the more kinetic energy it has."],
+  ["A metal spoon in hot soup gets hot. This heat moves by…",["conduction","convection","radiation","precipitation"],0,"Conduction moves heat by direct touch."]],
+ [["A force is…",["a push or a pull","a kind of energy","the amount of matter","a speed"],0,"A force is a push or a pull, and it has a size and a direction."],
+  ["Forces on a box are unbalanced. The box will…",["stay exactly the same","speed up, slow down, or change direction","disappear","lose its mass"],1,"Unbalanced forces change an object's motion."],
+  ["Your weight is…",["the amount of matter in you","the pull of gravity on your mass","how tall you are","the same on every planet"],1,"Weight is the pull of gravity, so it changes where gravity is different."],
+  ["Which surface makes the MOST friction?",["Ice","Polished glass","Sandpaper","Wet tile"],2,"Rough surfaces create more friction than smooth ones."]],
+ [["A car travels 120 km in 2 hours. Its speed is…",["60 km/h","120 km/h","240 km/h","2 km/h"],0,"Speed = distance ÷ time, so 120 ÷ 2 = 60 km/h."],
+  ["Velocity is…",["speed in a given direction","the weight of a car","a push or pull","stored energy"],0,"Velocity tells both the speed and the direction."],
+  ["Newton's second law says that the more force you apply…",["the less an object moves","the more an object accelerates","the heavier the object gets","the slower it goes"],1,"More force means more acceleration (force = mass × acceleration)."],
+  ["A swimmer pushes the water backward and moves forward. This shows Newton's…",["first law","second law","third law","law of gravity"],2,"The third law: every action has an equal and opposite reaction."]]
+],
+earth:[
+ [["Melted rock underground is called…",["lava","magma","sediment","marble"],1,"Underground it's magma. On the surface it's called lava."],
+  ["Obsidian looks like glass because it…",["is made of sand","cooled very fast","was pressed in layers","was changed by pressure"],1,"Obsidian is igneous rock that cooled so fast it looks like glass."],
+  ["Sandstone and limestone are…",["igneous","sedimentary","metamorphic","magma"],1,"They form from sediment pressed and cemented in layers."],
+  ["Breaking rock into smaller pieces is called…",["weathering","deposition","erosion","melting"],0,"Weathering breaks rock apart. Erosion then carries the pieces away."]],
+ [["Which layer of Earth is made of metal?",["Crust","Mantle","Core","Plates"],2,"Earth has a thin rocky crust, a thick hot mantle, and a metal core."],
+  ["About how fast do tectonic plates move today?",["A few kilometers a day","A few centimeters a year","A meter a minute","They don't move"],1,"Plates move a few centimeters a year, about as fast as fingernails grow."],
+  ["At a divergent boundary, plates…",["push together","pull apart","slide past each other","stop moving"],1,"At divergent boundaries plates pull apart and magma rises to make new crust."],
+  ["The San Andreas Fault in California is a…",["convergent boundary","divergent boundary","transform boundary","volcano"],2,"Plates slide past each other at a transform boundary like the San Andreas Fault."]],
+ [["Rain, snow, sleet, and hail are all forms of…",["evaporation","condensation","precipitation","transpiration"],2,"Precipitation is water falling from clouds."],
+  ["Water gathering in lakes, rivers, and underground is called…",["collection","evaporation","condensation","transpiration"],0,"Collection (runoff) is when water gathers in oceans, lakes, rivers, and underground."],
+  ["Which tool measures temperature?",["Barometer","Rain gauge","Thermometer","Ruler"],2,"A thermometer measures temperature."],
+  ["Climate is usually figured from the weather over about…",["one day","one week","one year","30 or more years"],3,"Climate is the average weather of a place over many years, usually 30 or more."]]
+],
+space:[
+ [["Our solar system is…",["only the 8 planets","the Sun and everything that orbits it","all the stars in the sky","the Earth and Moon"],1,"The solar system is the Sun plus planets, moons, dwarf planets, asteroids, and comets."],
+  ["Which planet is closest to the Sun?",["Venus","Earth","Mercury","Mars"],2,"In order: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune."],
+  ["Uranus and Neptune are called…",["rocky planets","gas giants","ice giants","dwarf planets"],2,"Jupiter and Saturn are gas giants; Uranus and Neptune are ice giants."],
+  ["An icy object that grows a glowing tail near the Sun is a…",["comet","asteroid","moon","star"],0,"Comets are icy and grow a glowing tail when they come near the Sun."]],
+ [["Earth's axis is…",["the path around the Sun","an imaginary line through the North and South Poles","the equator","the Moon's orbit"],1,"Earth spins on its axis, an imaginary line through the poles."],
+  ["About how many degrees is Earth's axis tilted?",["0°","10°","23.5°","90°"],2,"Earth's axis is tilted about 23.5°, which causes seasons."],
+  ["When is Earth closest to the Sun?",["Early July","Early January","In spring","It never changes"],1,"Earth is closest to the Sun in early January, so distance doesn't cause seasons."],
+  ["The Moon phase when we see its whole lit side is the…",["new moon","first quarter","full moon","crescent"],2,"At full moon we see the whole lit half of the Moon."]],
+ [["Gravity gets STRONGER when objects have…",["more mass","less mass","more distance between them","brighter colors"],0,"More mass means stronger gravity."],
+  ["One astronomical unit (AU) is about…",["the distance to the Moon","150 million km, the Earth–Sun distance","one light-year","the width of Earth"],1,"1 AU is the average Earth–Sun distance, about 150 million km."],
+  ["About how far away is Proxima Centauri, the nearest star after the Sun?",["4.2 light-years","1 AU","100 km","1 million light-years"],0,"Proxima Centauri is about 4.2 light-years away."],
+  ["A galaxy is…",["one planet and its moons","a huge system of billions of stars","a kind of comet","the Sun's outer layer"],1,"A galaxy is a huge system of billions of stars, like our Milky Way."]]
+],
+life:[
+ [["Which statement is part of the cell theory?",["All cells come from other cells","Cells are only in animals","Cells can be seen without a microscope","Cells are made of rocks"],0,"The cell theory says all cells come from other cells."],
+  ["The jelly-like fluid that holds the organelles is the…",["nucleus","cytoplasm","cell wall","vacuole"],1,"Cytoplasm is the jelly-like fluid holding the organelles."],
+  ["The nucleus holds DNA, which is…",["the cell's food","the cell's instructions","the cell's wall","sunlight"],1,"DNA holds the cell's instructions, kept in the nucleus."],
+  ["What does a plant cell's large vacuole store?",["Water","Sunlight","Bones","Air"],0,"Plant cells have a large vacuole that stores water."]],
+ [["An organ is made of…",["one cell","different tissues working together","many organisms","only blood"],1,"An organ is different tissues working together, like the heart."],
+  ["Which system breaks food into nutrients the body can use?",["Digestive","Skeletal","Nervous","Respiratory"],0,"The digestive system breaks food down into nutrients."],
+  ["The brain, spinal cord, and nerves are part of the…",["circulatory system","nervous system","digestive system","muscular system"],1,"The nervous system sends signals and controls the body."],
+  ["Which list is in order from smallest to largest?",["Organ, tissue, cell","Cell, tissue, organ","Tissue, cell, organ","Organism, organ, cell"],1,"Cells → tissues → organs → organ systems → organism."]],
+ [["An ecosystem includes…",["only animals","only plants","living things plus nonliving things like water and soil","only the weather"],2,"An ecosystem is the living things in an area plus the nonliving things around them."],
+  ["A rabbit that eats only plants is a(n)…",["herbivore","carnivore","omnivore","decomposer"],0,"Herbivores eat plants."],
+  ["A food web is…",["one food chain","many connected food chains","a spider's home","a list of plants"],1,"A food web is many connected food chains."],
+  ["Why are there fewer top predators, like hawks, than plants?",["Hawks don't need energy","Only about 10% of energy passes to each next level","Plants eat hawks","There is too much energy"],1,"Only about 10% of energy moves up each level, so less is left for top predators."]]
+],
+weather:[
+ [["About what percent of the atmosphere is oxygen?",["1%","21%","50%","78%"],1,"The atmosphere is about 78% nitrogen and 21% oxygen."],
+  ["What holds the atmosphere in place around Earth?",["Wind","Gravity","The ozone layer","Clouds"],1,"Gravity holds the atmosphere in place."],
+  ["Which is the coldest layer of the atmosphere?",["Troposphere","Stratosphere","Mesosphere","Thermosphere"],2,"The mesosphere is the coldest, below −90 °C at the top."],
+  ["Rising air pressure usually means…",["storms are coming","clear, calm weather","a tornado","snow"],1,"Rising pressure usually means clear, calm weather; falling pressure means storms."]],
+ [["An air mass that forms over land is…",["moist","dry","always warm","always cold"],1,"Continental air masses form over land and are dry. Maritime ones form over oceans and are moist."],
+  ["A front is…",["the boundary where two air masses meet","the top of a cloud","a type of hurricane","a wind that blows from one direction"],0,"A front is the boundary between two air masses, where weather changes."],
+  ["On a weather map, a red line with half circles shows a…",["cold front","warm front","stationary front","hurricane"],1,"A warm front is a red line with half circles."],
+  ["A tornado is…",["a giant storm over the ocean","a spinning column of air reaching from a storm cloud to the ground","a long, steady rain","a type of air mass"],1,"Tornadoes are spinning columns of air from a storm cloud to the ground."]],
+ [["Near the poles, sunlight arrives at a low slant. This makes it…",["warm all year","cold, because the energy spreads out","rainy","windy"],1,"Slanted sunlight spreads over more area, so the poles stay cold."],
+  ["Temperature drops about how much for every 1,000 m you climb?",["1 °C","6.5 °C","20 °C","It rises"],1,"Temperature drops about 6.5 °C for every 1,000 m of elevation."],
+  ["Water heats and cools slowly. So coastal places have…",["hotter summers","milder summers and winters","no seasons","colder winters"],1,"Being near water gives coastal places milder summers and winters."],
+  ["Winds that usually blow from one direction are called…",["fronts","prevailing winds","ocean currents","air masses"],1,"Prevailing winds usually blow from one direction. In the U.S., weather moves west to east."]]
+],
+elec:[
+ [["Like electric charges…",["attract","repel (push apart)","cancel out","disappear"],1,"Like charges repel, and opposite charges attract."],
+  ["What does every circuit need to push the electrons?",["An insulator","An energy source like a battery","A magnet","A light bulb"],1,"An energy source, like a battery, pushes the electrons. That push is voltage."],
+  ["A circuit with a gap in it, so no current flows, is…",["an open circuit","a closed circuit","a parallel circuit","a series circuit"],0,"An open circuit has a gap, so nothing flows."],
+  ["Which material is an insulator?",["Copper","Salt water","Rubber","Iron"],2,"Rubber resists the flow of electricity, so it's an insulator."]],
+ [["Every magnet has…",["one pole","a north pole and a south pole","no poles","only a north pole"],1,"Every magnet has a north pole and a south pole."],
+  ["Where is a magnet's force strongest?",["In the middle","Near the poles","Far away from it","It's the same everywhere"],1,"Field lines are closest together near the poles, where the force is strongest."],
+  ["A magnet can pull steel cans out of recycling but not aluminum cans because…",["aluminum is too heavy","steel contains iron, which is magnetic","aluminum is a magnet too","steel is shiny"],1,"Iron, nickel, and cobalt are magnetic. Aluminum is not."],
+  ["Earth's magnetic field protects us by…",["making it rain","steering harmful charged particles from the Sun toward the poles","heating the planet","making the Moon orbit"],1,"The field steers charged particles toward the poles, where they make auroras."]],
+ [["Ørsted's discovery in 1820 showed that electric current…",["creates a magnetic field","makes light","stops magnets","is made by plants"],0,"A wire carrying current moved a compass needle, showing current creates a magnetic field."],
+  ["How is an electromagnet different from a regular magnet?",["It can be turned on and off","It has no poles","It only attracts aluminum","It never works"],0,"An electromagnet works only while current flows, so it can be switched on and off."],
+  ["An electromagnet is made by…",["rubbing a balloon","wrapping a coil of wire around an iron core and running current through it","freezing a magnet","cutting a magnet in half"],1,"A coil of wire around an iron core becomes a magnet when current flows."],
+  ["Almost all the electricity in your home comes from…",["batteries","generators spun by steam, wind, or falling water","static electricity","compasses"],1,"Generators spun by steam, wind, or water make most of our electricity."]]
+],
+waves:[
+ [["A wave carries energy without carrying…",["energy","matter along with it","sound","light"],1,"A wave moves energy, but the material mostly stays in place."],
+  ["Shaking a rope up and down makes a…",["longitudinal wave","transverse wave","sound wave","compression"],1,"In a transverse wave, the material moves at right angles to the wave's direction."],
+  ["The highest point of a transverse wave is the…",["trough","crest","wavelength","medium"],1,"The crest is the highest point; the trough is the lowest."],
+  ["A wave with a bigger amplitude has more…",["energy","wavelength","color","hertz"],0,"Bigger amplitude means more energy."]],
+ [["Sound is made by…",["light","vibrations","magnets","heat only"],1,"Sound is a longitudinal wave made by vibrations."],
+  ["Why is space silent?",["It is too cold","Sound needs a medium and space is empty","The Sun is too loud","Sound moves too fast"],1,"Sound needs a medium to travel through, and space is mostly empty."],
+  ["Loudness is measured in…",["hertz","decibels (dB)","meters","volts"],1,"Loudness is measured in decibels. A conversation is about 60 dB."],
+  ["Sound reflecting off a surface and coming back is a(n)…",["pitch","echo","vibration","frequency"],1,"An echo is a reflected sound."]],
+ [["Light can cross empty space because it…",["is very loud","does not need a medium","is a longitudinal wave","is made of sound"],1,"Light is an electromagnetic wave and doesn't need a medium."],
+  ["About how fast does light travel?",["343 meters per second","1,480 meters per second","300,000 kilometers per second","100 kilometers per hour"],2,"Light travels about 300,000 km per second, the fastest thing in the universe."],
+  ["Light bouncing off a surface is called…",["refraction","reflection","absorption","vibration"],1,"Reflection is light bouncing off, like with a mirror."],
+  ["Wood blocks all light. It is…",["transparent","translucent","opaque","a prism"],2,"Opaque materials let no light pass through."]]
+],
+body:[
+ [["Saliva in your mouth starts breaking down…",["proteins","fats","starches","water"],2,"Saliva starts the chemical digestion of starches."],
+  ["About how long is the small intestine?",["6 centimeters","1 meter","6 meters","60 meters"],2,"The small intestine is about 6 meters long."],
+  ["Which organ stores urine?",["Kidney","Bladder","Stomach","Liver"],1,"Urine is stored in the bladder."],
+  ["Besides the kidneys, which organs also help remove wastes?",["Lungs and skin","Eyes and ears","Bones and teeth","Heart and brain"],0,"The lungs remove carbon dioxide and the skin removes sweat."]],
+ [["Air goes down the trachea into two…",["bronchi","alveoli","arteries","kidneys"],0,"Air travels down the trachea (windpipe) into two bronchi, then into the lungs."],
+  ["How many chambers does the human heart have?",["Two","Three","Four","Six"],2,"The heart has four chambers."],
+  ["Which blood vessels carry blood BACK to the heart?",["Arteries","Veins","Capillaries","Alveoli"],1,"Veins carry blood back to the heart and have valves to stop backflow."],
+  ["White blood cells…",["carry oxygen","fight germs","help clotting","carry water"],1,"White blood cells fight germs. Red blood cells carry oxygen."]],
+ [["The nerves that branch out to the rest of the body make up the…",["central nervous system","peripheral nervous system","skeletal system","digestive system"],1,"The peripheral nervous system is all the nerves outside the brain and spinal cord."],
+  ["Motor neurons carry commands…",["from the senses to the brain","from the brain to muscles","from the heart to the lungs","from bones to blood"],1,"Motor neurons carry commands from the brain to muscles."],
+  ["Your knee and elbow are…",["ball-and-socket joints","hinge joints","tendons","muscles"],1,"The knee and elbow are hinge joints."],
+  ["Why do muscles work in pairs?",["Muscles can only pull, never push","Muscles are too small","One muscle sleeps","Bones push them"],0,"Muscles can only pull, so a pair pulls in opposite directions, like the biceps and triceps."]]
+],
+genes:[
+ [["Heredity is…",["the passing of traits from parents to offspring","learning a new skill","a type of cell","a change in DNA"],0,"Heredity is how traits pass from parents to their offspring."],
+  ["Which of these is a trait you acquire, not inherit?",["Freckles","Blood type","Playing piano","Natural hair color"],2,"Playing piano is learned during a lifetime, so it's acquired."],
+  ["A chimpanzee learns to fish for termites by watching its mother. This is a(n)…",["instinct","learned behavior","inherited trait","mutation"],1,"It comes from experience, so it's a learned behavior."],
+  ["Your genes set a range for your height. What else affects how tall you grow?",["Nothing else","Nutrition and sleep","Your name","The weather that day"],1,"Some traits are influenced by both genes and environment, like nutrition and sleep."]],
+ [["What is stored in DNA?",["Food for the cell","The instructions for inherited traits","Oxygen","Water"],1,"DNA holds the instructions for every inherited trait."],
+  ["Humans have 46 chromosomes arranged in…",["46 pairs","23 pairs","2 pairs","10 pairs"],1,"Humans have 46 chromosomes in 23 pairs."],
+  ["About how many genes do humans have?",["46","2,000","20,000","1 million"],2,"Humans have about 20,000 genes."],
+  ["You have two alleles for every gene because…",["you make them yourself","you get one from each parent","cells copy them twice","food gives you one"],1,"You get one allele from each parent."]],
+ [["A recessive allele shows its trait only when…",["you have one copy","you have two copies","it is written in capital letters","the plant is tall"],1,"A recessive allele only shows with two copies."],
+  ["The trait you can actually see, like 'tall,' is the…",["genotype","phenotype","allele","chromosome"],1,"The phenotype is the observable trait. The genotype is the letters, like Tt."],
+  ["In a Punnett square, each box is what percent chance?",["10%","25%","50%","100%"],1,"A Punnett square has 4 boxes, so each is a 25% chance."],
+  ["The genotype Tt is called…",["homozygous dominant","heterozygous","homozygous recessive","a mutation"],1,"Tt has different alleles, so it's heterozygous (sometimes called a hybrid or carrier)."]]
+],
+adapt:[
+ [["Adaptations are…",["traits learned in school","inherited traits that help a living thing survive where it lives","mistakes in DNA","only found in plants"],1,"An adaptation is an inherited trait that helps survival."],
+  ["A polar bear's thick fur and layer of fat are…",["behavioral adaptations","structural adaptations","camouflage only","mimicry"],1,"Body features are structural adaptations."],
+  ["A short, thick, cone-shaped beak, like a cardinal's, is best for…",["cracking seeds","reaching nectar","tearing meat","catching fish"],0,"Cone-shaped beaks crack seeds."],
+  ["A snowshoe hare turning white in winter is an example of…",["mimicry","camouflage","migration","hibernation"],1,"Camouflage helps an animal blend in with its surroundings."]],
+ [["The first step of natural selection is variation. That means…",["all individuals are the same","individuals differ from each other","animals move away","only one animal survives"],1,"Variation means individuals in a group differ, like lighter and darker moths."],
+  ["When factory soot darkened the trees in England, which peppered moths survived best?",["Light moths","Dark moths","Neither","Only the biggest ones"],1,"Dark moths were hidden on dark bark, so they survived and became common."],
+  ["People choosing which dogs breed is called…",["natural selection","artificial selection","mutation","extinction"],1,"Artificial selection is people choosing which animals breed."],
+  ["According to the lesson, natural selection…",["adds new information to DNA","sorts traits God already placed in the kind","turns dogs into cats","only happens in plants"],1,"The lesson says natural selection chooses among traits already in the kind."]],
+ [["A footprint or burrow preserved in rock is a…",["cast","trace fossil","petrified fossil","mold"],1,"Trace fossils are evidence of activity, like footprints, burrows, or nests."],
+  ["The law of superposition says that in undisturbed layers…",["the top layer is oldest","lower layers were laid down first","all layers formed at once","fossils are only on top"],1,"In undisturbed layers, lower layers came first."],
+  ["When every member of a kind dies out, it is called…",["extinction","adaptation","catastrophe","fossilization"],0,"Extinction is when a kind dies out completely."],
+  ["A creature kept whole in amber, ice, or tar is a…",["trace fossil","preserved remains fossil","mold","cast"],1,"Preserved remains are whole creatures kept in amber, ice, or tar."]]
+],
+earthres:[
+ [["Which is a nonrenewable resource?",["Wind","Sunlight","Coal","Trees that are replanted"],2,"Coal is not replaced as fast as we use it, so it's nonrenewable."],
+  ["Energy made from moving water at dams is called…",["solar","geothermal","hydroelectric","nuclear"],2,"Hydroelectric power uses moving water."],
+  ["Geothermal energy uses…",["the Sun's light","heat inside Earth","wind","burning coal"],1,"Geothermal energy comes from Earth's internal heat."],
+  ["Why do many places use a mix of energy sources?",["Because no source is perfect","Because it's cheaper to waste energy","Because only one works at night","Because the law requires it"],0,"Every source has trade-offs, so many places use a mix."]],
+ [["Smog is…",["clean mountain air","a haze that forms when pollutants react with sunlight","a type of rain","a kind of tree"],1,"Smog forms when pollutants react with sunlight."],
+  ["Conservation means…",["using up resources quickly","protecting and wisely using natural resources","building more landfills","cutting down forests"],1,"Conservation is protecting and wisely using resources."],
+  ["Recycling means…",["using less","turning used materials into new products","throwing things away","burning trash"],1,"Recycling turns used paper, aluminum, glass, and some plastics into new products."],
+  ["Laws like the Clean Air Act have made U.S. air and rivers…",["dirtier","much cleaner since the 1970s","no different","hotter"],1,"Since the 1970s, these laws have made U.S. air and rivers much cleaner."]],
+ [["Which of these is a greenhouse gas?",["Oxygen","Nitrogen","Methane","Helium"],2,"Water vapor, carbon dioxide, and methane are main greenhouse gases."],
+  ["With the natural greenhouse effect, Earth's average temperature is about…",["−18 °C (0 °F)","15 °C (59 °F)","50 °C (122 °F)","100 °C (212 °F)"],1,"With the greenhouse effect, Earth averages about 15 °C (59 °F)."],
+  ["About how much has Earth's average temperature risen since the late 1800s?",["0.1 °C","1.2 °C","10 °C","25 °C"],1,"Earth's average temperature has risen about 1.2 °C."],
+  ["How do trees help with climate change?",["They make CO₂","They absorb CO₂ through photosynthesis","They melt ice","They block sunlight from space"],1,"Trees absorb CO₂ through photosynthesis."]]
+],
+chem:[
+ [["A mixture is two or more substances combined…",["chemically into a new substance","physically, each keeping its own properties","only as gases","only by heating"],1,"In a mixture, each part keeps its own properties and the amounts can vary."],
+  ["Which is a homogeneous mixture?",["Trail mix","Salad","Lemonade","Sand and gravel"],2,"Lemonade looks the same throughout, so it's homogeneous."],
+  ["Sand doesn't dissolve in water. Sand is…",["soluble","insoluble","a solvent","saturated"],1,"Things that don't dissolve are insoluble."],
+  ["Which method separates pebbles from sand by size?",["Magnet","Evaporation","Sieving","Distillation"],2,"Sieving separates pieces by size."]],
+ [["The horizontal rows of the periodic table are called…",["groups","periods","families","metals"],1,"Rows are periods. Columns are groups (families)."],
+  ["What decides which element an atom is?",["Its number of neutrons","Its number of protons","Its color","Its size"],1,"The number of protons (the atomic number) decides the element."],
+  ["Where are nonmetals found on the periodic table?",["Upper right","Far left","Bottom row only","In the middle"],0,"Nonmetals are in the upper right. Metals are on the left and center."],
+  ["Group 1 alkali metals, like sodium, are known for…",["never reacting","being so reactive they fizz in water","being gases","being used in balloons"],1,"Alkali metals are so reactive they fizz in water."]],
+ [["Which is a base?",["Lemon juice","Vinegar","Soap","Orange juice"],2,"Soap is a base. Bases taste bitter and feel slippery."],
+  ["The pH scale runs from…",["0 to 7","0 to 14","1 to 100","−7 to 7"],1,"The pH scale runs from 0 to 14."],
+  ["Red cabbage juice turns pink. The solution is…",["an acid","a base","neutral","pure water"],0,"Red cabbage juice turns pink in acids and green or yellow in bases."],
+  ["About what pH does your blood stay at?",["2","5","7.4","12"],2,"Your blood stays at about pH 7.4."]]
+],
+surface:[
+ [["Water expands by about how much when it freezes in a crack?",["1%","9%","50%","100%"],1,"Water expands about 9% when it freezes, pushing the crack wider."],
+  ["Which is an example of chemical weathering?",["Ice wedging","Plant roots splitting a rock","Iron in rock rusting and crumbling","Rocks grinding together"],2,"Rusting changes the minerals in the rock, so it's chemical weathering."],
+  ["Which agent of erosion shapes sand dunes in dry places?",["Wind","Ice","Gravity","Plants"],0,"Wind moves sand and dust, shaping dunes."],
+  ["Landslides and mudflows are erosion caused by…",["wind","gravity","ice","the Sun"],1,"Gravity pulls material downhill in landslides and mudflows."]],
+ [["Which is a constructive force that builds up land?",["Weathering","Erosion","Volcanoes","Wind wearing rock"],2,"Volcanoes and deposition build up land. Weathering and erosion wear it down."],
+  ["On a topographic map, contour lines far apart show…",["a steep slope","a gentle slope","a cliff","a river"],1,"Far-apart lines mean a gentle slope. Close lines mean a steep slope."],
+  ["A set of closed circles getting smaller toward the middle shows a…",["valley","hill or mountain","lake","road"],1,"Closed circles show a hill or mountain. The smallest circle is the top."],
+  ["The darker, labeled line that is usually every fifth line is the…",["contour interval","index contour","map key","valley line"],1,"An index contour is darker and labeled with its elevation."]],
+ [["Using the Bible's history, the lesson says the Flood was about how long ago?",["600 years","4,300 years","6,000 years","1 million years"],1,"The lesson places the Catastrophe (Flood) about 4,300 years ago."],
+  ["At the Tower of Babel, God confused people's languages. Which C is this?",["Creation","Corruption","Confusion","Consummation"],2,"Confusion is when God confused the languages at Babel."],
+  ["A crack that cuts through rock layers is…",["older than the layers","younger than the layers","the same age","impossible to date"],1,"Something that cuts through layers is younger than the layers it cuts."],
+  ["Indiana's limestone is full of sea fossils like…",["dinosaur eggs","crinoids and shells","tree leaves","bird feathers"],1,"Indiana's limestone is full of crinoids and shells."]]
+],
+machines:[
+ [["Lifting a 50 N backpack 2 m does how much work?",["25 J","52 J","100 J","200 J"],2,"Work = force × distance = 50 N × 2 m = 100 J."],
+  ["How does a machine help you do work?",["It reduces the amount of work","It changes the size or direction of a force","It creates energy","It removes friction completely"],1,"Machines trade force for distance. They don't reduce the work."],
+  ["A broom has the effort in the middle. It is which class of lever?",["First class","Second class","Third class","Not a lever"],2,"Third-class levers have the effort in the middle, like a broom or fishing rod."],
+  ["A lever's effort arm is 3 m and its load arm is 1 m. Its mechanical advantage is…",["1","3","4","300"],1,"MA = effort arm ÷ load arm = 3 ÷ 1 = 3."]],
+ [["A doorknob and a steering wheel are examples of a…",["pulley","wheel and axle","wedge","screw"],1,"A wheel and axle is a large wheel attached to a smaller rod so they turn together."],
+  ["A screw is…",["two ramps back to back","an inclined plane wrapped around a post","a wheel with a rope","a type of lever"],1,"A screw is an inclined plane wrapped around a post."],
+  ["Several pulleys combined, like on a construction crane, are called a…",["block and tackle","wedge","fulcrum","compound lever"],0,"A block and tackle combines pulleys for a bigger mechanical advantage."],
+  ["What helps raise a machine's efficiency?",["Adding friction","Oil and smooth bearings","Rough surfaces","Making it heavier"],1,"Oil and smooth bearings reduce friction and raise efficiency."]],
+ [["What is the first step of the engineering design process?",["Build a prototype","Define the problem","Test and evaluate","Improve and redesign"],1,"First, define the problem: what needs solving, and for whom."],
+  ["The engineering design process is…",["a straight line you do once","a loop engineers often repeat","only for scientists","finished after one test"],1,"It's a loop. Engineers often go through it many times."],
+  ["A lighter bike is faster but may be less sturdy. This is a…",["constraint","trade-off","prototype","variable"],1,"A trade-off is giving up one thing to gain another."],
+  ["The Wright brothers' first powered flight was in…",["1803","1903","1953","2003"],1,"They built and tested many gliders before their first powered flight in 1903."]]
+],
+};
+
+/* which lesson each existing practice-quiz question comes from (0, 1, 2) */
+const QUIZ_LESSON = {"matter":[0,0,1,1,2,0,1,1],"motion":[0,1,0,2,1,1,2,0],"earth":[0,0,2,2,1,1,2,0],"space":[1,1,0,0,1,1,0,2],"life":[0,0,0,1,1,2,2,2],"weather":[0,0,0,0,1,1,1,2,2,0],"elec":[0,0,0,0,0,1,1,1,2,2],"waves":[0,0,0,1,1,1,1,2,2,2],"body":[0,0,0,1,1,1,2,2,2,2],"genes":[0,0,0,1,1,1,1,2,2,0],"adapt":[0,0,0,0,0,1,1,1,2,2],"earthres":[0,0,0,1,1,1,1,2,2,0],"chem":[0,0,0,0,1,1,1,2,2,2],"surface":[0,0,0,0,0,1,1,2,2,2],"machines":[0,0,0,0,0,1,1,1,1,2]};
+UNITS.forEach(u => { u.lq = LESSON_Q[u.id] || u.lessons.map(()=>[]); });
+const LQ_PASS = 3;  /* right answers needed (of 4) to finish a lesson */
 
 /* ============ LEARNING ROUTINE, FIX-UPS, REVIEW, MASTERY ============ */
 const STEPS = ["Words to Know","Read","See It","Watch","Remember","Try It"];
@@ -2566,8 +2785,8 @@ const RV = () => { review[student] = review[student] || {}; return review[studen
 const FX = () => { fix[student] = fix[student] || {}; return fix[student]; };
 const LST = () => { lstep[student] = lstep[student] || {}; return lstep[student]; };
 const qKey = (u, text) => u + "|" + text;
-function findQ(u, text){ const un = unitById(u); return un ? un.quiz.concat(un.test).find(q => q[0]===text) : null; }
-function unitOfText(text){ const un = UNITS.find(x => x.quiz.concat(x.test).some(q => q[0]===text)); return un ? un.id : null; }
+function findQ(u, text){ const un = unitById(u); return un ? un.quiz.concat(un.test, ...un.lq).find(q => q[0]===text) : null; }
+function unitOfText(text){ const un = UNITS.find(x => x.quiz.concat(x.test, ...x.lq).some(q => q[0]===text)); return un ? un.id : null; }
 function testDays(stu, u){ return [...new Set(rs(stu,u,"test").filter(r=>r.pct>=80).map(r=>dayOf(r.at)))]; }
 function reviewLeft(stu, u){ return Object.values(review[stu]||{}).filter(it => it.u===u).length; }
 function fixLeft(stu, u){ return ((fix[stu]||{})[u]||[]).length; }
@@ -2709,8 +2928,8 @@ function renderUnit(){
   if (step===3) body = W ? `<div class="watch"><div class="vframe"><iframe src="https://www.youtube-nocookie.com/embed/${W.id}?rel=0&modestbranding=1&playsinline=1" title="${esc(W.title)}" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" loading="lazy"></iframe></div><p class="vcap"><b>${esc(W.title)}</b> · ${esc(W.by)}</p><p>If the video doesn't play, ask a parent for help.</p></div>` : "";
   if (step===4) body = `<div class="flash" id="flash"></div>`;
   if (step===5) body = `<div class="tryit"><b>Try it</b>${esc(L.tryit)}</div>
-    <div class="finish ${done?"is-done":""}">${done ? `<span class="got">✓ Lesson finished · <span class="st">★</span> earned</span>` : `<button class="btn big" id="finish">I finished this lesson <span class="st">+★</span></button>`}</div>`;
-  const nextLabel = step<5 ? `Next: ${STEPS[step+1]} →` : (view.lesson<u.lessons.length-1 ? "Next lesson →" : "Next: Vocab game →");
+    <div class="finish ${done?"is-done":""}">${done ? `<span class="got">✓ Lesson finished · <span class="st">★</span> earned</span> <button class="btn ghost small" id="lqagain" type="button">Practice the lesson quiz</button>` : `<button class="btn big" id="lquiz">Take the lesson quiz <span class="st">+★</span></button><p class="note">4 questions on this lesson. Get ${LQ_PASS} right to finish the lesson.</p>`}</div>`;
+  const nextLabel = step<5 ? `Next: ${STEPS[step+1]} →` : (student && !done) ? "Take the lesson quiz →" : (view.lesson<u.lessons.length-1 ? "Next lesson →" : "Next: Vocab game →");
   app.innerHTML = `
   <button class="back" id="back">← All units</button>
   <div class="unithead" style="--c:var(${u.color})">
@@ -2743,9 +2962,11 @@ function renderUnit(){
   $("#sprev").onclick = () => setStep(step-1);
   $("#snext").onclick = () => {
     if (step<5) return setStep(step+1);
+    if (student && !done) return startQuiz(u.id, "lesson", view.lesson);
     if (view.lesson<u.lessons.length-1) go({page:"unit", unit:u.id, lesson:view.lesson+1}); else startGame(u.id);
   };
-  const f=$("#finish"); if(f) f.onclick = () => { if (needStudent()) return; if (!P().done[key]){ P().done[key] = Date.now(); saveAll(); try{ window.rhythmReport && rhythmReport('science6'); }catch(e){} sfx.star(); confetti(); } render(); };
+  const lqb=$("#lquiz"); if(lqb) lqb.onclick = () => { if (needStudent()) return; startQuiz(u.id, "lesson", view.lesson); };
+  const lqa=$("#lqagain"); if(lqa) lqa.onclick = () => startQuiz(u.id, "lesson", view.lesson);
   if (step===2 && F && F.init){ try{ const stop = F.init($("#fig")); if (stop) figStops.push(stop); }catch(e){ console.error(e); } }
   if (step===4) runFlash(L.vocab, () => { view.flashDone = true; const n = $("#snext"); if (n) n.disabled = false; });
 }
@@ -2767,7 +2988,7 @@ function runFlash(vocab, onDone){
 
 /* ---------- quizzes & tests (retake rules) ---------- */
 function tagQs(list){ return list.map(([q,u]) => Object.assign(prepQ(q), {u})); }
-function startQuiz(unitId, kind, fresh){
+function startQuiz(unitId, kind, lesson){
   if (needStudent()) return;
   const saved = inprog[student];
   if (saved){ view = Object.assign({page:"quiz", resumed:true}, saved); render(); window.scrollTo({top:0}); return; }  /* no abandoning: finish what you started */
@@ -2777,8 +2998,12 @@ function startQuiz(unitId, kind, fresh){
   let list;
   if (kind==="final") list = shuffle(UNITS.filter(u => unitId==="final2" ? u.set===2 : u.set!==2).flatMap(u => shuffle(u.quiz.concat(u.test)).slice(0, unitId==="final2" ? 2 : 4).map(q=>[q,u.id])));
   else { const u = unitById(unitId);
-    list = (kind==="test" && rs(student,unitId,"test").length) ? shuffle(u.quiz.concat(u.test)).slice(0, u.test.length).map(q=>[q,unitId]) : shuffle(u[kind]).map(q=>[q,unitId]); }
-  go({page:"quiz", unit:unitId, kind, qs:tagQs(list), i:0, picks:[], checked:false, streak:0, bestStreak:0, retake: kind==="test" && rs(student,unitId,"test").length>0});
+    if (kind==="lesson") list = shuffle(u.lq[lesson]).map(q=>[q,unitId]);
+    else if (kind==="quiz") list = shuffle(u.lessons.flatMap((_,li) => {   /* 12 questions: 4 from each lesson */
+      const pool = u.quiz.filter((q,qi) => ((QUIZ_LESSON[u.id]||[])[qi]||0)===li).concat(u.lq[li]);
+      return shuffle(pool).slice(0,4); })).map(q=>[q,unitId]);
+    else list = (kind==="test" && rs(student,unitId,"test").length) ? shuffle(u.quiz.concat(u.test)).slice(0, u.test.length).map(q=>[q,unitId]) : shuffle(u[kind]).map(q=>[q,unitId]); }
+  go({page:"quiz", unit:unitId, kind, lesson: kind==="lesson" ? lesson : undefined, qs:tagQs(list), i:0, picks:[], checked:false, streak:0, bestStreak:0, retake: kind==="test" && rs(student,unitId,"test").length>0});
   saveQuiz();  /* saved from the first question, so leaving can't throw it away */
 }
 function finishQuiz(){
@@ -2786,6 +3011,9 @@ function finishQuiz(){
   const score = v.qs.reduce((a,Q,i)=>a+(v.picks[i]===Q.answer?1:0),0), p = pct(score, v.qs.length);
   const r = { id:"r"+Date.now().toString(36)+Math.random().toString(36).slice(2,6), student, unit:v.unit, kind:v.kind, score, total:v.qs.length, pct:p, stars:starsFor(p), bestStreak:v.bestStreak||0, at:new Date().toISOString(),
     items: v.qs.map((Q,i)=>({q:Q.q, choices:Q.choices, answer:Q.answer, picked:v.picks[i]??null, why:Q.why, u:Q.u||unitOfText(Q.q)})) };
+  if (v.kind==="lesson"){ r.lesson = v.lesson;
+    const key = v.unit+"-"+v.lesson;
+    if (score >= LQ_PASS && !P().done[key]){ P().done[key] = Date.now(); r.finished = true; try{ window.rhythmReport && rhythmReport('science6'); }catch(e){} } }
   const missed = r.items.filter(it => it.picked!==it.answer && it.u);
   missed.forEach(it => { RV()[qKey(it.u,it.q)] = {u:it.u, q:it.q, due:addDays(1), streak:0}; });
   if (v.kind==="test"){ if (missed.length) FX()[v.unit] = missed.map(it=>qKey(it.u,it.q)); else delete FX()[v.unit]; }
@@ -2796,6 +3024,11 @@ function finishQuiz(){
   if (r.stars>=2 || newBadges.length){ confetti(); sfx.star(); }
 }
 function afterResultHTML(r, missedN){
+  if (r.kind==="lesson"){
+    const L = unitById(r.unit).lessons[r.lesson];
+    if (r.score >= LQ_PASS) return `<div class="nextbox"><b>${r.finished ? "Lesson finished! <span class=\"st\">★</span> earned" : "Nice review!"}</b><p>You got ${r.score} of ${r.total}.${missedN ? ` The question${missedN>1?"s":""} you missed went into your review box.` : ""}</p></div>`;
+    return `<div class="nextbox"><b>Not yet. You need ${LQ_PASS} of ${r.total}.</b><p>Reread <b>${esc(L.t)}</b>, then take the lesson quiz again. The question${missedN>1?"s":""} you missed went into your review box too.</p></div>`;
+  }
   if (r.kind==="test"){
     const days = testDays(student,r.unit).length;
     if (missedN) return `<div class="nextbox"><b>What happens next</b><ol><li>Fix up the ${missedN} question${missedN>1?"s":""} you missed (right now).</li><li>Review them on the next few days.</li>${r.pct>=80 ? `<li>You passed (${r.pct}%)! After the fix-up, clear these from your review box to make this unit ★ Mastered.</li>` : `<li>Take this test again <b>tomorrow or later</b>. It will have a different mix of questions.</li>`}</ol><button class="btn" id="gofix">Start fix-up →</button></div>`;
@@ -3056,7 +3289,7 @@ function renderHome(){
 }
 
 /* ---------- quizzes & tests ---------- */
-function saveQuiz(){ const v = view; inprog[student] = {unit:v.unit, kind:v.kind, qs:v.qs, i:v.i, picks:v.picks, checked:v.checked, streak:v.streak||0, bestStreak:v.bestStreak||0}; saveAll(); }
+function saveQuiz(){ const v = view; inprog[student] = {unit:v.unit, kind:v.kind, lesson:v.lesson, qs:v.qs, i:v.i, picks:v.picks, checked:v.checked, streak:v.streak||0, bestStreak:v.bestStreak||0}; saveAll(); }
 
 function renderQuiz(){
   const v = view, Q = v.qs[v.i], picked = v.picks[v.i];
@@ -3064,7 +3297,7 @@ function renderQuiz(){
   app.innerHTML = `
   <div class="quiz" style="--c:var(${colorOf(v.unit)})">
     ${v.resumed ? `<p class="resumed">Welcome back! Your answers were saved. Finish this ${kindLabel(v.kind).toLowerCase()} before doing anything else.</p>` : ""}
-    <div class="qhead"><span class="kind">${kindLabel(v.kind)} · ${esc(titleOf(v.unit))}</span><span class="eyebrow">Question ${v.i+1} of ${v.qs.length}</span></div>
+    <div class="qhead"><span class="kind">${v.kind==="lesson" ? `Lesson ${unitById(v.unit).n}.${v.lesson+1} quiz · ${esc(unitById(v.unit).lessons[v.lesson].t)}` : `${kindLabel(v.kind)} · ${esc(titleOf(v.unit))}`}</span><span class="eyebrow">Question ${v.i+1} of ${v.qs.length}</span></div>
     <div class="meter"><i style="width:${pct(v.i+(locked||(!practice&&picked!=null)?1:0), v.qs.length)}%"></i></div>
     ${practice && (v.streak||0)>=2 ? `<p class="streak">${v.streak} in a row!</p>` : ""}
     <div class="qcard">
@@ -3134,10 +3367,11 @@ function renderDone(){
         <p class="muted">${esc(Q.why)}</p></div>`; }).join("")}</div>` : ""}
     <p class="note">Saved on this device.</p>
   </div>`;
-  $("#back").onclick = () => go(isFinal(r.unit) ? {page:"home"} : {page:"unit", unit:r.unit, lesson:0});
-  $("#again").onclick = () => isGame ? startGame(r.unit) : r.kind==="climb" ? startClimb(r.unit) : startQuiz(r.unit, r.kind, true);
+  $("#back").onclick = () => go(isFinal(r.unit) ? {page:"home"} : {page:"unit", unit:r.unit, lesson: r.kind==="lesson" ? r.lesson : 0});
+  $("#again").onclick = () => isGame ? startGame(r.unit) : r.kind==="climb" ? startClimb(r.unit) : startQuiz(r.unit, r.kind, r.lesson);
   const gf = $("#gofix"); if (gf) gf.onclick = () => startFix(r.unit);
-  if (r.kind==="test" || r.kind==="final") $("#again").hidden = true;
+  if (r.kind==="test" || r.kind==="final" || (r.kind==="lesson" && r.score>=LQ_PASS)) $("#again").hidden = true;
+  if (r.kind==="lesson" && r.score<LQ_PASS){ $("#again").textContent = "Reread the lesson"; $("#again").onclick = () => { LST()[r.unit+"-"+r.lesson] = 1; saveAll(); go({page:"unit", unit:r.unit, lesson:r.lesson}); }; }
   $("#gonext").onclick = () => { const n = nextStep(); if (n) n.go(); else go({page:"home"}); };
 }
 

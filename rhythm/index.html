@@ -211,6 +211,8 @@ body.theme-dance .ord button{border-radius:50%;width:36px;height:36px;border-col
 .remindbtn{border:2px solid var(--navy);background:var(--surface);color:var(--navy);border-radius:12px;min-height:48px;padding:0 16px;font-weight:700;font-size:16px;cursor:pointer}
 .slotbtn.nonepick{opacity:.75;font-style:italic}
 .opt.noneopt{border-style:dashed}
+.gbnote{margin-top:8px;padding:9px 12px;border-radius:10px;background:#FFF8E6;border-left:4px solid #E0B44C;color:#5C4513;font-size:.92em;line-height:1.4}
+.gbnote small{display:block;margin-top:3px;font-style:italic;opacity:.85}
 .appnote{margin-top:6px;font-size:.88em;color:#5A6670;line-height:1.35}
 .appnote.ok{color:#1E7A43;font-weight:700}
 .row:not(.done) .check.bylesson{background:#F1F3F5;border-style:dashed}
@@ -309,7 +311,7 @@ window.FIREBASE_CONFIG = {
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
-const BUILD = '2026-11-17j';   // change this with every update, so open boards reload to the new version
+const BUILD = '2026-11-19a';   // change this with every update, so open boards reload to the new version
 const COL = 'rhythm_days', CFG_DOC = 'rhythm_config/main';
 
 /* ---------- the starting board (used until you save your own) ---------- */
@@ -796,6 +798,13 @@ const appDone = i => !!(i && i.app && APPS[i.app] && (S.apps||{})[i.app]);
 const isOn = i => !!S.data.checks[i.id] || appDone(i);
 /* "None today": a Fun Choice she chooses to skip. It counts as done. */
 const NONE = '__none';
+/* "Good and beautiful" notes for reading and drawing */
+const GB_VERSE = 'Whatsoever things are pure, whatsoever things are lovely… think on these things. (Philippians 4:8)';
+const GB_READ = 'Choose a book that is good and beautiful, one that puts good things into your heart and mind.';
+const GB_DRAW = 'Draw things that are good and beautiful, things that put good things into your heart and mind.';
+function addGB(tags){ (tags||[]).forEach(t=>{ if('note' in t) return; const n=String(t.name||'').toLowerCase();
+  if(t.id==='reading' || /\bread/.test(n)) t.note=GB_READ; else if(t.id==='drawing' || /\bdraw/.test(n)) t.note=GB_DRAW; }); }
+const noteHTML = n => n ? `<div class="gbnote">✨ ${esc(n)}<small>${esc(GB_VERSE)}</small></div>` : '';
 /* Lock in: once she checks "Mark Attendance/Make Choices", her picks are set for the day (Mom can still change them). */
 const LOCK_ID = 'attendance';
 const hasLock = () => ALL_ITEMS.some(i=>i.id===LOCK_ID);
@@ -861,6 +870,11 @@ function normalize(d){
   if(ruth && !(ruth.funV>=1)){        // Ruth: one fewer weekday Fun Choice from Nov 18, 2026, so her fun picks match Bekah's
     (ruth.blocks||[]).forEach(b=>b.items.forEach(i=>{ if(i.id==='r_f1') i.until='2026-11-17'; }));
     ruth.funV=1;
+  }
+  if(ruth && !(ruth.gbV>=1)){
+    addGB((ruth.tags||{}).fun);
+    [...(ruth.blocks||[]),...(ruth.satBlocks||[]),...(ruth.sunBlocks||[])].forEach(b=>b.items.forEach(i=>{ if(i.id==='r_reading' && !('note' in i)) i.note=GB_READ; }));
+    ruth.gbV=1;
   }
   return c;
 }
@@ -1103,6 +1117,10 @@ function normalizeMain(d){
   if(c.v < 29){                       // Bekah may choose "None today" for a Fun Choice
     c.funNone = true;
     c.v = 29;
+  }
+  if(c.v < 30){                       // good and beautiful notes on reading and drawing
+    addGB(c.tags.fun);
+    c.v = 30;
   }
   return c;
 }
@@ -1388,8 +1406,10 @@ function rowHTML(i, ord){
       none ? 'None today<small>Chose to skip this one</small>' : tag ? esc(tag.name)+(isLocked(i.id)?`<small>Today's must-do job</small>`:tag.sub?`<small>${esc(tag.sub)}</small>`:'') : (PICK_TEXT[i.slot]||'+ Pick a tag')
     }</button></div>`;
     if(tag && tag.snack) extra += snackBoxes(i.id);
+    if(tag && tag.note) extra += noteHTML(tag.note);
     if(tag && tag.timer) extra += timerBox(i.id);
   } else {
+    if(i.note) extra += noteHTML(i.note);
     if(i.snack) extra += snackBoxes(i.id);
     if(i.timer) extra += timerBox(i.id);
   }
@@ -1654,6 +1674,7 @@ function itemEd(it, bi, ii, len, R='blocks'){
   if(kind==='task'){
     more = `<div class="ed-row2">
       <input data-path="${p}.d" value="${esc(it.d)}" placeholder="Short description (optional)">
+      <input data-path="${p}.note" value="${esc(it.note)}" placeholder="Note in a box under it (optional)" style="flex:1 1 100%">
       <input data-path="${p}.url" value="${esc(it.url)}" placeholder="App link (optional), e.g. ../math/" style="flex:1 1 180px">
       <label class="ed-min" title="She can't check this off herself. It checks itself when she finishes a lesson in this app. You can still check it on your login.">Checks itself from <select data-path="${p}.app" aria-label="Checks itself when she finishes a lesson in">
         <option value="" ${!it.app?'selected':''}>No app (she checks it)</option>
@@ -1687,6 +1708,7 @@ function tagsEd(k, title, help, hasSub, hasTimer, hasSnack){
     ${list.map((t,ti)=>`<div class="ed-tag">
       <input data-path="tags.${k}.${ti}.name" value="${esc(t.name)}" placeholder="Tag name">
       ${hasSub?`<input data-path="tags.${k}.${ti}.sub" value="${esc(t.sub)}" placeholder="Small line under it (optional)">`:''}
+      ${k==='fun'?`<input data-path="tags.${k}.${ti}.note" value="${esc(t.note)}" placeholder="Note shown when she picks it (optional)" style="flex:1 1 100%">`:''}
       ${k!=='flag'?`<label class="ed-min" title="After she does it, it's greyed out until this many days have passed">Every <input type="number" min="2" max="60" inputmode="numeric" data-path="tags.${k}.${ti}.every" data-type="num" value="${t.every||''}" placeholder="any" style="width:64px!important"> days</label>`:''}
       ${k!=='flag'&&t.every?`<label class="ed-min" title="When it was last done. The board also remembers each time she picks it.">Last done <input type="date" data-path="tags.${k}.${ti}.lastDone" value="${esc(t.lastDone||'')}" style="width:auto!important"></label>`:''}
       ${hasTimer?`<label class="ed-min">Timer <input type="number" min="1" max="300" inputmode="numeric" data-path="tags.${k}.${ti}.timer" data-type="min" value="${t.timer?Math.round(t.timer/60):''}" placeholder="none"> min</label>`:''}

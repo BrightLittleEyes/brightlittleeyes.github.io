@@ -1274,7 +1274,7 @@ const UNIT_BOOKS = {
         "Was it brave for Sarah to stay? Why?",
         "What did Sarah learn about being brave?"]},
  4:{title:"Mr. Popper’s Penguins", author:"Richard and Florence Atwater", year:1938, chapters:20, color:"#3F6F94",
-  note:"A funny classic. It connects to this unit’s geography of far-away and frozen lands.",
+  note:"A funny classic about a house painter, his family, and a houseful of penguins.",
   plan:[[1,3],[4,6],[7,10],[11,13],[14,16],[17,20]],
   tell:["Tell who Mr. Popper is and what he dreams about.",
         "Tell how the Popper family takes care of Captain Cook.",
@@ -1299,7 +1299,7 @@ const UNIT_BOOKS = {
         "Tell how the story ends and how Wilbur kept his promise."],
   talk:["Fern stood up for a little pig. When have you stood up for someone small?",
         "Charlotte is a true friend to Wilbur. What makes someone a good friend?",
-        "Charlotte works hard to help Wilbur even when she is tired. How is that like the Thankful Jar or Mr. Ortiz’s leaves?",
+        "Charlotte works hard to help Wilbur even when she is tired. When has someone worked hard to help you? How could you thank them?",
         "How does Templeton act? Is he a good friend?",
         "Wilbur is humble even when people say he is special. What does humble mean?",
         "The seasons keep turning on the farm. What does the ending teach about friendship and thankfulness?"]}
@@ -1374,7 +1374,7 @@ function shrinkImage(file){ return new Promise((res,rej)=>{ const fr=new FileRea
 let roster=LS.get("la3-roster",[]), student=LS.get("la3-student",""), prog=LS.get("la3-prog",{}), pin=LS.get("la3-pin","");
 let parentOK=false;
 const saveAll=()=>{ LS.set("la3-roster",roster); LS.set("la3-student",student); LS.set("la3-prog",prog); };
-const P=(s=student)=>{ if(!prog[s]) prog[s]={lessons:{},stars:{},minutes:0,last:null,writing:{},reads:[]}; const p=prog[s]; p.lessons=p.lessons||{}; p.stars=p.stars||{}; p.writing=p.writing||{}; p.reads=p.reads||[]; return p; };
+const P=(s=student)=>{ if(!prog[s]) prog[s]={lessons:{},stars:{},minutes:0,last:null,writing:{},reads:[]}; const p=prog[s]; p.lessons=p.lessons||{}; p.stars=p.stars||{}; p.writing=p.writing||{}; p.reads=p.reads||[]; p.days=p.days||{}; return p; };
 const LP=(i,s=student)=>{ const p=P(s); if(!p.lessons[i]) p.lessons[i]={sec:{},done:false}; return p.lessons[i]; };
 
 /* ================= read aloud ================= */
@@ -1394,7 +1394,32 @@ const SEC = {
   test:{n:"Spelling Check",ic:"🔤",c:"var(--spell)"}
 };
 const secsOf=L=> L.review ? ["read","test","gram","poem","book"] : ["read","spell","gram",L.extra.kind,"write","book"];
-const TOTAL_STARS = LESSONS.reduce((a,L)=>a+secsOf(L).length+2,0);
+/* ---- reading plan: one continuous list of reading days. Lessons 1–30 use the first 30; the rest are extra Reading Days. ---- */
+BOOKDB.hardy={title:"The Hardy Boys: The House on the Cliff", short:"The Hardy Boys", author:"Franklin W. Dixon", total:20, unit:"chapter", color:"#2F5D8A",
+  note:"Hardy Boys #2. Use the revised edition (20 chapters, the blue hardcover most libraries have). The 1927 original tells a different version of the story."};
+BOOK_ORDER.splice(BOOK_ORDER.indexOf("cam")+1,0,"hardy");
+const HARDY_SLOTS=[
+ {b:"hardy",r:[1,3],tell:"Tell who Frank and Joe Hardy are, who their father is, and what made the house on the cliff seem strange.",
+  talk:"Frank and Joe are brothers and a good team. How are they alike, and how are they different? How do you work as a team with your brothers or sisters?"},
+ {b:"hardy",r:[4,5],tell:"Tell what the boys saw or found when they went near the house on the cliff.",
+  talk:"The house seems spooky. Do you think something strange is really going on? What clues make you think so?"},
+ {b:"hardy",r:[6,8],tell:"Tell what clues the boys have found so far about the smugglers.",
+  talk:"A good detective notices small things, just like Cam Jansen. What small clue would you have noticed?"},
+ {b:"hardy",r:[9,10],tell:"Tell what happened to Mr. Hardy, and what the boys decided to do.",
+  talk:"The boys are worried about their dad. What can you do when you are worried about someone you love?"},
+ {b:"hardy",r:[11,13],tell:"Tell how the boys’ friends helped, and what new trouble came up.",
+  talk:"Chet and Biff stick with the Hardy boys. What makes someone a loyal friend?"},
+ {b:"hardy",r:[14,15],tell:"Tell about the boys’ search. What did they discover?",
+  talk:"Being brave is good, and being wise matters too. When should the boys ask grown-ups for help?"},
+ {b:"hardy",r:[16,18],tell:"Tell what happened when the boys got close to the smugglers.",
+  talk:"Make a prediction! How do you think the mystery will end? Write your guess down before you read the last chapters."},
+ {b:"hardy",r:[19,20],tell:"Tell how the mystery was solved. Was your prediction right?",
+  talk:"Which detectives did you like better, Cam Jansen or the Hardy Boys? Why?"}
+];
+const BOXCAR_SLOTS=UNIT_BOOKS[1].plan.map((r,j)=>({b:"boxcar",r,tell:UNIT_BOOKS[1].tell[j],talk:UNIT_BOOKS[1].talk[j]}));
+const READ_SLOTS=[PLAN[1][0],PLAN[1][1],...HARDY_SLOTS,...BOXCAR_SLOTS,...PLAN[2],...PLAN[3],...PLAN[4],...PLAN[5]];
+const NDAYS=READ_SLOTS.length;
+const TOTAL_STARS = LESSONS.reduce((a,L)=>a+secsOf(L).length+2,0) + (NDAYS-LESSONS.length);
 function starCount(s=student){ return Object.keys(P(s).stars).reduce((a,k)=>a+(k.endsWith("-done")?2:1),0); }
 function addStar(key){ if(!student||P().stars[key]) return false; P().stars[key]=Date.now(); P().last=Date.now(); saveAll(); updateStars(); return true; }
 function updateStars(){ $("starCount").textContent=starCount(); }
@@ -1409,7 +1434,8 @@ const BADGES=[
   {i:"📚",n:"Bookworm",d:"Read 300 minutes",ok:s=>(P(s).minutes||0)>=300},
   {i:"🚃",n:"Boxcar Reader",d:"Finish The Boxcar Children",ok:s=>bookDone("boxcar",s)},
   {i:"🐒",n:"Mystery Solver",d:"Finish the Cam Jansen mystery",ok:s=>bookDone("cam",s)},
-  {i:"📕",n:"Six Great Books",d:"Finish every book in the course",ok:s=>BOOK_ORDER.every(k=>bookDone(k,s))},
+  {i:"🔦",n:"Hardy Boys Detective",d:"Finish The House on the Cliff",ok:s=>bookDone("hardy",s)},
+  {i:"📕",n:`${BOOK_ORDER.length} Great Books`,d:"Finish every book in the course",ok:s=>BOOK_ORDER.every(k=>bookDone(k,s))},
   {i:"🔤",n:"Super Speller",d:"Spell 8 of 8 on the first try",ok:s=>Object.values(P(s).lessons).some(l=>l.sec&&((l.sec.spell&&l.sec.spell.score===8)||(l.sec.test&&l.sec.test.score===8)))},
   {i:"🌼",n:"Wildflower Scholar",d:"Finish all 30 lessons",ok:s=>LESSONS.every((_,i)=>lessonDone(i,s))}
 ];
@@ -1450,18 +1476,23 @@ $("addForm").addEventListener("submit",e=>{ e.preventDefault(); const n=$("newNa
 function renderHome(){
   const nx=nextLesson(), all=LESSONS.every((_,i)=>lessonDone(i)), NL=LESSONS[nx], n=starCount();
   const doneN=LESSONS.filter((_,i)=>lessonDone(i)).length;
+  const ndH=(()=>{ for(let j=LESSONS.length;j<NDAYS;j++) if(!dayDone(j)) return j; return -1; })();
   let h=`<div class="card hero"><div>
     <div class="kicker">Hello, ${esc(student)}!</div>
-    <h1>${all?"You finished every lesson! 🌼":`Lesson ${lessonNo(nx)}: ${esc(NL.story.title)}`}</h1>
+    <h1>${all&&ndH>=0?`Reading Day ${ndH+1}: ${esc(BOOKDB[planOf(ndH).b].short||BOOKDB[planOf(ndH).b].title)}`:all?"You finished every lesson! 🌼":`Lesson ${lessonNo(nx)}: ${esc(NL.story.title)}`}</h1>
     <div class="note" style="font-size:16px;margin-top:4px">${doneN} of ${LESSONS.length} lessons done · ⭐ ${n} of ${TOTAL_STARS} stars</div>
     <div class="starbar"><i style="width:${n/TOTAL_STARS*100}%"></i></div></div>
-    <button class="btn go" onclick="go('lesson',${nx})">${all?"Review":(P().lessons[nx]&&Object.keys(P().lessons[nx].sec).length?"Keep going ➜":"Start lesson ➜")}</button></div>`;
+    <button class="btn go" onclick="go('lesson',${all&&ndH>=0?ndH:nx})">${all&&ndH>=0?"Keep reading ➜":all?"Review":(P().lessons[nx]&&Object.keys(P().lessons[nx].sec).length?"Keep going ➜":"Start lesson ➜")}</button></div>`;
   UNITS.forEach(U=>{
     const ls=unitLessons(U.n), d=ls.filter(([,i])=>lessonDone(i)).length;
-    h+=`<div class="unit"><div class="unit-head"><div class="badge-ic" style="background:${U.color}">${U.icon}</div><div><h2>Unit ${U.n}: ${U.title}</h2><span>${d} of ${ls.length} lessons done · 📕 ${[...new Set(PLAN[U.n].map(p=>p.b))].map(k=>`<i>${BOOKDB[k].short||BOOKDB[k].title}</i>`).join(", then ")} · 🎵 “${U.poem.title}”</span></div></div><div class="lgrid">`;
+    h+=`<div class="unit"><div class="unit-head"><div class="badge-ic" style="background:${U.color}">${U.icon}</div><div><h2>Unit ${U.n}: ${U.title}</h2><span>${d} of ${ls.length} lessons done · 📕 ${[...new Set(ls.map(([,j])=>planOf(j).b))].map(k=>`<i>${BOOKDB[k].short||BOOKDB[k].title}</i>`).join(", then ")} · 🎵 “${U.poem.title}”</span></div></div><div class="lgrid">`;
     ls.forEach(([L,i])=>{ h+=`<button class="ltile ${lessonDone(i)?"done":""} ${i===nx&&!all?"next":""} ${L.review?"rev":""}" onclick="go('lesson',${i})"><b>Lesson ${lessonNo(i)}</b><span>${L.review?"Review & Check":esc(L.story.title)}</span></button>`; });
     h+=`</div></div>`;
   });
+  const dBooks=[...new Set(READ_SLOTS.slice(LESSONS.length).map(p=>p.b))];
+  h+=`<div class="unit"><div class="unit-head"><div class="badge-ic" style="background:var(--book)">📕</div><div><h2>Keep Reading</h2><span>Reading days after Lesson ${LESSONS.length} · 📕 ${dBooks.map(k=>`<i>${BOOKDB[k].short||BOOKDB[k].title}</i>`).join(", then ")}</span></div></div><div class="lgrid">`;
+  for(let j=LESSONS.length;j<NDAYS;j++){ const p=planOf(j); h+=`<button class="ltile ${dayDone(j)?"done":""} ${all&&j===ndH?"next":""}" onclick="go('lesson',${j})"><b>Reading Day ${j+1}</b><span>${esc(BOOKDB[p.b].short||BOOKDB[p.b].title)}: ${esc(chapTxt(p))}</span></button>`; }
+  h+=`</div></div>`;
   h+=`<h2 style="font-size:24px;margin-top:26px">My badges 🏅</h2><div class="badges">${BADGES.map(b=>`<div class="badge ${b.ok(student)?"":"locked"}"><div class="bi">${b.i}</div><b>${b.n}</b>${b.d}</div>`).join("")}</div>
   <h2 style="font-size:24px;margin-top:26px">My art gallery 🖼️</h2><div id="homeGallery"></div>
   <div style="text-align:center;margin-top:30px"><button class="link" onclick="go('parent')">👪 Parent area</button></div>`;
@@ -1490,7 +1521,19 @@ function secShell(k,title,body){ const sd=LP(curLesson).sec[k], scored=!!(sd&&sd
   if(scored) body=bigScore(k,sd,false)+body;
   return `<section class="card sec ${scored?"wasdone":""}" id="sec-${k}"><div class="sec-h" style="background:${SEC[k].c}"><span class="ic">${SEC[k].ic}</span><h2>${title||SEC[k].n}</h2><span class="chk">${secDone(curLesson,k)?(scored?`⭐ ${sd.score}/${sd.total}`:"✓ Done"):""}</span></div><div class="sec-b">${body}</div></section>`; }
 
+function renderDay(i){
+  curLesson=-1; const p=planOf(i), B=BOOKDB[p.b], s=P().days[i];
+  $("lesson").innerHTML=`<div class="lhead"><div class="kicker" style="color:var(--book)">📕 Keep Reading · after Lesson ${LESSONS.length}</div>
+    <h1>Reading Day ${i+1}</h1>
+    <div class="row" style="margin-top:8px"><button class="btn ghost small" onclick="go('lesson',${i-1})">‹ ${i-1<LESSONS.length?`Lesson ${i}`:`Day ${i}`}</button>${i<NDAYS-1?`<button class="btn ghost small" onclick="go('lesson',${i+1})">Day ${i+2} ›</button>`:""}${s&&s.done?`<span class="complete-badge">✓ Finished</span>`:""}</div></div>
+    <section class="card sec" id="sec-book"><div class="sec-h" style="background:${SEC.book.c}"><span class="ic">${SEC.book.ic}</span><h2>Book Time: ${B.short||B.title}</h2><span class="chk">${s&&s.done?"✓ Done":""}</span></div><div class="sec-b">${bookBody(i,s)}</div></section>`;
+  $("bkDone").onclick=()=>{ const m=Math.max(1,Math.min(180,parseInt($("bkMin").value)||20));
+    P().minutes=(P().minutes||0)+m; P().reads.push({at:Date.now(),min:m,title:B.title,ch:chapTxt(p),lesson:i});
+    P().days[i]={done:true,at:Date.now(),min:m,b:p.b,ch:p.r}; P().last=Date.now(); addStar(`D${i}`); saveAll();
+    confetti(p.r[1]===B.total?30:12); renderDay(i); };
+}
 function renderLesson(i,finished){
+  if(i>=LESSONS.length){ renderDay(i); return; }
   curLesson=i; const L=LESSONS[i], U=UNITS[L.u-1];
   if(finished){
     confetti(30);
@@ -1702,14 +1745,18 @@ WIRE.geo=(L,i)=>{ wireQs($("geoQs"),L.extra.q.map(()=>({type:"mc"})),(sc,t)=>mar
 
 /* ---- book time (classic chapter books, scheduled lesson by lesson) ---- */
 const posInUnit=i=>unitLessons(LESSONS[i].u).findIndex(([,j])=>j===i);
-const planOf=i=>PLAN[LESSONS[i].u][posInUnit(i)];
+const planOf=i=>READ_SLOTS[i];
 function chapTxt(p){ if(p.label) return p.label; const r=p.r; return r[0]===r[1]?`Chapter ${r[0]}`:`Chapters ${r[0]}–${r[1]}`; }
-function bookPct(key,who=student){ let last=0; LESSONS.forEach((L,j)=>{ const p=planOf(j); if(p.b!==key) return; const sc=P(who).lessons[j]; if(sc&&sc.sec&&sc.sec.book&&sc.sec.book.done) last=Math.max(last,p.r[1]); }); return last; }
+function bookRec(j,who=student){ const p=P(who); if(j<LESSONS.length){ const l=p.lessons[j]; return l&&l.sec&&l.sec.book; } return p.days[j]; }
+function bookPct(key,who=student){ let last=0; for(let j=0;j<NDAYS;j++){ const rec=bookRec(j,who); if(!rec||!rec.done) continue;
+    const b=rec.b||planOf(j).b, ch=Array.isArray(rec.ch)?rec.ch:planOf(j).r; if(b===key) last=Math.max(last,ch[1]); } return last; }
+const dayDone=(j,who=student)=>!!(P(who).days[j]&&P(who).days[j].done);
 const bookDone=(key,who=student)=>bookPct(key,who)>=BOOKDB[key].total;
 function upToTxt(B,n){ return B.unit==="half"?(n>=2?"You finished it!":"You read the first half."):`You’ve read through chapter ${n}.`; }
-BUILD.book=(L,i)=>{ const p=planOf(i), B=BOOKDB[p.b], s=LP(i).sec.book, upto=bookPct(p.b);
+BUILD.book=(L,i)=>{ const p=planOf(i), B=BOOKDB[p.b]; return secShell("book",`Book Time: ${B.short||B.title}`,bookBody(i,LP(i).sec.book)); };
+function bookBody(i,s){ const p=planOf(i), B=BOOKDB[p.b], upto=bookPct(p.b);
   const first=p.r[0]===1, last=p.r[1]===B.total, ct=chapTxt(p);
-  return secShell("book",`Book Time: ${B.short||B.title}`,`
+  return `
     <div class="bookcard"><div class="cover" style="background:${B.color}">${B.short||B.title}</div><div>
       <h3><i>${B.title}</i></h3><div class="note" style="font-size:16px">by ${B.author}${B.unit==="chapter"?` · ${B.total} chapters`:""}</div>
       <div class="chap">📖 Today: ${ct}${last&&B.unit==="chapter"?" (the end!)":""}</div>
@@ -1719,7 +1766,7 @@ BUILD.book=(L,i)=>{ const p=planOf(i), B=BOOKDB[p.b], s=LP(i).sec.book, upto=boo
     <div class="task" style="background:#F6F1E8"><span class="ti">💬</span><div><b>Talk about it:</b> ${p.talk}</div></div>
     ${last?`<div class="task" style="background:#FBF0F2"><span class="ti">🎉</span><div><b>You finished the book!</b> Draw a picture of your favorite part and tell someone why you liked it.</div></div>`:""}
     <div class="row" style="margin-top:10px"><label for="bkMin">Minutes read:</label><input type="number" id="bkMin" min="1" max="180" style="width:110px" value="${s&&s.min||20}"></div>
-    <div class="done-row"><span class="note" id="bkMsg"></span><button class="btn" style="background:var(--book)" id="bkDone" ${s&&s.done?"disabled":""}>${s&&s.done?"✓ Done":"I read it and told it back"}</button></div>`); };
+    <div class="done-row"><span class="note" id="bkMsg"></span><button class="btn" style="background:var(--book)" id="bkDone" ${s&&s.done?"disabled":""}>${s&&s.done?"✓ Done":"I read it and told it back"}</button></div>`; }
 WIRE.book=(L,i)=>{ const p=planOf(i), B=BOOKDB[p.b];
   $("bkDone").onclick=()=>{ const m=Math.max(1,Math.min(180,parseInt($("bkMin").value)||20));
     P().minutes=(P().minutes||0)+m; P().reads.push({at:Date.now(),min:m,title:B.title,ch:chapTxt(p),lesson:i}); markSec("book",{min:m,title:B.title,b:p.b,ch:p.r}); const b=$("bkDone"); if(b){b.disabled=true;b.textContent="✓ Done";} }; };
@@ -1817,8 +1864,10 @@ function renderParent(){
   else if(pview.tab==="writing"&&who){ const w=P(who).writing; const ks=Object.keys(w).filter(k=>w[k]&&w[k].trim()).sort((a,b)=>a-b);
     body=kids+(ks.length?ks.map(k=>`<div class="wsample"><b>Lesson ${lessonNo(+k)} · ${esc(LESSONS[k].write?strip(LESSONS[k].write.p):"")}</b>${esc(w[k])}</div>`).join(""):`<p class="note">Writing typed into the app shows up here. Notebook writing won't appear, so check that in person!</p>`); }
   else if(pview.tab==="reading"&&who){ const r=P(who).reads.slice().reverse();
-    body=kids+`<h3 style="font-size:20px">The course books, in order</h3><p class="note">Have each one on hand before its unit starts. The library usually has them all.</p>
-      <table class="t"><tr><th>Lessons</th><th>Book</th><th>Progress</th></tr>${BOOK_ORDER.map(k=>{ const B=BOOKDB[k], up=bookPct(k,who), ls=LESSONS.map((_,j)=>j).filter(j=>planOf(j).b===k); return `<tr><td style="white-space:nowrap">${ls[0]+1}–${ls[ls.length-1]+1}</td><td><i>${B.title}</i>, ${B.author}<div class="note" style="font-size:13px">${B.note}</div></td><td style="white-space:nowrap">${up>=B.total?"✓ Finished":up?(B.unit==="half"?"first half read":`through ch. ${up} of ${B.total}`):"not started"}</td></tr>`; }).join("")}</table>
+    body=kids+`<h3 style="font-size:20px">The course books, in order</h3><p class="note">Have each one on hand before she reaches it. The library usually has them all. Reading Days come after Lesson ${LESSONS.length} and are on her home screen under Keep Reading.</p>
+      <table class="t"><tr><th>When</th><th>Book</th><th>Progress</th></tr>${BOOK_ORDER.map(k=>{ const B=BOOKDB[k], up=bookPct(k,who), ls=READ_SLOTS.map((_,j)=>j).filter(j=>planOf(j).b===k);
+        const N=LESSONS.length, a=ls[0], z=ls[ls.length-1], when=z<N?`Lessons ${a+1}–${z+1}`:a>=N?`Reading Days ${a+1}–${z+1}`:`Lessons ${a+1}–${N}, then Reading Days ${N+1}–${z+1}`;
+        return `<tr><td style="min-width:110px">${when}</td><td><i>${B.title}</i>, ${B.author}<div class="note" style="font-size:13px">${B.note}</div></td><td style="white-space:nowrap">${up>=B.total?"✓ Finished":up?(B.unit==="half"?"first half read":`through ch. ${up} of ${B.total}`):"not started"}</td></tr>`; }).join("")}</table>
       <p style="margin-top:18px"><b>${P(who).minutes||0} minutes</b> of reading so far.</p>`+(r.length?`<table class="t"><tr><th>Date</th><th>Book</th><th>Read</th><th>Minutes</th></tr>${r.map(x=>`<tr><td>${fmtDate(x.at)}</td><td>${esc(x.title||"—")}</td><td>${esc(x.ch||"")}</td><td>${x.min}</td></tr>`).join("")}</table>`:`<p class="note">No reading logged yet.</p>`)
       +`<h3 style="margin-top:22px;font-size:20px">More Boxcar Children</h3><p class="note">For extra reading after Unit 1. These are the next books Gertrude Chandler Warner wrote, in order:</p><ol>${MORE_BOXCAR.map(t=>`<li><i>${esc(t)}</i></li>`).join("")}</ol>
       <h3 style="margin-top:22px;font-size:20px">More good books for free reading</h3><p class="note">Wholesome, well-written books at about a 3rd grade level. Please preview any book yourself, since editions differ.</p><ul class="booklist">${BOOKS.map(([t,a])=>`<li><i>${esc(t)}</i>, ${esc(a)}</li>`).join("")}</ul>`; }
@@ -1833,7 +1882,7 @@ function renderParent(){
       <li><b>🎵 Poetry, 🎨 Art, or 🌍 Geography:</b> these take turns. Poems are classics to memorize. Art lessons link to famous paintings on Wikimedia Commons. Please open those with your child, since the app can't show the pictures itself.</li>
       <li><b>🖌️ Art projects:</b> 15 hands-on projects, one in every art lesson and every poetry lesson. Each has a supply list and step-by-step directions. Your child can save a photo of the finished piece to their art gallery.</li>
       <li><b>📝 Writing:</b> a prompt to do in a notebook or type into the app.</li>
-      <li><b>📕 Book Time:</b> every lesson assigns the next chapters of a good chapter book. Your child reads from a real copy, tells it back, and talks about one question with you. The books are <i>Cam Jansen and the Mystery at the Monkey House</i>, <i>The Boxcar Children</i>, <i>Little House in the Big Woods</i>, <i>The Courage of Sarah Noble</i>, <i>Mr. Popper’s Penguins</i>, and <i>Charlotte’s Web</i>. The full list is under 📚 Reading log.</li></ul>
+      <li><b>📕 Book Time:</b> every lesson assigns the next chapters of a good chapter book. Your child reads from a real copy, tells it back, and talks about one question with you. After Lesson 30, Book Time continues on extra Reading Days until every book is finished. The books are <i>Cam Jansen and the Mystery at the Monkey House</i>, <i>The Hardy Boys: The House on the Cliff</i>, <i>The Boxcar Children</i>, <i>Little House in the Big Woods</i>, <i>The Courage of Sarah Noble</i>, <i>Mr. Popper’s Penguins</i>, and <i>Charlotte’s Web</i>. The full list is under 📚 Reading log.</li></ul>
       <p>Children earn a star for each part and two bonus stars for finishing a lesson. “Read it to me” and the spelling words use your device's built-in voice.</p>`; }
   else if(pview.tab==="settings"){ let code=""; try{ code=btoa(unescape(encodeURIComponent(JSON.stringify({app:"wildflower-la3",roster,prog})))); }catch(e){}
     body=`<h3 style="font-size:20px">Back up all progress</h3><p class="note">Progress is saved in this browser on this device. If the browser's data is cleared, it's lost. Copy this code somewhere safe so you can restore it later or move it to another device.</p>

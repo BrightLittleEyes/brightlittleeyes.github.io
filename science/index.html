@@ -366,6 +366,9 @@ table.grouped .gcount{font-size:13px;color:var(--muted,#5b6770);font-weight:500;
 .mtag{position:absolute;top:8px;right:8px;font-family:var(--mono);font-size:11px;font-weight:700;background:#F2B705;color:#15252A;border-radius:99px;padding:2px 8px}
 .mtag.ltag{background:#E4E7EA;color:#46525b}
 .tile.lockt{opacity:.6}
+.fbig{display:inline-block;font-size:20px;letter-spacing:.04em;color:#B7860F;margin:2px 0}
+.fbig.p{color:#2E7D4F;font-size:17px}
+.tile.fmast{border-width:3px;border-color:#F2B705;background:#FFF9E3}
 .mtag.ptag{background:#DDF1E4;color:#1F5E3A}
 
 .climbsvg{width:100%;max-width:460px;display:block;margin:0 auto 10px}
@@ -2588,6 +2591,9 @@ function unitLockWhy(stu, u){
   const p = prevUnit(u); return p && !passed(stu,p.id) ? "prev" : null;
 }
 function unitOpen(stu, u){ return !unitLockWhy(stu,u); }
+/* a final is ★ Mastered once it's passed AND every unit in its set is ★ Mastered (review cleared) */
+const finalMastered = (stu, f) => finalPassed(stu,f) && setUnits(f).every(u => mastered(stu,u.id));
+const finalReviewLeft = (stu, f) => setUnits(f).reduce((a,u) => a + reviewLeft(stu,u.id), 0);
 function finalLock(f){
   if (f==="final2" && !finalPassed(student,"final")) return "set";
   if (!setUnits(f).every(u => mastered(student,u.id))) return "units";
@@ -2625,7 +2631,10 @@ function parentUnitTable(who){
     if (!us.length) return "";
     return `<tr class="grp"><th colspan="5"><span class="pill ${cls}">${label}</span> <span class="gcount">${us.length} unit${us.length>1?"s":""}${sub?` · ${sub}`:""}</span></th></tr>` +
       us.map(u => `<tr><td>${u.n}. ${esc(u.name)}</td><td class="n">${lessonsDone(who,u)}/${u.lessons.length}</td><td class="n">${best(who,u.id,"test")!=null?best(who,u.id,"test")+"%":"–"}</td><td class="n">${reviewLeft(who,u.id)}</td><td>${esc(unitLeft(who,u))}</td></tr>`).join("");
-  }).join("");
+  }).join("") + `<tr class="grp"><th colspan="5"><span class="pill m">Final exams</span></th></tr>` +
+    ["final","final2"].map((f,i) => { const b = best(who,f,"final"), r = finalReviewLeft(who,f);
+      const left = finalMastered(who,f) ? "★ Mastered" : finalPassed(who,f) ? `✓ Passed · review ${r} question${r===1?"":"s"} to master` : b==null ? "Not taken" : "Score 80%+";
+      return `<tr><td>Final Exam ${i+1}: ${titleOf(f)}</td><td></td><td class="n">${b!=null?b+"%":"–"}</td><td class="n">${finalPassed(who,f)?r:""}</td><td>${left}</td></tr>`; }).join("");
   return `<div class="tblwrap" style="margin-bottom:14px"><table class="grouped"><thead><tr><th>Unit</th><th>Lessons</th><th>Best test</th><th>Review left</th><th>What's left</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
@@ -2679,7 +2688,9 @@ function nextStepCard(){
   const n = nextStep(); if (!n) return "";
   const due = dueList().length;
   return `<button class="cont next" id="cont"><span class="eyebrow">Your next step · ${esc(n.eye)}</span><b>${esc(n.title)}</b><small>${esc(n.sub)}</small><span class="arrow">→</span></button>
-  ${due && !n.eye.startsWith("Daily") ? `<p class="note">You also have ${due} review question${due>1?"s":""} waiting today.</p>` : ""}`;
+  ${due && !n.eye.startsWith("Daily") ? `<p class="note">You also have ${due} review question${due>1?"s":""} waiting today.</p>` : ""}
+  ${["final","final2"].filter(f => finalPassed(student,f) && !finalMastered(student,f)).map(f => { const r = finalReviewLeft(student,f), us = setUnits(f).filter(u=>reviewLeft(student,u.id)).map(u=>u.n);
+    return `<p class="note fnote">🏆 <b>Final Exam ${f==="final"?1:2} is ✓ Passed.</b> Clear ${r} more review question${r===1?"":"s"} from Unit${us.length>1?"s":""} ${us.join(", ")} to make it <b>★ Mastered</b>. They come up in your daily review.</p>`; }).join("")}`;
 }
 
 /* ---------- lessons: the same 6 steps every time ---------- */
@@ -3009,8 +3020,9 @@ function tileHTML(u){
 }
 function finalTile(id, sym, name){
   const lk = student ? finalLock(id) : null, us = setUnits(id), m = student ? us.filter(u=>mastered(student,u.id)).length : 0;
-  const note = finalPassed(student,id) ? "✓ Passed" : lk==="set" ? "Pass Final Exam 1 first" : lk==="units" ? `${m} of ${us.length} units mastered` : lk==="finaltomorrow" ? "Opens again tomorrow" : "Ready! Score 80%+";
-  return `<button class="tile ${lk&&!finalPassed(student,id)?"lockt":""}" style="--c:var(--u6)" data-final="${id}">${lk&&!finalPassed(student,id)?`<span class="mtag ltag">🔒 Locked</span>`:""}
+  const fm = student && finalMastered(student,id), frl = student ? finalReviewLeft(student,id) : 0;
+  const note = fm ? `<b class="fbig">★ MASTERED</b>` : finalPassed(student,id) ? `<b class="fbig p">✓ PASSED</b><br>${frl} review question${frl===1?"":"s"} left to master` : lk==="set" ? "Pass Final Exam 1 first" : lk==="units" ? `${m} of ${us.length} units mastered` : lk==="finaltomorrow" ? "Opens again tomorrow" : "Ready! Score 80%+";
+  return `<button class="tile ${lk&&!finalPassed(student,id)?"lockt":""} ${fm?"fmast":""}" style="--c:var(--u6)" data-final="${id}">${fm ? `<span class="mtag">★ Mastered</span>` : student && finalPassed(student,id) ? `<span class="mtag ptag">✓ Passed</span>` : lk ? `<span class="mtag ltag">🔒 Locked</span>` : ""}
       <span class="num">★</span><span class="sym">${sym}</span><span class="nm">${name}</span>
       <span class="checks"><small>${student ? note : "20 questions"}</small></span>
       <span class="mass"><span>Best</span>${starStr(student?bestStars(student,id,"final"):0)}</span>
@@ -3197,7 +3209,7 @@ function renderProgress(){
     <thead><tr><th>Unit</th><th>Lessons</th><th>Vocab game</th><th>Quiz</th><th>Test</th><th>Status</th></tr></thead>
     <tbody>${UNITS.map(u=>`<tr><td>${u.n}. ${esc(u.name)}</td><td class="n">${lessonsDone(student,u)}/${u.lessons.length}</td>
       <td>${starStr(bestStars(student,u.id,"game"))}</td><td>${starStr(bestStars(student,u.id,"quiz"))}</td><td>${starStr(bestStars(student,u.id,"test"))}</td><td>${mastered(student,u.id)?'<span class="pill g">★ Mastered</span>':passed(student,u.id)?`<span class="note">✓ Passed · ${reviewLeft(student,u.id)} to review</span>`:'<span class="note">Not yet</span>'}</td></tr>`).join("")}
-      <tr><td>Final Exam 1</td><td></td><td></td><td></td><td>${starStr(bestStars(student,"final","final"))}</td></tr><tr><td>Final Exam 2</td><td></td><td></td><td></td><td>${starStr(bestStars(student,"final2","final"))}</td></tr></tbody></table></div>
+      ${["final","final2"].map((f,i)=>`<tr><td>Final Exam ${i+1}</td><td></td><td></td><td></td><td>${starStr(bestStars(student,f,"final"))}</td><td>${finalMastered(student,f)?'<span class="pill g">★ Mastered</span>':finalPassed(student,f)?`<span class="note">✓ Passed · ${finalReviewLeft(student,f)} to review</span>`:'<span class="note">Not yet</span>'}</td></tr>`).join("")}</tbody></table></div>
   <div class="section-h"><h2>History</h2></div>
   <div class="tblwrap">${mine.length ? `<table><thead><tr><th>When</th><th>What</th><th>Score</th><th>Stars</th></tr></thead>
     <tbody>${mine.map(r=>`<tr><td class="n">${fmtDate(r.at)}</td><td>${esc(kindLabel(r.kind))} · ${esc(isFinal(r.unit)?titleOf(r.unit):"Unit "+unitById(r.unit).n)}</td><td class="n">${r.kind==="game"?r.mistakes+" mistakes":r.score+"/"+r.total}</td><td>${starStr(r.stars??starsFor(r.pct))}</td></tr>`).join("")}</tbody></table>`

@@ -597,6 +597,16 @@ render();
     return c.textContent.replace(/\s+/g," ").replace(/(\.\s*){2,}/g,". ").trim();
   }
   try{ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged=function(){ speechSynthesis.getVoices(); }; }catch(e){}
+  /* Shared reading voice for the 3rd grade apps (saved per device as "ble-voice").
+     "" = Joelle if this device shares it with web apps, otherwise the device's own voice.
+     "system" = always the device's own voice (Settings > Accessibility > Spoken Content).
+     anything else = that exact voice. */
+  function bleVoice(){ try{ var want=localStorage.getItem("ble-voice")||""; if(want==="system") return null;
+    var vs=speechSynthesis.getVoices().filter(function(v){return /^en(-|_)/i.test(v.lang);});
+    if(want){ var w=vs.find(function(v){return v.voiceURI===want;})||vs.find(function(v){return v.name===want;}); if(w) return w; }
+    return vs.find(function(v){return /joelle/i.test(v.name) && /premium|enhanced/i.test(v.name+v.voiceURI);})||vs.find(function(v){return /joelle/i.test(v.name);})||null;
+   }catch(e){ return null; } }
+  
   function speak(btn,card){
     if(current===btn){ stop(); return; }
     stop();
@@ -604,8 +614,8 @@ render();
     u.rate=0.9;
     var all=speechSynthesis.getVoices();
     var vs=all.filter(function(v){return /^en(-|_)/i.test(v.lang);});
-    var pick=vs.find(function(v){return /joelle/i.test(v.name) && /premium|enhanced/i.test(v.name+v.voiceURI);})||vs.find(function(v){return /joelle/i.test(v.name);})||vs.find(function(v){return v.default;})||vs.find(function(v){return /samantha|google us english|aria|jenny/i.test(v.name);})||vs[0];
-    if(pick){ u.voice=pick; u.lang=pick.lang; }
+    var pick=bleVoice();
+    if(pick){ u.voice=pick; u.lang=pick.lang; } else u.lang="en-US";
     u.onend=u.onerror=function(){ if(current===btn) stop(); };
     current=btn; btn.setAttribute("aria-pressed","true"); btn.lastChild.textContent="Stop";
     speechSynthesis.speak(u);

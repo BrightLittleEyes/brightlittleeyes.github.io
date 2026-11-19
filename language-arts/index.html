@@ -1424,11 +1424,17 @@ const P=(s=student)=>{ if(!prog[s]) prog[s]={lessons:{},stars:{},minutes:0,last:
 const LP=(i,s=student)=>{ const p=P(s); if(!p.lessons[i]) p.lessons[i]={sec:{},done:false}; return p.lessons[i]; };
 
 /* ================= read aloud ================= */
-let voice=null;
-function pickVoice(){ try{ const v=speechSynthesis.getVoices().filter(v=>/^en[-_]US/i.test(v.lang));
-  voice=v.find(x=>/natural|neural/i.test(x.name))||v.find(x=>/samantha|aria|jenny|google us/i.test(x.name))||v[0]||null; }catch(e){} }
-try{ pickVoice(); speechSynthesis.onvoiceschanged=pickVoice; }catch(e){}
-function say(text,rate=.9){ try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(strip(text).replace(/[“”]/g,'"')); if(voice)u.voice=voice; u.rate=rate; u.lang="en-US"; speechSynthesis.speak(u); return true; }catch(e){ return false; } }
+/* Shared reading voice for the 3rd grade apps (saved per device as "ble-voice").
+   "" = Joelle if this device shares it with web apps, otherwise the device's own voice.
+   "system" = always the device's own voice (Settings > Accessibility > Spoken Content).
+   anything else = that exact voice. */
+function bleVoice(){ try{ var want=localStorage.getItem("ble-voice")||""; if(want==="system") return null;
+  var vs=speechSynthesis.getVoices().filter(function(v){return /^en(-|_)/i.test(v.lang);});
+  if(want){ var w=vs.find(function(v){return v.voiceURI===want;})||vs.find(function(v){return v.name===want;}); if(w) return w; }
+  return vs.find(function(v){return /joelle/i.test(v.name) && /premium|enhanced/i.test(v.name+v.voiceURI);})||vs.find(function(v){return /joelle/i.test(v.name);})||null;
+ }catch(e){ return null; } }
+try{ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices(); }catch(e){}
+function say(text,rate=.9){ try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(strip(text).replace(/[“”]/g,'"')); const v=bleVoice(); if(v){ u.voice=v; u.lang=v.lang; } else u.lang="en-US"; u.rate=rate; speechSynthesis.speak(u); return true; }catch(e){ return false; } }
 function hush(){ try{ speechSynthesis.cancel(); }catch(e){} }
 
 /* ================= course structure ================= */
@@ -1931,7 +1937,11 @@ function renderParent(){
       <li><b>📕 Book Time:</b> every lesson assigns the next chapters of a good chapter book. Your child reads from a real copy, tells it back, and talks about one question with you. After Lesson 30, Book Time continues on extra Reading Days until every book is finished. The books are <i>Cam Jansen and the Mystery at the Monkey House</i>, <i>The Hardy Boys: The House on the Cliff</i>, <i>The Boxcar Children</i>, <i>Little House in the Big Woods</i>, <i>The Courage of Sarah Noble</i>, <i>Mr. Popper’s Penguins</i>, and <i>Charlotte’s Web</i>. The full list is under 📚 Reading log.</li></ul>
       <p>Children earn a star for each part and two bonus stars for finishing a lesson. “Read it to me” and the spelling words use your device's built-in voice.</p>`; }
   else if(pview.tab==="settings"){ let code=""; try{ code=btoa(unescape(encodeURIComponent(JSON.stringify({app:"wildflower-la3",roster,prog})))); }catch(e){}
-    body=`<h3 style="font-size:20px">Back up all progress</h3><p class="note">Progress is saved in this browser on this device. If the browser's data is cleared, it's lost. Copy this code somewhere safe so you can restore it later or move it to another device.</p>
+    body=`<h3 style="font-size:20px">🔈 Reading voice</h3>
+      <p class="note">This voice reads stories, poems, and spelling words. The setting is saved on this device and is shared with the 3rd grade Bible and history apps.</p>
+      <div class="row"><select id="vsel" style="font-size:17px;padding:9px 12px;border-radius:12px;border:2px solid var(--line);max-width:100%"></select><button class="btn ghost small" id="vtest">▶ Test</button></div>
+      <p class="note" id="vnote"></p>
+      <h3 style="font-size:20px;margin-top:20px">Back up all progress</h3><p class="note">Progress is saved in this browser on this device. If the browser's data is cleared, it's lost. Copy this code somewhere safe so you can restore it later or move it to another device.</p>
       <textarea id="bk" readonly rows="4" style="width:100%;font-size:13px;font-family:ui-monospace,monospace">${code}</textarea>
       <div class="row" style="margin-top:8px"><button class="btn small" id="bkcopy">Copy backup code</button><span class="note" id="bkmsg"></span></div>
       <h3 style="font-size:20px;margin-top:20px">Restore from a backup code</h3><textarea id="rs" rows="3" style="width:100%;font-size:13px" placeholder="Paste a backup code here"></textarea>
@@ -1946,6 +1956,17 @@ function renderParent(){
   $("lockBtn").onclick=()=>{ parentOK=false; go(student?"home":"pick"); };
   if(pview.tab==="art"&&who) galleryHTML(who).then(g=>{ const el=$("pGallery"); if(el) el.innerHTML=g; });
   if(pview.tab==="settings"){
+    const fillVoices=()=>{ const sel=$("vsel"); if(!sel) return; let vs=[]; try{ vs=speechSynthesis.getVoices().filter(v=>/^en(-|_)/i.test(v.lang)); }catch(e){}
+      const cur=(()=>{ try{ return localStorage.getItem("ble-voice")||""; }catch(e){ return ""; } })();
+      const jo=vs.filter(v=>/joelle/i.test(v.name));
+      sel.innerHTML=`<option value="">Automatic: Joelle if available, otherwise the device’s own voice</option><option value="system">The device’s own voice (from Settings)</option>`+
+        vs.map(v=>`<option value="${esc(v.voiceURI)}">${esc(v.name)} · ${esc(v.lang)}${/premium/i.test(v.name+v.voiceURI)?" · Premium":/enhanced/i.test(v.name+v.voiceURI)?" · Enhanced":""}</option>`).join("");
+      sel.value=[...sel.options].some(o=>o.value===cur)?cur:"";
+      const now=bleVoice();
+      $("vnote").innerHTML=(jo.length?`✓ This device shares <b>Joelle</b> with web apps.`:`Joelle isn’t in this device’s list for web apps, so “Automatic” uses the device’s own voice. On an iPad, set that in Settings → Accessibility → Spoken Content → Voices → English.`)+`<br>Reading with: <b>${now?esc(now.name):"the device’s own voice"}</b>.`; };
+    fillVoices(); try{ speechSynthesis.onvoiceschanged=()=>{ speechSynthesis.getVoices(); fillVoices(); }; }catch(e){}
+    $("vsel").onchange=e=>{ try{ localStorage.setItem("ble-voice",e.target.value); }catch(err){} fillVoices(); };
+    $("vtest").onclick=()=>say("Hello! This is the voice that will read your lessons.");
     $("bkcopy").onclick=()=>{ const ta=$("bk"); try{ navigator.clipboard.writeText(ta.value).then(()=>{$("bkmsg").textContent="Copied.";},()=>{ta.select();$("bkmsg").textContent="Selected. Press copy.";}); }catch(e){ ta.select(); $("bkmsg").textContent="Selected. Press copy."; } };
     let armed=false;
     $("rsgo").onclick=()=>{ let d; try{ d=JSON.parse(decodeURIComponent(escape(atob($("rs").value.trim())))); }catch(e){ $("rsmsg").textContent="That code isn't a valid backup."; return; }

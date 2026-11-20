@@ -394,9 +394,14 @@ async function renderTimeline(){
 function renderSettings(){
   $app.innerHTML = `<section class="card settings"><h2>Settings</h2>
     <label>Student's name<input id="nameIn" value="${esc(progress.name||"")}" placeholder="First name"></label>
+    <div id="bleVoiceBox" style="display:grid;gap:6px;margin:4px 0 8px"><b>🔈 Reading voice</b>
+      <select id="bleVSel" style="font:inherit;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)"></select>
+      <div class="btnrow"><button class="btn" id="bleVTest" type="button">▶ Test</button><button class="btn" id="bleVRef" type="button">↻ Refresh list</button></div>
+      <span class="status" id="bleVNote"></span></div>
     <div class="btnrow"><button class="btn" id="saveSet">Save</button><span class="status" id="setStatus"></span></div>
     <p class="status">Progress is saved on this device. Always open the app the same way (for example, its home-screen icon), and make a backup code below now and then to keep it safe.</p>
   </section>`;
+  try{ bleVoiceUI(); }catch(e){}
   document.getElementById("saveSet").addEventListener("click", ()=>{ progress.name = document.getElementById("nameIn").value.trim(); save(); document.getElementById("setStatus").textContent = "Saved"; });
 }
 
@@ -566,5 +571,27 @@ render();
 <script src="../rhythm/report.js"></script>
 <script>setTimeout(()=>{ try{ const p=JSON.parse(localStorage.getItem('otw-g3-progress-v1')||'{}'); rhythmCatchUp('hist3', Object.values((p&&p.done)||{}).map(d=>d&&d.at)); }catch(e){} }, 1500);</script>
 <script src="../parent-pin.js"></script>
+<script>
+/* Reading-voice picker for the Settings screen (saved on this device as "ble-voice"). */
+function bleVoiceUI(){
+  var sel=document.getElementById("bleVSel"); if(!sel) return;
+  function esc2(s){ return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
+  function fill(){
+    var all=[]; try{ all=speechSynthesis.getVoices()||[]; }catch(e){}
+    var vs=all.filter(function(v){return /^en(-|_)/i.test(v.lang);}).sort(function(a,b){ return (/joelle/i.test(b.name)-/joelle/i.test(a.name))||(/samantha/i.test(b.name)-/samantha/i.test(a.name))||a.name.localeCompare(b.name); });
+    var cur=""; try{ cur=localStorage.getItem("ble-voice")||""; }catch(e){}
+    sel.innerHTML='<option value="">Automatic (the device’s voice)</option>'+vs.map(function(v){ return '<option value="'+esc2(v.voiceURI)+'">'+(/samantha/i.test(v.name)?"⭐ ":"")+esc2(v.name)+' · '+esc2(v.lang)+'</option>'; }).join("");
+    sel.value=cur; if(sel.value!==cur) sel.value="";
+    var n=document.getElementById("bleVNote"); if(n) n.textContent=vs.length?("Pick a voice and tap Test. Samantha (⭐) usually sounds the most natural."):"Voices are still loading. Tap Refresh list.";
+  }
+  fill(); var tries=0, t=setInterval(function(){ tries++; fill(); if(tries>8) clearInterval(t); },500);
+  try{ speechSynthesis.addEventListener("voiceschanged",fill); }catch(e){}
+  sel.onchange=function(){ try{ localStorage.setItem("ble-voice",sel.value); }catch(e){} var n=document.getElementById("bleVNote"); if(n) n.textContent="Saved. The Read buttons will use this voice."; };
+  document.getElementById("bleVRef").onclick=fill;
+  document.getElementById("bleVTest").onclick=function(){ try{ speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance("Hi! This is the voice that will read your Bible lessons."); u.rate=0.9;
+    var want=sel.value, v=null; if(want){ v=speechSynthesis.getVoices().find(function(x){return x.voiceURI===want;}); }
+    if(v){ u.voice=v; u.lang=v.lang; } else u.lang="en-US"; speechSynthesis.speak(u); }catch(e){} };
+}
+</script>
 </body>
 </html>

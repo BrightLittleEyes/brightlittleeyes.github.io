@@ -156,6 +156,7 @@ input[type=range]{width:100%;accent-color:var(--c);height:30px}
 .opts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media (max-width:560px){.opts{grid-template-columns:1fr}}
 .opt{background:#f2f6ff;border-radius:16px;padding:16px;font-size:19px;text-align:left;box-shadow:0 4px 0 #d7e0f2;font-weight:500;border:3px solid transparent}
+.opt.sel{border-color:var(--c);background:#fff;box-shadow:0 4px 0 color-mix(in srgb,var(--c) 45%,#fff)}
 .opt.right{background:#c9f5dc;box-shadow:0 4px 0 #7fd3a3}
 .opt.wrong{background:#ffd6de;box-shadow:0 4px 0 #f59aae}
 .why{background:#fff8e0;border-radius:14px;padding:12px 14px;font-size:18px;margin-top:14px}
@@ -468,7 +469,7 @@ const GAMES = [
   {k:'climb', name:'Fact Climb', icon:'⛰️', how:'True or false? Climb to the top'},
   {k:'quiz',  name:'Unit Quiz',  icon:'🏆', how:'Show what you know'}
 ];
-const UNIT_MAX = 3 + GAMES.length*3;
+const UNIT_MAX = 3 + GAMES.length*3 + 3;   // lessons + games + unit test
 const STAR_MAX = UNITS.length * UNIT_MAX;
 const P = (s=student) => { if(!prog[s]) prog[s] = {best:{},last:null}; if(!prog[s].best) prog[s].best={}; return prog[s]; };
 const best = (s,key) => P(s).best[key] || 0;
@@ -496,6 +497,8 @@ function badgeList(s){
     {i:'🔤', n:'Word Wizard', d:'Get 3 stars in Word Match', ok: mine.some(r=>r.kind==='match'&&r.stars===3)},
     {i:'🚩', n:'Summit', d:'Plant the flag in Fact Climb', ok: mine.some(r=>r.kind==='climb'&&r.stars===3)},
     {i:'💯', n:'Perfect Score', d:'Get every question right on a quiz', ok: mine.some(r=>r.kind==='quiz'&&r.right===r.total)},
+    {i:'📝', n:'Test Passer', d:'Pass your first Unit Test', ok: mine.some(r=>r.kind==='test'&&r.passed)},
+    {i:'🧠', n:'Memory Master', d:'Pass all 7 Unit Tests', ok: UNITS.every(u=>mine.some(r=>r.kind==='test'&&r.passed&&r.unit===u.id))},
     {i:'🏅', n:'Super Scientist', d:`Earn all ${STAR_MAX} stars`, ok: starsFor(s)>=STAR_MAX}
   ];
 }
@@ -566,10 +569,14 @@ function renderUnit(){
     <div class="path">${u.lessons.map((L,i)=>`<button class="step ${lessonDone(student,u.id,i)?'isdone':''}" data-l="${i}"><span class="si">${L.icon}</span><span><small>Lesson ${i+1}</small><b>${esc(L.t)}</b></span><span class="st">${lessonDone(student,u.id,i)?'✅':''}</span></button>`).join('')}</div>
     <h2>🎮 Games</h2>
     <div class="path">${GAMES.map(g=>`<button class="step" data-g="${g.k}"><span class="si">${g.icon}</span><span><b>${g.name}</b><small>${g.how}</small></span><span class="st">${starStr(best(student,u.id+'-'+g.k))}</span></button>`).join('')}</div>
+    <h2>📝 Unit Test</h2>
+    <div class="path">${(()=>{ const n=lessonsDone(student,u.id), locked=n<3, b=testBest(student,u.id), ok=testPassed(student,u.id);
+      return `<button class="step ${ok?'isdone':''}" data-test="1" style="${locked?'opacity:.6':''}"><span class="si">${locked?'🔒':'📝'}</span><span><b>Unit Test</b><small>${locked?`Opens after all 3 lessons (${n}/3 done)`:`${TEST_N} questions from all 3 lessons · ${TEST_PASS} right to pass`}</small></span><span class="st" style="color:${ok?'#1f8a52':'#5b6785'};font-size:16px">${b>=0?`Best ${b}/${TEST_N}${ok?' ✅':''}`:''}</span></button>`; })()}</div>
   </div>`;
   app.querySelector('[data-go]').onclick = () => go({page:'home'});
   app.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>go({page:'lesson', unit:u.id, lesson:+b.dataset.l}));
   app.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>go({page:'game', unit:u.id, game:b.dataset.g}));
+  app.querySelector('[data-test]').onclick = () => go({page:'game', unit:u.id, game:'test'});
 }
 
 /* ============ LESSON ============ */
@@ -1266,13 +1273,158 @@ ACTS.moon = {
 };
 
 /* ============ GAMES ============ */
+/* ============ UNIT TESTS: 12 questions per unit, each test asks 10 ============ */
+const TEST_N = 10, TEST_PASS = 8;
+const TESTS = {
+ create:[
+  ['What did God make on Day 1?',['Light','Fish','People','Trees'],0,'On Day 1, God said, "Let there be light."'],
+  ['What did God make on Day 5?',['Plants','Fish and birds','The sun','Land animals'],1,'Day 5 was for creatures of the sea and the sky.'],
+  ['On which day did God make plants and trees?',['Day 1','Day 2','Day 3','Day 5'],2,'God made dry land and plants on Day 3.'],
+  ['How many days did God take to make everything?',['Three','Six','Ten','One hundred'],1,'God made everything in six days and rested on the seventh.'],
+  ['When God looked at everything He made, He said it was…',['Very good','Just okay','Not finished','Too big'],0,'Everything God made was very good.'],
+  ['Animals have babies "after their ___."',['Color','Kind','Size','Name'],1,'Dogs have puppies, cats have kittens: after their kind.'],
+  ['A tiny poodle and a big Great Dane are…',['Different kinds','Both in the dog kind','Both cats','Not animals'],1,'They look different, but they are both dogs. That is variety.'],
+  ['Fur color, size, and ear shape are examples of…',['Traits','Fossils','Layers','Seasons'],0,'A trait is something about how a living thing looks or acts.'],
+  ['Where are most fossils found?',['In rock layers','In the clouds','Inside trees','In ocean waves'],0,'Fossils are found in layers of rock that were once mud.'],
+  ['A flood is when…',['Water covers land that is usually dry','Snow melts slowly','Rocks turn into sand','The sun dries a lake'],0,'In Noah\'s day, water covered the whole earth.'],
+  ['Why must a leaf be covered quickly to become a fossil?',['So it doesn\'t rot away first','So it stays warm','So birds can find it','So it grows bigger'],0,'If it is not buried fast, it rots away before it can turn to stone.'],
+  ['Who is the Creator of everything?',['God','Scientists','The sun','Noah'],0,'God created the heavens and the earth.']],
+ plants:[
+  ['Which part holds a plant up tall?',['Stem','Roots','Petals','Seeds'],0,'The stem is like the plant\'s backbone.'],
+  ['Which part of a plant is usually under the ground?',['Flower','Leaves','Roots','Fruit'],2,'Roots grow down into the soil.'],
+  ['What do plants make in their leaves?',['Food','Rocks','Seeds','Soil'],0,'Leaves use sunlight, water, and air to make food.'],
+  ['Where do new seeds come from?',['Roots','Flowers and fruit','Soil','Rain'],1,'Flowers make fruit, and the fruit holds the seeds.'],
+  ['What is the dirt that plants grow in called?',['Soil','Pollen','Stem','Sap'],0,'Plants grow in soil.'],
+  ['What happens to a plant kept in the dark?',['It grows faster','It can\'t make food and gets weak','It turns blue','It makes more flowers'],1,'Without sunlight, leaves cannot make food.'],
+  ['What is a sprout?',['A seed that has started to grow','A dead leaf','A kind of rock','A flower petal'],0,'When a seed starts to grow, it sprouts.'],
+  ['What comes right after the seed in a plant\'s life cycle?',['Fruit','Sprout','Flower','Grown tree'],1,'Seed, then sprout, then young plant.'],
+  ['A life cycle is…',['How a living thing grows and changes','A kind of bike','A plant\'s color','The weather'],0,'Plants and animals each have a life cycle.'],
+  ['What do roots soak up from the soil?',['Water','Sunlight','Air','Light'],0,'Roots drink water from the soil.'],
+  ['Which is NOT a part of a plant?',['Leaf','Stem','Root','Wing'],3,'Plants have leaves, stems, and roots, but not wings!'],
+  ['What is inside an apple that can grow a new tree?',['Seeds','Juice','Skin','Stem'],0,'Each seed could grow into a new apple tree.']],
+ animals:[
+  ['Which animal group has feathers?',['Fish','Birds','Reptiles','Mammals'],1,'Only birds have feathers.'],
+  ['A bat has fur and feeds its babies milk. What is it?',['A bird','A mammal','A reptile','A fish'],1,'Fur and milk mean mammal, even if it flies.'],
+  ['Which animal is a reptile?',['Frog','Turtle','Whale','Eagle'],1,'Turtles have dry, scaly skin.'],
+  ['Amphibians usually have…',['Dry scales','Smooth, wet skin','Feathers','Fur'],1,'Frogs and salamanders have smooth, wet skin.'],
+  ['What do fish use to breathe underwater?',['Lungs','Gills','Beaks','Fins'],1,'Gills take air out of the water.'],
+  ['What hatches from a butterfly\'s egg?',['A butterfly','A caterpillar','A tadpole','A chrysalis'],1,'A caterpillar hatches first.'],
+  ['What is a tadpole?',['A baby frog','A baby fish','A baby bird','A plant'],0,'Tadpoles grow legs and become frogs.'],
+  ['A big change in an animal\'s body as it grows is called…',['Metamorphosis','Habitat','Precipitation','Friction'],0,'Frogs and butterflies go through metamorphosis.'],
+  ['Which home is best for a camel?',['Ocean','Arctic','Desert','Pond'],2,'Camels are designed for the hot, dry desert.'],
+  ['A special feature that helps an animal live in its home is an…',['Adaptation','Atom','Orbit','Igloo'],0,'Thick fur on a polar bear is an adaptation.'],
+  ['Which animal is designed for the icy Arctic?',['Scorpion','Polar bear','Camel','Lizard'],1,'Polar bears have thick fur and fat to stay warm.'],
+  ['Which ocean animal breathes air?',['Shark','Dolphin','Goldfish','Octopus'],1,'Dolphins are mammals, so they come up to breathe air.']],
+ matter:[
+  ['Matter is anything that…',['Takes up space','Makes a sound','Is alive','Is hot'],0,'Everything that takes up space is matter.'],
+  ['Everything is made of tiny bits called…',['Particles','Planets','Seeds','Poles'],0,'Particles are too small to see.'],
+  ['In which state are particles packed tight together?',['Solid','Liquid','Gas','All of them'],0,'In a solid, particles are packed tight and wiggle in place.'],
+  ['Juice poured into a cup takes the shape of the cup. Juice is a…',['Solid','Liquid','Gas','Rock'],1,'Liquids take the shape of their container.'],
+  ['Steam from a pot is a…',['Solid','Liquid','Gas','Fossil'],2,'Steam is water as a gas.'],
+  ['When liquid water gets very cold, it…',['Freezes','Melts','Evaporates','Boils'],0,'Cold water freezes into ice.'],
+  ['A puddle dries up on a hot day because the water…',['Freezes','Evaporates','Melts','Sinks'],1,'Heat makes the water evaporate into the air.'],
+  ['Melting changes a…',['Solid into a liquid','Liquid into a gas','Gas into a solid','Liquid into a solid'],0,'Ice melts into water.'],
+  ['At what temperature does water boil?',['0 °C','50 °C','100 °C','200 °C'],2,'Water boils at 100 °C.'],
+  ['Which one would float in water?',['A rock','A coin','A piece of wood','A metal key'],2,'Wood is light for its size, so it floats.'],
+  ['Color, size, and whether something floats are all…',['Properties','Predictions','Particles','Planets'],0,'Properties are things you can observe about matter.'],
+  ['Before a test, a scientist makes a guess called a…',['Property','Prediction','Pole','Phase'],1,'Predict first, then test!']],
+ forces:[
+  ['Opening a door toward you is a…',['Push','Pull','Magnet','Gravity'],1,'A pull moves something toward you.'],
+  ['Kicking a ball away from you is a…',['Pull','Push','Friction','Orbit'],1,'A push moves something away from you.'],
+  ['Which kick sends a ball the farthest?',['A soft kick','A medium kick','A hard kick','They all go the same'],2,'More force makes the ball go farther.'],
+  ['What force makes a dropped ball fall to the ground?',['Friction','Gravity','Magnetism','Wind'],1,'Gravity pulls things down.'],
+  ['Friction happens when…',['Two surfaces rub together','A magnet sticks','Water evaporates','The moon shines'],0,'Rubbing surfaces slow things down.'],
+  ['On which surface would a toy car roll the farthest?',['Sand','Carpet','Grass','Smooth ice'],3,'Smooth ice has very little friction.'],
+  ['Why do people put sand on icy sidewalks?',['To add friction so we don\'t slip','To make the ice melt faster','To make it pretty','To feed the birds'],0,'Sand is rough, so it adds friction.'],
+  ['Magnets pull on things made of…',['Wood','Plastic','Iron or steel','Paper'],2,'Magnets attract iron and steel.'],
+  ['Every magnet has a north pole and a…',['West pole','South pole','Top pole','Middle pole'],1,'Magnets have a north and a south pole.'],
+  ['A north pole and a south pole will…',['Attract','Repel','Melt','Disappear'],0,'Opposite poles pull together.'],
+  ['Two south poles will…',['Attract','Repel','Stick forever','Spin'],1,'The same poles push apart.'],
+  ['Which one would a magnet NOT pick up?',['A paper clip','An iron nail','A plastic spoon','A steel pin'],2,'Plastic is not iron or steel.']],
+ weather:[
+  ['The water cycle is…',['How water moves from Earth to the sky and back','A bike for the beach','A kind of cloud','A big wave'],0,'Water goes around and around.'],
+  ['Clouds form when water vapor…',['Cools and condenses','Gets hotter','Turns into rock','Falls down'],0,'Cool vapor condenses into tiny drops that make clouds.'],
+  ['Rain, snow, sleet, and hail are all…',['Precipitation','Evaporation','Condensation','Seasons'],0,'Water falling from clouds is precipitation.'],
+  ['Water gathering in lakes and oceans is called…',['Collection','Freezing','Friction','Rotation'],0,'Collection is the last step of the water cycle.'],
+  ['What heats the water to start the water cycle?',['The sun','The moon','Magnets','Clouds'],0,'The sun warms the water so it evaporates.'],
+  ['Weather is…',['What the air outside is like right now','The shape of the moon','A kind of rock','A planet'],0,'Weather can change from day to day.'],
+  ['What tool measures temperature?',['Ruler','Thermometer','Magnet','Scale'],1,'A thermometer tells how hot or cold it is.'],
+  ['What should you bring on a rainy day?',['Sunglasses','An umbrella','A swimsuit','A sled'],1,'An umbrella keeps you dry.'],
+  ['Why is an umbrella a bad idea on a very windy day?',['It can flip inside out','It gets too hot','It turns into ice','It makes it rain'],0,'Strong wind can flip an umbrella!'],
+  ['How many seasons are there?',['Two','Three','Four','Twelve'],2,'Spring, summer, fall, and winter.'],
+  ['Which season usually has the longest, warmest days?',['Winter','Summer','Fall','Spring'],1,'In summer, our half of Earth leans toward the sun.'],
+  ['In fall, many trees…',['Lose their leaves','Grow new flowers','Turn into ice','Stop needing water'],0,'Leaves change color and fall in autumn.']],
+ space:[
+  ['How many planets travel around our sun?',['Five','Eight','Ten','Twenty'],1,'There are eight planets.'],
+  ['Which planet is closest to the sun?',['Mercury','Earth','Neptune','Mars'],0,'Mercury is planet number one.'],
+  ['Which planet is called the Red Planet?',['Venus','Mars','Saturn','Uranus'],1,'Mars has rusty red dirt.'],
+  ['Which planet has big, beautiful rings?',['Saturn','Mercury','Earth','Mars'],0,'Saturn\'s rings are made of ice and rock.'],
+  ['The path a planet travels around the sun is its…',['Orbit','Rotation','Phase','Pole'],0,'Planets orbit the sun.'],
+  ['On which day did God make the sun, moon, and stars?',['Day 1','Day 3','Day 4','Day 6'],2,'God made the lights in the sky on Day 4.'],
+  ['One full spin of Earth is called a…',['Rotation','Orbit','Season','Phase'],0,'One rotation takes 24 hours.'],
+  ['When your side of Earth turns away from the sun, it is…',['Day','Night','Summer','Noon'],1,'Facing away from the sun makes it night.'],
+  ['The moon shines because it…',['Makes its own fire','Reflects light from the sun','Has light bulbs','Is a star'],1,'The moon is like a mirror for sunlight.'],
+  ['The changing shapes of the moon are called…',['Phases','Seasons','Orbits','Poles'],0,'New moon, crescent, quarter, gibbous, full.'],
+  ['About how long does the moon take to go around Earth?',['A day','A week','A month','A year'],2,'One trip takes about a month.'],
+  ['When we see the whole lit side of the moon, it is a…',['New moon','Crescent moon','Full moon','Half moon'],2,'A full moon looks like a whole circle.']]
+};
+const testResults = (s,u) => results.filter(r=>r.student===s && r.unit===u && r.kind==='test');
+const testBest = (s,u) => testResults(s,u).reduce((a,r)=>Math.max(a,r.right),-1);
+const testPassed = (s,u) => testResults(s,u).some(r=>r.passed);
+
+function gameTest(u, box, stat){
+  if (lessonsDone(student,u.id) < 3){
+    box.innerHTML = `<div class="result"><div class="big">🔒</div><p class="qtext">The Unit Test opens after all 3 lessons.</p>
+      <p class="note" style="font-size:17px">You've finished ${lessonsDone(student,u.id)} of 3 lessons in ${esc(u.name)}.</p>
+      <div class="ctrl" style="justify-content:center"><button class="btn" id="back">Back to ${esc(u.name)}</button></div></div>`;
+    $('#back').onclick = () => go({page:'unit', unit:u.id}); return;
+  }
+  const qs = shuffle(TESTS[u.id]).slice(0, TEST_N).map(q => ({q, order: shuffle([0,1,2,3])}));
+  const answers = [];
+  let i = 0, pick = null;
+  const start = () => {
+    box.innerHTML = `<div class="result"><div class="big">📝</div><p class="qtext">${esc(u.name)} Unit Test</p>
+      <p style="font-size:18px">${TEST_N} questions from all 3 lessons. Take your time and do your best!<br>You need <b>${TEST_PASS} right</b> to pass.</p>
+      <p class="note" style="font-size:16px">You won't see the answers until the end.</p>
+      <div class="ctrl" style="justify-content:center"><button class="btn" id="go">Start the test</button></div></div>`;
+    $('#go').onclick = draw;
+  };
+  const draw = () => {
+    const {q, order} = qs[i]; pick = null;
+    stat.textContent = `Question ${i+1} of ${TEST_N}`;
+    box.innerHTML = `<div class="progress"><div style="width:${i/TEST_N*100}%"></div></div>
+      <p class="qtext">${esc(q[0])}</p>
+      <div class="opts">${order.map(k=>`<button class="opt" data-o="${k}">${esc(q[1][k])}</button>`).join('')}</div>
+      <div class="ctrl" style="justify-content:flex-end"><button class="btn" id="nextT" disabled>${i+1<TEST_N?'Next ➜':'Finish the test'}</button></div>`;
+    box.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>{ pick=+b.dataset.o; box.querySelectorAll('[data-o]').forEach(x=>x.classList.toggle('sel', x===b)); $('#nextT').disabled=false; });
+    $('#nextT').onclick = () => { if (pick===null) return; answers.push(pick); i++; i<TEST_N ? draw() : finish(); };
+  };
+  const finish = () => {
+    stat.textContent = '';
+    const wrong = qs.map((x,k)=>({...x, a:answers[k]})).filter(x=>x.a!==x.q[2]);
+    const right = TEST_N - wrong.length, passed = right >= TEST_PASS;
+    const gain = passed ? award(`${u.id}-test`, 3) : 0;
+    logResult({unit:u.id, kind:'test', stars: passed?3:0, right, total:TEST_N, passed, missed: wrong.map(x=>x.q[0])});
+    if (passed) confetti(24);
+    box.innerHTML = `<div class="result"><div class="big">${passed?'🏆':'💪'}</div>
+      <p class="qtext">You got ${right} out of ${TEST_N}!</p>
+      <p style="font-size:19px;margin:0 0 6px">${passed ? `✅ <b>You passed the ${esc(u.name)} test!</b>${gain?` +${gain} ⭐`:''}` : `You need ${TEST_PASS} to pass. Look back at the lessons and try again another day!`}</p></div>
+      ${wrong.length ? `<h3 style="margin:14px 0 8px">Let's look at the ones you missed</h3>${wrong.map(x=>`<div class="why" style="margin-top:8px"><b>${esc(x.q[0])}</b><br>
+        <span style="color:#c9304f">Your answer: ${esc(x.q[1][x.a])}</span><br><span style="color:#1f8a52">Right answer: ${esc(x.q[1][x.q[2]])}</span><br><small>${esc(x.q[3])}</small></div>`).join('')}` : '<p class="center" style="font-size:19px">🎉 Every answer was right!</p>'}
+      <div class="ctrl" style="justify-content:center;margin-top:14px">${passed?'':'<button class="btn" id="again">🔄 Take it again</button>'}<button class="btn ghost" id="back">Back to ${esc(u.name)}</button></div>`;
+    if (!passed) $('#again').onclick = () => go({page:'game', unit:u.id, game:'test'});
+    $('#back').onclick = () => go({page:'unit', unit:u.id});
+  };
+  start();
+}
+
 function renderGame(){
-  const u = unitById(view.unit), g = GAMES.find(x=>x.k===view.game);
+  const u = unitById(view.unit), g = GAMES.find(x=>x.k===view.game) || {k:'test', name:'Unit Test', icon:'📝'};
   app.innerHTML = `<div class="screen">
     <div class="crumbs"><button data-go="home">🏠 Home</button> › <button data-go="unit">${esc(u.name)}</button></div>
     <div class="panel"><div class="ghead"><span class="gkind">${g.icon} ${g.name}</span><span class="note" id="gstat"></span></div><div id="game"></div></div></div>`;
   app.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go({page:b.dataset.go, unit:u.id}));
-  ({match:gameMatch, sort:gameSort, climb:gameClimb, quiz:gameQuiz})[g.k](u, $('#game'), $('#gstat'));
+  ({match:gameMatch, sort:gameSort, climb:gameClimb, quiz:gameQuiz, test:gameTest})[g.k](u, $('#game'), $('#gstat'));
 }
 function finishGame(u, kind, stars, extra, box, line){
   const key = `${u.id}-${kind}`, gain = award(key, stars);
@@ -1437,13 +1589,13 @@ function renderParent(){
     body = kidChips + `
       <p style="font-size:19px;margin:4px 0"><b>${esc(who)}</b>: ⭐ ${st} of ${STAR_MAX} stars · ${bl.filter(b=>b.ok).length} of ${bl.length} badges</p>
       <p class="note" style="margin-top:0">Last active: ${p.last ? fmtDate(p.last) : 'not yet'} · Games played: ${results.filter(r=>r.student===who).length}</p>
-      <div style="overflow-x:auto"><table class="hist"><tr><th>Unit</th><th>Lessons</th>${GAMES.map(g=>`<th>${g.name}</th>`).join('')}<th>Stars</th></tr>
-      ${UNITS.map(u=>`<tr><td>${u.icon} ${esc(u.name)}</td><td>${lessonsDone(who,u.id)}/3</td>${GAMES.map(g=>`<td style="color:#e3a008;white-space:nowrap">${starStr(best(who,u.id+'-'+g.k))}</td>`).join('')}<td><b>${unitStars(who,u.id)}</b>/${UNIT_MAX}</td></tr>`).join('')}</table></div>
+      <div style="overflow-x:auto"><table class="hist"><tr><th>Unit</th><th>Lessons</th>${GAMES.map(g=>`<th>${g.name}</th>`).join('')}<th>Unit Test</th><th>Stars</th></tr>
+      ${UNITS.map(u=>`<tr><td>${u.icon} ${esc(u.name)}</td><td>${lessonsDone(who,u.id)}/3</td>${GAMES.map(g=>`<td style="color:#e3a008;white-space:nowrap">${starStr(best(who,u.id+'-'+g.k))}</td>`).join('')}<td style="white-space:nowrap">${(()=>{ const b=testBest(who,u.id), n=testResults(who,u.id).length; return b<0?'<span class="note">not yet</span>':`<b>${b}/${TEST_N}</b> ${testPassed(who,u.id)?'✅ passed':'❌'}<br><span class="note">${n} tr${n===1?'y':'ies'}</span>`; })()}</td><td><b>${unitStars(who,u.id)}</b>/${UNIT_MAX}</td></tr>`).join('')}</table></div>
       <h3>Badges</h3><div class="badges">${badgeHTML(who)}</div>`;
   } else if(pview.tab==='history' && who){
     const mine = results.filter(r=>r.student===who).sort((a,b)=>b.at.localeCompare(a.at));
-    const gname = k => (GAMES.find(g=>g.k===k)||{name:k}).name;
-    body = kidChips + (mine.length ? `<div style="overflow-x:auto"><table class="hist"><tr><th>When</th><th>Unit</th><th>Game</th><th>Score</th><th>Missed</th></tr>${mine.map(r=>`<tr><td>${fmtDate(r.at)}</td><td>${esc(uname(r.unit))}</td><td>${gname(r.kind)}</td><td style="white-space:nowrap"><b>${r.right}/${r.total}</b> <span style="color:#e3a008">${starStr(r.stars)}</span></td><td>${r.missed&&r.missed.length?r.missed.map(esc).join('<br>'):'None 🎉'}</td></tr>`).join('')}</table></div>` : `<p class="note">${esc(who)} hasn't played a game yet.</p>`);
+    const gname = k => k==='test' ? '📝 Unit Test' : (GAMES.find(g=>g.k===k)||{name:k}).name;
+    body = kidChips + (mine.length ? `<div style="overflow-x:auto"><table class="hist"><tr><th>When</th><th>Unit</th><th>Game</th><th>Score</th><th>Missed</th></tr>${mine.map(r=>`<tr><td>${fmtDate(r.at)}</td><td>${esc(uname(r.unit))}</td><td>${gname(r.kind)}</td><td style="white-space:nowrap"><b>${r.right}/${r.total}</b> ${r.kind==='test' ? (r.passed?'✅ passed':'❌ not yet') : `<span style="color:#e3a008">${starStr(r.stars)}</span>`}</td><td>${r.missed&&r.missed.length?r.missed.map(esc).join('<br>'):'None 🎉'}</td></tr>`).join('')}</table></div>` : `<p class="note">${esc(who)} hasn't played a game yet.</p>`);
   } else if(pview.tab==='settings'){
     let code=''; try{ code = btoa(unescape(encodeURIComponent(JSON.stringify({app:'g3science',v:2,roster,prog,results})))); }catch(e){}
     body = `
@@ -1547,7 +1699,7 @@ go({page: student ? 'home' : 'pick'});
     try{ speechSynthesis.cancel(); }catch(e){}
     document.getElementById("vptitle").textContent=title||"Video";
     
-    wrap.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+id+'?rel=0&modestbranding=1&playsinline=1" title="'+String(title||"Video").replace(/"/g,"&quot;")+'" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>';
+    wrap.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+id+'?rel=0&modestbranding=1&playsinline=1" title="'+String(title||"Video").replace(/"/g,"&quot;")+'" sandbox="allow-scripts allow-same-origin allow-presentation" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>';
     box.classList.add("on"); document.body.style.overflow="hidden";
   }
   document.addEventListener("click",function(e){

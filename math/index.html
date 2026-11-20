@@ -643,14 +643,17 @@ try { if (localStorage.getItem("mathPipRuleV2") !== "1") {   // Nov 19: 1 Help P
   pipRule.pip = 1; localStorage.setItem("mathPipRule", JSON.stringify(pipRule)); localStorage.setItem("mathPipRuleV2", "1");
   if (pipGate.pipRun >= 1 && !pipGate.resting) { pipGate.resting = true; pipGate.others = 0; localStorage.setItem("mathPipGate", JSON.stringify(pipGate)); }
 } } catch (e) {}
+/* Earned Help Pip problems add up (Nov 19): every ${pipRule.other} of her own earns ${pipRule.pip} more, each Help Pip problem uses 1. Never taken away. */
+if (typeof pipGate.tokens !== "number") { pipGate.tokens = pipGate.resting ? 0 : Math.max(0, pipRule.pip - pipGate.pipRun); pipGate.resting = pipGate.tokens <= 0; try { localStorage.setItem("mathPipGate", JSON.stringify(pipGate)); } catch (e) {} }
 let gateSnap = { pip: state.solved.pip || 0, all: sumSolved() };
 function saveGate() { try { localStorage.setItem("mathPipGate", JSON.stringify(pipGate)); } catch (e) {} }
 function gateCount() {
   const pip = state.solved.pip || 0, all = sumSolved(), dp = pip - gateSnap.pip, dOther = (all - pip) - (gateSnap.all - gateSnap.pip);
   gateSnap = { pip, all };
   if (dp < 0 || dOther < 0 || dp + dOther > 5) return;   // a restore or reset, not real work
-  if (dp > 0) { pipGate.pipRun += dp; if (pipGate.pipRun >= pipRule.pip) { pipGate.resting = true; pipGate.others = 0; } }
-  if (dOther > 0) { pipGate.others += dOther; if (pipGate.others >= pipRule.other) { if (pipGate.resting) pipWoke = true; pipGate.resting = false; pipGate.pipRun = 0; pipGate.others = 0; } }
+  if (dp > 0) pipGate.tokens = Math.max(0, pipGate.tokens - dp);
+  if (dOther > 0) { pipGate.others += dOther; while (pipGate.others >= pipRule.other) { pipGate.others -= pipRule.other; pipGate.tokens += pipRule.pip; pipWoke = true; } }
+  pipGate.resting = pipGate.tokens <= 0;
   saveGate();
 }
 { const s0 = save; save = function () { s0(); gateCount(); }; }
@@ -674,23 +677,23 @@ function gateCount() {
 function renderSettingsCard() {
   const d = el(`<details class="card backup" open><summary>Settings</summary>
     <h3 style="margin:8px 0 0">Help Pip limit</h3>
-    <p class="sub">After this many Help Pip problems, Pip rests until she finishes problems in other activities.</p>
+    <p class="sub">Each time she finishes the number of her own problems below, she earns Help Pip problems. Earned ones add up and are never taken away.</p>
     <div class="row" style="align-items:center">
-      <label>Help Pip problems before a rest <input type="number" id="rp" min="1" max="20" value="${pipRule.pip}" style="width:80px"></label>
-      <label>Other problems to wake Pip <input type="number" id="ro" min="1" max="20" value="${pipRule.other}" style="width:80px"></label>
+      <label>Help Pip problems she earns <input type="number" id="rp" min="1" max="20" value="${pipRule.pip}" style="width:80px"></label>
+      <label>Her own problems to earn them <input type="number" id="ro" min="1" max="20" value="${pipRule.other}" style="width:80px"></label>
     </div>
     <div class="row" style="align-items:center"><button class="primary" type="button" id="rsave">Save</button><span class="sub" id="rmsg" style="margin:0"></span></div>
-    <p class="sub">Right now: ${pipGate.resting ? `Pip is resting. ${pipGate.others} of ${pipRule.other} other problems done.` : `${pipGate.pipRun} of ${pipRule.pip} Help Pip problems used.`}</p>
-    <div><button class="quiet" type="button" id="rwake">Wake Pip now</button></div>
+    <p class="sub">Right now: ${pipGate.tokens} Help Pip ${pipGate.tokens === 1 ? "problem" : "problems"} saved, and ${pipGate.others} of ${pipRule.other} of her own toward the next.</p>
+    <div><button class="quiet" type="button" id="rwake">Give her 1 Help Pip problem now</button></div>
   </details>`);
   stage.appendChild(d);
   d.querySelector("#rsave").onclick = () => {
     const a = Math.max(1, Math.min(20, Math.round(+d.querySelector("#rp").value) || 3)), b = Math.max(1, Math.min(20, Math.round(+d.querySelector("#ro").value) || 3));
     pipRule = { pip: a, other: b }; try { localStorage.setItem("mathPipRule", JSON.stringify(pipRule)); } catch (e) {}
-    if (pipGate.pipRun >= a) pipGate.resting = true; saveGate();
+    saveGate();
     d.querySelector("#rmsg").textContent = `Saved: ${a} Help Pip, then ${b} other problems.`;
   };
-  d.querySelector("#rwake").onclick = () => { pipGate = { pipRun: 0, others: 0, resting: false }; saveGate(); render(); };
+  d.querySelector("#rwake").onclick = () => { pipGate.tokens += 1; pipGate.resting = false; saveGate(); render(); };
 }
 
 document.getElementById("parentBtn").onclick = () => {
@@ -810,7 +813,7 @@ renderHome = function () {
         <span class="sym">${pipFace}</span>
         <span><span class="nm">Help Pip</span><span class="ct" style="display:block">${pipGate.resting
           ? `Pip is recharging 🔋 Finish ${leftPip} more ${leftPip === 1 ? "problem" : "problems"} on your own to wake him.`
-          : "Pip's math got tangled again. Be the teacher!"}</span></span>
+          : `Pip's math got tangled again. Be the teacher! ${pipGate.tokens} ready.`}</span></span>
       </button>
     </div>
     <h2 style="margin-top:6px">Or do it yourself: ${set ? "finish what you started" : "pick one"}</h2>
@@ -984,18 +987,19 @@ function paintPipBat() {
   let b = document.getElementById("pipbat");
   if (!b) { b = el(`<div id="pipbat" class="pipbat" aria-live="polite"></div>`); document.getElementById("score").after(b); }
   b.hidden = state.section === "parent";
-  const left = pipRule.other - pipGate.others, ready = Math.max(0, pipRule.pip - pipGate.pipRun);
-  b.classList.toggle("awake", !pipGate.resting);
-  b.innerHTML = pipGate.resting
-    ? `<span>🔋 Pip:</span><span class="cells">${Array.from({ length: pipRule.other }, (_, i) => `<i class="${i < pipGate.others ? "on" : ""}"></i>`).join("")}</span><span>${left} more ${left === 1 ? "problem" : "problems"} to wake Pip!</span>`
-    : `<span>🤖 Pip is awake: ${ready} Help Pip ${ready === 1 ? "problem" : "problems"} ready</span>`;
+  const left = pipRule.other - pipGate.others, ready = pipGate.tokens;
+  const cells = `<span class="cells">${Array.from({ length: pipRule.other }, (_, i) => `<i class="${i < pipGate.others ? "on" : ""}"></i>`).join("")}</span>`;
+  b.classList.toggle("awake", ready > 0);
+  b.innerHTML = ready > 0
+    ? `<span>🤖 ${ready} Help Pip ${ready === 1 ? "problem" : "problems"} ready</span><span>·</span>${cells}<span>${left} more for another!</span>`
+    : `<span>🔋 Pip:</span>${cells}<span>${left} more ${left === 1 ? "problem" : "problems"} to wake Pip!</span>`;
 }
 function showWoke() {
-  const n = pipRule.pip;
+  const n = pipRule.pip, t = pipGate.tokens, more = t > n;
   const d = el(`<div class="woke" role="dialog" aria-modal="true" aria-labelledby="wokeT"><section class="card">
     <div class="big">🎉</div>
-    <h2 id="wokeT">You woke Pip up!</h2>
-    <p>You earned ${n} Help Pip ${n === 1 ? "problem" : "problems"}. ${n === 1 ? "It's" : "They're"} saved for you. Pip will wait until you're ready.</p>
+    <h2 id="wokeT">${more ? "You earned another Help Pip problem!" : "You woke Pip up!"}</h2>
+    <p>You earned ${n} Help Pip ${n === 1 ? "problem" : "problems"}. You have <b>${t}</b> saved now. Pip will wait until you're ready.</p>
     <div class="row" style="width:100%"><button class="primary" type="button" id="wokeGo">Help Pip now</button><button type="button" id="wokeLater">Keep going here first</button></div>
   </section></div>`);
   document.body.appendChild(d);

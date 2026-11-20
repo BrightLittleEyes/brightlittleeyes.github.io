@@ -582,7 +582,7 @@ render();
 <div id="vplay" role="dialog" aria-modal="true" aria-label="Video"><div class="vbox">
   <div class="vtop"><span id="vptitle">Video</span><button class="vclose" id="vpclose">✕ Close</button></div>
   <div class="vwrap" id="vpwrap"></div>
-  <div class="vfoot">If the video won’t play here, <a id="vpout" href="#" target="_blank" rel="noopener">open it on YouTube</a>.</div>
+  <div class="vfoot">If the video won’t play, ask a parent for help.<span id="vpout" hidden></span></div>
 </div></div>
 <script>
 (function(){
@@ -598,7 +598,7 @@ render();
     try{ speechSynthesis.cancel(); }catch(e){}
     document.getElementById("vptitle").textContent=title||"Video";
     document.getElementById("vpout").href=href;
-    wrap.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+id+'?autoplay=1&rel=0&modestbranding=1&playsinline=1" title="'+String(title||"Video").replace(/"/g,"&quot;")+'" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>';
+    wrap.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+id+'?autoplay=1&rel=0&modestbranding=1&playsinline=1" title="'+String(title||"Video").replace(/"/g,"&quot;")+'" sandbox="allow-scripts allow-same-origin allow-presentation" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>';
     box.classList.add("on"); document.body.style.overflow="hidden";
   }
   document.addEventListener("click",function(e){

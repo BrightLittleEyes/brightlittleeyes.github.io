@@ -765,9 +765,9 @@ const WATCH = {
   "more": "atoms and molecules for kids"
  },
  "matter-1": {
-  "id": "24Yromifcss",
-  "title": "States of Matter: Solids, Liquids, and Gases",
-  "by": "Learn Bright",
+  "id": "npv74D2MO6Q",
+  "title": "Part(icles) of Your World: States of Matter",
+  "by": "Crash Course Kids",
   "more": "states of matter for kids"
  },
  "matter-2": {
@@ -2714,7 +2714,7 @@ function renderUnit(){
   if (step===0) body = `<div class="vocab first"><dl>${L.vocab.map(v=>`<dt>${esc(v[0])}</dt><dd>${esc(v[1])}</dd>`).join("")}</dl></div>`;
   if (step===1) body = `<div class="readbody">${L.body}</div><div class="vocab"><h3>Words to know</h3><dl>${L.vocab.map(v=>`<dt>${esc(v[0])}</dt><dd>${esc(v[1])}</dd>`).join("")}</dl></div>`;
   if (step===2) body = F ? `<figure class="fig" id="fig"><span class="figtag">${F.tag}</span>${F.html}<figcaption>${esc(F.cap)}</figcaption></figure>` : "";
-  if (step===3) body = W ? `<div class="watch"><div class="vframe"><iframe src="https://www.youtube-nocookie.com/embed/${W.id}?rel=0&modestbranding=1&playsinline=1" title="${esc(W.title)}" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" loading="lazy"></iframe></div><p class="vcap"><b>${esc(W.title)}</b> · ${esc(W.by)}</p><p>If the video doesn't play, ask a parent for help.</p></div>` : "";
+  if (step===3) body = W ? `<div class="watch"><div class="vframe"><iframe src="https://www.youtube-nocookie.com/embed/${W.id}?rel=0&modestbranding=1&playsinline=1" title="${esc(W.title)}" sandbox="allow-scripts allow-same-origin allow-presentation" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" loading="lazy"></iframe></div><p class="vcap"><b>${esc(W.title)}</b> · ${esc(W.by)}</p><p>If the video doesn't play, ask a parent for help.</p></div>` : "";
   if (step===4) body = `<div class="flash" id="flash"></div>`;
   if (step===5) body = `<div class="tryit"><b>Try it</b>${esc(L.tryit)}</div>
     <div class="finish ${done?"is-done":""}">${done ? `<span class="got">✓ Lesson finished · <span class="st">★</span> earned</span> <button class="btn ghost small" id="lqagain" type="button">Practice the lesson quiz</button>` : `<button class="btn big" id="lquiz">Take the lesson quiz <span class="st">+★</span></button><p class="note">${LQ_SIZE} questions on this lesson. Get ${LQ_PASS} right to finish the lesson.</p>`}</div>`;

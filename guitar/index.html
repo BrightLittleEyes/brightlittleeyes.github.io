@@ -1770,7 +1770,7 @@ function renderUnit(){
   const n=$("#next"); if(n) n.onclick = () => go({page:"unit", unit:u.id, lesson:view.lesson+1});
   const tq=$("#toquiz"); if(tq) tq.onclick = () => startGame(u.id);
   app.querySelectorAll(".vthumb").forEach(b => b.onclick = () => { stopAllSound(); const id = b.dataset.vid;
-    b.outerHTML = `<div class="vframe"><iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1" title="Lesson video" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>`; });
+    b.outerHTML = `<div class="vframe"><iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1" title="Lesson video" sandbox="allow-scripts allow-same-origin allow-presentation" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>`; });
   FS.forEach((F,i) => { if (F.init){ try{ const stop = F.init($("#fig-"+i)); if (stop) figStops.push(stop); }catch(e){ console.error(e); } } });
 }
 

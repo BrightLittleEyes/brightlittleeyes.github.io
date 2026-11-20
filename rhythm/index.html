@@ -875,6 +875,10 @@ function normalize(d){
     ['satBlocks','sunBlocks'].forEach(r=>{ if(!Array.isArray(k[r])) k[r]=[]; }); [...k.blocks,...k.satBlocks,...k.sunBlocks].forEach(b=>{ b.items=Array.isArray(b.items)?b.items:[]; }); } });
   const ruth = c.kids && c.kids.ruth;
   if(ruth && !Array.isArray(ruth.blocks)) Object.assign(ruth, ruthBoard(c));
+  if(ruth && Array.isArray(ruth.blocks) && !(ruth.flagV>=1)){   // Ruth gets the red "Anything different today?" tags too
+    if(!(ruth.tags.flag||[]).length) ruth.tags.flag = clone(c.tags.flag||[]);
+    ruth.flagV=1;
+  }
   if(ruth && !(ruth.appsV>=1)){ tieApps([ruth.blocks], APP_OF_RUTH); ruth.appsV=1; }
   if(ruth && !(ruth.funV>=1)){        // Ruth: one fewer weekday Fun Choice from Nov 18, 2026, so her fun picks match Bekah's
     (ruth.blocks||[]).forEach(b=>b.items.forEach(i=>{ if(i.id==='r_f1') i.until='2026-11-17'; }));
@@ -917,7 +921,7 @@ function ruthBoard(c){
   return {theme:'dance', blocks, satBlocks:sat, sunBlocks:sun, tags:{
     fun,
     mech: clone(c.tags.mech||[]).filter(t=>t.id!=='snackbox').map(t=>{ delete t.timer; delete t.lastDone; return t; }),
-    flag: [],
+    flag: clone(c.tags.flag||[]),
     mom: [['mm_sing','Sing Together'],['mm_dance','Dance Together'],['mm_read','Read Together'],['mm_bake','Bake Together'],['mm_walk','Walk & Talk'],['mm_game','Play a Game'],['mm_hair','Hair & Nails'],['mm_craft','Craft Together']].map(([id,name])=>({id,name})),
     explore: [['x_cook','Cooking','Help make a real recipe'],['x_nature','Nature Walk','Look, listen, and collect'],['x_sci','Science Experiment','Try it and see what happens'],['x_games','Board Games','Pick a game to play']].map(([id,name,sub])=>({id,name,sub}))
   }};
@@ -1765,7 +1769,7 @@ function renderEditor(){
     ${tagsEd('fun','Fun Choice tags',E._main?'She picks these for the Fun Choice slots.':'She picks these for the Fun Choice slots. A timer shows under the tag when it\'s placed.',E._main,!E._main)}
     ${tagsEd('mech','Helping Hands tags','She picks these for the Helping Hands slots. "Shows on" picks which days a tag is offered.',true,true,true)}
     <div class="ed-sec" style="margin-top:-8px"><label class="ed-chk" style="font-weight:700;color:var(--ink)"><input type="checkbox" data-path="noRepeat" data-type="flag" ${E.noRepeat!==false?'checked':''}> No repeats: a Helping Hands job she did yesterday is greyed out today ("You did this yesterday")</label></div>
-    ${E._main?'':tagsEd('flag','Change of Routine tags','The red tags for "Anything different today?"',false,false)}
+    ${tagsEd('flag','Change of Routine tags','The red tags for "Anything different today?"',false,false)}
     <div class="ed-sec"><h3>Timer sound</h3><p class="help">What plays when a timer runs out. A "Time's up!" card also pops up until she taps OK.</p>
       <div class="ed-grid" style="align-items:center">
         <label class="ed-f" style="flex:0 1 220px">Sound<select data-path="sound">

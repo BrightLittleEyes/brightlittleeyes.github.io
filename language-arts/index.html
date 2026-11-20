@@ -230,6 +230,15 @@ ol.steps li::before{content:counter(st);width:30px;height:30px;border-radius:50%
 @keyframes popin{0%{transform:scale(.85);opacity:0}70%{transform:scale(1.04)}100%{transform:scale(1);opacity:1}}
 .sec.wasdone .practice{display:none}
 .sec-h .chk{font-size:16px!important}
+.lhead2{display:flex;gap:16px;align-items:center;margin-bottom:6px}
+.lnum{flex:none;min-width:96px;text-align:center;border-radius:20px;padding:8px 12px 10px;color:#fff;box-shadow:0 4px 0 rgba(0,0,0,.15)}
+.lnum small{display:block;font-size:13px;letter-spacing:1.4px;text-transform:uppercase;font-weight:700;opacity:.92}
+.lnum b{display:block;font-family:"Lora",serif;font-size:44px;line-height:1}
+.lhead2 .kicker{margin-bottom:2px}
+.lhead2 h1{font-size:clamp(26px,4.2vw,38px)}
+.notnow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#FFF6DA;border:2px solid var(--gold);border-radius:14px;padding:10px 14px;margin:10px 0 4px;font-size:17px}
+.dotslabel{font-size:14px;font-weight:700;color:var(--soft);margin:12px 0 0}
+.lessonnav{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:22px 0 4px;padding-top:14px;border-top:1.5px dashed var(--line)}
 .confetti{position:fixed;top:-20px;font-size:26px;pointer-events:none;animation:fall 1.9s linear forwards;z-index:9}
 @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.6}}
 @media(max-width:560px){.sec-b{padding:14px}.story{font-size:19px}.artcard{grid-template-columns:1fr}.frame{display:none}}
@@ -1563,7 +1572,13 @@ function markSec(k,data={}){
   const i=curLesson, l=LP(i); l.sec[k]=Object.assign({},l.sec[k]||{},data,{done:true,at:Date.now()});
   P().last=Date.now(); addStar(`L${i}-${k}`); saveAll();
   const secs=secsOf(LESSONS[i]);
-  if(!l.done && secs.every(s=>secDone(i,s))){ l.done=true; l.doneAt=Date.now(); addStar(`L${i}-done`); saveAll(); try{ window.rhythmReport && rhythmReport('la3'); }catch(e){} renderLesson(i,true); return; }
+  if(!l.done && secs.every(s=>secDone(i,s))){ l.done=true; l.doneAt=Date.now(); addStar(`L${i}-done`);
+    /* Only her current lesson checks off today's Language on the rhythm board. Finishing up an earlier
+       lesson (she has already worked in a later one) is a correction, so it doesn't count for today. */
+    const later=Object.keys(P().lessons).some(j=>+j>i && P().lessons[j] && (P().lessons[j].done || Object.keys(P().lessons[j].sec||{}).length));
+    l.rhythm=!later; saveAll();
+    if(l.rhythm){ try{ window.rhythmReport && rhythmReport('la3'); }catch(e){} }
+    renderLesson(i,true,later); return; }
   refreshDots(); paintSecHead(k); if(data.total) showFresh(k);
 }
 function paintSecHead(k){ const el=document.querySelector(`#sec-${k} .chk`); const s=LP(curLesson).sec[k]; if(el) el.textContent=secDone(curLesson,k)?(s&&s.total?`⭐ ${s.score}/${s.total}`:"✓ Done"):""; }
@@ -1575,31 +1590,35 @@ function secShell(k,title,body){ const sd=LP(curLesson).sec[k], scored=!!(sd&&sd
 
 function renderDay(i){
   curLesson=-1; const p=planOf(i), B=BOOKDB[p.b], s=P().days[i];
-  $("lesson").innerHTML=`<div class="lhead"><div class="kicker" style="color:var(--book)">📕 Keep Reading · after Lesson ${LESSONS.length}</div>
-    <h1>Reading Day ${i+1}</h1>
-    <div class="row" style="margin-top:8px"><button class="btn ghost small" onclick="go('lesson',${i-1})">‹ ${i-1<LESSONS.length?`Lesson ${i}`:`Day ${i}`}</button>${i<NDAYS-1?`<button class="btn ghost small" onclick="go('lesson',${i+1})">Day ${i+2} ›</button>`:""}${s&&s.done?`<span class="complete-badge">✓ Finished</span>`:""}</div></div>
-    <section class="card sec" id="sec-book"><div class="sec-h" style="background:${SEC.book.c}"><span class="ic">${SEC.book.ic}</span><h2>Book Time: ${B.short||B.title}</h2><span class="chk">${s&&s.done?"✓ Done":""}</span></div><div class="sec-b">${bookBody(i,s)}</div></section>`;
+  $("lesson").innerHTML=`<div class="lhead"><div class="lhead2"><div class="lnum" style="background:var(--book)"><small>Day</small><b>${i+1}</b></div>
+    <div><div class="kicker" style="color:var(--book)">📕 Keep Reading · after Lesson ${LESSONS.length}</div><h1>Reading Day ${i+1}</h1>${s&&s.done?`<span class="complete-badge">✓ You finished this day</span>`:""}</div></div></div>
+    <section class="card sec" id="sec-book"><div class="sec-h" style="background:${SEC.book.c}"><span class="ic">${SEC.book.ic}</span><h2>Book Time: ${B.short||B.title}</h2><span class="chk">${s&&s.done?"✓ Done":""}</span></div><div class="sec-b">${bookBody(i,s)}</div></section>
+    <div class="lessonnav"><button class="btn ghost small" onclick="go('lesson',${i-1})">‹ Back to ${i-1<LESSONS.length?`Lesson ${i}`:`Day ${i}`}</button>${i<NDAYS-1?`<button class="btn ghost small" onclick="go('lesson',${i+1})">Look ahead to Day ${i+2} ›</button>`:""}</div>`;
   $("bkDone").onclick=()=>{ const m=Math.max(1,Math.min(180,parseInt($("bkMin").value)||20));
     P().minutes=(P().minutes||0)+m; P().reads.push({at:Date.now(),min:m,title:B.title,ch:chapTxt(p),lesson:i});
     P().days[i]={done:true,at:Date.now(),min:m,b:p.b,ch:p.r}; P().last=Date.now(); addStar(`D${i}`); saveAll();
     confetti(p.r[1]===B.total?30:12); renderDay(i); };
 }
-function renderLesson(i,finished){
+function renderLesson(i,finished,catchUp){
   if(i>=LESSONS.length){ renderDay(i); return; }
   curLesson=i; const L=LESSONS[i], U=UNITS[L.u-1];
   if(finished){
     confetti(30);
     $("lesson").innerHTML=`<div class="card finish"><div class="big">🌼</div><span class="stamp">Lesson ${lessonNo(i)} complete</span>
-      <h2>Wonderful work, ${esc(student)}!</h2><p class="lead">${L.review?`You finished the Unit ${L.u} review.`:`You read “${esc(L.story.title)}” and finished every part of the lesson.`} You earned ${secsOf(L).length+2} stars.</p>
+      <h2>Wonderful work, ${esc(student)}!</h2>${catchUp?`<p class="note" style="font-size:16px;margin:4px 0 0">This was an earlier lesson, so it doesn’t check off today’s Language on your rhythm board. Today’s new lesson does.</p>`:""}<p class="lead">${L.review?`You finished the Unit ${L.u} review.`:`You read “${esc(L.story.title)}” and finished every part of the lesson.`} You earned ${secsOf(L).length+2} stars.</p>
       ${(()=>{ const sc=secsOf(L).map(k=>[k,LP(i).sec[k]]).filter(([,x])=>x&&x.total); return sc.length?`<div class="scorebig" style="max-width:520px;margin:6px auto 18px">${sc.map(([k,x])=>`<div style="display:flex;justify-content:space-between;gap:18px;width:100%;font-size:21px"><span>${SEC[k].ic} ${SEC[k].n}</span><b style="font-family:Lora,serif;font-size:24px;color:#7A5410">${x.score} / ${x.total} ${x.score===x.total?"⭐":""}</b></div>`).join("")}</div>`:""; })()}
       <div class="row" style="justify-content:center">${i<LESSONS.length-1?`<button class="btn" onclick="go('lesson',${i+1})">Next lesson ➜</button>`:""}<button class="btn ghost" onclick="go('home')">Back to lessons</button></div></div>`;
     return;
   }
-  let h=`<div class="lhead"><div class="kicker" style="color:${U.color}">Unit ${U.n} · ${U.title} · Lesson ${lessonNo(i)} of ${LESSONS.length}</div>
-    <h1>${L.review?`Unit ${U.n} Review & Check`:esc(L.story.title)}</h1>
-    <div class="row" style="margin-top:8px">${i===0?"":`<button class="btn ghost small" onclick="go('lesson',${i-1})">‹ Lesson ${i}</button>`}<button class="btn ghost small" ${i===LESSONS.length-1?"disabled":""} onclick="go('lesson',${i+1})">Lesson ${i+2} ›</button>${lessonDone(i)?`<span class="complete-badge">✓ Finished</span>`:""}</div>
+  const cur=nextLesson(), allDone=LESSONS.every((_,j)=>lessonDone(j));
+  let h=`<div class="lhead"><div class="lhead2"><div class="lnum" style="background:${U.color}"><small>Lesson</small><b>${lessonNo(i)}</b></div>
+    <div><div class="kicker" style="color:${U.color}">Unit ${U.n} · ${U.title}</div>
+    <h1>${L.review?`Unit ${U.n} Review & Check`:esc(L.story.title)}</h1>${lessonDone(i)?`<span class="complete-badge">✓ You finished this lesson</span>`:""}</div></div>
+    ${!allDone&&i!==cur?`<div class="notnow">👀 <span>You’re looking at <b>Lesson ${lessonNo(i)}</b>. Your lesson for today is <b>Lesson ${lessonNo(cur)}</b>.</span><button class="btn small" onclick="go('lesson',${cur})">Go to Lesson ${lessonNo(cur)} ➜</button></div>`:""}
+    <p class="dotslabel">Parts of this lesson · tap one to jump to it</p>
     <div class="dots" id="dots"></div></div>`;
   secsOf(L).forEach(k=>{ h+=BUILD[k](L,i,U); });
+  h+=`<div class="lessonnav">${i===0?"<span></span>":`<button class="btn ghost small" onclick="go('lesson',${i-1})">‹ Back to Lesson ${i}</button>`}${i<LESSONS.length-1?`<button class="btn ghost small" onclick="go('lesson',${i+1})">Look ahead to Lesson ${i+2} ›</button>`:""}</div>`;
   $("lesson").innerHTML=h; refreshDots();
   secsOf(L).forEach(k=>WIRE[k]&&WIRE[k](L,i,U));
 }
@@ -2005,6 +2024,6 @@ go(student?"home":"pick");
   } else IDB.put(snapshot()); })();
 </script>
 <script src="../rhythm/report.js"></script>
-<script>setTimeout(()=>{ try{ const p=JSON.parse(localStorage.getItem('la3-prog')||'{}'); rhythmCatchUp('la3', Object.values(p).flatMap(s=>Object.values((s&&s.lessons)||{}).filter(l=>l&&l.done).map(l=>l.doneAt))); }catch(e){} }, 1500);</script>
+<script>setTimeout(()=>{ try{ const p=JSON.parse(localStorage.getItem('la3-prog')||'{}'); rhythmCatchUp('la3', Object.values(p).flatMap(s=>Object.values((s&&s.lessons)||{}).filter(l=>l&&l.done&&l.rhythm!==false).map(l=>l.doneAt))); }catch(e){} }, 1500);</script>
 </body>
 </html>

@@ -1759,7 +1759,7 @@ BUILD.write=(L,i)=>{ const W=L.write, saved=P().writing[i]||"";
   return secShell("write","Writing",`<p style="font-size:20px"><b>${W.p}</b></p>
     <div class="task"><span class="ti">💡</span><div>${W.tip}</div></div>
     <p class="note">Write in your notebook, or type here. Your typing is saved for your parent to see.</p>
-    <textarea class="writebox" id="wrBox" placeholder="Start writing here…">${esc(saved)}</textarea>
+    <textarea class="writebox" id="wrBox" placeholder="Start writing here…" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off" data-gramm="false" data-enable-grammarly="false">${esc(saved)}</textarea>
     <div class="done-row"><span class="note" id="wrMsg"></span><button class="btn" style="background:var(--write)" id="wrDone">${secDone(i,"write")?"✓ Finished (save changes)":"I finished my writing"}</button></div>`); };
 WIRE.write=(L,i)=>{ let t=null; const box=$("wrBox");
   box.oninput=()=>{ clearTimeout(t); t=setTimeout(()=>{ P().writing[i]=box.value; saveAll(); const m=$("wrMsg"); if(m) m.textContent="Saved."; },500); };
@@ -2009,6 +2009,14 @@ function renderParent(){
     box.querySelectorAll("[data-remove]").forEach(b=>twoTap(b,"Tap again to remove",()=>{ const n=b.dataset.remove; roster=roster.filter(x=>x!==n); delete prog[n]; if(student===n) student=""; saveAll(); renderParent(); $("stumsg").textContent=`${n} was removed.`; }));
   }
 }
+
+/* ================= no spelling help while she types ================= */
+/* She should spell (and capitalize) on her own, so every typing box has autocorrect, spell-check underlines,
+   automatic capitals and word suggestions turned off. */
+(function(){ const off=el=>{ if(el.dataset.noHelp) return; el.dataset.noHelp="1"; el.setAttribute("spellcheck","false"); el.spellcheck=false;
+    el.setAttribute("autocorrect","off"); el.setAttribute("autocapitalize","off"); el.setAttribute("autocomplete","off"); el.setAttribute("data-gramm","false"); };
+  const scan=root=>{ root.querySelectorAll && root.querySelectorAll('textarea, input[type="text"], input:not([type])').forEach(off); };
+  scan(document); try{ new MutationObserver(ms=>ms.forEach(m=>m.addedNodes.forEach(n=>{ if(n.nodeType===1){ if(n.matches&&n.matches('textarea, input[type="text"], input:not([type])')) off(n); scan(n); } }))).observe(document.body,{childList:true,subtree:true}); }catch(e){} })();
 
 /* ================= start ================= */
 if('serviceWorker' in navigator && /github\.io$/.test(location.hostname)){ addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }

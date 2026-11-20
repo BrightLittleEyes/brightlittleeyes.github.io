@@ -311,7 +311,7 @@ window.FIREBASE_CONFIG = {
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
-const BUILD = '2026-11-20a';   // change this with every update, so open boards reload to the new version
+const BUILD = '2026-11-20b';   // change this with every update, so open boards reload to the new version
 const COL = 'rhythm_days', CFG_DOC = 'rhythm_config/main';
 
 /* ---------- the starting board (used until you save your own) ---------- */
@@ -796,6 +796,15 @@ const APP_OF_RUTH = {bible:'bible3', history:'hist3', language:'la3', science:'s
 function tieApps(blockLists, map){ blockLists.forEach(bl=>(bl||[]).forEach(b=>(b.items||[]).forEach(i=>{ if(!i.slot && map[i.id] && !('app' in i)) i.app=map[i.id]; }))); }
 const appDone = i => !!(i && i.app && APPS[i.app] && (S.apps||{})[i.app]);
 const isOn = i => !!S.data.checks[i.id] || appDone(i);
+const appTime = i => { const t=new Date((S.apps||{})[i.app]); return isNaN(t) ? 'earlier' : t.toLocaleTimeString(undefined,{hour:'numeric', minute:'2-digit'}); };
+/* Mom can take back a box an app checked off (for example, one sent by mistake) */
+function unApp(app){
+  const key=S.date; S.apps={...(S.apps||{})}; delete S.apps[app]; cacheLocal('apps:'+key, S.apps);
+  if(S.data.checks[ALL_ITEMS.find(i=>i.app===app).id]){ const id=ALL_ITEMS.find(i=>i.app===app).id; delete S.data.checks[id]; (S.ck=S.ck||{})[id]=1; save(); }
+  render();
+  if(S.db) S.db.doc(COL+'/'+key).set({apps:{[app]:firebase.firestore.FieldValue.delete()}}, {mergeFields:['apps.'+app]})
+    .then(()=>setStatus('ok','Saved')).catch(err=>{ console.error(err); setStatus('warn','Not saved online'); });
+}
 /* "None today": a Fun Choice she chooses to skip. It counts as done. */
 const NONE = '__none';
 /* "Good and beautiful" notes for reading and drawing */
@@ -1419,7 +1428,7 @@ function rowHTML(i, ord){
     ? `<div class="appnote ok">🔒 Today's choices are locked in</div>`
     : `<div class="appnote">Make all your choices first. Checking this locks them in for today.</div>`;
   if(i.app && APPS[i.app]) extra += appDone(i)
-    ? `<div class="appnote ok">✓ Finished in ${esc(APPS[i.app].name)}</div>`
+    ? `<div class="appnote ok">✓ Finished in ${esc(APPS[i.app].name)} at ${esc(appTime(i))}${S.role==='parent'?' <span style="font-weight:400">(tap the box to uncheck)</span>':''}</div>`
     : `<div class="appnote">🔒 Checks itself off when you ${esc(APPS[i.app].how)} in <b>${esc(APPS[i.app].name)}</b>.</div>`;
   const label = i.slot || !i.d ? `<b>${esc(i.t)}</b>` : `<b>${esc(i.t)}:</b> <span class="d">${esc(i.d)}</span>`;
   const arrows = ord ? `<span class="ord"><button data-ord="up" data-ob="${esc(ord.b)}" data-oid="${esc(i.id)}" aria-label="Move ${esc(i.t)} up" ${ord.first?'disabled':''}>▲</button><button data-ord="down" data-ob="${esc(ord.b)}" data-oid="${esc(i.id)}" aria-label="Move ${esc(i.t)} down" ${ord.last?'disabled':''}>▼</button></span>` : '';
@@ -1562,7 +1571,10 @@ $('#app').addEventListener('click', e=>{
       const miss=openPicks();
       if(miss.length){ toast(`Make all your choices first. Still to pick: ${miss.map(i=>i.t.replace(/ Slot /,' ')).join(', ')}.`, 4500); return; }
       D.checks[k]=true; S.just=k; (S.ck=S.ck||{})[k]=1; save(); render(); toast('Locked in! Have a great day.', 2600); return; }
-    if(appDone(it)){ toast(`This was checked off when you finished a lesson in ${APPS[it.app].name}.`, 3200); return; }
+    if(appDone(it)){
+      if(S.role!=='parent'){ toast(`This was checked off when you finished a lesson in ${APPS[it.app].name}.`, 3200); return; }
+      if(!confirm(`Uncheck ${it.t}? ${APPS[it.app].name} checked it off at ${appTime(it)}. It will check itself again if she finishes another lesson today.`)) return;
+      unApp(it.app); return; }
     if(it && it.app && APPS[it.app] && S.role!=='parent'){ toast(`To check this off, ${APPS[it.app].how} in ${APPS[it.app].name}. It checks itself!`, 4200); return; }
     if(D.checks[k]) delete D.checks[k]; else { D.checks[k]=true; S.just=k; } (S.ck=S.ck||{})[k]=1; save(); render(); return; }
   if(t.dataset.remind){ clockTimer(+t.dataset.remind*60000); return; }

@@ -615,7 +615,7 @@ function renderLesson(){
         <div class="donebar" id="donebar"><span>✅ Lesson complete!${wasDone?'':' You earned a ⭐'}</span>
           <span style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">${i<2?`<button class="btn small" id="nextL">Next lesson ➜</button>`:''}<button class="btn small ghost" id="toGames">🎮 Play the games</button></span></div>
       </div>
-      ${VIDS[L.t]?`<div class="watchcard"><div class="wtext"><b>📺 Watch a video</b><span>${esc(VIDS[L.t].t)}</span>${VIDS[L.t].by?`<small>${esc(VIDS[L.t].by)}</small>`:''}</div><div class="vframe"><iframe src="https://www.youtube-nocookie.com/embed/${VIDS[L.t].id}?rel=0&modestbranding=1&playsinline=1" title="${esc(VIDS[L.t].t)}" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" loading="lazy"></iframe></div><small class="vhelp">If the video doesn't play, ask a parent for help.</small></div>`:''}
+      ${VIDS[L.t]?`<div class="watchcard"><div class="wtext"><b>📺 Watch a video</b><span>${esc(VIDS[L.t].t)}</span>${VIDS[L.t].by?`<small>${esc(VIDS[L.t].by)}</small>`:''}</div><div class="vframe"><iframe src="https://www.youtube-nocookie.com/embed/${VIDS[L.t].id}?rel=0&modestbranding=1&playsinline=1" title="${esc(VIDS[L.t].t)}" sandbox="allow-scripts allow-same-origin allow-presentation" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" loading="lazy"></iframe></div><small class="vhelp">If the video doesn't play, ask a parent for help.</small></div>`:''}
       <div class="home-try"><b>🏡 Try it at home</b>${esc(L.home)}</div>
     </div></div>`;
   app.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go({page:b.dataset.go, unit:u.id}));

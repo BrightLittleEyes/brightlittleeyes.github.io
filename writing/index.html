@@ -988,6 +988,7 @@ function finishQuiz(){
   const r = { id:"r"+Date.now().toString(36)+Math.random().toString(36).slice(2,6), student, week:v.week, kind:quizKind(v.week), score, total:v.qs.length, pct:p, stars:starsFor(p), bestStreak:v.bestStreak, at:new Date().toISOString(),
     items: v.qs.map((Q,i)=>({q:Q.q, choices:Q.choices, answer:Q.answer, picked:v.picks[i]})) };
   results.push(r); saveAll(); renderStarChip();
+  if (p >= 60){ try{ window.rhythmReport && rhythmReport('writing6'); }catch(e){} }   // a grammar check with a star counts on the rhythm board
   const newBadges = badges(student).filter(b=>b.got && !before.includes(b.name));
   go({page:"done", r, newBadges, improved: prevBest==null || p>prevBest });
   if (r.stars) { sfx.star(); if (r.stars===3) confetti(); }
@@ -1187,6 +1188,6 @@ render();
 
 </script>
 <script src="../rhythm/report.js"></script>
-<script>setTimeout(()=>{ try{ const p=JSON.parse(localStorage.getItem('g6w-prog')||'{}'); rhythmCatchUp('writing6', Object.values(p).flatMap(s=>Object.values((s&&s.done)||{}))); }catch(e){} }, 1500);</script>
+<script>setTimeout(()=>{ try{ const p=JSON.parse(localStorage.getItem('g6w-prog')||'{}'); const rs=JSON.parse(localStorage.getItem('g6w-results')||'[]')||[]; rhythmCatchUp('writing6', Object.values(p).flatMap(s=>Object.values((s&&s.done)||{})).concat(rs.filter(r=>r&&r.pct>=60).map(r=>r.at))); }catch(e){} }, 1500);</script>
 </body>
 </html>

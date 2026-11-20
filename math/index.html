@@ -455,7 +455,7 @@ function logClose(done) {
   if (!curProb) return;
   const p = curProb; curProb = null;
   if (!done && p.time < 5) return;
-  probLog.push({ t0: p.t0, day: p.day, sec: p.sec, topic: p.topic, label: p.label, time: p.time, done, steps: p.steps });
+  probLog.push({ t0: p.t0, day: p.day, sec: p.sec, topic: p.topic, label: p.label, time: p.time, done, steps: p.steps, why: p.why });
   saveLog();
 }
 const _render = render;
@@ -623,7 +623,7 @@ document.addEventListener("click", e => {
 /* ---------- parent area (behind the PIN): daily totals, problem log, backup ---------- */
 function renderParent() {
   pinOkUntil = Date.now() + 10 * 60000;
-  const tabs = [["daily", "Daily totals", renderDaily], ["log", "Problem log", renderLog], ["backup", "Backup & restore", renderBackup], ["settings", "Settings", () => { renderSettingsCard(); renderSelfCard(); }]];
+  const tabs = [["daily", "Daily totals", renderDaily], ["log", "Problem log", renderLog], ["backup", "Backup & restore", renderBackup], ["notes", "Her notes", renderNotes], ["settings", "Settings", () => { renderSettingsCard(); renderSelfCard(); }]];
   const cur = tabs.find(t => t[0] === state.parentTab) || tabs[0];
   const bar = el(`<section class="card" style="margin-bottom:14px"><div class="choices" role="tablist">${tabs.map(([k, n]) =>
     `<button type="button" role="tab" data-t="${k}" aria-selected="${k === cur[0]}" class="${k === cur[0] ? "picked" : ""}">${n}</button>`).join("")}</div></section>`);
@@ -636,9 +636,13 @@ function renderParent() {
   stage.appendChild(lock);
 }
 /* ---------- Help Pip limit: after some Pip problems, Pip rests until she finishes problems in other activities ---------- */
-let pipRule = { pip: 3, other: 3 }, pipGate = { pipRun: 0, others: 0, resting: false };
+let pipRule = { pip: 1, other: 3 }, pipGate = { pipRun: 0, others: 0, resting: false }, pipWoke = false;
 try { const r = JSON.parse(localStorage.getItem("mathPipRule")); if (r && r.pip > 0 && r.other > 0) pipRule = r; } catch (e) {}
 try { const g = JSON.parse(localStorage.getItem("mathPipGate")); if (g) pipGate = Object.assign(pipGate, g); } catch (e) {}
+try { if (localStorage.getItem("mathPipRuleV2") !== "1") {   // Nov 19: 1 Help Pip problem, then 3 of her own
+  pipRule.pip = 1; localStorage.setItem("mathPipRule", JSON.stringify(pipRule)); localStorage.setItem("mathPipRuleV2", "1");
+  if (pipGate.pipRun >= 1 && !pipGate.resting) { pipGate.resting = true; pipGate.others = 0; localStorage.setItem("mathPipGate", JSON.stringify(pipGate)); }
+} } catch (e) {}
 let gateSnap = { pip: state.solved.pip || 0, all: sumSolved() };
 function saveGate() { try { localStorage.setItem("mathPipGate", JSON.stringify(pipGate)); } catch (e) {} }
 function gateCount() {
@@ -646,7 +650,7 @@ function gateCount() {
   gateSnap = { pip, all };
   if (dp < 0 || dOther < 0 || dp + dOther > 5) return;   // a restore or reset, not real work
   if (dp > 0) { pipGate.pipRun += dp; if (pipGate.pipRun >= pipRule.pip) { pipGate.resting = true; pipGate.others = 0; } }
-  if (dOther > 0) { pipGate.others += dOther; if (pipGate.others >= pipRule.other) { pipGate.resting = false; pipGate.pipRun = 0; pipGate.others = 0; } }
+  if (dOther > 0) { pipGate.others += dOther; if (pipGate.others >= pipRule.other) { if (pipGate.resting) pipWoke = true; pipGate.resting = false; pipGate.pipRun = 0; pipGate.others = 0; } }
   saveGate();
 }
 { const s0 = save; save = function () { s0(); gateCount(); }; }
@@ -965,6 +969,103 @@ new MutationObserver(muts => {
   if (!wrong) return;
   card.classList.add("nudge"); card.querySelector("summary").textContent = "📋 Want to see the steps?";
 }).observe(stage, { childList: true, subtree: true });
+/* ---------- Pip battery: she can always see how close she is to earning Help Pip, so she never has to leave to check ---------- */
+(() => { const st = document.createElement("style"); st.textContent = `
+  .pipbat{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;font-weight:600;font-size:.95rem;color:var(--ink)}
+  .pipbat .cells{display:inline-flex;gap:4px}
+  .pipbat .cells i{width:18px;height:22px;border-radius:5px;border:2px solid var(--g-think);display:inline-block}
+  .pipbat .cells i.on{background:var(--g-think)}
+  .pipbat.awake{color:var(--g-think)}
+  .pipbat[hidden]{display:none}
+  .woke{position:fixed;inset:0;background:rgba(20,30,28,.5);display:flex;align-items:center;justify-content:center;z-index:150;padding:16px}
+  .woke .card{max-width:420px;width:100%;text-align:center;align-items:center}
+  .woke .big{font-size:48px;line-height:1}`; document.head.appendChild(st); })();
+function paintPipBat() {
+  let b = document.getElementById("pipbat");
+  if (!b) { b = el(`<div id="pipbat" class="pipbat" aria-live="polite"></div>`); document.getElementById("score").after(b); }
+  b.hidden = state.section === "parent";
+  const left = pipRule.other - pipGate.others, ready = Math.max(0, pipRule.pip - pipGate.pipRun);
+  b.classList.toggle("awake", !pipGate.resting);
+  b.innerHTML = pipGate.resting
+    ? `<span>🔋 Pip:</span><span class="cells">${Array.from({ length: pipRule.other }, (_, i) => `<i class="${i < pipGate.others ? "on" : ""}"></i>`).join("")}</span><span>${left} more ${left === 1 ? "problem" : "problems"} to wake Pip!</span>`
+    : `<span>🤖 Pip is awake: ${ready} Help Pip ${ready === 1 ? "problem" : "problems"} ready</span>`;
+}
+function showWoke() {
+  const n = pipRule.pip;
+  const d = el(`<div class="woke" role="dialog" aria-modal="true" aria-labelledby="wokeT"><section class="card">
+    <div class="big">🎉</div>
+    <h2 id="wokeT">You woke Pip up!</h2>
+    <p>You earned ${n} Help Pip ${n === 1 ? "problem" : "problems"}. ${n === 1 ? "It's" : "They're"} saved for you. Pip will wait until you're ready.</p>
+    <div class="row" style="width:100%"><button class="primary" type="button" id="wokeGo">Help Pip now</button><button type="button" id="wokeLater">Keep going here first</button></div>
+  </section></div>`);
+  document.body.appendChild(d);
+  d.querySelector("#wokeGo").onclick = () => { d.remove(); state.section = "pip"; state.step = 0; render(); };
+  d.querySelector("#wokeLater").onclick = () => d.remove();
+}
+{ const r7 = render; render = function () {
+  r7(); paintPipBat();
+  if (pipWoke && state.section !== "pip") { pipWoke = false; showWoke(); }
+}; }
+
+/* ---------- every activity: on her first wrong answer in a step, Pip asks her why (her words go to Parent → Her notes) ---------- */
+(() => { const st = document.createElement("style"); st.textContent = `
+  #stage.whyLock button:not(#whyGo2):not(.quiet), #stage.whyLock input { pointer-events:none; opacity:.45 }`; document.head.appendChild(st); })();
+let lastChoice = "";
+document.addEventListener("click", e => {
+  const b = e.target.closest && e.target.closest("#stage button"); if (!b || b.id === "whyGo2") return;
+  const inp = stage.querySelector("input[type=number]:not([disabled])");
+  lastChoice = (b.id === "chk" || /^check/i.test(b.textContent.trim())) && inp ? inp.value : plain(b.textContent);
+}, true);
+document.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.matches && e.target.matches("#stage input")) lastChoice = e.target.value; }, true);
+new MutationObserver(muts => {
+  if (!curProb || !state.section || state.section === "pip" || state.section !== curProb.sec || Date.now() - lastPress > 1500) return;
+  if (stage.querySelector("#whyIn2")) return;
+  const look = muts.flatMap(m => [...m.addedNodes]).filter(n => n.nodeType === 1)
+    .map(n => n.matches(".note.look") ? n : n.querySelector(".note.look")).filter(Boolean)
+    .find(n => !/^(Type a number first|Tap the line to put your dot)/.test(n.textContent.trim()));
+  if (!look) return;
+  const stepKey = stepName(curProb.sec, state.step);
+  curProb.asked = curProb.asked || {};
+  if (curProb.asked[stepKey]) return;   // only the first wrong answer in each step
+  curProb.asked[stepKey] = true;
+  const choice = lastChoice || "that";
+  const box = el(`<div class="card" style="padding:14px;gap:8px;margin-top:10px">
+    ${pipSay(`Hmm, why do you think “${String(choice).replace(/"/g, "&quot;")}” wasn't right? Tell me in your own words, so I can learn too!`)}
+    <textarea id="whyIn2" rows="3" aria-label="Tell Pip why" style="font:inherit;padding:10px;border-radius:10px;border:2px solid var(--line);background:var(--card);color:var(--ink);width:100%;min-width:0"></textarea>
+    <div class="row" style="align-items:center"><button class="primary" type="button" id="whyGo2" disabled>Tell Pip</button>
+      <span class="sub" id="whyMsg2" style="margin:0">Write at least a few words.</span></div>
+  </div>`);
+  look.after(box);
+  stage.classList.add("whyLock");
+  const ta = box.querySelector("#whyIn2"), go = box.querySelector("#whyGo2");
+  ta.addEventListener("input", () => {
+    const ok = ta.value.trim().split(/\s+/).filter(Boolean).length >= 3;
+    go.disabled = !ok; box.querySelector("#whyMsg2").textContent = ok ? "" : "Write at least a few words.";
+  });
+  go.onclick = () => {
+    if (curProb) (curProb.why = curProb.why || []).push({ step: stepKey, choice: String(choice), said: ta.value.trim() });
+    box.remove(); stage.classList.remove("whyLock");
+    const inp = stage.querySelector("input[type=number]:not([disabled])"); if (inp) inp.focus();
+  };
+  setTimeout(() => ta.focus(), 50);
+}).observe(stage, { childList: true, subtree: true });
+{ const r8 = render; render = function () { stage.classList.remove("whyLock"); r8(); }; }
+
+/* ---------- Parent → Her notes: what she wrote after a wrong pick in Help Pip (for understanding her thinking, not for grading) ---------- */
+function renderNotes() {
+  const esc = s => String(s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+  const rows = probLog.filter(r => r.why && r.why.length).slice().reverse();
+  const when = t => new Date(t).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  stage.appendChild(el(`<details class="card backup" open><summary>Her notes</summary>
+    <p class="sub">When she gets something wrong (in Help Pip, and the first time in each step of the other activities), Pip asks her why, and she writes it in her own words. These are here so you can see how she's thinking. They don't count toward any score. Newest first.</p>
+    ${rows.length ? rows.map(r => `<div style="border-top:1px solid var(--line);padding:10px 0;display:grid;gap:4px">
+        <span class="sub" style="margin:0">${when(r.t0)} · ${r.sec === "pip" ? `Help Pip: ${esc((PIP_TOPICS[r.topic] || {}).label || "")}` : esc((sections[r.sec] || {}).title || r.sec)}</span>
+        <span style="font-size:.9rem">${esc(r.label)}</span>
+        ${r.why.map(w => `<div class="note look" style="margin-top:4px"><span class="sub" style="margin:0">${esc(w.step)} · she answered “${esc(w.choice)}”</span><br><b>“${esc(w.said)}”</b></div>`).join("")}
+      </div>`).join("") : "<p>No notes yet. They'll show up here after she writes one.</p>"}
+  </details>`));
+}
+
 
 /* ---------- problem log card (for grown-ups) ---------- */
 function renderLog() {
@@ -992,7 +1093,8 @@ function renderLog() {
   const when = t => new Date(t).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
   const rushed = r => Object.values(r.steps).reduce((a, s) => a + (s.fast || 0), 0);
   const result = r => (!r.done ? "Left unfinished" : clean(r) ? "Right first try"
-    : Object.entries(r.steps).filter(([, s]) => s.miss).map(([k, s]) => `${s.miss} wrong at ${k}`).join(", ")) + (rushed(r) ? ` · rushed ${rushed(r)}×` : "");
+    : Object.entries(r.steps).filter(([, s]) => s.miss).map(([k, s]) => `${s.miss} wrong at ${k}`).join(", ")) + (rushed(r) ? ` · rushed ${rushed(r)}×` : "")
+    + (r.why && r.why.length ? r.why.map(w => `<br><i>Picked “${w.choice.replace(/[&<>]/g, "")}”. Her words: “${w.said.replace(/[&<>]/g, "")}”</i>`).join("") : "");
   const recent = rows.slice(-25).reverse();
   stage.appendChild(el(`<details class="card backup">
     <summary>Problem log · accuracy and time, last 30 days</summary>
@@ -2326,6 +2428,26 @@ function pipMeet() {
   });
 }
 
+/* One try per choice: a wrong pick shows the right one and why, then she writes in her own words why her pick was wrong. */
+const plain = s => String(s).replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+function pipWhy(fb, choice, after) {
+  const box = el(`<div class="card" style="padding:14px;gap:8px;margin-top:10px">
+    ${pipSay(`Hmm, why was “${plain(choice).replace(/"/g, "&quot;")}” wrong? Tell me in your own words, so I don't make that mistake next time!`)}
+    <textarea id="whyIn" rows="3" aria-label="Tell Pip why" style="font:inherit;padding:10px;border-radius:10px;border:2px solid var(--line);background:var(--card);color:var(--ink);width:100%;min-width:0"></textarea>
+    <div class="row" style="align-items:center"><button class="primary" type="button" id="whyGo" disabled>Tell Pip</button>
+      <span class="sub" id="whyMsg" style="margin:0">Write at least a few words.</span></div>
+  </div>`);
+  fb.appendChild(box);
+  const ta = box.querySelector("#whyIn"), go = box.querySelector("#whyGo");
+  ta.addEventListener("input", () => {
+    const ok = ta.value.trim().split(/\s+/).filter(Boolean).length >= 3;
+    go.disabled = !ok; box.querySelector("#whyMsg").textContent = ok ? "" : "Write at least a few words.";
+  });
+  go.onclick = () => {
+    if (curProb) (curProb.why = curProb.why || []).push({ step: stepName("pip", state.step), choice: plain(choice), said: ta.value.trim() });
+    box.remove(); after();
+  };
+}
 function pipSense() {
   const pp = state.pp;
   const c = el(`<section class="card">
@@ -2333,6 +2455,7 @@ function pipSense() {
     ${pipWork(pp)}
     ${pipSay(pp.claim + " Did I get it?")}
     <h2>Does Pip's answer make sense?</h2>
+    <p class="sub">You get one try, so check before you tap.</p>
     <div class="choices">
       <button type="button" data-a="yes">Yes, it makes sense</button>
       <button type="button" data-a="off">Something seems off</button>
@@ -2340,21 +2463,23 @@ function pipSense() {
     <div id="fb"></div>
   </section>`);
   stage.appendChild(c);
+  const done = () => { const fb = c.querySelector("#fb"); fb.innerHTML = `${pipAnswer(pp)}<div class="note ok">${pp.yesRight}</div>${pipSay("Thanks for checking my work, teacher.")}`; fb.appendChild(pipNextRow()); };
+  const toFind = () => { const fb = c.querySelector("#fb"); fb.appendChild(nextBtn(() => { state.step = 2; render(); }, "Find Pip's mistake")); };
   c.querySelectorAll("[data-a]").forEach(b => b.onclick = () => {
-    const fb = c.querySelector("#fb"), saysOk = b.dataset.a === "yes";
-    if (pp.wrong < 0) {
-      if (saysOk) {
-        fb.innerHTML = `${pipAnswer(pp)}<div class="note ok">${pp.yesRight}</div>${pipSay("Phew! Thanks for checking my work, teacher.")}`;
-        fb.appendChild(pipNextRow());
-        c.querySelectorAll("[data-a]").forEach(x => x.disabled = true);
-      } else fb.innerHTML = `<div class="note look">${pp.offWrong}</div>`;
-      return;
+    const fb = c.querySelector("#fb"), saysOk = b.dataset.a === "yes", right = (pp.wrong < 0) === saysOk;
+    c.querySelectorAll("[data-a]").forEach(x => x.disabled = true);
+    c.querySelector(`[data-a="${pp.wrong < 0 ? "yes" : "off"}"]`).classList.add("picked");
+    if (right) {
+      if (pp.wrong < 0) return done();
+      fb.innerHTML = `<div class="note ok">${pp.offRight}</div>`; return toFind();
     }
-    if (!saysOk) {
-      fb.innerHTML = `<div class="note ok">${pp.offRight}</div>`;
-      fb.appendChild(nextBtn(() => { state.step = 2; render(); }, "Find Pip's mistake"));
-      c.querySelectorAll("[data-a]").forEach(x => x.disabled = true);
-    } else fb.innerHTML = `<div class="note look">${pp.yesWrong}</div>`;
+    fb.innerHTML = pp.wrong < 0
+      ? `<div class="note look">Actually, Pip got this one right. ${pp.yesRight.replace(/^You checked it\. /, "")}</div>`
+      : `<div class="note look">Actually, something is off. ${pp.offRight.replace(/^Good eye\. /, "")}</div>`;
+    pipWhy(fb, b.textContent, () => {
+      if (pp.wrong < 0) { fb.innerHTML += pipAnswer(pp); fb.appendChild(pipNextRow()); }
+      else toFind();
+    });
   });
 }
 
@@ -2363,17 +2488,22 @@ function pipFind() {
   const c = el(`<section class="card">
     ${pipQ(pp)}
     ${pipSay("Oh no, you're right. My circuits got tangled somewhere. Which step did I mess up? Tap it.")}
+    <p class="sub">One try. Check each step before you tap.</p>
     <div class="work" id="steps"></div>
     <div id="fb"></div>
   </section>`);
   stage.appendChild(c);
+  const btns = [];
   pp.steps.forEach((s, i) => {
     const b = el(`<button class="step" type="button"><small>${s.label}</small><b>${s.math}</b></button>`);
     b.onclick = () => {
       if (i === pp.wrong) { state.step = 3; render(); return; }
-      c.querySelector("#fb").innerHTML = `<div class="note look">${pp.stepOk(i)}</div>`;
+      btns.forEach(x => x.disabled = true); btns[pp.wrong].classList.add("fixed");
+      const fb = c.querySelector("#fb");
+      fb.innerHTML = `<div class="note look">${pp.stepOk(i)} The mistake is in <b>${pp.steps[pp.wrong].label}</b>.</div>`;
+      pipWhy(fb, `${s.label}`, () => fb.appendChild(nextBtn(() => { state.step = 3; render(); }, "Fix Pip's step")));
     };
-    c.querySelector("#steps").appendChild(b);
+    btns.push(b); c.querySelector("#steps").appendChild(b);
   });
 }
 
@@ -2383,21 +2513,24 @@ function pipFix() {
     ${pipQ(pp)}
     <div class="work"><div class="step"><small>${s.label}</small><b>${s.math}</b></div></div>
     ${pipSay(pp.fixQ)}
+    <p class="sub">One try. Think it through before you tap.</p>
     <div class="choices" id="opts"></div>
     <div id="fb"></div>
   </section>`);
   stage.appendChild(c);
-  [...pp.fixes].sort(() => Math.random() - .5).forEach(([t, ok, why]) => {
+  const finish = fb => { fb.insertAdjacentHTML("beforeend", `${pipAnswer(pp)}${pipWork(pp, true)}<div class="note ok">${pp.fixed}</div>${pipSay("Oh! I see it now. Thank you, teacher. My circuits feel much better.")}`); fb.appendChild(pipNextRow()); };
+  const opts = [...pp.fixes].sort(() => Math.random() - .5), btns = [];
+  opts.forEach(([t, ok, why]) => {
     const b = el(`<button type="button">${t}</button>`);
     b.onclick = () => {
       const fb = c.querySelector("#fb");
-      if (!ok) { fb.innerHTML = `<div class="note look">${why}</div>`; return; }
-      c.querySelectorAll("#opts button").forEach(x => x.disabled = x !== b);
-      b.classList.add("picked");
-      fb.innerHTML = `${pipAnswer(pp)}${pipWork(pp, true)}<div class="note ok">${pp.fixed}</div>${pipSay("Oh! I see it now. Thank you, teacher. My circuits feel much better.")}`;
-      fb.appendChild(pipNextRow());
+      btns.forEach(x => x.disabled = true);
+      btns[opts.findIndex(o => o[1])].classList.add("picked");
+      if (ok) return finish(fb);
+      fb.innerHTML = `<div class="note look">${why} The right way: <b>${pp.fixes.find(f => f[1])[0]}</b>.</div>`;
+      pipWhy(fb, t, () => finish(fb));
     };
-    c.querySelector("#opts").appendChild(b);
+    btns.push(b); c.querySelector("#opts").appendChild(b);
   });
 }
 function pipNextRow() {

@@ -239,6 +239,16 @@ ol.steps li::before{content:counter(st);width:30px;height:30px;border-radius:50%
 .notnow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#FFF6DA;border:2px solid var(--gold);border-radius:14px;padding:10px 14px;margin:10px 0 4px;font-size:17px}
 .dotslabel{font-size:14px;font-weight:700;color:var(--soft);margin:12px 0 0}
 .lessonnav{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:22px 0 4px;padding-top:14px;border-top:1.5px dashed var(--line)}
+.mybook{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;padding:18px 20px;margin:-6px 0 22px}
+.mybook .cover{width:84px;height:114px;font-size:12px}
+.mybook h2{font-size:24px;margin:2px 0}
+.mybook .kicker{color:var(--book)}
+.mybook .bkbar{max-width:340px;height:12px}
+.bookpath{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;grid-column:1/-1}
+.bookpath span{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:4px 12px 4px 6px;font-size:14px}
+.bookpath i.c{width:14px;height:20px;border-radius:2px 4px 4px 2px;display:inline-block}
+.bookpath .now{border-color:var(--book);box-shadow:0 0 0 2px #E9DCC8;font-weight:700}
+.bookpath .fin{color:var(--soft)}
 .confetti{position:fixed;top:-20px;font-size:26px;pointer-events:none;animation:fall 1.9s linear forwards;z-index:9}
 @keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.6}}
 @media(max-width:560px){.sec-b{padding:14px}.story{font-size:19px}.artcard{grid-template-columns:1fr}.frame{display:none}}
@@ -1534,6 +1544,18 @@ $("addForm").addEventListener("submit",e=>{ e.preventDefault(); const n=$("newNa
   roster.push(n); $("newName").value=""; student=n; P(); saveAll(); go("home"); });
 
 /* ================= home ================= */
+/* "My book": the reading path runs on its own, separate from the unit themes */
+function myBookHTML(){
+  let j=-1; for(let k=0;k<NDAYS;k++){ const r=bookRec(k); if(!(r&&r.done)){ j=k; break; } }
+  const path=`<div class="bookpath">${BOOK_ORDER.map(k=>{ const B=BOOKDB[k], fin=bookDone(k), now=j>=0&&planOf(j).b===k;
+      return `<span class="${now?"now":fin?"fin":""}"><i class="c" style="background:${B.color}"></i>${fin?"✓ ":""}${esc(B.short||B.title)}</span>`; }).join("")}</div>`;
+  if(j<0) return `<div class="card mybook"><div class="cover" style="background:var(--book)">🎉</div><div><div class="kicker">📕 My books</div><h2>You finished every book!</h2><div class="note">What a reader you are! Ask a parent for your next good book.</div></div>${path}</div>`;
+  const p=planOf(j), B=BOOKDB[p.b], up=bookPct(p.b), where=j<LESSONS.length?`Lesson ${j+1}`:`Reading Day ${j+1}`;
+  return `<div class="card mybook"><div class="cover" style="background:${B.color}">${esc(B.short||B.title)}</div><div>
+    <div class="kicker">📕 My book</div><h2><i>${esc(B.title)}</i></h2><div class="note" style="font-size:15px">by ${esc(B.author)}</div>
+    <div class="bkbar"><i style="width:${up/B.total*100}%"></i></div>
+    <div style="font-size:17px;margin-top:6px">${up?(B.unit==="half"?"You read the first half.":`You’ve read through chapter ${up} of ${B.total}.`):"You’re starting this book."} <b>Next: ${esc(chapTxt(p))}</b> in ${where}.</div></div>${path}</div>`;
+}
 function renderHome(){
   const nx=nextLesson(), all=LESSONS.every((_,i)=>lessonDone(i)), NL=LESSONS[nx], n=starCount();
   const doneN=LESSONS.filter((_,i)=>lessonDone(i)).length;
@@ -1544,14 +1566,15 @@ function renderHome(){
     <div class="note" style="font-size:16px;margin-top:4px">${doneN} of ${LESSONS.length} lessons done · ⭐ ${n} of ${TOTAL_STARS} stars</div>
     <div class="starbar"><i style="width:${n/TOTAL_STARS*100}%"></i></div></div>
     <button class="btn go" onclick="go('lesson',${all&&ndH>=0?ndH:nx})">${all&&ndH>=0?"Keep reading ➜":all?"Review":(P().lessons[nx]&&Object.keys(P().lessons[nx].sec).length?"Keep going ➜":"Start lesson ➜")}</button></div>`;
+  h+=myBookHTML();
   UNITS.forEach(U=>{
     const ls=unitLessons(U.n), d=ls.filter(([,i])=>lessonDone(i)).length;
-    h+=`<div class="unit"><div class="unit-head"><div class="badge-ic" style="background:${U.color}">${U.icon}</div><div><h2>Unit ${U.n}: ${U.title}</h2><span>${d} of ${ls.length} lessons done · 📕 ${[...new Set(ls.map(([,j])=>planOf(j).b))].map(k=>`<i>${BOOKDB[k].short||BOOKDB[k].title}</i>`).join(", then ")} · 🎵 “${U.poem.title}”</span></div></div><div class="lgrid">`;
+    h+=`<div class="unit"><div class="unit-head"><div class="badge-ic" style="background:${U.color}">${U.icon}</div><div><h2>Unit ${U.n}: ${U.title}</h2><span>${d} of ${ls.length} lessons done · 🎵 Poem: “${U.poem.title}”</span></div></div><div class="lgrid">`;
     ls.forEach(([L,i])=>{ h+=`<button class="ltile ${lessonDone(i)?"done":""} ${i===nx&&!all?"next":""} ${L.review?"rev":""}" onclick="go('lesson',${i})"><b>Lesson ${lessonNo(i)}</b><span>${L.review?"Review & Check":esc(L.story.title)}</span></button>`; });
     h+=`</div></div>`;
   });
   const dBooks=[...new Set(READ_SLOTS.slice(LESSONS.length).map(p=>p.b))];
-  h+=`<div class="unit"><div class="unit-head"><div class="badge-ic" style="background:var(--book)">📕</div><div><h2>Keep Reading</h2><span>Reading days after Lesson ${LESSONS.length} · 📕 ${dBooks.map(k=>`<i>${BOOKDB[k].short||BOOKDB[k].title}</i>`).join(", then ")}</span></div></div><div class="lgrid">`;
+  h+=`<div class="unit"><div class="unit-head"><div class="badge-ic" style="background:var(--book)">📕</div><div><h2>Keep Reading</h2><span>Extra Book Time days after Lesson ${LESSONS.length}, so you can finish all your books</span></div></div><div class="lgrid">`;
   for(let j=LESSONS.length;j<NDAYS;j++){ const p=planOf(j); h+=`<button class="ltile ${dayDone(j)?"done":""} ${all&&j===ndH?"next":""}" onclick="go('lesson',${j})"><b>Reading Day ${j+1}</b><span>${esc(BOOKDB[p.b].short||BOOKDB[p.b].title)}: ${esc(chapTxt(p))}</span></button>`; }
   h+=`</div></div>`;
   h+=`<h2 style="font-size:24px;margin-top:26px">My badges 🏅</h2><div class="badges">${BADGES.map(b=>`<div class="badge ${b.ok(student)?"":"locked"}"><div class="bi">${b.i}</div><b>${b.n}</b>${b.d}</div>`).join("")}</div>

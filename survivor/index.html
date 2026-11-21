@@ -258,6 +258,9 @@ const DOUBLE_EPS=new Set([5]); // episodes where two people go home
 const PAIRS={8:[['carter','cristian'],['mike','maggie'],['lewis','sharonda'],['kilby','kristin'],['devin','jelly'],['eric','thienan']]};
 const pairKey=pr=>'pair:'+pr.join('+');
 const pairName=pr=>pr.map(k=>first(k)).join(' & ');
+// Reward challenges played in schoolyard-pick teams
+const REW_TEAMS={9:[{n:'Purple team',ks:['mike','devin','eric','lewis','thienan']},{n:'Yellow team',ks:['sharonda','carter','jelly','maggie','cristian']}]};
+const teamLabel=t=>t.n+' ('+t.ks.map(k=>first(k)).join(', ')+')';
 function guessesFor(ep){ return DOUBLE_EPS.has(ep) ? [{f:'picks',l:'Voted out #1',p:PREDICT},{f:'picks2',l:'Voted out #2',p:PREDICT},...GUESS.slice(1)] : GUESS; }
 const EVENTS = [
   {c:'team',l:'Tribe won immunity',p:2},{c:'reward',l:'Won reward',p:5},{c:'indiv',l:'Individual immunity',p:5},
@@ -332,6 +335,10 @@ function guessRight(e,f,g,firstBoot){
 function guessHits(e,mid){ const P=S.preds[e.num]||{}; return guessesFor(e.num).filter(G=>guessRight(e,G.f,(P[G.f]||{})[mid],(P.picks||{})[mid])).length; }
 function guessPts(e,mid){ const P=S.preds[e.num]||{}; return guessesFor(e.num).reduce((s,G)=>s+(guessRight(e,G.f,(P[G.f]||{})[mid],(P.picks||{})[mid])?G.p:0),0); }
 function guessOpts(f,sel,alive,ep){
+  if(f==='rew' && REW_TEAMS[ep]){
+    const o=(v,l)=>`<option value="${v}" ${sel===v?'selected':''}>${esc(l)}</option>`;
+    return '<option value="">— pick a team —</option>'+REW_TEAMS[ep].map(t=>o(pairKey(t.ks),teamLabel(t))).join('');
+  }
   if(PAIRS[ep]){
     const o=(v,l)=>`<option value="${v}" ${sel===v?'selected':''}>${esc(l)}</option>`;
     return '<option value="">— pick a pair —</option>'+PAIRS[ep].map(pr=>o(pairKey(pr),pairName(pr))).join('');
@@ -418,7 +425,7 @@ function renderStandings(){
       </div>
       <div class="panel">
         <h2>Tonight's picks · Ep ${ep}</h2>
-        <p class="sub">Lock these in before the episode airs. Voted out +${PREDICT}, immunity +2, reward +2. Pick a tribe before the merge and a castaway after.${DOUBLE_EPS.has(ep)?` <b>Two people go home this episode, so everyone gets two voted-out guesses.</b>`:''}${PAIRS[ep]?` <b>This episode is played in pairs, so every guess is a pair.</b>`:''}</p>
+        <p class="sub">Lock these in before the episode airs. Voted out +${PREDICT}, immunity +2, reward +2. Pick a tribe before the merge and a castaway after.${DOUBLE_EPS.has(ep)?` <b>Two people go home this episode, so everyone gets two voted-out guesses.</b>`:''}${PAIRS[ep]?` <b>This episode is played in pairs, so every guess is a pair.</b>`:''}${REW_TEAMS[ep]?` <b>The reward challenge is played in two teams, so pick a team for the reward guess.</b>`:''}</p>
         <div class="stack" style="gap:0">${m.managers.map(mg=>`
           <div class="guess"><div style="font-weight:600">${esc(mg.name)}</div>
             <div class="guessrow">${guessesFor(ep).map(G=>`<label><span class="glabel">${G.l}</span><select data-pred="${mg.id}" data-field="${G.f}" aria-label="${esc(mg.name)}: ${G.l}" ${S.canWrite?'':'disabled'}>${guessOpts(G.f,(P[G.f]||{})[mg.id],alive,ep)}</select></label>`).join('')}</div>
@@ -538,6 +545,10 @@ function renderScore(){
       <button class="btn" data-pairact="reward">Won reward</button>
       <button class="btn" data-pairact="out">Voted out</button>
     </div>`:''}
+    ${REW_TEAMS[ep]?`<div class="row" style="margin:4px 0">
+      <span class="extras" style="margin:0">Quick fill · reward team:</span>
+      ${REW_TEAMS[ep].map((t,i)=>`<button class="btn" data-teamrew="${i}">${esc(t.n)} won</button>`).join('')}
+    </div>`:''}
     <div class="row" style="margin:4px 0">
       <span class="extras" style="margin:0">Quick fill · tribe reward:</span>
       ${['Savu','Toka','Dina','Merged'].filter(t=>active.some(c=>tribeOf(c.k)===t)).map(t=>`<button class="btn" data-triberew="${t}">${t} won</button>`).join('')}
@@ -643,6 +654,11 @@ document.addEventListener('click', async e=>{
   }
   if(t.dataset.out){ const k=t.dataset.out, ed=S.edit; ed.out = ed.out.includes(k)?ed.out.filter(x=>x!==k):[...ed.out,k]; S.editDirty=true; render(); return; }
   if(t.dataset.ev){ const [k,c]=t.dataset.ev.split('|'), ed=S.edit; const arr=ed.events[k]||[]; ed.events[k]=arr.includes(c)?arr.filter(x=>x!==c):[...arr,c]; if(!ed.events[k].length) delete ed.events[k]; S.editDirty=true; render(); return; }
+  if(t.dataset.teamrew){
+    const ed=S.edit, team=(REW_TEAMS[ed.num]||[])[+t.dataset.teamrew]; if(!team) return;
+    team.ks.forEach(k=>{ const a=ed.events[k]||[]; if(!a.includes('reward')) ed.events[k]=[...a,'reward']; });
+    S.editDirty=true; render(); return;
+  }
   if(t.dataset.pairact){
     S.pairSel=$('#pairsel')?.value||''; const ks=S.pairSel.split('+').filter(Boolean), act=t.dataset.pairact, ed=S.edit;
     ks.forEach(k=>{ if(act==='out'){ if(!ed.out.includes(k)) ed.out=[...ed.out,k]; } else { const a=ed.events[k]||[]; if(!a.includes(act)) ed.events[k]=[...a,act]; } });

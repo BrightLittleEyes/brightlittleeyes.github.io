@@ -482,7 +482,7 @@ function renderDraft(){
       <button class="btn pickbtn needwrite" data-pick="${c.k}"><span>${esc(c.n)}<br><small>${c.a} · ${esc(c.j)}</small></span>${tribeChip(c.k)}</button>`).join('')}</div>
       ${S.canWrite?'':'<p class="extras">View-only: picks are made by players with edit access.</p>'}</div>`}
     <div class="panel"><h3>Teams</h3><p class="sub">Draft order: ${m.order.map(id=>esc(mgrName(id))).join(' → ')}</p>
-      <div class="rosters">${m.order.map(id=>`<div><strong>${esc(mgrName(id))}</strong><ol>${m.picks.filter(p=>p.m===id).map(p=>`<li>${esc(BY[p.c].n)}${p.from?` <span class="extras">(replacement, Ep ${p.from}+)</span>`:''}</li>`).join('')}</ol></div>`).join('')}</div>
+      <div class="rosters">${m.order.map(id=>`<div><strong>${esc(mgrName(id))}</strong><ol>${m.picks.map((p,i)=>[p,i]).filter(([p])=>p.m===id).map(([p,i])=>`<li>${esc(BY[p.c].n)}${p.from?` <span class="extras">(replacement, scores from <select data-fromidx="${i}" aria-label="Episode ${esc(BY[p.c].n)} starts scoring" ${S.canWrite?'':'disabled'}>${Array.from({length:LAST_EP-1},(_,j)=>j+2).map(n=>`<option value="${n}" ${n===p.from?'selected':''}>Ep ${n}</option>`).join('')}</select>)</span>`:''}</li>`).join('')}</ol></div>`).join('')}</div>
     </div>
     <div class="panel"><h3>Sole Survivor picks</h3><p class="sub">Pick who you think wins it all, drafted or not. The earlier you commit, the more it's worth: picking now, during Episode ${nextEp()}, is worth <b>${WIN_VAL[nextEp()]||0} points</b> if they win. Put your vote in when Jeff says it's time to vote. After that it's locked for the rest of the season.</p>
       <div class="stack">${m.managers.map(mg=>{ const w=wpOf(mg.id), lk=wpLocked(w);
@@ -683,6 +683,12 @@ document.addEventListener('change', async e=>{
   if(s.id==='epsel'){ S.scoreEp=+s.value; S.edit=null; render(); return; }
   if(s.id==='teamsize'){ S.teamSize=+s.value; return; }
   if(s.dataset.tribe){ await writeMain({['tribes.'+s.dataset.tribe]:s.value}); toast(`${first(s.dataset.tribe)} moved to ${s.value}`); return; }
+  if(s.dataset.fromidx){
+    const i=+s.dataset.fromidx, picks=M().picks.map(p=>({...p}));
+    if(!picks[i]||!picks[i].from) return;
+    picks[i].from=+s.value; await writeMain({picks});
+    toast(`${first(picks[i].c)} now scores from Episode ${s.value}.`); return;
+  }
   if(s.dataset.wp){ if(wpLocked(wpOf(s.dataset.wp))){ toast('That pick is locked.'); render(); return; } await writeMain({['winnerPicks.'+s.dataset.wp]:{c:s.value, ep:nextEp()}}); toast(s.value?`Sole Survivor pick saved: worth ${WIN_VAL[nextEp()]||0} if they win.`:'Pick cleared.'); return; }
   if(s.dataset.pred){
     const ep=nextEp(), ref=S.db.doc('predictions/ep'+ep);

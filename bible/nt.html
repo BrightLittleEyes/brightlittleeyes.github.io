@@ -148,6 +148,44 @@ textarea{width:100%;min-height:70px;margin-top:6px;border:1px solid var(--line);
 .status{font-size:13px;color:var(--muted)}
 @media (max-width:480px){ .card{padding:16px} .verse{font-size:19px} }
 </style>
+<script>/* No emoji in text boxes */
+(function(){
+  var RE=/[\p{Extended_Pictographic}\p{Emoji_Presentation}\p{Emoji_Modifier}\p{Regional_Indicator}‍️⃣\u{E0020}-\u{E007F}]/gu;
+  var TEXT=/^(text|search|email|url|tel|password|)$/;
+  function isField(el){
+    if(!el) return false;
+    if(el.tagName==='TEXTAREA') return true;
+    if(el.tagName==='INPUT') return TEXT.test((el.getAttribute('type')||'').toLowerCase());
+    return !!el.isContentEditable;
+  }
+  var tip, tipT;
+  function notice(){
+    if(!document.body) return;
+    if(!tip){ tip=document.createElement('div'); tip.setAttribute('role','status');
+      tip.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#333;color:#fff;padding:10px 16px;border-radius:10px;font:600 15px system-ui,sans-serif;z-index:2147483647;pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,.25)';
+      tip.textContent='Emoji can’t be used here. Please use words.'; }
+    document.body.appendChild(tip); clearTimeout(tipT); tipT=setTimeout(function(){ tip.remove(); },2200);
+  }
+  function clean(el){
+    if(el.isContentEditable && el.tagName!=='INPUT' && el.tagName!=='TEXTAREA'){
+      var w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT), n, hit=false;
+      while((n=w.nextNode())){ RE.lastIndex=0; if(RE.test(n.nodeValue)){ hit=true; n.nodeValue=n.nodeValue.replace(RE,''); } }
+      if(hit) notice(); return;
+    }
+    var v=el.value; RE.lastIndex=0; if(!RE.test(v)) return;
+    var s=el.selectionStart, before=(s==null?v:v.slice(0,s)).replace(RE,'');
+    el.value=v.replace(RE,'');
+    try{ if(s!=null) el.setSelectionRange(before.length,before.length); }catch(e){}
+    notice();
+  }
+  addEventListener('beforeinput',function(e){
+    if(!isField(e.target) || !e.data) return;
+    RE.lastIndex=0; if(RE.test(e.data) && !e.isComposing && !e.data.replace(RE,'')){ e.preventDefault(); notice(); }
+  },true);
+  addEventListener('input',function(e){ if(isField(e.target) && !e.isComposing) clean(e.target); },true);
+  addEventListener('compositionend',function(e){ if(isField(e.target)) clean(e.target); },true);
+})();
+</script>
 </head>
 <body>
 

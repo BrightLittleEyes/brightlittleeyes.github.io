@@ -274,6 +274,8 @@ footer { color: var(--soft); font-size: .85rem; text-align: center; }
 .mtcard p{margin:0 0 20px;color:var(--soft);font-size:18px}
 .mtcard button:hover:not(:disabled){background:var(--accent)}
 .mtcard button{border:0;border-radius:16px;background:var(--accent);color:var(--accent-ink);font:700 22px var(--font-body);min-height:60px;width:100%;cursor:pointer}
+.pipbat .pf svg{width:26px;height:26px;display:block}.pipbat .pf{display:inline-flex;align-items:center}.woke .big.pf svg{width:84px;height:84px;display:block;margin:0 auto}
+.pipmiss{text-align:center;font-weight:600;font-size:.92rem;color:var(--soft);margin-top:4px}
 </style>
 <script>/* No emoji in text boxes */
 (function(){
@@ -454,6 +456,13 @@ try {
     localStorage.setItem("mathFreshStart", "2026-11-18");
   }
 } catch (e) {}
+/* one-time Pip reset (Nov 20, 2026): no saved Help Pip problems, and the 3-problem count starts at 0 */
+try {
+  if (localStorage.getItem("mathPipReset") !== "2026-11-20") {
+    localStorage.setItem("mathPipGate", JSON.stringify({ pipRun: 0, others: 0, resting: true, tokens: 0 }));
+    localStorage.setItem("mathPipReset", "2026-11-20");
+  }
+} catch (e) {}
 state.pipDone = {};
 try { const s = JSON.parse(localStorage.getItem("mathPlanner")); if (s && s.solved) state.solved = Object.assign(state.solved, s.solved); if (s && s.pipDone) state.pipDone = s.pipDone; } catch (e) {}
 function save() { try { localStorage.setItem("mathPlanner", JSON.stringify({ solved: state.solved, pipDone: state.pipDone })); } catch (e) {} countSolved(); }
@@ -477,7 +486,7 @@ setInterval(() => {
 let probLog = [];
 try { const l = JSON.parse(localStorage.getItem("mathLog")); if (Array.isArray(l)) probLog = l; } catch (e) {}
 function saveLog() { if (probLog.length > 2000) probLog = probLog.slice(-2000); try { localStorage.setItem("mathLog", JSON.stringify(probLog)); } catch (e) {} }
-let curProb = null, lastPress = 0;
+let curProb = null, lastPress = 0, lastClean = true;
 const stepName = (sec, i) => (sections[sec] && sections[sec].steps[i]) || `Step ${i + 1}`;
 function probStep() {
   const k = stepName(curProb.sec, state.step);
@@ -493,6 +502,7 @@ function probLabel() {
 function logClose(done) {
   if (!curProb) return;
   const p = curProb; curProb = null;
+  if (done) lastClean = !Object.values(p.steps).some(s => s.miss > 0);
   if (!done && p.time < 5) return;
   probLog.push({ t0: p.t0, day: p.day, sec: p.sec, topic: p.topic, label: p.label, time: p.time, done, steps: p.steps, why: p.why });
   saveLog();
@@ -675,7 +685,7 @@ function renderParent() {
   stage.appendChild(lock);
 }
 /* ---------- Help Pip limit: after some Pip problems, Pip rests until she finishes problems in other activities ---------- */
-let pipRule = { pip: 1, other: 3 }, pipGate = { pipRun: 0, others: 0, resting: false }, pipWoke = false;
+let pipRule = { pip: 1, other: 3 }, pipGate = { pipRun: 0, others: 0, resting: false }, pipWoke = false, pipMissed = false;
 try { const r = JSON.parse(localStorage.getItem("mathPipRule")); if (r && r.pip > 0 && r.other > 0) pipRule = r; } catch (e) {}
 try { const g = JSON.parse(localStorage.getItem("mathPipGate")); if (g) pipGate = Object.assign(pipGate, g); } catch (e) {}
 try { if (localStorage.getItem("mathPipRuleV2") !== "1") {   // Nov 19: 1 Help Pip problem, then 3 of her own
@@ -687,10 +697,11 @@ if (typeof pipGate.tokens !== "number") { pipGate.tokens = pipGate.resting ? 0 :
 let gateSnap = { pip: state.solved.pip || 0, all: sumSolved() };
 function saveGate() { try { localStorage.setItem("mathPipGate", JSON.stringify(pipGate)); } catch (e) {} }
 function gateCount() {
-  const pip = state.solved.pip || 0, all = sumSolved(), dp = pip - gateSnap.pip, dOther = (all - pip) - (gateSnap.all - gateSnap.pip);
+  const pip = state.solved.pip || 0, all = sumSolved(), dp = pip - gateSnap.pip; let dOther = (all - pip) - (gateSnap.all - gateSnap.pip);
   gateSnap = { pip, all };
   if (dp < 0 || dOther < 0 || dp + dOther > 5) return;   // a restore or reset, not real work
   if (dp > 0) pipGate.tokens = Math.max(0, pipGate.tokens - dp);
+  if (dOther > 0 && !lastClean) { pipMissed = true; dOther = 0; }
   if (dOther > 0) { pipGate.others += dOther; while (pipGate.others >= pipRule.other) { pipGate.others -= pipRule.other; pipGate.tokens += pipRule.pip; pipWoke = true; } }
   pipGate.resting = pipGate.tokens <= 0;
   saveGate();
@@ -700,7 +711,7 @@ function gateCount() {
   if (!pipGate.resting) return pm0();
   const left = pipRule.other - pipGate.others;
   const c = el(`<section class="card">
-    ${pipSay(`My batteries need a recharge! 🔋 Go solve ${left} more ${left === 1 ? "problem" : "problems"} in other activities, and I'll be ready to learn again.`)}
+    ${pipSay(`My batteries need a recharge! 🔋 Go solve ${left} more ${left === 1 ? "problem" : "problems"} in other activities with no wrong answers, and I'll be ready to learn again. Hints are OK!`)}
     <div class="meter"><span style="width:${pipGate.others / pipRule.other * 100}%"></span></div>
     <p class="sub" style="margin:0">${pipGate.others} of ${pipRule.other} done</p>
     <button class="primary" type="button" id="pipHome">Pick another activity</button>
@@ -711,7 +722,7 @@ function gateCount() {
 { const rh0 = renderHome; renderHome = function () {
   rh0();
   const t = stage.querySelector('[data-s="pip"] .ct');
-  if (t && pipGate.resting) { const left = pipRule.other - pipGate.others; t.textContent = `Pip is recharging 🔋 Finish ${left} more ${left === 1 ? "problem" : "problems"} in other activities to wake him.`; }
+  if (t && pipGate.resting) { const left = pipRule.other - pipGate.others; t.textContent = `Pip is recharging 🔋 Finish ${left} more ${left === 1 ? "problem" : "problems"} with no wrong answers to wake him. Hints are OK.`; }
 }; }
 function renderSettingsCard() {
   const d = el(`<details class="card backup" open><summary>Settings</summary>
@@ -852,7 +863,7 @@ renderHome = function () {
       <button class="tile wide" type="button" data-s="pip" style="--c:var(--g-think)">
         <span class="sym">${pipFace}</span>
         <span><span class="nm">Help Pip</span><span class="ct" style="display:block">${pipGate.resting
-          ? `Pip is recharging 🔋 Finish ${leftPip} more ${leftPip === 1 ? "problem" : "problems"} on your own to wake him.`
+          ? `Pip is recharging 🔋 Finish ${leftPip} more ${leftPip === 1 ? "problem" : "problems"} on your own with no wrong answers to wake him. Hints are OK.`
           : `Pip's math got tangled again. Be the teacher! ${pipGate.tokens} ready.`}</span></span>
       </button>
     </div>
@@ -1035,13 +1046,13 @@ function paintPipBat() {
   const cells = `<span class="cells">${Array.from({ length: pipRule.other }, (_, i) => `<i class="${i < pipGate.others ? "on" : ""}"></i>`).join("")}</span>`;
   b.classList.toggle("awake", ready > 0);
   b.innerHTML = ready > 0
-    ? `<span>🤖 ${ready} Help Pip ${ready === 1 ? "problem" : "problems"} ready</span><span>·</span>${cells}<span>${left} more for another!</span>`
-    : `<span>🔋 Pip:</span>${cells}<span>${left} more ${left === 1 ? "problem" : "problems"} to wake Pip!</span>`;
+    ? `<span class="pf">${pipFace}</span><span>${ready} Help Pip ${ready === 1 ? "problem" : "problems"} ready</span><span>·</span>${cells}<span>${left} more with no wrong answers for another!</span>`
+    : `<span class="pf">${pipFace}</span><span>Pip:</span>${cells}<span>${left} more with no wrong answers to wake Pip!</span>`;
 }
 function showWoke() {
   const n = pipRule.pip, t = pipGate.tokens, more = t > n;
   const d = el(`<div class="woke" role="dialog" aria-modal="true" aria-labelledby="wokeT"><section class="card">
-    <div class="big">🎉</div>
+    <div class="big pf">${pipFace}</div>
     <h2 id="wokeT">${more ? "You earned another Help Pip problem!" : "You woke Pip up!"}</h2>
     <p>You earned ${n} Help Pip ${n === 1 ? "problem" : "problems"}. You have <b>${t}</b> saved now. Pip will wait until you're ready.</p>
     <div class="row" style="width:100%"><button class="primary" type="button" id="wokeGo">Help Pip now</button><button type="button" id="wokeLater">Keep going here first</button></div>
@@ -1053,6 +1064,9 @@ function showWoke() {
 { const r7 = render; render = function () {
   r7(); paintPipBat();
   if (pipWoke && state.section !== "pip") { pipWoke = false; showWoke(); }
+  if (pipMissed) { pipMissed = false;
+    const b = document.getElementById("pipbat"), m = el(`<div class="pipmiss">That one had a wrong answer, so it didn't charge Pip. The next one can!</div>`);
+    if (b) { document.querySelectorAll(".pipmiss").forEach(x => x.remove()); b.after(m); setTimeout(() => m.remove(), 8000); } }
 }; }
 
 /* ---------- every activity: on her first wrong answer in a step, Pip asks her why (her words go to Parent → Her notes) ---------- */

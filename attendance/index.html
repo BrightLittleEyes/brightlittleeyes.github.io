@@ -205,10 +205,7 @@ details summary{cursor:pointer;font-family:var(--display);font-weight:700;font-s
       <div class="row" style="margin-bottom:12px">
         <button id="allBtn">Check all subjects</button>
       </div>
-      <label class="f">Notes (field trip, co-op, test, sick, etc.)
-        <textarea id="notes" rows="2"></textarea>
-      </label>
-      <div class="row" style="margin-top:12px;justify-content:space-between">
+      <div class="row" style="justify-content:space-between">
         <span class="saved" id="savedMsg"></span>
         <button class="primary" id="saveBtn">Save day</button>
       </div>
@@ -240,7 +237,7 @@ details summary{cursor:pointer;font-family:var(--display);font-weight:700;font-s
       <div class="row"><button id="csvBtn">Download record (CSV)</button><button id="printBtn">Print</button></div>
     </div>
     <div class="tablewrap"><table>
-      <thead><tr><th>Date</th><th>Status</th><th>Subjects</th><th>Notes</th></tr></thead>
+      <thead><tr><th>Date</th><th>Status</th><th>Subjects</th></tr></thead>
       <tbody id="log"></tbody>
     </table></div>
     <p class="saved" id="logEmpty">No days recorded yet. Pick a date above and mark it as a school day.</p>
@@ -281,7 +278,7 @@ details summary{cursor:pointer;font-family:var(--display);font-weight:700;font-s
   const today=iso(new Date());
   const yr=new Date().getMonth()>=6?new Date().getFullYear():new Date().getFullYear()-1;
   let settings={name:"",start:`${yr}-07-01`,end:`${yr+1}-06-30`,goal:180,subjects:DEFAULT_SUBJECTS};
-  let days={}; // date -> {status, subjects:{name:minutes|0}, notes}
+  let days={}; // date -> {status, subjects:{name:minutes|0}}
   let sel=today, view=parse(today); view.setDate(1);
   let db=null, local=false;
   const $=id=>document.getElementById(id);
@@ -342,7 +339,7 @@ details summary{cursor:pointer;font-family:var(--display);font-weight:700;font-s
     renderDay();renderCal();renderTally(c.per,c.present);renderLog();
   }
   function renderDay(){
-    const r=days[sel]||{status:"",subjects:{},notes:""};
+    const r=days[sel]||{status:"",subjects:{}};
     $("dayPick").value=sel;
     $("dayTitle").textContent=sel===today?"Today":parse(sel).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});
     document.querySelectorAll(".status button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.s===r.status&&!!r.status)));
@@ -358,7 +355,6 @@ details summary{cursor:pointer;font-family:var(--display);font-weight:700;font-s
       lab.querySelector(".min").addEventListener("input",()=>{const cb=lab.querySelector("input[type=checkbox]");if(!cb.checked){cb.checked=true;lab.classList.add("on");if(!pendingStatus())setPending("present")}markDirty()});
       box.appendChild(lab);
     });
-    $("notes").value=r.notes||"";
     $("savedMsg").textContent=days[sel]?"Saved":(sel>today?"Future date":"Not recorded yet");
   }
   function pendingStatus(){const b=document.querySelector('.status button[aria-pressed="true"]');return b?b.dataset.s:""}
@@ -397,9 +393,8 @@ details summary{cursor:pointer;font-family:var(--display);font-weight:700;font-s
     $("logEmpty").hidden=rows.length>0;
     rows.forEach(([d,r])=>{
       const tr=document.createElement("tr");tr.className="click";
-      tr.innerHTML=`<td class="d">${d}</td><td><span class="pill ${r.status}">${label(r.status)}</span></td><td></td><td></td>`;
+      tr.innerHTML=`<td class="d">${d}</td><td><span class="pill ${r.status}">${label(r.status)}</span></td><td></td>`;
       tr.children[2].textContent=Object.entries(r.subjects||{}).map(([s,m])=>m?`${s} (${m}m)`:s).join(", ");
-      tr.children[3].textContent=r.notes||"";
       tr.addEventListener("click",()=>{sel=d;view=new Date(parse(d).getFullYear(),parse(d).getMonth(),1);render();window.scrollTo({top:0,behavior:"smooth"})});
       tb.appendChild(tr);
     });
@@ -408,7 +403,6 @@ details summary{cursor:pointer;font-family:var(--display);font-weight:700;font-s
   // ---- events ----
   document.querySelectorAll(".status button").forEach(b=>b.addEventListener("click",()=>{setPending(b.dataset.s);markDirty();if(!b.dataset.s)saveDay()}));
   $("allBtn").addEventListener("click",()=>{document.querySelectorAll(".subj").forEach(l=>{l.querySelector("input[type=checkbox]").checked=true;l.classList.add("on")});setPending("present");markDirty()});
-  $("notes").addEventListener("input",markDirty);
   $("dayPick").addEventListener("change",e=>{if(!e.target.value)return;sel=e.target.value;const d=parse(sel);view=new Date(d.getFullYear(),d.getMonth(),1);render()});
   $("prevM").addEventListener("click",()=>{view=new Date(view.getFullYear(),view.getMonth()-1,1);renderCal()});
   $("nextM").addEventListener("click",()=>{view=new Date(view.getFullYear(),view.getMonth()+1,1);renderCal()});
@@ -417,9 +411,8 @@ details summary{cursor:pointer;font-family:var(--display);font-weight:700;font-s
     const status=pendingStatus();
     const subjects={};
     if(status==="present") settings.subjects.forEach((s,i)=>{if($("sub"+i).checked)subjects[s]=Number($("min"+i).value)||0});
-    const notes=$("notes").value.trim();
     if(!status){delete days[sel]}
-    else days[sel]={status,subjects,notes};
+    else days[sel]={status,subjects};
     $("savedMsg").textContent="Saving…";
     const ok=await persistDay(sel);
     render();if(ok)$("savedMsg").textContent=status?"Saved":"Cleared";
@@ -433,10 +426,10 @@ details summary{cursor:pointer;font-family:var(--display);font-weight:700;font-s
 
   $("csvBtn").addEventListener("click",async()=>{
     const q=v=>`"${String(v??"").replace(/"/g,'""')}"`;
-    const head=["Date","Weekday","Status",...settings.subjects.map(s=>s+" (min)"),"Notes"];
+    const head=["Date","Weekday","Status",...settings.subjects.map(s=>s+" (min)")];
     const lines=[`${q("Student")},${q(settings.name)}`,`${q("School year")},${q(settings.start+" to "+settings.end)}`,`${q("Days of instruction")},${counts().present}`,`${q("Absences")},${counts().absent}`,"",head.map(q).join(",")];
     Object.entries(days).filter(([d])=>inYear(d)).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([d,r])=>{
-      lines.push([d,parse(d).toLocaleDateString("en-US",{weekday:"long"}),label(r.status),...settings.subjects.map(s=>r.subjects&&s in r.subjects?(r.subjects[s]||"x"):""),r.notes].map(q).join(","));
+      lines.push([d,parse(d).toLocaleDateString("en-US",{weekday:"long"}),label(r.status),...settings.subjects.map(s=>r.subjects&&s in r.subjects?(r.subjects[s]||"x"):"")].map(q).join(","));
     });
     const fname=`attendance-${(settings.name||"student").replace(/\W+/g,"-").toLowerCase()}-${settings.start.slice(0,4)}-${settings.end.slice(0,4)}.csv`;
     download(fname,"\ufeff"+lines.join("\r\n"),"text/csv");

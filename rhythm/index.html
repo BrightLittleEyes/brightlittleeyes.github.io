@@ -1211,6 +1211,15 @@ function normalizeMain(d){
     c.tags.fun = (c.tags.fun||[]).filter(t=>!(t.id==='mom_game' || norm(t.name)==='board game with mom'));
     c.v = 33;
   }
+  if(c.v < 34){                       // new Fun Choices for Bekah
+    c.tags.fun = c.tags.fun||[];
+    [{id:'guitar', name:'Play Guitar', sub:'Practice or play songs you know', timer:1800},
+     {id:'cards', name:'Solo Card Games', sub:'Solitaire or card tricks', timer:2700},
+     {id:'origami', name:'Origami', sub:'Fold something new', timer:2700},
+     {id:'yarn', name:'Knitting, Crochet or Bracelets', sub:'Work on a yarn or bracelet project', timer:2700}]
+      .forEach(t=>{ if(!c.tags.fun.some(x=>x.id===t.id || norm(x.name)===norm(t.name))) c.tags.fun.push(t); });
+    c.v = 34;
+  }
   return c;
 }
 const BOARD_OF_DAY = {6:'satBlocks', 0:'sunBlocks'};   // Saturday, Sunday; every other day uses "blocks"

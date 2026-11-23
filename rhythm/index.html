@@ -867,7 +867,7 @@ const LOCK_MSG = 'Your choices are locked in for today. Ask Mom if something nee
 const openPicks = () => ALL_ITEMS.filter(i=>i.slot && !S.data.slots[i.id]);
 /* Down Time: if she picks "None today" for a Fun Choice during the day, Down Time goes on her evening.
    Only Mom can check it off. */
-const DOWN = {id:'downtime', t:'Down Time', d:'Quiet, calm time. Mom will let you know when it is done.', momOnly:true};
+const DOWN = {id:'downtime', t:'Down Time', d:'Quiet, calm time until bedtime.', momOnly:true};
 const downOn = () => !!(S.kid==='main' ? CFG.downTime : ((CFG.kids||{})[S.kid]||{}).downTime);
 const noneOK = () => !!(S.kid==='main' ? CFG.funNone : ((CFG.kids||{})[S.kid]||{}).funNone);
 const DAY_OPTS = {all:'Every day', notsat:'Every day but Saturday', weekdays:'Weekdays', sat:'Saturdays', sun:'Sundays', weekend:'Weekends'};
@@ -1654,7 +1654,7 @@ $('#app').addEventListener('click', e=>{
   const t=e.target.closest('button'); if(!t) return;
   const D=S.data;
   if(t.dataset.check){ const k=t.dataset.check, it=ALL_ITEMS.find(x=>x.id===k);
-    if(it && it.momOnly && S.role!=='parent'){ toast('Mom checks off Down Time when it is done.', 3000); return; }
+    if(it && it.momOnly && S.role!=='parent'){ toast('Down Time lasts until bedtime. Mom checks it off.', 3000); return; }
     if(k===LOCK_ID && S.role!=='parent'){
       if(D.checks[k]){ toast(LOCK_MSG, 3500); return; }
       const miss=openPicks();

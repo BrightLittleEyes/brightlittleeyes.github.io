@@ -929,6 +929,13 @@ function normalize(d){
     if(!(ruth.tags.flag||[]).length) ruth.tags.flag = clone(c.tags.flag||[]);
     ruth.flagV=1;
   }
+  if(ruth && Array.isArray(ruth.blocks) && !(ruth.radioV>=1)){   // Ruth: Christian Radio too (no timer on her board)
+    ruth.tags.fun = ruth.tags.fun||[];
+    if(!ruth.tags.fun.some(t=>t.id==='radio' || String(t.name||'').trim().toLowerCase()==='christian radio'))
+      ruth.tags.fun.push({id:'radio', name:'Christian Radio', sub:'Listen to a Christian radio station',
+        links:[{name:'Listen to K-LOVE', url:'https://www.klove.com/music/streaming'}, {name:'Listen to Air1', url:'https://www.air1.com/streaming'}]});
+    ruth.radioV=1;
+  }
   if(ruth && Array.isArray(ruth.blocks) && !(ruth.weekendV>=1)){ ruth.weekendOff=true; ruth.weekendV=1; }   // Ruth: no structure on weekends
   if(ruth && !(ruth.appsV>=1)){ tieApps([ruth.blocks], APP_OF_RUTH); ruth.appsV=1; }
   if(ruth && Array.isArray(ruth.blocks) && !(ruth.tillyV>=1)){   // Ruth: Tilly Math, checked off by her 3rd Grade Math app after 30 minutes

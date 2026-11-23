@@ -992,6 +992,7 @@ function normalizeMain(d){
   if(d.tags) ['fun','mech','flag'].forEach(k=>{ if(Array.isArray(d.tags[k])) c.tags[k]=d.tags[k]; });
   ['verse','verseRef','kidName','pwKid','pwParent','sound','theme'].forEach(k=>{ if(typeof d[k]==='string') c[k]=d[k]; });
   if(typeof d.repeat==='boolean') c.repeat=d.repeat;
+  if(typeof d.funNone==='boolean') c.funNone=d.funNone;   // "None today" for Fun Choices is kept when the board is saved
   if(typeof d.noRepeat==='boolean') c.noRepeat=d.noRepeat;
   if(d.kids && typeof d.kids==='object') c.kids=clone(d.kids);
   if(d.original && typeof d.original==='object') c.original=d.original;
@@ -1191,6 +1192,10 @@ function normalizeMain(d){
   if(c.v < 30){                       // good and beautiful notes on reading and drawing
     addGB(c.tags.fun);
     c.v = 30;
+  }
+  if(c.v < 31){                       // "None today" was lost when the board was saved; turn it back on for Bekah
+    c.funNone = true;
+    c.v = 31;
   }
   return c;
 }
@@ -1830,6 +1835,7 @@ function renderEditor(){
     ${E._main?`<p class="help" style="margin-top:-6px"><b>These blocks and tags are only on ${esc(kidLabel(S.kid))}'s board.</b></p>`:''}
     ${(E.tags.mom||[]).length||E._main?tagsEd('mom','Mom &amp; Me tags','What the two of you can do together in Mom &amp; Me time.',false,false):''}
     ${(E.tags.explore||[]).length||E._main?tagsEd('explore','Explore tags','Real-world things she can pick for Explore time.',true,false):''}
+    <div class="ed-sec" style="margin-bottom:-8px"><label class="ed-chk" style="font-weight:700;color:var(--ink)"><input type="checkbox" data-path="${E._main?'kids.'+S.kid+'.funNone':'funNone'}" data-type="flag" ${(E._main?(E.kids[S.kid]||{}).funNone:E.funNone)?'checked':''}> She can pick "None today" for a Fun Choice (it still counts as done)</label></div>
     ${tagsEd('fun','Fun Choice tags',E._main?'She picks these for the Fun Choice slots.':'She picks these for the Fun Choice slots. A timer shows under the tag when it\'s placed.',E._main,!E._main)}
     ${tagsEd('mech','Helping Hands tags','She picks these for the Helping Hands slots. "Shows on" picks which days a tag is offered.',true,true,true)}
     <div class="ed-sec" style="margin-top:-8px"><label class="ed-chk" style="font-weight:700;color:var(--ink)"><input type="checkbox" data-path="noRepeat" data-type="flag" ${E.noRepeat!==false?'checked':''}> No repeats: a Helping Hands job she did yesterday is greyed out today ("You did this yesterday")</label></div>

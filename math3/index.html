@@ -358,6 +358,8 @@ function goalNow(){
 }
 function goalLeft(g){ const a=[]; if(g.min<GOAL_MIN) a.push(`${GOAL_MIN-g.min} more minute${GOAL_MIN-g.min===1?'':'s'} of work`); if(g.right<GOAL_RIGHT) a.push(`${GOAL_RIGHT-g.right} more problem${GOAL_RIGHT-g.right===1?'':'s'} right on the first try`); return a.join(' and '); }
 function mathReport(){ try{ const g=goalNow(), k=goalDayKey();
+  /* Ruth's rhythm board: Tilly Math checks itself off after 30 minutes of work */
+  if(g.min>=GOAL_MIN && localStorage.getItem('math3Board')!==k){ localStorage.setItem('math3Board',k); window.rhythmReport && rhythmReport('math3'); }
   if(g.met && localStorage.getItem('math3Reported')!==k){ localStorage.setItem('math3Reported',k);
     try{ const u=new SpeechSynthesisUtterance('You reached today\'s math goal. Great work!'); u.rate=.95; speechSynthesis.speak(u); }catch(e){} }
   if(window.paintGoal) paintGoal(); }catch(e){} }
@@ -2182,6 +2184,7 @@ function pipNextRow() {
 
 render();
 </script>
-
+<script src="../rhythm/report.js"></script>
+<script>mathReport();</script>
 </body>
 </html>

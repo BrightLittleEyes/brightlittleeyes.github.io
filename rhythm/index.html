@@ -832,7 +832,8 @@ const APPS = {
   bible3:  {name:'Through the Word 3 (Bible)',     how:'finish a Bible lesson'},
   hist3:   {name:'Through the Word 3 (History)',   how:'finish a History lesson'},
   la3:     {name:'Wildflower Language Arts',       how:'finish a Language Arts lesson'},
-  sciexp:  {name:'Science Explorers',              how:'finish a Science lesson'}
+  sciexp:  {name:'Science Explorers',              how:'finish a Science lesson'},
+  math3:   {name:'3rd Grade Math',                 how:'do 30 minutes of work'}
 };
 const APP_OF_MAIN = {bible:'bible6', history:'hist6', language:'writing6', mathapp:'math6', science:'science6'};
 const APP_OF_RUTH = {bible:'bible3', history:'hist3', language:'la3', science:'sciexp'};
@@ -924,6 +925,14 @@ function normalize(d){
   }
   if(ruth && Array.isArray(ruth.blocks) && !(ruth.weekendV>=1)){ ruth.weekendOff=true; ruth.weekendV=1; }   // Ruth: no structure on weekends
   if(ruth && !(ruth.appsV>=1)){ tieApps([ruth.blocks], APP_OF_RUTH); ruth.appsV=1; }
+  if(ruth && Array.isArray(ruth.blocks) && !(ruth.tillyV>=1)){   // Ruth: Tilly Math, checked off by her 3rd Grade Math app after 30 minutes
+    if(!ruth.blocks.some(b=>b.items.some(i=>i.id==='r_tilly'))){
+      const b = ruth.blocks.find(b=>b.items.some(i=>i.id==='math')) || ruth.blocks.find(b=>b.id==='r_subjects') || ruth.blocks[0];
+      const at = b.items.findIndex(i=>i.id==='math');
+      b.items.splice(at<0 ? b.items.length : at+1, 0, {id:'r_tilly', t:'Tilly Math', d:'30 minutes in 3rd Grade Math. Open it from its icon and tap Start on the timer at the top.', app:'math3'});
+    }
+    ruth.tillyV=1;
+  }
   if(ruth && !(ruth.funV>=1)){        // Ruth: one fewer weekday Fun Choice from Nov 18, 2026, so her fun picks match Bekah's
     (ruth.blocks||[]).forEach(b=>b.items.forEach(i=>{ if(i.id==='r_f1') i.until='2026-11-17'; }));
     ruth.funV=1;

@@ -272,6 +272,7 @@ table.log td,table.log th{text-align:left;padding:5px 6px;border-bottom:1px soli
     <p>Progress and stars are saved in this browser only. 🔊 buttons read the text aloud. That's good for practice, but on the test she'll read on her own, so try having her read first.</p>
     <p><b>Read with Tilly</b> uses the device's speech-to-text to listen. It's a helper, not a perfect judge. Speech-to-text tends to "fix" small mistakes and sometimes mishears names. After she reads, you can tap any word to switch it between right and missed.</p>
     <div id="rlog"></div>
+    <div id="speedSet" style="margin-top:14px"></div>
     <div id="helpRule" style="margin-top:14px"></div>
     <div id="notes" class="notes" style="margin-top:10px"></div>
     <p><button class="speak" id="resetBtn">Reset progress</button></p>
@@ -439,7 +440,9 @@ function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor
 const $=s=>document.querySelector(s);
 const esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 const canSpeak=("speechSynthesis" in window);
-function speak(t){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.replace(/\{\d\}/g," blank ").replace(/\*/g,""));u.rate=.88;u.pitch=1.12;const v=pickVoice();if(v)u.voice=v;speechSynthesis.speak(u)}catch(e){}}
+const SPEEDS=[["Extra slow",.6],["Slow",.72],["Medium",.85]];
+function tRate(){try{const v=+localStorage.getItem(KEY+"_rate");if(v>=.4&&v<=1.2)return v}catch(e){}return .72}
+function speak(t){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.replace(/\{\d\}/g," blank ").replace(/\*/g,""));u.rate=tRate();u.pitch=1.12;const v=pickVoice();if(v)u.voice=v;speechSynthesis.speak(u)}catch(e){}}
 let _voice;function pickVoice(){try{if(_voice)return _voice;const vs=speechSynthesis.getVoices().filter(v=>/^en[-_]US/i.test(v.lang));if(!vs.length)return null;_voice=(window.bleBestVoice&&bleBestVoice())||vs.find(v=>/Samantha|Ava|Allison|Susan|Zira|Jenny|Aria|Google US English/i.test(v.name))||vs[0];return _voice}catch(e){return null}}
 function speakBtn(t){return canSpeak?`<button class="speak" data-say="${esc(t).replace(/"/g,'&quot;')}">🔊 Read to me</button>`:""}
 
@@ -752,7 +755,7 @@ function step(){
     };
   }else ruthTurn();
 }
-let TCPS=14;try{const v=+localStorage.getItem(KEY+"_cps");if(v>5&&v<40)TCPS=v}catch(e){}
+let TCPS1=16;try{const v=+localStorage.getItem(KEY+"_cps1");if(v>5&&v<45)TCPS1=v}catch(e){}
 function tillyRead(si,done){
   const sg=RS.segs[si];
   if(!canSpeak){setBubble("Grown-up, please read my part out loud! 🩰");setTimeout(done,2500);return}
@@ -760,15 +763,15 @@ function tillyRead(si,done){
   const wts=sg.toks.map(k=>k.t.length+1+(/[,;:]["”]?$/.test(k.t)?4:0)+(/[.!?]["”]?$/.test(k.t)?7:0));
   const starts=[];let acc=0;wts.forEach(w=>{starts.push(acc);acc+=w});const totalW=acc;
   let boundary=false,finished=false,t0=0,raf=null,lastIdx=-1;
-  const pace=()=>{if(boundary||finished)return;const pos=(Date.now()-t0)/1000*TCPS;let idx=sg.toks.length-1;
+  const pace=()=>{if(boundary||finished)return;const pos=(Date.now()-t0)/1000*TCPS1*tRate();let idx=sg.toks.length-1;
     for(let i=0;i<starts.length;i++){if(pos<starts[i]+wts[i]){idx=i;break}}
     if(idx!==lastIdx){lastIdx=idx;mark(idx)}raf=requestAnimationFrame(pace)};
   const begin=()=>{if(t0)return;t0=Date.now();setTimeout(()=>{if(!boundary&&!finished)pace()},180)};
   const end=()=>{if(finished)return;finished=true;cancelAnimationFrame(raf);
-    if(!boundary&&t0){const secs=(Date.now()-t0)/1000;if(secs>1){const c=totalW/secs;if(c>5&&c<40){TCPS=TCPS*.4+c*.6;try{localStorage.setItem(KEY+"_cps",TCPS.toFixed(2))}catch(e){}}}}
+    if(!boundary&&t0){const secs=(Date.now()-t0)/1000;if(secs>1){const c=totalW/secs;const c1=c/tRate();if(c1>5&&c1<45){TCPS1=TCPS1*.4+c1*.6;try{localStorage.setItem(KEY+"_cps1",TCPS1.toFixed(2))}catch(e){}}}}
     mark(-1);done()};
   try{speechSynthesis.cancel();
-    const u=new SpeechSynthesisUtterance(sg.text);u.rate=.88;u.pitch=1.12;const v=pickVoice();if(v)u.voice=v;
+    const u=new SpeechSynthesisUtterance(sg.text);u.rate=tRate();u.pitch=1.12;const v=pickVoice();if(v)u.voice=v;
     u.onstart=begin;
     u.onboundary=e=>{if(e.name&&e.name!=="word")return;begin();boundary=true;const ci=e.charIndex;
       let idx=sg.toks.findIndex(k=>ci>=k.s&&ci<k.e);if(idx<0)idx=sg.toks.findIndex(k=>k.s>=ci);if(idx>=0)mark(idx)};
@@ -1079,7 +1082,10 @@ function helpPas(x){
 }
 
 /* ---- grown-up area: Help Tilly settings + Ruth's notes ---- */
-function renderHelpParent(){
+function renderSpeed(){const el=$("#speedSet");if(!el)return;const r=tRate();
+  el.innerHTML=`<b>Tilly's reading speed</b><div class="seg-toggle" style="margin:6px 0 0">${SPEEDS.map(([n,v])=>`<button data-rate="${v}" class="${Math.abs(v-r)<.01?"on":""}">${n}</button>`).join("")}</div>`;
+  el.querySelectorAll("[data-rate]").forEach(b=>b.onclick=()=>{try{localStorage.setItem(KEY+"_rate",b.dataset.rate)}catch(e){}renderSpeed();speak("Hi Ruth! This is how fast I'll read.")})}
+function renderHelpParent(){renderSpeed();
   const el=$("#helpRule");if(!el)return;const R_=rule();
   el.innerHTML=`<b>Help Tilly</b><p class="rule" style="margin:4px 0">Each time Ruth finishes the number of her own problems below, she earns Help Tilly problems. Earned ones add up and are never taken away.<br>
     <label>Help Tilly problems earned <input type="number" id="rp" min="1" max="20" value="${R_.pip}"></label>

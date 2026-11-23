@@ -1207,6 +1207,10 @@ function normalizeMain(d){
     c.downTime = true;
     c.v = 32;
   }
+  if(c.v < 33){                       // Mom will offer board games on her own terms, not as a Fun Choice
+    c.tags.fun = (c.tags.fun||[]).filter(t=>!(t.id==='mom_game' || norm(t.name)==='board game with mom'));
+    c.v = 33;
+  }
   return c;
 }
 const BOARD_OF_DAY = {6:'satBlocks', 0:'sunBlocks'};   // Saturday, Sunday; every other day uses "blocks"

@@ -137,6 +137,75 @@ details.parent summary{font-family:'Fredoka';font-weight:600;cursor:pointer}
   .sentence{font-size:22px}.passage{font-size:20px}
   .brand span{display:none}
 }
+
+/* ---- Read with Tilly ---- */
+.seg-toggle{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 14px}
+.seg-toggle button{background:#fff;border:3px solid #E7DFCF;border-radius:999px;padding:10px 18px;font-family:'Fredoka';font-weight:600;font-size:18px}
+.seg-toggle button.on{border-color:var(--lav);background:var(--lav-l);color:var(--lav)}
+.mode.story h3{font-size:20px}
+.rtop{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+.btn.small{font-size:16px;padding:8px 16px}
+.btn.lav{background:var(--lav);box-shadow:0 4px 0 #5b4fb8}
+.rhead{display:flex;gap:14px;align-items:center;margin-bottom:14px}
+.rhead svg{flex:0 0 72px;width:72px;height:72px}
+.bubble{position:relative;flex:1;background:var(--lav-l);border-radius:18px;padding:12px 16px;font-size:19px;font-weight:700;color:#3d3480}
+.bubble:before{content:"";position:absolute;left:-10px;top:50%;margin-top:-10px;border:10px solid transparent;border-right-color:var(--lav-l);border-left:0}
+.bubble .small{display:block;font-weight:400;font-size:15px;color:var(--soft);margin-top:4px}
+.rpass{font-size:25px;line-height:2;background:#FBF8F2;border-radius:16px;padding:16px 18px;margin-bottom:14px}
+.seg{border-radius:10px;padding:3px 2px;transition:background .2s}
+.seg.tilly{color:#5b4fb8}
+.seg.active{background:var(--sun-l);box-shadow:0 0 0 4px var(--sun-l)}
+.rt{border-radius:6px;padding:0 2px;transition:background .15s,color .15s}
+.rt.speaking{background:var(--lav);color:#fff}
+.rt.live{color:var(--green)}
+.rt.next{box-shadow:inset 0 -3px 0 var(--coral)}
+.rt.ok{color:#1f7a3f}
+.rt.sub{background:var(--red-l);color:var(--red);font-weight:700}
+.rt.almost{background:var(--sun-l);color:#8a6400;font-weight:700;box-shadow:inset 0 -3px 0 var(--sun)}
+.rt.miss{color:#9A958A;text-decoration:line-through;text-decoration-color:var(--red);text-decoration-thickness:2px}
+.seg.fixable .rt{cursor:pointer}
+.rctl{text-align:center}
+.mic{width:96px;height:96px;border-radius:50%;background:var(--coral);color:#fff;font-size:44px;box-shadow:0 5px 0 #C9523F}
+.mic.on{background:var(--red);animation:pulse 1.2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(217,71,58,.5)}70%{box-shadow:0 0 0 22px rgba(217,71,58,0)}100%{box-shadow:0 0 0 0 rgba(217,71,58,0)}}
+.hint{color:var(--soft);margin:8px 0;font-weight:700}
+.heard{color:var(--soft);font-size:16px;font-style:italic;min-height:24px}
+.tricky{text-align:left;margin:6px 0 4px;line-height:2.5}
+.tchip{display:inline-flex;align-items:center;gap:6px;background:#fff;border:2px solid var(--red-l);border-radius:999px;padding:2px 6px 2px 14px;font-size:18px;margin-right:4px}
+.tchip i{font-size:14px;color:var(--soft)}
+.tchip.fixed{border-color:var(--green);background:var(--green-l)}
+.rstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:4px 0 12px}
+.rstats div{background:#FBF8F2;border-radius:14px;padding:12px}
+.rstats b{display:block;font-family:'Fredoka';font-size:30px;color:var(--teal)}
+.rstats span{font-size:14px;color:var(--soft)}
+.legend{font-size:15px;color:var(--soft);margin-bottom:8px}
+table.log{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px}
+table.log td,table.log th{text-align:left;padding:5px 6px;border-bottom:1px solid #eee;vertical-align:top}
+
+/* ---- Help Tilly ---- */
+.bat{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;font-size:16px;color:var(--soft);background:#fff;border-radius:999px;padding:6px 14px;margin:0 auto 14px;box-shadow:var(--shadow);width:fit-content;max-width:100%}
+.bat .pf svg{width:30px;height:30px;vertical-align:middle}
+.bat .cells{display:inline-flex;gap:4px}
+.bat .cells i{width:18px;height:22px;border-radius:5px;border:2px solid var(--lav);display:inline-block}
+.bat .cells i.on{background:var(--lav)}
+.bat.awake{color:var(--lav);background:var(--lav-l)}
+.bat b{color:var(--ink)}
+.bat.awake b{color:var(--lav)}
+.mode.resting{opacity:.7}
+.mode.help{border-color:var(--lav-l)}
+.mode.help:not(.resting){border-color:var(--lav);background:linear-gradient(180deg,#fff, var(--lav-l))}
+.tok.tclue{background:var(--lav-l);box-shadow:inset 0 -3px 0 var(--lav)}
+.blank.tw{color:var(--lav);border-color:var(--lav)}
+.woke{position:fixed;inset:0;background:rgba(30,25,60,.5);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px;animation:pop .2s}
+.woke .wface svg{width:110px;height:110px}
+.woke h2{font-size:26px;margin:8px 0}
+.whybox{background:#fff;border:3px solid var(--lav-l);border-radius:16px;padding:14px;margin-top:12px;text-align:left}
+.whybox textarea{width:100%;font:inherit;font-size:19px;border:2px solid #E7DFCF;border-radius:12px;padding:10px;margin:8px 0}
+.locked{pointer-events:none;opacity:.45}
+.swap{background:#fff;border-radius:12px;padding:10px 14px;margin-top:8px;font-size:20px}
+.swap b{color:var(--lav)}
+.rule input{width:64px;font:inherit;padding:4px 8px;border-radius:8px;border:2px solid #E7DFCF}
+.notes .n{border-top:1px solid #eee;padding:8px 0}
 </style>
 </head>
 <body>
@@ -163,6 +232,7 @@ details.parent summary{font-family:'Fredoka';font-weight:600;cursor:pointer}
     <button class="homebtn" id="homeBtn" style="display:none">🏠 Home</button>
   </div>
 </header>
+<div class="bat" id="bat"></div>
 
 <!-- HOME -->
 <section class="view on" id="v-home">
@@ -187,6 +257,8 @@ details.parent summary{font-family:'Fredoka';font-weight:600;cursor:pointer}
   </div>
   <div class="grid">
     <button class="mode" data-go="learn"><div class="ic">📚</div><h3>Learn the Clues</h3><p>The 5 kinds of clues and the 4 detective steps.</p><div class="meta">Start here!</div></button>
+    <button class="mode" data-go="read"><div class="ic">🎤</div><h3>Read with Tilly</h3><p>Take turns reading a story out loud with Tilly. She listens and shows the words to practice.</p><div class="meta">Uses the microphone</div></button>
+    <button class="mode help" id="helpCard" data-go="help"><div class="ic">🩰</div><h3>Help Tilly</h3><p>Tilly tries a tricky word. Did she get it right? You're the teacher!</p><div class="meta" id="metaHelp" style="color:var(--lav)"></div></button>
     <button class="mode" data-go="detective"><div class="ic">🔍</div><h3>Word Detective</h3><p>Figure out the mystery word, then find the clue that proves it.</p><div class="meta" id="metaDet">6 words per round</div></button>
     <button class="mode" data-go="passages"><div class="ic">📝</div><h3>IREAD Practice</h3><p>Fill in the blanks in a short story, just like on the real test.</p><div class="meta" id="metaPas">4 passages per round</div></button>
     <button class="mode" data-go="challenge"><div class="ic">🏆</div><h3>Big Challenge</h3><p>10 mixed questions. No hints until you answer. How many can you get?</p><div class="meta" id="metaCh">Best score: —</div></button>
@@ -197,6 +269,10 @@ details.parent summary{font-family:'Fredoka';font-weight:600;cursor:pointer}
     <summary>For grown-ups</summary>
     <p>IREAD-3 has a few questions where kids read a short passage with two blanks and choose the word that fits each blank from four choices. Indiana's standard for this is 3.RC.11, using context clues to figure out unknown words. <b>IREAD Practice</b> uses that same format. <b>Word Detective</b> teaches the skill underneath: Ruth picks the meaning, then taps the clue word that proves it. Tilly, her robot ballerina, cheers her on.</p>
     <p>Progress and stars are saved in this browser only. 🔊 buttons read the text aloud. That's good for practice, but on the test she'll read on her own, so try having her read first.</p>
+    <p><b>Read with Tilly</b> uses the device's speech-to-text to listen. It's a helper, not a perfect judge. Speech-to-text tends to "fix" small mistakes and sometimes mishears names. After she reads, you can tap any word to switch it between right and missed.</p>
+    <div id="rlog"></div>
+    <div id="helpRule" style="margin-top:14px"></div>
+    <div id="notes" class="notes" style="margin-top:10px"></div>
     <p><button class="speak" id="resetBtn">Reset progress</button></p>
   </details>
 </section>
@@ -233,6 +309,24 @@ details.parent summary{font-family:'Fredoka';font-weight:600;cursor:pointer}
     <div class="count" id="progText">1 / 6</div>
   </div>
   <div class="card" id="playCard"></div>
+</section>
+
+<section class="view" id="v-read">
+  <div class="rhead"><span id="pickFace"></span><div class="bubble">Let's read a story together, Ruth! You can take turns with me, or read the whole thing yourself. 🩰</div></div>
+  <div class="seg-toggle" id="readMode">
+    <button data-m="turns">🤝 Take turns with Tilly</button>
+    <button data-m="solo">🎤 I'll read it all</button>
+  </div>
+  <div id="micNote"></div>
+  <div class="grid" id="storyList"></div>
+</section>
+
+<section class="view" id="v-reading">
+  <div class="card" id="readCard"></div>
+</section>
+
+<section class="view" id="v-help">
+  <div class="card" id="helpCard2"></div>
 </section>
 
 <section class="view" id="v-results">
@@ -344,7 +438,8 @@ function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor
 const $=s=>document.querySelector(s);
 const esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 const canSpeak=("speechSynthesis" in window);
-function speak(t){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.replace(/\{\d\}/g," blank ").replace(/\*/g,""));u.rate=.88;speechSynthesis.speak(u)}catch(e){}}
+function speak(t){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.replace(/\{\d\}/g," blank ").replace(/\*/g,""));u.rate=.88;u.pitch=1.12;const v=pickVoice();if(v)u.voice=v;speechSynthesis.speak(u)}catch(e){}}
+let _voice;function pickVoice(){try{if(_voice)return _voice;const vs=speechSynthesis.getVoices().filter(v=>/^en[-_]US/i.test(v.lang));if(!vs.length)return null;_voice=vs.find(v=>/Samantha|Ava|Allison|Susan|Zira|Jenny|Aria|Google US English/i.test(v.name))||vs[0];return _voice}catch(e){return null}}
 function speakBtn(t){return canSpeak?`<button class="speak" data-say="${esc(t).replace(/"/g,'&quot;')}">🔊 Read to me</button>`:""}
 
 const BADGES=[
@@ -354,19 +449,25 @@ const BADGES=[
 function addStars(n){S.stars+=n;save();$("#starCount").textContent=S.stars;const p=$(".pill");p.classList.remove("shake");void p.offsetWidth;p.classList.add("shake")}
 
 /* ---------------- NAV ---------------- */
-function show(id){document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id==="v-"+id));$("#homeBtn").style.display=id==="home"?"none":"";window.scrollTo({top:0,behavior:"smooth"});try{speechSynthesis.cancel()}catch(e){}}
+function show(id){if(typeof LS!=="undefined"&&LS){LS.on=false;try{LS.rec.stop()}catch(e){}LS=null}document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id==="v-"+id));$("#homeBtn").style.display=id==="home"?"none":"";window.scrollTo({top:0,behavior:"smooth"});try{speechSynthesis.cancel()}catch(e){}}
 function home(){renderHome();show("home")}
 document.addEventListener("click",e=>{
   const g=e.target.closest("[data-go]");if(g){go(g.dataset.go);return}
-  const sp=e.target.closest("[data-say]");if(sp){speak(sp.dataset.say)}
+  const sp=e.target.closest("[data-say]");if(sp){speak(sp.dataset.say);return}
+  const st=e.target.closest("[data-story]");if(st){startRead(READS[+st.dataset.story]);return}
+  const md=e.target.closest("[data-m]");if(md){readMode=md.dataset.m;try{localStorage.setItem(KEY+"_mode",readMode)}catch(_){}renderReadPicker();return}
+  const tw=e.target.closest(".tryw");if(tw){tryWord(tw);return}
+  const rt=e.target.closest(".seg.fixable .rt");if(rt){fixWord(+rt.dataset.s,+rt.dataset.w);return}
 });
 $("#homeBtn").onclick=home;
-$("#resetBtn").onclick=()=>{const b=$("#resetBtn");if(b.dataset.sure){S={stars:0,det:[0,0],pas:[0,0],best:null,cleared:0};save();b.textContent="Reset progress";delete b.dataset.sure;renderHome()}else{b.dataset.sure=1;b.textContent="Tap again to reset everything"}};
+$("#resetBtn").onclick=()=>{const b=$("#resetBtn");if(b.dataset.sure){S={stars:0,det:[0,0],pas:[0,0],best:null,cleared:0,rule:S.rule};save();b.textContent="Reset progress";delete b.dataset.sure;renderHome()}else{b.dataset.sure=1;b.textContent="Tap again to reset everything"}};
 function go(m){
   if(m==="learn"){renderLearn();show("learn")}
   else if(m==="detective")startRound("det")
   else if(m==="passages")startRound("pas")
   else if(m==="challenge")startRound("ch")
+  else if(m==="read"){renderReadPicker();show("read")}
+  else if(m==="help")startHelp()
   else home();
 }
 
@@ -376,6 +477,7 @@ function renderHome(){
   $("#metaDet").textContent="6 words per round"+(S.det[1]?" · "+pct(S.det):"");
   $("#metaPas").textContent="4 passages per round"+(S.pas[1]?" · "+pct(S.pas):"");
   $("#metaCh").textContent="Best score: "+(S.best==null?"—":S.best+" / 10");
+  renderLog();renderHelpParent();paintBat();
   $("#badges").innerHTML=BADGES.map(b=>`<div class="badge ${S.stars>=b.n?"got":""}"><span class="e">${b.e}</span>${b.t}<span style="font-weight:400;opacity:.8">· ${b.n}⭐</span></div>`).join("");
 }
 function renderLearn(){
@@ -447,13 +549,13 @@ function renderDet(x){
     if(phase!==1)return;
     const ok=b.dataset.v===x.a;tries++;
     if(challenge){
-      phase=2;R.total++;if(ok){R.right++;addStars(1);R.stars++}
+      phase=2;R.total++;if(ok){R.right++;addStars(1);R.stars++;earnOwn()}
       card.querySelectorAll(".ch").forEach(c=>{c.disabled=true;if(c.dataset.v===x.a)c.classList.add("right");else if(c===b)c.classList.add("wrong");else c.classList.add("dim")});
       reveal(ok?"Correct! 🎉":`Not quite. ${esc(word)} means "${esc(x.a)}."`,ok?"good":"bad");
       return;
     }
     if(ok){
-      if(tries===1){R.right++;addStars(1);R.stars++}
+      if(tries===1){R.right++;addStars(1);R.stars++;earnOwn()}
       R.total++;
       card.querySelectorAll(".ch").forEach(c=>{c.disabled=true;if(c===b)c.classList.add("right");else c.classList.add("dim")});
       phase=2;
@@ -515,7 +617,7 @@ function renderPas(x){
     });
     // show passage with results
     $("#pass").innerHTML=esc(x.text).replace(/\{(\d)\}/g,(m,n)=>{const b=x.blanks[n],ok=pick[n]===b.a;return ok?`<span class="blank right">✓ ${esc(b.a)}</span>`:`<span class="blank wrong">${esc(pick[n])}</span><span class="fix">${esc(b.a)}</span>`});
-    R.right+=got;R.total+=2;addStars(got);R.stars+=got;
+    R.right+=got;R.total+=2;addStars(got);R.stars+=got;if(got===2)earnOwn();
     const fb=$("#fb");
     fb.className="feedback on "+(got===2?"good":got===1?"try":"bad");
     fb.innerHTML=`<h4>${got===2?"Both right! Tilly spins for joy! ⭐⭐":got===1?"One out of two. Nice try! ⭐":"Let's look at the clues together."}</h4>`+
@@ -559,6 +661,405 @@ function burst(){
     s.style.left=(window.innerWidth/2)+"px";s.style.top="180px";
     s.style.setProperty("--dx",(Math.random()*600-300)+"px");s.style.setProperty("--dy",(Math.random()*500+80)+"px");s.style.setProperty("--rot",(Math.random()*720-360)+"deg");
     document.body.appendChild(s);setTimeout(()=>s.remove(),1500)}
+}
+
+/* ================= READ WITH TILLY ================= */
+const SRClass=window.SpeechRecognition||window.webkitSpeechRecognition;
+let micBroken=!SRClass, micMsg=SRClass?"":"This browser can't turn speech into text. Safari on an iPad or iPhone, or Chrome, can.";
+let readMode="turns";try{readMode=localStorage.getItem(KEY+"_mode")||"turns"}catch(e){}
+const READS=PAS.map(p=>({title:p.title,text:p.text.replace(/\{(\d)\}/g,(m,n)=>p.blanks[+n].a)}));
+const NUMW=["zero","one","two","three","four","five","six","seven","eight","nine","ten","eleven","twelve","thirteen","fourteen","fifteen","sixteen","seventeen","eighteen","nineteen","twenty"];
+const HOMO=[["to","too","two"],["there","their","theyre"],["for","four"],["red","read"],["right","write"],["see","sea"],["hear","here"],["know","no"],["new","knew"],["one","won"],["by","buy","bye"],["ate","eight"],["week","weak"],["tail","tale"],["hole","whole"],["flour","flower"],["blew","blue"],["sun","son"],["road","rode"],["ok","okay"],["grey","gray"],["mom","mum"],["piece","peace"],["wear","where"],["be","bee"],["deer","dear"],["pair","pear"],["meet","meat"],["not","knot"],["way","weigh"],["through","threw"],["hi","high"],["i","eye"],["our","hour"],["night","knight"],["plain","plane"],["sale","sail"],["toe","tow"],["its","it"]];
+const HG={};HOMO.forEach((g,i)=>g.forEach(w=>HG[w]=i+1));
+function normW(w){w=String(w).toLowerCase().replace(/[’‘]/g,"'").replace(/[^a-z0-9']/g,"").replace(/'/g,"");if(/^\d+$/.test(w)&&+w<=20)w=NUMW[+w];return w}
+function cleanW(t){return t.replace(/^[^A-Za-z0-9']+|[^A-Za-z0-9']+$/g,"")}
+function lev(a,b){const m=a.length,n=b.length;if(!m)return n;if(!n)return m;let p=Array.from({length:n+1},(_,j)=>j);for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[n]}
+function wcmp(e,b){const a=e.n;if(a===b||(HG[a]&&HG[a]===HG[b]))return"ok";
+  if(e.name&&(lev(a,b)<=2||a.slice(0,2)===b.slice(0,2)))return"ok";
+  if(a.length>=3&&b.length>=3&&(lev(a,b)<=1||((a.startsWith(b)||b.startsWith(a))&&Math.abs(a.length-b.length)<=3)))return"almost";
+  return"sub"}
+function prepHeard(raw,toks){const set=new Set(toks.map(t=>t.n));const h=raw.map(normW).filter(Boolean);const out=[];
+  for(let i=0;i<h.length;i++){if(i+1<h.length&&!set.has(h[i])&&set.has(h[i]+h[i+1])){out.push(h[i]+h[i+1]);i++}else out.push(h[i])}return out}
+function align(toks,heard){
+  const n=toks.length,m=heard.length,D=[],B=[],C=[];
+  for(let i=0;i<=n;i++){D.push(new Array(m+1).fill(0));B.push(new Array(m+1).fill(0));C.push([])}
+  for(let i=1;i<=n;i++){D[i][0]=i;B[i][0]=2}
+  for(let j=1;j<=m;j++){D[0][j]=j;B[0][j]=3}
+  for(let i=1;i<=n;i++)for(let j=1;j<=m;j++){const r=wcmp(toks[i-1],heard[j-1]);C[i][j]=r;const sc=r==="ok"?0:r==="almost"?.6:1;
+    let best=D[i-1][j-1]+sc,bk=1;if(D[i-1][j]+1<best){best=D[i-1][j]+1;bk=2}if(D[i][j-1]+1<best){best=D[i][j-1]+1;bk=3}D[i][j]=best;B[i][j]=bk}
+  const status=new Array(n).fill("miss"),said=new Array(n).fill(null),extras=[];let i=n,j=m;
+  while(i>0||j>0){const bk=B[i][j];if(bk===1){status[i-1]=C[i][j];said[i-1]=heard[j-1];i--;j--}else if(bk===2){i--}else{extras.unshift(heard[j-1]);j--}}
+  return{status,said,extras}}
+function sentencesOf(t){return(t.match(/[^.!?]+[.!?]+["”]?/g)||[t]).map(x=>x.trim())}
+function tokenizeText(text){const toks=[];const re=/\S+/g;let m;
+  while((m=re.exec(text))){const n=normW(m[0]);if(n)toks.push({t:m[0],n,s:m.index,e:m.index+m[0].length,name:false})}
+  toks.forEach((k,i)=>{if(i>0&&/^["“]?[A-Z]/.test(k.t)&&!/[.!?]["”]?$/.test(toks[i-1].t)&&k.n!=="i")k.name=true});return toks}
+const TILLY_SVG=()=>document.querySelector(".brand svg").outerHTML;
+
+function renderReadPicker(){
+  $("#pickFace").innerHTML=TILLY_SVG();
+  const f=$("#pickFace svg");f.style.width="72px";f.style.height="72px";
+  $("#readMode").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.m===readMode));
+  $("#micNote").innerHTML=micBroken?`<div class="feedback on try" style="margin:0 0 14px">🎤 <b>The listening helper can't use the microphone here.</b> ${micMsg} Ruth can still read with Tilly, and a grown-up can tap the words she misses.</div>`:"";
+  const best=S.readBest||{};
+  $("#storyList").innerHTML=READS.map((r,i)=>`<button class="mode story" data-story="${i}"><h3>📖 ${esc(r.title)}</h3><p>${esc(r.text.slice(0,72))}…</p><div class="meta">${best[r.title]!=null?"Best: "+best[r.title]+"% ⭐":"New story!"} · ${tokenizeText(r.text).length} words</div></button>`).join("");
+}
+
+let RS=null,LS=null;
+function startRead(story){
+  const sents=sentencesOf(story.text);
+  const segs=readMode==="solo"?[{text:sents.join(" "),who:"ruth"}]:sents.map((t,i)=>({text:t,who:i%2===0?"tilly":"ruth"}));
+  segs.forEach(sg=>{sg.toks=tokenizeText(sg.text);sg.res=null;sg.counted=false});
+  RS={story,segs,idx:0,stars:0,done:false,logIdx:null,solo:readMode==="solo"};
+  show("reading");
+  $("#readCard").innerHTML=`
+    <div class="rtop"><button class="btn ghost small" data-go="read">← Stories</button><span class="fred" style="color:var(--teal);font-size:20px">📖 ${esc(story.title)}</span></div>
+    <div class="rhead">${TILLY_SVG()}<div class="bubble" id="bubble"></div></div>
+    <div class="rpass" id="rpass">${segs.map((sg,si)=>`<span class="seg ${sg.who}" id="seg${si}">${segHTML(sg,si)}</span>`).join(" ")}</div>
+    <div class="rctl" id="rctl"></div>`;
+  step();
+}
+function segHTML(sg,si){let out="",pos=0;sg.toks.forEach((k,wi)=>{out+=esc(sg.text.slice(pos,k.s))+`<span class="rt" id="w${si}_${wi}" data-s="${si}" data-w="${wi}">${esc(k.t)}</span>`;pos=k.e});return out+esc(sg.text.slice(pos))}
+function setBubble(h){$("#bubble").innerHTML=h}
+function W(si,wi){return document.getElementById("w"+si+"_"+wi)}
+
+function step(){
+  document.querySelectorAll(".seg").forEach((e,i)=>e.classList.toggle("active",i===RS.idx));
+  const sg=RS.segs[RS.idx],ctl=$("#rctl");
+  if(!sg){finishRead();return}
+  try{$("#seg"+RS.idx).scrollIntoView({block:"center",behavior:"smooth"})}catch(e){}
+  if(sg.who==="tilly"){
+    setBubble(RS.idx===0?"I'll read first! Follow along with your eyes. 👀":"My turn! Follow along with me. 👀");
+    ctl.innerHTML=`<button class="btn lav" id="tgo">▶ Tilly, read!</button>`;
+    $("#tgo").onclick=()=>{
+      ctl.innerHTML=`<div class="hint">Tilly is reading… 🩰</div><button class="btn ghost small" id="tskip">Skip ▶</button>`;
+      let done=false;const fin=()=>{if(done)return;done=true;document.querySelectorAll(".rt.speaking").forEach(x=>x.classList.remove("speaking"));RS.idx++;step()};
+      $("#tskip").onclick=()=>{try{speechSynthesis.cancel()}catch(e){}fin()};
+      tillyRead(RS.idx,fin);
+    };
+  }else ruthTurn();
+}
+function tillyRead(si,done){
+  const sg=RS.segs[si];
+  if(!canSpeak){setBubble("Grown-up, please read my part out loud! 🩰");setTimeout(done,2500);return}
+  try{speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(sg.text);u.rate=.88;u.pitch=1.12;const v=pickVoice();if(v)u.voice=v;
+    u.onboundary=e=>{if(e.name&&e.name!=="word")return;const ci=e.charIndex;sg.toks.forEach((k,wi)=>{const w=W(si,wi);if(w)w.classList.toggle("speaking",ci>=k.s&&ci<k.e)})};
+    u.onend=()=>done();u.onerror=()=>done();
+    speechSynthesis.speak(u);
+    const ms=sg.text.length*95+4000;setTimeout(()=>{if(!speechSynthesis.speaking)done()},ms);
+  }catch(e){done()}
+}
+
+function ruthTurn(){
+  const sg=RS.segs[RS.idx],ctl=$("#rctl"),si=RS.idx;
+  if(micBroken){
+    sg.res={status:sg.toks.map(()=>"ok"),said:sg.toks.map(()=>null),extras:[],secs:0,manual:true,pending:true};
+    paintSeg(si,true);
+    setBubble(`Your turn, Ruth! Read the yellow part out loud. 📖<span class="small">Grown-up: tap any word she misses or gets wrong, then tap Done.</span>`);
+    ctl.innerHTML=`<button class="btn" id="mdone">✓ Done</button>`;
+    $("#mdone").onclick=()=>{sg.res.pending=false;afterRuth()};
+    return;
+  }
+  setBubble(RS.solo?"Tap the microphone, then read the whole story out loud. Take your time! 🎤":"Your turn, Ruth! Tap the microphone and read the yellow part. 🎤");
+  ctl.innerHTML=`<button class="mic" id="micgo" aria-label="Start reading">🎤</button><div class="hint">Tap to start</div>`;
+  $("#micgo").onclick=startListen;
+}
+
+function startListen(){
+  const si=RS.idx,sg=RS.segs[si];
+  sg.res=null;paintSeg(si,false);
+  $("#rctl").innerHTML=`<button class="mic on" id="micstop" aria-label="I'm done">✋</button><div class="hint">I'm listening… tap ✋ when you finish</div><div class="heard" id="heard"></div>`;
+  setBubble("I'm listening! 👂 Read nice and clear.");
+  try{speechSynthesis.cancel()}catch(e){}
+  LS={si,committed:[],cur:{fin:[],int:[]},on:true,t0:0,t1:0,auto:null,rec:null,stopping:null};
+  $("#micstop").onclick=stopListen;
+  makeRec(LS);
+}
+function makeRec(L){
+  let r;try{r=new SRClass()}catch(e){micFailed("start");return}
+  L.rec=r;r.lang="en-US";r.continuous=true;r.interimResults=true;r.maxAlternatives=1;
+  r.onresult=e=>{
+    const fins=[],ints=[];
+    for(let i=0;i<e.results.length;i++){const t=e.results[i][0].transcript.trim();if(!t)continue;
+      if(e.results[i].isFinal){if(fins.length&&t.toLowerCase().startsWith(fins[fins.length-1].toLowerCase()))fins[fins.length-1]=t;else fins.push(t)}else ints.push(t)}
+    L.cur={fin:fins.join(" ").split(/\s+/).filter(Boolean),int:ints.join(" ").split(/\s+/).filter(Boolean)};
+    const all=L.committed.concat(L.cur.fin,L.cur.int);
+    if(all.length){if(!L.t0)L.t0=Date.now();L.t1=Date.now()}
+    if(LS===L&&L.on)liveUpdate(L,all);
+  };
+  r.onerror=e=>{if(["not-allowed","service-not-allowed","audio-capture"].includes(e.error)){L.on=false;if(LS===L){LS=null;micFailed(e.error)}}};
+  r.onend=()=>{
+    L.committed=L.committed.concat(L.cur.fin,L.cur.int);L.cur={fin:[],int:[]};
+    if(L.stopping){const f=L.stopping;L.stopping=null;f();return}
+    if(L.on&&LS===L)setTimeout(()=>{if(L.on&&LS===L)makeRec(L)},60);
+  };
+  try{r.start()}catch(e){if(LS===L){LS=null;micFailed("start")}}
+}
+function liveUpdate(L,all){
+  const sg=RS.segs[L.si];const h=prepHeard(all,sg.toks);
+  const hd=$("#heard");if(hd)hd.textContent=all.length?"I heard: …"+all.slice(-12).join(" "):"";
+  const a=align(sg.toks,h);let last=-1;
+  a.status.forEach((st,wi)=>{if(st!=="miss")last=wi});
+  sg.toks.forEach((k,wi)=>{const w=W(L.si,wi);w.classList.toggle("live",wi<=last&&a.status[wi]!=="miss");w.classList.toggle("next",wi===last+1)});
+  clearTimeout(L.auto);
+  if(last===sg.toks.length-1&&h.length>=sg.toks.length*.6)L.auto=setTimeout(()=>{if(LS===L&&L.on)stopListen()},1700);
+}
+function stopListen(){
+  const L=LS;if(!L||!L.on)return;L.on=false;clearTimeout(L.auto);
+  $("#rctl").innerHTML=`<div class="hint">Checking… 🔍</div>`;
+  let done=false;const fin=()=>{if(done)return;done=true;evaluateRead(L)};
+  L.stopping=fin;try{L.rec.stop()}catch(e){}
+  setTimeout(()=>{if(!done){L.stopping=null;L.committed=L.committed.concat(L.cur.fin,L.cur.int);L.cur={fin:[],int:[]};fin()}},1600);
+}
+function evaluateRead(L){
+  if(LS===L)LS=null;
+  const sg=RS.segs[L.si];const h=prepHeard(L.committed,sg.toks);
+  if(!h.length){paintSeg(L.si,false);ruthTurn();setBubble("Hmm, I didn't hear anything. 🤔 Is the microphone allowed? Let's try again!");return}
+  const a=align(sg.toks,h);
+  sg.res={...a,secs:L.t0?Math.max(1,(L.t1-L.t0)/1000):0,heard:L.committed.join(" ")};
+  afterRuth();
+}
+function micFailed(err){
+  micBroken=true;
+  micMsg=err==="not-allowed"?"The microphone is blocked. In Safari, tap the aA button → Website Settings → Microphone → Allow. If you opened the app from the home-screen icon, try it in Safari instead."
+    :err==="service-not-allowed"?"Speech-to-text is off on this device. On an iPad or iPhone, turn on Settings → General → Keyboard → Enable Dictation. If you opened the app from the home-screen icon, try it in Safari instead."
+    :"The microphone couldn't start on this device.";
+  if(RS&&!RS.done&&RS.segs[RS.idx]&&RS.segs[RS.idx].who==="ruth"){ruthTurn();setBubble(`I can't hear through the microphone right now. 😕<span class="small">${micMsg} For now: Ruth reads out loud, and a grown-up taps any word she misses, then taps Done.</span>`)}
+}
+
+function paintSeg(si,fix){
+  const sg=RS.segs[si];const el=$("#seg"+si);el.classList.toggle("fixable",!!(fix&&sg.res));
+  sg.toks.forEach((k,wi)=>{const w=W(si,wi);w.classList.remove("live","next","ok","miss","sub","almost","speaking");w.removeAttribute("title");
+    if(sg.res){const st=sg.res.status[wi];if(!(sg.res.pending&&st==="ok"))w.classList.add(st);const said=sg.res.said[wi];
+      if((st==="sub"||st==="almost")&&said)w.title='I heard "'+said+'"';else if(st==="miss")w.title="Skipped"}});
+}
+function fixWord(si,wi){
+  const sg=RS.segs[si];if(!sg||!sg.res)return;
+  sg.res.status[wi]=sg.res.status[wi]==="ok"?"miss":"ok";if(sg.res.status[wi]==="ok")sg.res.said[wi]=null;
+  paintSeg(si,true);
+  if(RS.done)renderSummary(false);else if(si===RS.idx&&!sg.res.pending)afterRuth();
+}
+function segScore(sg){const ok=sg.res.status.filter(x=>x==="ok").length;return{ok,total:sg.res.status.length,pct:Math.round(100*ok/sg.res.status.length)}}
+function trickyOf(sg){const out=[];sg.res.status.forEach((st,wi)=>{if(st!=="ok")out.push({w:cleanW(sg.toks[wi].t),said:st==="miss"?null:sg.res.said[wi]})});return out}
+function uniqT(a){const seen=new Set();return a.filter(x=>{const k=x.w.toLowerCase();if(seen.has(k))return false;seen.add(k);return true})}
+function trickyChip(x){return `<span class="tchip"><b>${esc(x.w)}</b>${x.said?` <i>I heard “${esc(x.said)}”</i>`:x.said===null?` <i>skipped</i>`:""}<button class="speak" data-say="${esc(x.w)}" aria-label="Hear it">🔊</button>${micBroken?"":`<button class="speak tryw" data-w="${esc(x.w)}">🎤 Try</button>`}</span>`}
+function afterRuth(){
+  const si=RS.idx,sg=RS.segs[si];paintSeg(si,true);
+  const sc=segScore(sg);
+  if(!sg.counted){sg.counted=true;if(sc.pct>=90){addStars(1);RS.stars++;earnOwn()}}
+  const tricky=uniqT(trickyOf(sg));
+  const msg=sc.pct===100?"Perfect! I'm doing a happy spin! 🩰✨":sc.pct>=90?"So smooth! Just a tiny wobble. ⭐":sc.pct>=70?"Nice reading! Let's look at the colored words.":"Good try! Let's practice the tricky words, then read it again.";
+  setBubble(msg+`<span class="small">${sg.res.manual?"Grown-up: tap a word to change it.":"Grown-up: tap a word to fix it if I heard it wrong."}</span>`);
+  const last=RS.idx===RS.segs.length-1;
+  $("#rctl").innerHTML=(tricky.length?`<div class="tricky"><b>Tricky words:</b> ${tricky.map(trickyChip).join(" ")}</div>`:"")+
+    `<div class="actions" style="justify-content:center"><button class="btn ghost" id="again">🔁 Read it again</button><button class="btn" id="goon">${last?"See how I did ⭐":"Keep going ▶"}</button></div>`;
+  $("#again").onclick=()=>{sg.res=null;paintSeg(si,false);ruthTurn()};
+  $("#goon").onclick=()=>{RS.idx++;step()};
+}
+function tryWord(btn){
+  if(!SRClass||micBroken)return;
+  const target=normW(btn.dataset.w);const chip=btn.closest(".tchip");
+  btn.textContent="👂…";btn.disabled=true;
+  let got=false;let r;try{r=new SRClass()}catch(e){return}
+  r.lang="en-US";r.continuous=false;r.interimResults=false;r.maxAlternatives=5;
+  const finish=ok=>{if(got)return;got=true;try{r.stop()}catch(e){}btn.disabled=false;
+    if(ok){chip.classList.add("fixed");btn.textContent="✓ Yes!";if(!chip.dataset.star){chip.dataset.star=1;addStars(1);if(RS)RS.stars++}}
+    else{btn.textContent="🎤 Again";chip.classList.add("shake");setTimeout(()=>chip.classList.remove("shake"),400)}};
+  r.onresult=e=>{const alts=[];const res=e.results[0];for(let i=0;i<res.length;i++)alts.push(...res[i].transcript.split(/\s+/).map(normW));
+    finish(alts.some(a=>a===target||(HG[a]&&HG[a]===HG[target])))};
+  r.onerror=()=>finish(false);r.onend=()=>setTimeout(()=>finish(false),300);
+  setTimeout(()=>finish(false),6000);
+  try{r.start()}catch(e){finish(false)}
+}
+function totalsRead(){let ok=0,total=0,secs=0,manual=false;const tricky=[];
+  RS.segs.forEach(sg=>{if(sg.who!=="ruth"||!sg.res)return;const sc=segScore(sg);ok+=sc.ok;total+=sc.total;secs+=sg.res.secs||0;if(sg.res.manual)manual=true;tricky.push(...trickyOf(sg))});
+  return{ok,total,secs,manual,tricky:uniqT(tricky),pct:total?Math.round(100*ok/total):0}}
+function finishRead(){
+  RS.done=true;
+  if(!RS.finished){RS.finished=true;addStars(2);RS.stars+=2}
+  document.querySelectorAll(".seg").forEach(e=>e.classList.remove("active"));
+  RS.segs.forEach((sg,si)=>{if(sg.who==="ruth"&&sg.res)paintSeg(si,true)});
+  renderSummary(true);
+}
+function renderSummary(first){
+  const T=totalsRead();
+  const wcpm=RS.solo&&!T.manual&&T.secs>=5?Math.round(T.ok/(T.secs/60)):null;
+  const entry={d:Date.now(),title:RS.story.title,mode:RS.solo?"Read it all":"Took turns",ok:T.ok,total:T.total,pct:T.pct,wcpm,missed:T.tricky.map(x=>x.w).slice(0,10)};
+  S.log=S.log||[];S.readBest=S.readBest||{};
+  if(first){S.log.push(entry);if(S.log.length>40)S.log.shift();RS.logIdx=S.log.length-1}else if(RS.logIdx!=null&&S.log[RS.logIdx])S.log[RS.logIdx]=entry;
+  S.readBest[RS.story.title]=Math.max(S.readBest[RS.story.title]||0,T.pct);save();
+  setBubble((T.pct>=95?"Ta-da! You read like a star, Ruth! 🩰✨":T.pct>=85?"Great reading, Ruth! I'm so proud of you! 💜":"Good work, Ruth! Let's practice the tricky words together.")+`<span class="small">Grown-up: tap any word in the story to fix it if I heard it wrong.</span>`);
+  $("#rctl").innerHTML=`<div class="rstats"><div><b>${T.ok}/${T.total}</b><span>words read right</span></div><div><b>${T.pct}%</b><span>accuracy</span></div>${wcpm?`<div><b>${wcpm}</b><span>words per minute</span></div>`:""}<div><b>+${RS.stars}⭐</b><span>stars</span></div></div>
+    <div class="legend"><span class="rt ok">green</span> read right · <span class="rt sub">red</span> said a different word · <span class="rt almost">yellow</span> almost · <span class="rt miss">crossed out</span> skipped</div>
+    ${T.tricky.length?`<div class="tricky"><b>Practice these:</b> ${T.tricky.map(trickyChip).join(" ")}</div>`:`<p class="fred" style="font-size:20px">No tricky words! 🎉</p>`}
+    <div class="actions" style="justify-content:center"><button class="btn ghost" data-go="read">📚 Pick another story</button><button class="btn" id="rerun">🔁 Read this story again</button></div>`;
+  $("#rerun").onclick=()=>startRead(RS.story);
+  if(first&&T.pct>=85)burst();
+}
+function renderLog(){
+  const el=$("#rlog");if(!el)return;const L=(S.log||[]).slice(-12).reverse();
+  el.innerHTML=L.length?`<b>Ruth's reading log</b><table class="log"><tr><th>Date</th><th>Story</th><th>Right</th><th>WPM</th><th>Words to practice</th></tr>${L.map(x=>`<tr><td>${new Date(x.d).toLocaleDateString(undefined,{month:"short",day:"numeric"})}</td><td>${esc(x.title)}<br><span style="color:var(--soft)">${x.mode}</span></td><td>${x.ok}/${x.total} (${x.pct}%)</td><td>${x.wcpm||"—"}</td><td>${x.missed.map(esc).join(", ")||"—"}</td></tr>`).join("")}</table>`:"";
+}
+
+/* ================= HELP TILLY ================= */
+const pick2=a=>a[Math.floor(Math.random()*a.length)];
+function rule(){const r=S.rule||{};return{pip:r.pip>0?r.pip:1,other:r.other>0?r.other:3}}
+function earnOwn(){const R_=rule();S.tok=S.tok||0;S.prog=(S.prog||0)+1;let woke=false;
+  if(S.prog>=R_.other){S.prog=0;S.tok+=R_.pip;woke=true}save();paintBat();if(woke)setTimeout(showWoke,450)}
+function paintBat(){const b=$("#bat");if(!b)return;const R_=rule(),p=Math.min(S.prog||0,R_.other-1),t=S.tok||0,left=R_.other-p;
+  const cells=`<span class="cells">${Array.from({length:R_.other},(_,i)=>`<i class="${i<p?"on":""}"></i>`).join("")}</span>`;
+  b.classList.toggle("awake",t>0);
+  b.innerHTML=`<span class="pf">${TILLY_SVG()}</span>${t>0?`<b>${t} Help Tilly ${t===1?"problem":"problems"} ready!</b> ·`:"<b>Tilly:</b>"} ${cells}<span>${left} more with no wrong answers ${t>0?"for another":"to wake Tilly"}!</span>`;
+  const m=$("#metaHelp");if(m)m.textContent=t>0?`${t} ready! Tap to help Tilly 🩰`:`Tilly is resting · ${left} more to wake her`;
+  const c=$("#helpCard");if(c)c.classList.toggle("resting",t<1);
+}
+function showWoke(){const R_=rule(),t=S.tok,more=t>R_.pip;const d=document.createElement("div");d.className="woke";
+  d.innerHTML=`<div class="card" style="text-align:center;max-width:420px"><div class="wface">${TILLY_SVG()}</div><h2 class="fred">${more?"You earned another Help Tilly problem!":"Tilly is ready to dance again! 🩰"}</h2><p>You earned ${R_.pip} Help Tilly ${R_.pip===1?"problem":"problems"}. You have <b>${t}</b> saved now. Tilly will wait until you're ready.</p><div class="actions" style="justify-content:center"><button class="btn ghost" id="wk1">Keep going</button><button class="btn lav" id="wk2">Help Tilly now</button></div></div>`;
+  document.body.appendChild(d);burst();
+  d.querySelector("#wk1").onclick=()=>d.remove();d.querySelector("#wk2").onclick=()=>{d.remove();go("help")};
+}
+let HT=null;
+function startHelp(){
+  show("help");const card=$("#helpCard2");
+  if((S.tok||0)<1){const R_=rule(),left=R_.other-(S.prog||0);
+    card.innerHTML=`<div class="rhead">${TILLY_SVG()}<div class="bubble">I'm resting my toes right now. 😴 Finish ${left} more ${left===1?"problem":"problems"} with no wrong answers, and I'll wake up!<span class="small">You earn Help Tilly problems in Word Detective, IREAD Practice, Big Challenge, and Read with Tilly.</span></div></div>
+      <div class="actions" style="justify-content:center"><button class="btn" data-go="detective">🔍 Word Detective</button><button class="btn lav" data-go="passages">📝 IREAD Practice</button></div>`;return}
+  S.tok--;S.helped=(S.helped||0)+1;save();paintBat();
+  HT={whyAsked:false};
+  if(Math.random()<.55)helpDet(pick2(DET));else helpPas(pick2(PAS));
+}
+function helpShell(title,bubble,body,q){
+  $("#helpCard2").innerHTML=`<div class="rtop"><span class="fred" style="color:var(--lav);font-size:21px">🩰 Help Tilly</span><span class="hint" style="margin:0">You're the teacher!</span></div>
+   <div class="rhead">${TILLY_SVG()}<div class="bubble" id="hb">${bubble}</div></div>
+   ${body}<div class="q" id="hq">${q}</div><div id="hctl"></div><div class="feedback" id="hfb"></div><div class="actions" id="hacts"></div>`;
+}
+function hb(h){$("#hb").innerHTML=h}
+function choiceBtns(list,cls){return `<div class="choices ${cls||""}">${list.map((o,i)=>`<button class="ch" data-v="${esc(o.v)}"><span class="L">${o.L||"ABCD"[i]}</span>${o.h||esc(o.v)}</button>`).join("")}</div>`}
+function whyBox(choice,about,then){
+  if(HT.whyAsked){then&&then();return}HT.whyAsked=true;
+  const ctl=$("#hctl");ctl.classList.add("locked");
+  const box=document.createElement("div");box.className="whybox";
+  box.innerHTML=`<div class="fred" style="color:var(--lav);font-size:19px">Tilly asks:</div><div>Hmm, why do you think “<b>${esc(choice)}</b>” fits? Tell me in your own words, so I can learn too!</div>
+    <textarea rows="3" aria-label="Tell Tilly why"></textarea><div style="display:flex;align-items:center;gap:12px"><button class="btn lav small" disabled>Tell Tilly</button><span class="hint" style="margin:0">Write at least a few words.</span></div>`;
+  $("#hfb").after(box);
+  const ta=box.querySelector("textarea"),bt=box.querySelector("button"),msg=box.querySelector(".hint");
+  ta.addEventListener("input",()=>{const ok=ta.value.trim().split(/\s+/).filter(Boolean).length>=3;bt.disabled=!ok;msg.textContent=ok?"":"Write at least a few words."});
+  bt.onclick=()=>{S.notes=S.notes||[];S.notes.push({d:Date.now(),about,choice,said:ta.value.trim()});if(S.notes.length>60)S.notes.shift();save();
+    box.remove();ctl.classList.remove("locked");hb("Thanks for telling me! 💜 Now let's try another one.");then&&then()};
+  setTimeout(()=>ta.focus(),50);
+}
+function helpFinish(msg,stars,bodyHTML){
+  if(stars){addStars(stars)}
+  const fb=$("#hfb");fb.className="feedback on good";fb.innerHTML=bodyHTML;hb(msg);
+  $("#hq").innerHTML="";$("#hctl").innerHTML="";
+  const t=S.tok||0;
+  $("#hacts").innerHTML=t>0?`<button class="btn ghost" data-go="home">🏠 Home</button><button class="btn lav" data-go="help">🩰 Help Tilly again (${t} left)</button>`
+    :`<div class="hint" style="flex:1;text-align:left">Tilly is going to rest now. Do ${rule().other-(S.prog||0)} more with no wrong answers to wake her!</div><button class="btn" data-go="home">🏠 Home</button>`;
+  if(stars>=2)burst();
+}
+
+/* ---- Tilly tries a mystery word ---- */
+function helpDet(x){
+  const {plain,tStart,tEnd}=tokenize(x.s);const word=plain.slice(tStart,tEnd);
+  const right=Math.random()<.25,tAns=right?x.a:pick2(x.d);
+  const cs=plain.indexOf(x.clue),ce=cs+x.clue.length;
+  const toks=[];let pos=0;
+  plain.split(/(\s+)/).forEach(part=>{const st=pos,en=pos+part.length;pos=en;if(!part||/^\s+$/.test(part)){toks.push({sp:part});return}toks.push({t:part,isT:st<tEnd&&en>tStart,isC:cs>=0&&st<ce&&en>cs})});
+  const words=toks.filter(k=>k.t);
+  let tPick=[],reason;
+  if(right){tPick=words.filter(k=>k.isC);reason=`My clue was “${x.clue}.”`}
+  else{
+    const sigW=words.find(k=>k.isC&&["but","unlike","while","instead"].includes(normW(k.t)));
+    const cand=words.filter(k=>!k.isT&&!k.isC&&normW(k.t).length>=4);
+    if(x.t==="ant"&&sigW&&Math.random()<.6){tPick=[sigW];reason=`I saw “${cleanW(sigW.t)},” but I thought it meant the same thing.`}
+    else if(cand.length){const k=pick2(cand);tPick=[k];const w=cleanW(k.t);reason=pick2([`I only looked at the word “${w}.”`,`I stopped reading at “${w}” and guessed.`,`I thought “${w}” was the clue.`])}
+    else reason="I picked the one that sounded fun!";
+  }
+  const sentHTML=()=>toks.map((k,i)=>k.sp!==undefined?k.sp:`<span class="tok w${k.isT?" target":""}${tPick.includes(k)?" tclue":""}" data-i="${i}">${esc(k.t)}</span>`).join("");
+  const swapped=a=>esc(plain.slice(0,tStart))+`<b>${esc(a)}</b>`+esc(plain.slice(tEnd));
+  helpShell("",`I think <b>${esc(word)}</b> means <b>“${esc(tAns)}.”</b> ${esc(reason)}`,
+    `<div class="sentence" id="hs">${sentHTML()}</div>`,`Is Tilly right?`);
+  $("#hctl").innerHTML=choiceBtns([{v:"1",L:"👍",h:"Yes, she's right"},{v:"0",L:"👎",h:"No, she made a mistake"}]);
+  const T=TYPES[x.t];
+  const reveal=()=>{const hs=$("#hs");hs.classList.remove("tappable");hs.querySelectorAll(".tok").forEach(e=>{e.classList.remove("tclue");const k=toks[+e.dataset.i];if(k&&k.isC)e.classList.add("clue")});
+    return `<div class="typetag" style="color:${T.c}">${T.icon} ${T.name}</div><div><b>${esc(word)}</b> means “${esc(x.a)}.” ${esc(x.why)}</div>`};
+  const fixStep=(q)=>{
+    $("#hq").innerHTML=q||`What does <b>${esc(word)}</b> really mean?`;
+    $("#hctl").innerHTML=choiceBtns(shuffle([x.a,...x.d]).map(v=>({v})));
+    $("#hctl").querySelectorAll(".ch").forEach(b=>b.onclick=()=>{
+      const v=b.dataset.v,fb=$("#hfb");
+      if(v===x.a){$("#hctl").querySelectorAll(".ch").forEach(c=>{c.disabled=true;c.classList.add(c===b?"right":"dim")});fb.className="feedback";clueStep();return}
+      b.classList.add("wrong","shake");b.disabled=true;fb.className="feedback on try";
+      fb.innerHTML=(v===tAns?`<h4>That's what I picked! 😅</h4>`:`<h4>Hmm, I don't think so.</h4>`)+`Try it in the sentence: <div class="swap">${swapped(v)}</div>Does that make sense with the rest of the sentence?`;
+      whyBox(v,`“${word}”`);
+    });
+  };
+  const clueStep=()=>{
+    hb(`Yes! <b>${esc(word)}</b> means “${esc(x.a)}.” Now show me the real clue, so I don't wobble next time! Tap a word that proves it.`);
+    $("#hq").innerHTML=`Tap a clue word in the sentence.`;
+    const hs=$("#hs");hs.classList.add("tappable");hs.querySelectorAll(".tclue").forEach(e=>e.classList.remove("tclue"));
+    let miss=0;
+    hs.onclick=e=>{const el=e.target.closest(".tok");if(!el||!hs.classList.contains("tappable"))return;const k=toks[+el.dataset.i];
+      if(k.isT){$("#hfb").className="feedback on try";$("#hfb").innerHTML="That's the mystery word! Look at the words <b>around</b> it.";return}
+      if(k.isC){helpFinish("Ta-da! Now I get it! Thank you, teacher Ruth! 🩰✨",2,`<h4>You taught Tilly! ⭐⭐</h4>`+reveal());return}
+      miss++;el.classList.add("miss");setTimeout(()=>el.classList.remove("miss"),600);
+      if(miss>=3)helpFinish("Thank you, Ruth! Now I get it! 🩰",2,`<h4>Here's the clue:</h4>`+reveal());
+      else{$("#hfb").className="feedback on try";$("#hfb").innerHTML=`Not that one. Which words helped you know what <b>${esc(word)}</b> means?`}};
+  };
+  $("#hctl").querySelectorAll(".ch").forEach(b=>b.onclick=()=>{
+    const yes=b.dataset.v==="1";
+    if(right&&yes)helpFinish("You checked it! I did it right this time! 💃",2,`<h4>Good checking! ⭐⭐</h4>`+reveal());
+    else if(right&&!yes)helpFinish("Let's check together. I think I got this one!",1,`<h4>Tilly was right this time.</h4>Swap it in: <div class="swap">${swapped(x.a)}</div>It makes sense! `+reveal());
+    else if(!right&&!yes){hb(`Good eye! 👀 Can you teach me what <b>${esc(word)}</b> really means?`);fixStep()}
+    else{hb(`Let's test it! I'll swap my answer in. Hmm… does it make sense? 🤔`);$("#hfb").className="feedback on info";$("#hfb").innerHTML=`<div class="swap">${swapped(tAns)}</div>Read the whole sentence. Does “${esc(tAns)}” fit the clues?`;fixStep(`Oops, I wobbled! What does <b>${esc(word)}</b> really mean?`)}
+  });
+}
+
+/* ---- Tilly fills in an IREAD passage ---- */
+function helpPas(x){
+  const right=Math.random()<.25,wb=right?-1:(Math.random()<.5?0:1);
+  const tp=x.blanks.map((b,i)=>i===wb?pick2(b.d):b.a);
+  const fill=x.blanks.map((b,i)=>tp[i]);const state=["tw","tw"];
+  const passHTML=()=>esc(x.text).replace(/\{(\d)\}/g,(m,n)=>`<span class="blank ${state[n]}"><span class="num">${+n+1}</span> ${esc(fill[n])}</span>`);
+  helpShell("",`I filled in the blanks! I picked “<b>${esc(tp[0])}</b>” and “<b>${esc(tp[1])}</b>.” ${right?"":esc(pick2(["I just picked words that sounded good.","I only read the sentence with the blank, not the one after it.","I went really fast, like a pirouette!"]))}`,
+    `<p class="direc">📝 ${esc(x.title)}. Tilly's words are in purple.</p><div class="passage" id="hp">${passHTML()}</div>`,`Did Tilly get both blanks right?`);
+  $("#hctl").innerHTML=choiceBtns([{v:"-1",L:"✅",h:"Both are right"},{v:"0",L:"1",h:"Blank 1 is wrong"},{v:"1",L:"2",h:"Blank 2 is wrong"}]);
+  const whys=()=>x.blanks.map((b,i)=>`<div style="margin-top:6px"><b>Blank ${i+1}: ${esc(b.a)}.</b> ${esc(b.why)}</div>`).join("");
+  const done=(msg,stars,head)=>{state[0]=state[1]="right";fill[0]=x.blanks[0].a;fill[1]=x.blanks[1].a;$("#hp").innerHTML=passHTML();helpFinish(msg,stars,head+whys())};
+  const fixBlank=i=>{
+    $("#hq").innerHTML=`What should blank ${i+1} be?`;
+    $("#hctl").innerHTML=choiceBtns(shuffle([x.blanks[i].a,...x.blanks[i].d]).map(v=>({v})));
+    $("#hctl").querySelectorAll(".ch").forEach(b=>b.onclick=()=>{
+      const v=b.dataset.v,fb=$("#hfb");
+      if(v===x.blanks[i].a){done("Ta-da! Now I get it! Thank you, teacher Ruth! 🩰✨",2,`<h4>You taught Tilly! ⭐⭐</h4>`);return}
+      b.classList.add("wrong","shake");b.disabled=true;fill[i]=v;state[i]="wrong";$("#hp").innerHTML=passHTML();
+      fb.className="feedback on try";fb.innerHTML=(v===tp[i]?`<h4>That's what I picked! 😅</h4>`:`<h4>Hmm, read it with that word.</h4>`)+`Read the sentence with the blank <b>and</b> the sentence after it. Does “${esc(v)}” make sense?`;
+      whyBox(v,`${x.title}, blank ${i+1}`);
+    });
+  };
+  $("#hctl").querySelectorAll(".ch").forEach(b=>b.onclick=()=>{
+    const v=+b.dataset.v;
+    if(v===wb){if(wb===-1)done("You checked it! I got both right this time! 💃",2,`<h4>Good checking! ⭐⭐</h4>`);
+      else{hb(`Good eye! 👀 I wobbled on blank ${wb+1}. Can you teach me the right word?`);state[wb]="wrong";$("#hp").innerHTML=passHTML();fixBlank(wb)}}
+    else if(wb===-1)done("Let's check together. Both of my words make sense!",1,`<h4>Tilly was right this time.</h4>`);
+    else if(v===-1){hb(`Let's check blank ${wb+1} together. Read it with my word “${esc(tp[wb])}.” Does that make sense? 🤔`);state[wb]="wrong";$("#hp").innerHTML=passHTML();fixBlank(wb)}
+    else{hb(`Let's check blank ${v+1}: “${esc(tp[v])}” works there! ${esc(x.blanks[v].why)} Now look at blank ${wb+1}.`);state[wb]="wrong";$("#hp").innerHTML=passHTML();fixBlank(wb)}
+  });
+}
+
+/* ---- grown-up area: Help Tilly settings + Ruth's notes ---- */
+function renderHelpParent(){
+  const el=$("#helpRule");if(!el)return;const R_=rule();
+  el.innerHTML=`<b>Help Tilly</b><p class="rule" style="margin:4px 0">Each time Ruth finishes the number of her own problems below, she earns Help Tilly problems. Earned ones add up and are never taken away.<br>
+    <label>Help Tilly problems earned <input type="number" id="rp" min="1" max="20" value="${R_.pip}"></label>
+    <label>Own problems to earn them <input type="number" id="ro" min="1" max="20" value="${R_.other}"></label>
+    <button class="speak" id="ruleSave">Save</button></p>
+    <p style="margin:4px 0;font-size:15px;color:var(--soft)">Counts as one of her own: a Word Detective word right on the first try, an IREAD Practice passage with both blanks right, a Big Challenge question right, or a Read with Tilly turn at 90% or better. Saved now: ${S.tok||0}. Helped so far: ${S.helped||0}.</p>`;
+  $("#ruleSave").onclick=()=>{const a=Math.max(1,Math.min(20,+$("#rp").value||1)),b=Math.max(1,Math.min(20,+$("#ro").value||3));S.rule={pip:a,other:b};if((S.prog||0)>=b)S.prog=b-1;save();renderHelpParent();paintBat();$("#ruleSave").textContent="Saved ✓"};
+  const N=(S.notes||[]).slice().reverse().slice(0,15);
+  $("#notes").innerHTML=`<b>Ruth's notes</b><p style="margin:4px 0;font-size:15px;color:var(--soft)">When Ruth picks a wrong fix in Help Tilly, Tilly asks why, and Ruth writes it in her own words. These are here so you can see how she's thinking. They don't count toward any score. Newest first.</p>`+
+    (N.length?N.map(n=>`<div class="n"><span style="color:var(--soft);font-size:14px">${new Date(n.d).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})} · ${esc(n.about)}</span><br>Picked “<b>${esc(n.choice)}</b>”: ${esc(n.said)}</div>`).join(""):`<p style="font-size:15px">None yet.</p>`);
 }
 
 renderHome();

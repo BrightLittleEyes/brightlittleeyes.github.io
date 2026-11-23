@@ -654,6 +654,7 @@ function finish(){
       <button class="btn" data-go="${R.kind==="det"?"detective":R.kind==="pas"?"passages":"challenge"}">Play again</button>
     </div>`;
   show("results");
+  if(window.rhythmReport) rhythmReport('read3');   /* checks off Clue Quest on Ruth's rhythm board */
   if(pct>=.7)burst();
 }
 function burst(){
@@ -878,7 +879,7 @@ function totalsRead(){let ok=0,total=0,secs=0,manual=false;const tricky=[];
   return{ok,total,secs,manual,tricky:uniqT(tricky),pct:total?Math.round(100*ok/total):0}}
 function finishRead(){
   RS.done=true;
-  if(!RS.finished){RS.finished=true;addStars(2);RS.stars+=2}
+  if(!RS.finished){RS.finished=true;addStars(2);RS.stars+=2;if(window.rhythmReport)rhythmReport('read3')}
   document.querySelectorAll(".seg").forEach(e=>e.classList.remove("active"));
   RS.segs.forEach((sg,si)=>{if(sg.who==="ruth"&&sg.res)paintSeg(si,true)});
   renderSummary(true);
@@ -1065,5 +1066,6 @@ function renderHelpParent(){
 
 renderHome();
 </script>
+<script src="../rhythm/report.js"></script>
 </body>
 </html>

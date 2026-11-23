@@ -835,6 +835,7 @@ const APPS = {
   hist3:   {name:'Through the Word 3 (History)',   how:'finish a History lesson'},
   la3:     {name:'Wildflower Language Arts',       how:'finish a Language Arts lesson'},
   sciexp:  {name:'Science Explorers',              how:'finish a Science lesson'},
+  read3:   {name:'Clue Quest with Tilly',          how:'finish a round or read a story'},
   math3:   {name:'3rd Grade Math',                 how:"reach today's goal (30 minutes of work and 10 problems right on the first try)"}
 };
 const APP_OF_MAIN = {bible:'bible6', history:'hist6', language:'writing6', mathapp:'math6', science:'science6'};
@@ -928,6 +929,14 @@ function normalize(d){
   if(ruth && Array.isArray(ruth.blocks) && !(ruth.flagV>=1)){   // Ruth gets the red "Anything different today?" tags too
     if(!(ruth.tags.flag||[]).length) ruth.tags.flag = clone(c.tags.flag||[]);
     ruth.flagV=1;
+  }
+  if(ruth && Array.isArray(ruth.blocks) && !(ruth.clueV>=1)){   // Ruth: Clue Quest with Tilly, checked off by the app
+    if(!ruth.blocks.some(b=>b.items.some(i=>i.id==='r_clue'))){
+      const b = ruth.blocks.find(b=>b.items.some(i=>i.id==='r_reading')) || ruth.blocks.find(b=>b.id==='r_subjects') || ruth.blocks[0];
+      const at = b.items.findIndex(i=>i.id==='r_reading');
+      b.items.splice(at<0 ? b.items.length : at+1, 0, {id:'r_clue', t:'Clue Quest with Tilly', d:'Open Clue Quest from its icon on your desktop. Finish a round or read a story.', app:'read3'});
+    }
+    ruth.clueV=1;
   }
   if(ruth && Array.isArray(ruth.blocks) && !(ruth.danceV>=1)){   // Ruth: Dance on Monday evenings, no evening Fun Choice that day
     const eve = ruth.blocks.find(b=>b.id==='r_evening') || ruth.blocks.find(b=>/evening/i.test(b.name||'')) || ruth.blocks[ruth.blocks.length-1];

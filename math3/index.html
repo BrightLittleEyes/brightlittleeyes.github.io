@@ -1576,7 +1576,7 @@ function gateCount() {
 { const rh0 = renderHome; renderHome = function () {
   rh0();
   const t = stage.querySelector('[data-s="pip"] .ct');
-  if (t && pipGate.resting) { const left = pipRule.other - pipGate.others; t.textContent = `Tilly is resting her toes. Finish ${left} more ${left === 1 ? "problem" : "problems"} with no wrong answers to wake him. Hints are OK.`; }
+  if (t && pipGate.resting) { const left = pipRule.other - pipGate.others; t.textContent = `Tilly is resting her toes. Finish ${left} more ${left === 1 ? "problem" : "problems"} with no wrong answers to wake her. Hints are OK.`; }
 }; }
 function renderSettingsCard() {
   const d = el(`<details class="card backup" open><summary>Settings</summary>
@@ -1691,7 +1691,7 @@ renderHome = function () {
       <button class="tile wide" type="button" data-s="pip" style="--c:var(--g-think)">
         <span class="sym">${pipFace}</span>
         <span><span class="nm">Help Tilly</span><span class="ct" style="display:block">${pipGate.resting
-          ? `Tilly is resting her toes. Finish ${leftPip} more ${leftPip === 1 ? "problem" : "problems"} on your own with no wrong answers to wake him. Hints are OK.`
+          ? `Tilly is resting her toes. Finish ${leftPip} more ${leftPip === 1 ? "problem" : "problems"} on your own with no wrong answers to wake her. Hints are OK.`
           : `Tilly's math got dizzy from spinning! Be the teacher! ${pipGate.tokens} ready.`}</span></span>
       </button>
     </div>
@@ -2221,10 +2221,9 @@ function pipFix() {
 function pipNextRow() {
   const row = el(`<div class="row" style="margin-top:10px"></div>`);
   const again = el(`<button class="primary" type="button">Help Tilly again</button>`);
-  again.onclick = () => {
-    state.solved.pip++; state.pipDone[state.pp.key] = (state.pipDone[state.pp.key] || 0) + 1;
-    state.pipOffer = null; save(); state.step = 0; render();
-  };
+  /* the Help problem counts as soon as it's finished, even if she leaves with Home instead of this button */
+  if (state.pp && !state.pp.counted) { state.pp.counted = true; state.solved.pip++; state.pipDone[state.pp.key] = (state.pipDone[state.pp.key] || 0) + 1; state.pipOffer = null; save(); }
+  again.onclick = () => { state.step = 0; render(); };
   row.append(again); return row;
 }
 

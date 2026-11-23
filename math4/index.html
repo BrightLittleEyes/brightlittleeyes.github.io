@@ -1750,6 +1750,7 @@ document.addEventListener("click", e => {
 document.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.matches && e.target.matches("#stage input")) lastChoice = e.target.value; }, true);
 new MutationObserver(muts => {
   if (!curProb || !state.section || state.section === "pip" || state.section !== curProb.sec || Date.now() - lastPress > 1500) return;
+  return;   /* Mom: no "why" writing after a wrong answer here. She just tries again. */
   if (stage.querySelector("#whyIn2")) return;
   const look = muts.flatMap(m => [...m.addedNodes]).filter(n => n.nodeType === 1)
     .map(n => n.matches(".note.look") ? n : n.querySelector(".note.look")).filter(Boolean)
@@ -1985,25 +1986,72 @@ function pipMeet() {
   });
 }
 
-/* One try per choice: a wrong pick shows the right one and why, then she writes in her own words why her pick was wrong. */
+/* One try per choice: a wrong pick shows the right one and why. Then she says it (microphone) or types it,
+   so the right answer is the last thing she says. Reading it off the screen is fine. The check is forgiving,
+   and after two tries she can keep going anyway, so she never gets stuck. */
 const plain = s => String(s).replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
-function pipWhy(fb, choice, after) {
+const NUMW = {zero:0,oh:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19,twenty:20,thirty:30,forty:40,fifty:50,sixty:60,seventy:70,eighty:80,ninety:90,hundred:100};
+function sayWords(t){
+  t = plain(t).toLowerCase().replace(/[’']/g, "").replace(/(\d),(\d)/g, "$1$2").replace(/[^a-z0-9.\/ ]+/g, " ");
+  return t.split(/\s+/).filter(Boolean).map(w => (w in NUMW ? String(NUMW[w]) : w).replace(/\.$/, ""));
+}
+function sayMatches(said, right){
+  const want = sayWords(right), got = sayWords(said), gotS = new Set(got), gotJoin = got.join("");
+  if (!want.length) return said.trim().length > 0;
+  const SKIP = new Set(["the","and","then","that","this","with","for","are","was","its","you","your"]);
+  const nums = (plain(right).match(/\d+(?::\d+)?/g) || []).map(n => n.replace(":", "")), words = want.filter(w => !/\d/.test(w) && w.length > 2 && !SKIP.has(w));
+  const numsOk = nums.every(n => gotS.has(n) || gotJoin.replace(/[^0-9]/g, "").includes(n));
+  const hit = words.filter(w => gotS.has(w) || got.some(g => g.length > 3 && (g.startsWith(w.slice(0, 4)) || w.startsWith(g.slice(0, 4))))).length;
+  if (nums.length) return numsOk;            // saying just the math is enough
+  return words.length === 0 || hit >= Math.ceil(words.length / 2);
+}
+/* iPad/iPhone: web voice recognition doesn't run in apps saved to the home screen, so there she uses the keyboard's own microphone (Dictation) */
+const IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const SR = IOS ? null : (window.SpeechRecognition || window.webkitSpeechRecognition);
+function pipWhy(fb, choice, after, right) {
+  const ans = plain(right || "");
   const box = el(`<div class="card" style="padding:14px;gap:8px;margin-top:10px">
-    ${pipSay(`Hmm, why was “${plain(choice).replace(/"/g, "&quot;")}” wrong? Tell me in your own words, so I never make that mistake again on a mission!`)}
-    <textarea id="whyIn" rows="3" aria-label="Tell Ziggy why" style="font:inherit;padding:10px;border-radius:10px;border:2px solid var(--line);background:var(--card);color:var(--ink);width:100%;min-width:0"></textarea>
+    ${pipSay(`The right answer is “<b>${ans.replace(/</g, "&lt;")}</b>”. Say it or type it to me, so it sticks in my head!`)}
+    <div class="row" style="align-items:stretch;gap:8px">
+      ${SR ? `<button type="button" id="sayMic" style="flex:0 0 auto;min-height:52px;padding:0 18px;font-weight:600">🎤 Say it</button>` : ""}
+      <textarea id="whyIn" rows="2" aria-label="The right answer" placeholder="${IOS ? "Tap here, then 🎤 on the keyboard" : "Type the right answer"}" style="font:inherit;padding:10px;border-radius:10px;border:2px solid var(--line);background:var(--card);color:var(--ink);flex:1 1 220px;min-width:0"></textarea>
+    </div>
     <div class="row" style="align-items:center"><button class="primary" type="button" id="whyGo" disabled>Tell Ziggy</button>
-      <span class="sub" id="whyMsg" style="margin:0">Write at least a few words.</span></div>
+      <span class="sub" id="whyMsg" style="margin:0">${SR ? "Tap Say it, or type it." : IOS ? "Tap the box, then tap 🎤 on the keyboard to say it. Or type it." : "Type it."}</span></div>
   </div>`);
   fb.appendChild(box);
-  const ta = box.querySelector("#whyIn"), go = box.querySelector("#whyGo");
-  ta.addEventListener("input", () => {
-    const ok = ta.value.trim().split(/\s+/).filter(Boolean).length >= 3;
-    go.disabled = !ok; box.querySelector("#whyMsg").textContent = ok ? "" : "Write at least a few words.";
-  });
-  go.onclick = () => {
-    if (curProb) (curProb.why = curProb.why || []).push({ step: stepName("pip", state.step), choice: plain(choice), said: ta.value.trim() });
-    box.remove(); after();
+  const ta = box.querySelector("#whyIn"), go = box.querySelector("#whyGo"), msg = box.querySelector("#whyMsg"), mic = box.querySelector("#sayMic");
+  let tries = 0, rec = null;
+  const ready = () => { go.disabled = !ta.value.trim(); };
+  ta.addEventListener("input", ready);
+  const check = () => {
+    const said = ta.value.trim(); if (!said) return;
+    tries++;
+    if (sayMatches(said, ans) || !ans || tries >= 3) {
+      if (curProb) (curProb.why = curProb.why || []).push({ step: stepName("pip", state.step), choice: plain(choice), right: ans, said });
+      if (rec) try { rec.abort(); } catch (e) {}
+      box.remove(); after(); return;
+    }
+    msg.textContent = tries >= 2 ? "Almost! Look at the answer above and try once more, or tap Keep going." : "Almost! Look at the answer above and try again.";
+    if (tries >= 2) go.textContent = "Keep going";
+    if (tries >= 2) { go.onclick = () => { tries = 3; check(); }; }
   };
+  go.onclick = check;
+  if (mic) mic.onclick = () => {
+    try {
+      if (rec) { rec.abort(); rec = null; }
+      rec = new SR(); rec.lang = "en-US"; rec.interimResults = false; rec.maxAlternatives = 3;
+      mic.disabled = true; mic.textContent = "🎤 Listening…"; msg.textContent = "Say the right answer now.";
+      rec.onresult = e => {
+        const alts = [...e.results[0]].map(a => a.transcript);
+        ta.value = alts.find(a => sayMatches(a, ans)) || alts[0] || ""; ready(); check();
+      };
+      rec.onerror = ev => { msg.textContent = ev.error === "not-allowed" ? "The microphone isn't allowed here. Type it instead." : "I didn't catch that. Tap Say it again, or type it."; };
+      rec.onend = () => { mic.disabled = false; mic.textContent = "🎤 Say it"; rec = null; };
+      rec.start();
+    } catch (e) { mic.disabled = false; mic.textContent = "🎤 Say it"; msg.textContent = "Type it instead."; }
+  };
+  setTimeout(() => ta.focus(), 50);
 }
 function pipSense() {
   const pp = state.pp;
@@ -2036,7 +2084,7 @@ function pipSense() {
     pipWhy(fb, b.textContent, () => {
       if (pp.wrong < 0) { fb.innerHTML += pipAnswer(pp); fb.appendChild(pipNextRow()); }
       else toFind();
-    });
+    }, c.querySelector(`[data-a="${pp.wrong < 0 ? "yes" : "off"}"]`).textContent);
   });
 }
 
@@ -2058,7 +2106,7 @@ function pipFind() {
       btns.forEach(x => x.disabled = true); btns[pp.wrong].classList.add("fixed");
       const fb = c.querySelector("#fb");
       fb.innerHTML = `<div class="note look">${pp.stepOk(i)} The mistake is in <b>${pp.steps[pp.wrong].label}</b>.</div>`;
-      pipWhy(fb, `${s.label}`, () => fb.appendChild(nextBtn(() => { state.step = 3; render(); }, "Fix Ziggy's step")));
+      pipWhy(fb, `${s.label}`, () => fb.appendChild(nextBtn(() => { state.step = 3; render(); }, "Fix Ziggy's step")), pp.steps[pp.wrong].label);
     };
     btns.push(b); c.querySelector("#steps").appendChild(b);
   });
@@ -2085,7 +2133,7 @@ function pipFix() {
       btns[opts.findIndex(o => o[1])].classList.add("picked");
       if (ok) return finish(fb);
       fb.innerHTML = `<div class="note look">${why} The right way: <b>${pp.fixes.find(f => f[1])[0]}</b>.</div>`;
-      pipWhy(fb, t, () => finish(fb));
+      pipWhy(fb, t, () => finish(fb), pp.fixes.find(f => f[1])[0]);
     };
     btns.push(b); c.querySelector("#opts").appendChild(b);
   });

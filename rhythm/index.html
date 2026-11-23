@@ -223,6 +223,7 @@ body.theme-dance .ord button{border-radius:50%;width:36px;height:36px;border-col
 .block.weekend h2{font-family:"Bricolage Grotesque",sans-serif;font-size:28px;margin:10px 0 6px;color:var(--navy)}
 body.theme-dance .block.weekend h2{font-family:"Fredoka",sans-serif}
 .block.weekend p{margin:0;color:var(--muted);font-size:18px}
+.taglinks{display:flex;gap:8px;flex-wrap:wrap}
 .momonly{margin-top:6px;font-size:13px;color:var(--muted);font-weight:700}
 .kidswitch{display:flex;gap:8px;justify-content:center;margin:10px 0 4px;flex-wrap:wrap}
 .kidswitch button{min-height:44px;padding:0 20px;border-radius:22px;border:2px solid var(--navy);background:#fff;color:var(--navy);font-weight:700;font-size:16px;cursor:pointer}
@@ -1234,6 +1235,11 @@ function normalizeMain(d){
       c.tags.fun.push({id:'radio', name:'Christian Radio', sub:'Listen to a Christian radio station', timer:2700});
     c.v = 37;
   }
+  if(c.v < 38){                       // Christian Radio: links to K-LOVE and Air1
+    (c.tags.fun||[]).forEach(t=>{ if(t.id==='radio'){ t.timer=2700;
+      t.links=[{name:'Listen to K-LOVE', url:'https://www.klove.com/music/streaming'}, {name:'Listen to Air1', url:'https://www.air1.com/streaming'}]; } });
+    c.v = 38;
+  }
   return c;
 }
 const BOARD_OF_DAY = {6:'satBlocks', 0:'sunBlocks'};   // Saturday, Sunday; every other day uses "blocks"
@@ -1531,6 +1537,8 @@ function rowHTML(i, ord){
     if(tag && tag.snack) extra += snackBoxes(i.id);
     if(tag && tag.note) extra += noteHTML(tag.note);
     if(tag && tag.timer) extra += timerBox(i.id);
+    if(tag && Array.isArray(tag.links) && tag.links.length)
+      extra += `<div class="taglinks">${tag.links.map(l=>`<a class="applink" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.name)}</a>`).join('')}</div>`;
   } else {
     if(i.note) extra += noteHTML(i.note);
     if(i.snack) extra += snackBoxes(i.id);

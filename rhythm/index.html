@@ -1247,6 +1247,10 @@ function normalizeMain(d){
       t.links=[{name:'Listen to K-LOVE', url:'https://www.klove.com/music/streaming'}, {name:'Listen to Air1', url:'https://www.air1.com/streaming'}]; } });
     c.v = 38;
   }
+  if(c.v < 39){                       // radio time is one hour
+    (c.tags.fun||[]).forEach(t=>{ if(t.id==='radio') t.timer=3600; });
+    c.v = 39;
+  }
   return c;
 }
 const BOARD_OF_DAY = {6:'satBlocks', 0:'sunBlocks'};   // Saturday, Sunday; every other day uses "blocks"
@@ -1406,8 +1410,8 @@ function loadYesterday(){
 }
 /* Running and paused timers are kept on this device, so they survive the iPad reloading the page */
 const tmKey = () => 'rhythm:tm:'+S.kid+':'+S.date;
-function saveTimers(){ try{ localStorage.setItem(tmKey(), JSON.stringify({t:S.timers, p:S.paused})); }catch(e){} }
-function loadTimers(){ let o=null; try{ o=JSON.parse(localStorage.getItem(tmKey())||'null'); }catch(e){} S.timers=(o&&o.t)||{}; S.paused=(o&&o.p)||{}; }
+function saveTimers(){ try{ localStorage.setItem(tmKey(), JSON.stringify({t:S.timers, p:S.paused, e:S.ended||{}})); }catch(e){} }
+function loadTimers(){ let o=null; try{ o=JSON.parse(localStorage.getItem(tmKey())||'null'); }catch(e){} S.timers=(o&&o.t)||{}; S.paused=(o&&o.p)||{}; S.ended=(o&&o.e)||{}; }
 /* A board left open (or an iPad waking up) can miss live updates, so it also asks the database directly. */
 function refreshDay(){
   if(!S.db || !S.started || S.view!=='app' || S.saveT && Object.keys(S.ck||{}).length) return;
@@ -1544,8 +1548,14 @@ function rowHTML(i, ord){
     if(tag && tag.snack) extra += snackBoxes(i.id);
     if(tag && tag.note) extra += noteHTML(tag.note);
     if(tag && tag.timer) extra += timerBox(i.id);
-    if(tag && Array.isArray(tag.links) && tag.links.length)
-      extra += `<div class="taglinks">${tag.links.map(l=>`<a class="applink" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.name)}</a>`).join('')}</div>`;
+    if(tag && Array.isArray(tag.links) && tag.links.length){
+      /* Links work only on the day she picked it, and (when it has a timer) only while that timer is running */
+      const today = S.date===keyOf(new Date()), ended = !!(S.ended||{})[i.id], running = !!S.timers[i.id];
+      if(!today) extra += `<div class="momonly">The station buttons only work on the day it's picked.</div>`;
+      else if(tag.timer && ended) extra += `<div class="momonly">Radio time is done for today.</div>`;
+      else if(tag.timer && !running) extra += `<div class="momonly">Tap ${(S.paused||{})[i.id]!=null?'Resume':'Start'} to get the station buttons.</div>`;
+      else extra += `<div class="taglinks">${tag.links.map(l=>`<a class="applink" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.name)}</a>`).join('')}</div>`;
+    }
   } else {
     if(i.note) extra += noteHTML(i.note);
     if(i.snack) extra += snackBoxes(i.id);
@@ -1652,7 +1662,7 @@ document.addEventListener('visibilitychange', syncWake);
 
 setInterval(()=>{
   const ids=Object.keys(S.timers); if(!ids.length) return;
-  ids.forEach(id=>{ if(Date.now()>=S.timers[id]){ const info=timerInfo(id); delete S.timers[id]; saveTimers(); showAlarm(info ? info.msg : 'Time is finished.'); } });
+  ids.forEach(id=>{ if(Date.now()>=S.timers[id]){ const info=timerInfo(id); delete S.timers[id]; (S.ended=S.ended||{})[id]=true; saveTimers(); showAlarm(info ? info.msg : 'Time is finished.'); render(); } });
   paintTimer(); syncWake();
 }, 500);
 
@@ -1720,11 +1730,14 @@ $('#app').addEventListener('click', e=>{
     if(isLocked(t.dataset.slot) && S.role!=='parent'){ toast(`${findTag('mech',D.slots[t.dataset.slot]).name} is today's must-do job.`, 3000); return; }
     openPicker(t.dataset.slot); return; }
   if(t.dataset.tact){ const id=t.dataset.tid, a=t.dataset.tact, info=timerInfo(id); if(!info) return;
+    if(a==='start' && S.role!=='parent' && (S.ended||{})[id]){ const tg=findTag((itemById(id)||{}).slot, D.slots[id]);
+      if(tg && Array.isArray(tg.links) && tg.links.length){ toast(`${tg.name} time is done for today.`, 3000); return; } }
+    if(a==='start' && S.role==='parent' && S.ended) delete S.ended[id];
     if(a==='start'){ S.timers[id]=Date.now()+info.secs*1000; delete S.paused[id]; if(info.clock) clockTimer(info.secs*1000); }
     if(a==='pause'){ S.paused[id]=Math.max(0,S.timers[id]-Date.now()); delete S.timers[id]; }
     if(a==='resume'){ S.timers[id]=Date.now()+S.paused[id]; if(info.clock) clockTimer(S.paused[id]); delete S.paused[id]; }
     if(a==='reset'){ delete S.timers[id]; delete S.paused[id]; }
-    saveTimers(); paintTimer(); syncWake(); return; }
+    saveTimers(); render(); syncWake(); return; }
   if(t.dataset.snack){ const k=+t.dataset.snack, sid=t.dataset.sid; D.snack[k]=!D.snack[k];
     if(D.snack.every(Boolean) && !D.checks[sid]){ D.checks[sid]=true; (S.ck=S.ck||{})[sid]=1; toast('All 8 compartments filled!'); }
     save(); render(); return; }

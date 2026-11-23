@@ -156,9 +156,9 @@ details.parent summary{font-family:'Fredoka';font-weight:600;cursor:pointer}
 .seg.tilly{color:#5b4fb8}
 .seg.active{background:var(--sun-l);box-shadow:0 0 0 4px var(--sun-l)}
 .rt{border-radius:6px;padding:0 2px;transition:background .15s,color .15s}
-.rt.speaking{background:var(--lav);color:#fff}
+.rt.speaking{background:var(--lav);color:#fff;box-shadow:0 0 0 3px var(--lav)}
 .rt.live{color:var(--green)}
-.rt.next{box-shadow:inset 0 -3px 0 var(--coral)}
+.rt.next{background:var(--sun);color:var(--ink);box-shadow:0 0 0 3px var(--sun);font-weight:700}
 .rt.ok{color:#1f7a3f}
 .rt.sub{background:var(--red-l);color:var(--red);font-weight:700}
 .rt.almost{background:var(--sun-l);color:#8a6400;font-weight:700;box-shadow:inset 0 -3px 0 var(--sun)}
@@ -267,7 +267,7 @@ table.log td,table.log th{text-align:left;padding:5px 6px;border-bottom:1px soli
   <h2 class="sec-title fred">My Badges</h2>
   <div class="badges" id="badges"></div>
   <details class="parent">
-    <summary>For grown-ups</summary>
+    <summary>🔒 For grown-ups</summary>
     <p>IREAD-3 has a few questions where kids read a short passage with two blanks and choose the word that fits each blank from four choices. Indiana's standard for this is 3.RC.11, using context clues to figure out unknown words. <b>IREAD Practice</b> uses that same format. <b>Word Detective</b> teaches the skill underneath: Ruth picks the meaning, then taps the clue word that proves it. Tilly, her robot ballerina, cheers her on.</p>
     <p>Progress and stars are saved in this browser only. 🔊 buttons read the text aloud. That's good for practice, but on the test she'll read on her own, so try having her read first.</p>
     <p><b>Read with Tilly</b> uses the device's speech-to-text to listen. It's a helper, not a perfect judge. Speech-to-text tends to "fix" small mistakes and sometimes mishears names. After she reads, you can tap any word to switch it between right and missed.</p>
@@ -692,6 +692,17 @@ function align(toks,heard){
   const status=new Array(n).fill("miss"),said=new Array(n).fill(null),extras=[];let i=n,j=m;
   while(i>0||j>0){const bk=B[i][j];if(bk===1){status[i-1]=C[i][j];said[i-1]=heard[j-1];i--;j--}else if(bk===2){i--}else{extras.unshift(heard[j-1]);j--}}
   return{status,said,extras}}
+function alignSoFar(toks,heard){
+  const n=toks.length,m=heard.length,D=[],B=[],C=[];
+  for(let i=0;i<=n;i++){D.push(new Array(m+1).fill(0));B.push(new Array(m+1).fill(0));C.push([])}
+  for(let i=1;i<=n;i++){D[i][0]=i;B[i][0]=2}
+  for(let j=1;j<=m;j++){D[0][j]=j;B[0][j]=3}
+  for(let i=1;i<=n;i++)for(let j=1;j<=m;j++){const r=wcmp(toks[i-1],heard[j-1]);C[i][j]=r;const sc=r==="ok"?0:r==="almost"?.6:1;
+    let best=D[i-1][j-1]+sc,bk=1;if(D[i-1][j]+1<best){best=D[i-1][j]+1;bk=2}if(D[i][j-1]+1<best){best=D[i][j-1]+1;bk=3}D[i][j]=best;B[i][j]=bk}
+  let end=0;for(let i=1;i<=n;i++)if(D[i][m]<D[end][m])end=i;   // earliest place that best explains what she's said
+  const st=new Array(n).fill("unread");let i=end,j=m;
+  while(i>0||j>0){const bk=B[i][j];if(bk===1){st[i-1]=C[i][j];i--;j--}else if(bk===2){st[i-1]="miss";i--}else j--}
+  return{status:st,end}}
 function sentencesOf(t){return(t.match(/[^.!?]+[.!?]+["”]?/g)||[t]).map(x=>x.trim())}
 function tokenizeText(text){const toks=[];const re=/\S+/g;let m;
   while((m=re.exec(text))){const n=normW(m[0]);if(n)toks.push({t:m[0],n,s:m.index,e:m.index+m[0].length,name:false})}
@@ -741,16 +752,31 @@ function step(){
     };
   }else ruthTurn();
 }
+let TCPS=14;try{const v=+localStorage.getItem(KEY+"_cps");if(v>5&&v<40)TCPS=v}catch(e){}
 function tillyRead(si,done){
   const sg=RS.segs[si];
   if(!canSpeak){setBubble("Grown-up, please read my part out loud! 🩰");setTimeout(done,2500);return}
+  const mark=idx=>sg.toks.forEach((k,wi)=>{const w=W(si,wi);if(w)w.classList.toggle("speaking",wi===idx)});
+  const wts=sg.toks.map(k=>k.t.length+1+(/[,;:]["”]?$/.test(k.t)?4:0)+(/[.!?]["”]?$/.test(k.t)?7:0));
+  const starts=[];let acc=0;wts.forEach(w=>{starts.push(acc);acc+=w});const totalW=acc;
+  let boundary=false,finished=false,t0=0,raf=null,lastIdx=-1;
+  const pace=()=>{if(boundary||finished)return;const pos=(Date.now()-t0)/1000*TCPS;let idx=sg.toks.length-1;
+    for(let i=0;i<starts.length;i++){if(pos<starts[i]+wts[i]){idx=i;break}}
+    if(idx!==lastIdx){lastIdx=idx;mark(idx)}raf=requestAnimationFrame(pace)};
+  const begin=()=>{if(t0)return;t0=Date.now();setTimeout(()=>{if(!boundary&&!finished)pace()},180)};
+  const end=()=>{if(finished)return;finished=true;cancelAnimationFrame(raf);
+    if(!boundary&&t0){const secs=(Date.now()-t0)/1000;if(secs>1){const c=totalW/secs;if(c>5&&c<40){TCPS=TCPS*.4+c*.6;try{localStorage.setItem(KEY+"_cps",TCPS.toFixed(2))}catch(e){}}}}
+    mark(-1);done()};
   try{speechSynthesis.cancel();
     const u=new SpeechSynthesisUtterance(sg.text);u.rate=.88;u.pitch=1.12;const v=pickVoice();if(v)u.voice=v;
-    u.onboundary=e=>{if(e.name&&e.name!=="word")return;const ci=e.charIndex;sg.toks.forEach((k,wi)=>{const w=W(si,wi);if(w)w.classList.toggle("speaking",ci>=k.s&&ci<k.e)})};
-    u.onend=()=>done();u.onerror=()=>done();
+    u.onstart=begin;
+    u.onboundary=e=>{if(e.name&&e.name!=="word")return;begin();boundary=true;const ci=e.charIndex;
+      let idx=sg.toks.findIndex(k=>ci>=k.s&&ci<k.e);if(idx<0)idx=sg.toks.findIndex(k=>k.s>=ci);if(idx>=0)mark(idx)};
+    u.onend=end;u.onerror=end;
     speechSynthesis.speak(u);
-    const ms=sg.text.length*95+4000;setTimeout(()=>{if(!speechSynthesis.speaking)done()},ms);
-  }catch(e){done()}
+    setTimeout(begin,700);
+    setTimeout(()=>{if(!finished&&!speechSynthesis.speaking)end()},sg.text.length*110+5000);
+  }catch(e){end()}
 }
 
 function ruthTurn(){
@@ -771,6 +797,7 @@ function ruthTurn(){
 function startListen(){
   const si=RS.idx,sg=RS.segs[si];
   sg.res=null;paintSeg(si,false);
+  const f0=W(si,0);if(f0)f0.classList.add("next");
   $("#rctl").innerHTML=`<button class="mic on" id="micstop" aria-label="I'm done">✋</button><div class="hint">I'm listening… tap ✋ when you finish</div><div class="heard" id="heard"></div>`;
   setBubble("I'm listening! 👂 Read nice and clear.");
   try{speechSynthesis.cancel()}catch(e){}
@@ -801,11 +828,12 @@ function makeRec(L){
 function liveUpdate(L,all){
   const sg=RS.segs[L.si];const h=prepHeard(all,sg.toks);
   const hd=$("#heard");if(hd)hd.textContent=all.length?"I heard: …"+all.slice(-12).join(" "):"";
-  const a=align(sg.toks,h);let last=-1;
-  a.status.forEach((st,wi)=>{if(st!=="miss")last=wi});
-  sg.toks.forEach((k,wi)=>{const w=W(L.si,wi);w.classList.toggle("live",wi<=last&&a.status[wi]!=="miss");w.classList.toggle("next",wi===last+1)});
+  const a=alignSoFar(sg.toks,h),nx=a.end;
+  sg.toks.forEach((k,wi)=>{const w=W(L.si,wi);w.classList.toggle("live",wi<nx);w.classList.toggle("next",wi===nx)});
+  const cur=W(L.si,Math.min(nx,sg.toks.length-1));
+  if(cur){const r=cur.getBoundingClientRect();if(r.top<80||r.bottom>window.innerHeight-160)cur.scrollIntoView({block:"center",behavior:"smooth"})}
   clearTimeout(L.auto);
-  if(last===sg.toks.length-1&&h.length>=sg.toks.length*.6)L.auto=setTimeout(()=>{if(LS===L&&L.on)stopListen()},1700);
+  if(nx>=sg.toks.length)L.auto=setTimeout(()=>{if(LS===L&&L.on)stopListen()},1700);
 }
 function stopListen(){
   const L=LS;if(!L||!L.on)return;L.on=false;clearTimeout(L.auto);
@@ -1064,8 +1092,18 @@ function renderHelpParent(){
     (N.length?N.map(n=>`<div class="n"><span style="color:var(--soft);font-size:14px">${new Date(n.d).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})} · ${esc(n.about)}</span><br>Picked “<b>${esc(n.choice)}</b>”: ${esc(n.said)}</div>`).join(""):`<p style="font-size:15px">None yet.</p>`);
 }
 
+/* ---- parent PIN (the same PIN as Ruth's other apps) ---- */
+(()=>{const d=document.querySelector("details.parent");if(!d)return;const sm=d.querySelector("summary");
+  sm.addEventListener("click",e=>{
+    if(d.open){if(window.BLEPin)BLEPin.lock();return}
+    if(!window.BLEPin||BLEPin.unlocked())return;
+    e.preventDefault();BLEPin.ask(()=>{d.open=true;renderHome()});
+  });
+  const r0=renderHome;renderHome=function(){if(d.open&&window.BLEPin&&!BLEPin.unlocked())d.open=false;r0()};
+})();
 renderHome();
 </script>
 <script src="../rhythm/report.js"></script>
+<script src="../parent-pin.js"></script>
 </body>
 </html>

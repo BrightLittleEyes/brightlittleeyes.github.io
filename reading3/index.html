@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Reading 3">
+<meta name="theme-color" content="#1F8A8A">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.json">
+<title>Clue Quest with Tilly</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFF8EC; --ink:#2B2B3A; --soft:#6B6B7B; --card:#FFFFFF;
+  --teal:#1F8A8A; --teal-l:#D9F0EF; --coral:#F2715B; --coral-l:#FDE3DD;
+  --sun:#FFC845; --sun-l:#FFF1C7; --green:#2E9D52; --green-l:#DDF3E3;
+  --red:#D9473A; --red-l:#FBE0DD; --lav:#7B68D9; --lav-l:#E9E5FA;
+  --r:20px; --shadow:0 4px 0 rgba(43,43,58,.08), 0 10px 24px rgba(43,43,58,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Atkinson Hyperlegible',system-ui,sans-serif;font-size:18px;line-height:1.5}
+h1,h2,h3,.fred{font-family:'Fredoka',system-ui,sans-serif;font-weight:600;line-height:1.15}
+button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
+button:focus-visible{outline:3px solid var(--lav);outline-offset:3px}
+.wrap{max-width:820px;margin:0 auto;padding:16px 16px 60px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0 14px}
+.brand{display:flex;align-items:center;gap:10px;font-family:'Fredoka';font-weight:700;font-size:24px;color:var(--teal)}
+.brand svg{width:44px;height:44px}
+.hdr-right{display:flex;gap:10px;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:6px;background:var(--sun-l);border:2px solid var(--sun);padding:6px 14px;border-radius:999px;font-family:'Fredoka';font-weight:600;font-size:18px}
+.homebtn{background:var(--card);border:2px solid #E7DFCF;padding:6px 14px;border-radius:999px;font-family:'Fredoka';font-weight:600}
+.view{display:none;animation:pop .25s ease}
+.view.on{display:block}
+@keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:22px}
+.hero{display:flex;gap:18px;align-items:center;background:var(--teal);color:#fff;border-radius:var(--r);padding:22px 24px;margin-bottom:18px}
+.hero h1{margin:0 0 4px;font-size:30px}
+.hero p{margin:0;opacity:.95}
+.hero svg{flex:0 0 104px;width:104px;height:104px;background:#fff;border-radius:50%;padding:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.mode{text-align:left;background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:20px;border:3px solid transparent;transition:transform .12s,border-color .12s}
+.mode:hover{transform:translateY(-2px);border-color:var(--sun)}
+.mode .ic{font-size:34px}
+.mode h3{margin:6px 0 4px;font-size:22px}
+.mode p{margin:0;color:var(--soft);font-size:16px}
+.mode .meta{margin-top:10px;font-size:14px;color:var(--teal);font-weight:700}
+.badges{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+.badge{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:14px;background:#F2EEE6;color:#9A958A;font-size:15px;font-weight:700}
+.badge.got{background:var(--lav-l);color:var(--lav)}
+.badge .e{font-size:22px;filter:grayscale(1);opacity:.5}
+.badge.got .e{filter:none;opacity:1}
+.sec-title{font-size:22px;margin:26px 0 10px}
+details.parent{margin-top:22px;background:#fff;border-radius:16px;padding:14px 18px;box-shadow:var(--shadow);font-size:16px}
+details.parent summary{font-family:'Fredoka';font-weight:600;cursor:pointer}
+/* learn */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:8px 0 6px}
+.step{background:var(--card);border-radius:16px;padding:16px;box-shadow:var(--shadow);text-align:center}
+.step .n{display:inline-grid;place-items:center;width:42px;height:42px;border-radius:50%;background:var(--coral);color:#fff;font-family:'Fredoka';font-weight:700;font-size:22px}
+.step h3{margin:8px 0 4px;font-size:21px}
+.step p{margin:0;font-size:16px;color:var(--soft)}
+.clue-card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:18px 20px;margin-bottom:12px;border-left:8px solid var(--c)}
+.clue-card h3{margin:0;font-size:22px;display:flex;align-items:center;gap:10px}
+.clue-card .what{margin:4px 0 10px}
+.sig{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.sig span{background:var(--cl);color:var(--ink);border-radius:999px;padding:3px 12px;font-weight:700;font-size:15px}
+.ex{background:#FBF8F2;border-radius:12px;padding:12px 14px;font-size:18px}
+.ex b.t{background:var(--sun-l);border-bottom:3px solid var(--sun);padding:0 3px;border-radius:4px}
+.ex mark{background:var(--cl);padding:0 3px;border-radius:4px}
+.tips li{margin-bottom:6px}
+/* question */
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:12px}
+.progress{flex:1;height:14px;background:#EFE7D7;border-radius:999px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--teal);border-radius:999px;transition:width .3s}
+.count{font-family:'Fredoka';font-weight:600;color:var(--soft);white-space:nowrap}
+.sentence{font-size:25px;line-height:1.7;margin:4px 0 14px}
+.tok{border-radius:6px;padding:1px 2px;transition:background .15s}
+.tappable .tok.w{cursor:pointer;border-bottom:2px dashed #CFC6B5}
+.tappable .tok.w:hover{background:var(--lav-l)}
+.tok.target{background:var(--sun-l);border-bottom:4px solid var(--sun);font-weight:700;padding:1px 4px}
+.tok.clue{background:var(--green-l);box-shadow:0 0 0 2px var(--green-l)}
+.tok.miss{background:var(--red-l)}
+.q{font-family:'Fredoka';font-weight:600;font-size:22px;margin:4px 0 12px}
+.q b{color:var(--coral)}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.ch{display:flex;align-items:center;gap:12px;text-align:left;background:#fff;border:3px solid #E7DFCF;border-radius:16px;padding:12px 14px;font-size:20px;min-height:60px;transition:transform .1s,border-color .1s,background .1s}
+.ch:hover:not(:disabled){border-color:var(--teal);transform:translateY(-1px)}
+.ch .L{flex:0 0 34px;height:34px;display:grid;place-items:center;border-radius:50%;background:#F2EEE6;font-family:'Fredoka';font-weight:700}
+.ch.sel{border-color:var(--teal);background:var(--teal-l)}
+.ch.sel .L{background:var(--teal);color:#fff}
+.ch.right{border-color:var(--green);background:var(--green-l)}
+.ch.right .L{background:var(--green);color:#fff}
+.ch.wrong{border-color:var(--red);background:var(--red-l)}
+.ch.wrong .L{background:var(--red);color:#fff}
+.ch:disabled{cursor:default}
+.ch.dim{opacity:.5}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-3px)}}
+.feedback{margin-top:14px;border-radius:16px;padding:14px 16px;font-size:18px;display:none}
+.feedback.on{display:block;animation:pop .2s}
+.feedback.good{background:var(--green-l)}
+.feedback.try{background:var(--sun-l)}
+.feedback.bad{background:var(--red-l)}
+.feedback.info{background:var(--lav-l)}
+.feedback h4{margin:0 0 4px;font-family:'Fredoka';font-size:20px}
+.typetag{display:inline-flex;align-items:center;gap:6px;background:#fff;border-radius:999px;padding:3px 12px;font-weight:700;font-size:15px;margin-bottom:6px}
+.actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;flex-wrap:wrap}
+.btn{background:var(--coral);color:#fff;font-family:'Fredoka';font-weight:600;font-size:20px;padding:12px 26px;border-radius:999px;box-shadow:0 4px 0 #C9523F}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 #C9523F}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:#fff;color:var(--ink);border:2px solid #E7DFCF;box-shadow:none}
+.speak{background:var(--lav-l);color:var(--lav);border-radius:999px;padding:6px 12px;font-weight:700;font-size:15px}
+/* passage */
+.direc{font-size:16px;color:var(--soft);margin:0 0 8px}
+.passage{font-size:23px;line-height:1.85;background:#FBF8F2;border-radius:16px;padding:16px 18px;margin-bottom:16px}
+.blank{display:inline-block;min-width:110px;text-align:center;border-bottom:3px solid var(--ink);padding:0 6px;font-weight:700;color:var(--teal);line-height:1.3}
+.blank .num{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--ink);color:#fff;font-size:14px;font-family:'Fredoka';vertical-align:2px}
+.blank.right{color:var(--green);border-color:var(--green)}
+.blank.wrong{color:var(--red);border-color:var(--red);text-decoration:line-through}
+.bgroup{margin-bottom:14px}
+.bgroup h4{margin:0 0 8px;font-family:'Fredoka';font-size:19px}
+.fix{color:var(--green);font-weight:700;text-decoration:none;margin-left:6px}
+/* results */
+.results{text-align:center;padding:30px 20px}
+.results .big{font-size:64px;line-height:1}
+.results h2{font-size:32px;margin:10px 0 6px}
+.results .score{font-family:'Fredoka';font-size:22px;color:var(--soft)}
+.stars-row{font-size:36px;letter-spacing:4px;margin:10px 0}
+.burst{position:fixed;pointer-events:none;font-size:26px;z-index:20;animation:fall 1.4s ease-out forwards}
+@keyframes fall{0%{opacity:1;transform:translate(0,0) rotate(0)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(var(--rot))}}
+@media (max-width:560px){
+  .hero{flex-direction:column;text-align:center}
+  .sentence{font-size:22px}.passage{font-size:20px}
+  .brand span{display:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="brand">
+    <svg viewBox="0 0 56 56" aria-hidden="true">
+  <path d="M6 56 Q10 47 16 49 Q20 45 24 49 Q28 45 32 49 Q36 45 40 49 Q46 47 50 56 Z" fill="#E9E5FA" stroke="#7B68D9" stroke-width="1.5"/>
+  <circle cx="28" cy="7.5" r="6" fill="#f1cf6e" stroke="#c99a2e" stroke-width="1.5"/>
+  <circle cx="8" cy="29" r="3.5" fill="#B9B2D9"/><circle cx="48" cy="29" r="3.5" fill="#B9B2D9"/>
+  <rect x="9" y="13" width="38" height="33" rx="11" fill="#CFD8E3"/>
+  <path d="M9 24 Q9 13 20 13 L36 13 Q47 13 47 24 Q40 17 33 20 Q28 15 23 20 Q16 17 9 24 Z" fill="#f1cf6e" stroke="#c99a2e" stroke-width="1.2"/>
+  <path d="M19 15 L21 8.5 L24.5 12.5 L28 6 L31.5 12.5 L35 8.5 L37 15 Q28 12.5 19 15 Z" fill="#e9b8ec" stroke="#8a5a8f" stroke-width="1.2" stroke-linejoin="round"/>
+  <circle cx="20" cy="29" r="5.5" fill="#fff"/><circle cx="36" cy="29" r="5.5" fill="#fff"/>
+  <circle cx="20.5" cy="29.5" r="2.4" fill="#2B2B3A"/><circle cx="35.5" cy="29.5" r="2.4" fill="#2B2B3A"/>
+  <path d="M15 24.5 l-2 -2 M18 23.2 l-1 -2.6 M41 24.5 l2 -2 M38 23.2 l1 -2.6" stroke="#2B2B3A" stroke-width="1.4" stroke-linecap="round"/>
+  <circle cx="14.5" cy="36" r="2.6" fill="#e9b8ec"/><circle cx="41.5" cy="36" r="2.6" fill="#e9b8ec"/>
+  <path d="M22 37 Q28 42.5 34 37" fill="none" stroke="#2B2B3A" stroke-width="2" stroke-linecap="round"/>
+</svg>
+    <span>Clue Quest with Tilly</span>
+  </div>
+  <div class="hdr-right">
+    <div class="pill" title="Stars earned">⭐ <span id="starCount">0</span></div>
+    <button class="homebtn" id="homeBtn" style="display:none">🏠 Home</button>
+  </div>
+</header>
+
+<!-- HOME -->
+<section class="view on" id="v-home">
+  <div class="hero">
+    <svg viewBox="0 0 56 56" aria-hidden="true">
+  <path d="M6 56 Q10 47 16 49 Q20 45 24 49 Q28 45 32 49 Q36 45 40 49 Q46 47 50 56 Z" fill="#E9E5FA" stroke="#7B68D9" stroke-width="1.5"/>
+  <circle cx="28" cy="7.5" r="6" fill="#f1cf6e" stroke="#c99a2e" stroke-width="1.5"/>
+  <circle cx="8" cy="29" r="3.5" fill="#B9B2D9"/><circle cx="48" cy="29" r="3.5" fill="#B9B2D9"/>
+  <rect x="9" y="13" width="38" height="33" rx="11" fill="#CFD8E3"/>
+  <path d="M9 24 Q9 13 20 13 L36 13 Q47 13 47 24 Q40 17 33 20 Q28 15 23 20 Q16 17 9 24 Z" fill="#f1cf6e" stroke="#c99a2e" stroke-width="1.2"/>
+  <path d="M19 15 L21 8.5 L24.5 12.5 L28 6 L31.5 12.5 L35 8.5 L37 15 Q28 12.5 19 15 Z" fill="#e9b8ec" stroke="#8a5a8f" stroke-width="1.2" stroke-linejoin="round"/>
+  <circle cx="20" cy="29" r="5.5" fill="#fff"/><circle cx="36" cy="29" r="5.5" fill="#fff"/>
+  <circle cx="20.5" cy="29.5" r="2.4" fill="#2B2B3A"/><circle cx="35.5" cy="29.5" r="2.4" fill="#2B2B3A"/>
+  <path d="M15 24.5 l-2 -2 M18 23.2 l-1 -2.6 M41 24.5 l2 -2 M38 23.2 l1 -2.6" stroke="#2B2B3A" stroke-width="1.4" stroke-linecap="round"/>
+  <circle cx="14.5" cy="36" r="2.6" fill="#e9b8ec"/><circle cx="41.5" cy="36" r="2.6" fill="#e9b8ec"/>
+  <path d="M22 37 Q28 42.5 34 37" fill="none" stroke="#2B2B3A" stroke-width="2" stroke-linecap="round"/>
+</svg>
+    <div>
+      <h1>Hi Ruth! I'm Tilly! 🩰</h1>
+      <p>I'm a twirling robot ballerina, and today I'm a word detective too! When we meet a tricky word, the words around it leave clues. Let's dance through them and get ready for IREAD!</p>
+    </div>
+  </div>
+  <div class="grid">
+    <button class="mode" data-go="learn"><div class="ic">📚</div><h3>Learn the Clues</h3><p>The 5 kinds of clues and the 4 detective steps.</p><div class="meta">Start here!</div></button>
+    <button class="mode" data-go="detective"><div class="ic">🔍</div><h3>Word Detective</h3><p>Figure out the mystery word, then find the clue that proves it.</p><div class="meta" id="metaDet">6 words per round</div></button>
+    <button class="mode" data-go="passages"><div class="ic">📝</div><h3>IREAD Practice</h3><p>Fill in the blanks in a short story, just like on the real test.</p><div class="meta" id="metaPas">4 passages per round</div></button>
+    <button class="mode" data-go="challenge"><div class="ic">🏆</div><h3>Big Challenge</h3><p>10 mixed questions. No hints until you answer. How many can you get?</p><div class="meta" id="metaCh">Best score: —</div></button>
+  </div>
+  <h2 class="sec-title fred">My Badges</h2>
+  <div class="badges" id="badges"></div>
+  <details class="parent">
+    <summary>For grown-ups</summary>
+    <p>IREAD-3 has a few questions where kids read a short passage with two blanks and choose the word that fits each blank from four choices. Indiana's standard for this is 3.RC.11, using context clues to figure out unknown words. <b>IREAD Practice</b> uses that same format. <b>Word Detective</b> teaches the skill underneath: Ruth picks the meaning, then taps the clue word that proves it. Tilly, her robot ballerina, cheers her on.</p>
+    <p>Progress and stars are saved in this browser only. 🔊 buttons read the text aloud. That's good for practice, but on the test she'll read on her own, so try having her read first.</p>
+    <p><button class="speak" id="resetBtn">Reset progress</button></p>
+  </details>
+</section>
+
+<!-- LEARN -->
+<section class="view" id="v-learn">
+  <h2 class="fred" style="font-size:30px;margin:4px 0 6px">The 4 Detective Steps</h2>
+  <p style="margin:0 0 8px;color:var(--soft)">Use these every time you see a word you don't know.</p>
+  <div class="steps">
+    <div class="step"><div class="n">1</div><h3>🛑 Stop</h3><p>Stop at the tricky word. Don't skip it!</p></div>
+    <div class="step"><div class="n">2</div><h3>👀 Look</h3><p>Read the words <b>before</b> and <b>after</b> it. Hunt for clues.</p></div>
+    <div class="step"><div class="n">3</div><h3>🔄 Swap</h3><p>Try putting each answer in place of the word.</p></div>
+    <div class="step"><div class="n">4</div><h3>✅ Check</h3><p>Does the sentence still make sense? Then you've cracked it!</p></div>
+  </div>
+  <h2 class="fred" style="font-size:30px;margin:26px 0 10px">The 5 Kinds of Clues</h2>
+  <div id="clueCards"></div>
+  <h2 class="fred" style="font-size:26px;margin:24px 0 8px">IREAD Test Tips 💡</h2>
+  <div class="card">
+    <ul class="tips" style="margin:0;padding-left:22px">
+      <li>Read the <b>whole</b> passage first, before you pick anything.</li>
+      <li>For each blank, reread the sentence with the blank <b>and</b> the sentence after it. Clues often come next!</li>
+      <li>Try <b>every</b> answer choice in the blank. Read it in your head.</li>
+      <li>Cross out choices that sound silly. Pick the one that makes the most sense.</li>
+      <li>Some words have more than one meaning, like <i>bark</i> or <i>pitch</i>. The clues tell you which meaning fits.</li>
+    </ul>
+  </div>
+  <div class="actions"><button class="btn" data-go="detective">I'm ready to practice! →</button></div>
+</section>
+
+<!-- DETECTIVE / CHALLENGE / PASSAGE share a play view -->
+<section class="view" id="v-play">
+  <div class="topbar">
+    <div class="progress"><i id="progBar" style="width:0"></i></div>
+    <div class="count" id="progText">1 / 6</div>
+  </div>
+  <div class="card" id="playCard"></div>
+</section>
+
+<section class="view" id="v-results">
+  <div class="card results" id="resultsCard"></div>
+</section>
+</div>
+
+<script>
+/* ---------------- DATA ---------------- */
+const TYPES = {
+  def:{name:"Definition Clue", icon:"📖", c:"#1F8A8A", cl:"#D9F0EF",
+       what:"The sentence <b>tells you</b> what the word means, right there!",
+       sig:["is","means","which means","is called","a / an … (after a comma)"],
+       ex:'A <b class="t">meteorologist</b> is <mark>a scientist who studies the weather</mark>.'},
+  syn:{name:"Same-As Clue (Synonym)", icon:"👯", c:"#7B68D9", cl:"#E9E5FA",
+       what:"A word nearby means <b>the same</b> thing as the tricky word.",
+       sig:["or","also","in other words","so (another word)"],
+       ex:'The puppy was <b class="t">drowsy</b>, or <mark>sleepy</mark>, after the long walk.'},
+  ant:{name:"Opposite Clue (Antonym)", icon:"↔️", c:"#F2715B", cl:"#FDE3DD",
+       what:"A word nearby means <b>the opposite</b>. Then the tricky word means the other thing!",
+       sig:["but","not","unlike","instead","while","however"],
+       ex:'My brother is <b class="t">timid</b> around new people, <mark>but my sister is brave</mark>.'},
+  ex:{name:"Example Clue", icon:"📝", c:"#2E9D52", cl:"#DDF3E3",
+      what:"The sentence gives <b>examples</b>. Think: what do the examples have in common?",
+      sig:["such as","like","for example","including"],
+      ex:'The zoo has many <b class="t">reptiles</b>, including <mark>snakes, lizards, and turtles</mark>.'},
+  inf:{name:"Big-Picture Clue", icon:"🧩", c:"#C99A1A", cl:"#FFF1C7",
+       what:"No signal words. Think about <b>what is happening</b> in the sentence and figure it out.",
+       sig:["What is happening?","How would someone feel?","What would make sense?"],
+       ex:'The <b class="t">famished</b> boy <mark>ate three bowls of cereal and still asked for toast</mark>.'}
+};
+
+// s: sentence with *target*; clue: exact substring that proves it; a: correct; d: distractors
+const DET = [
+ {s:"The *nocturnal* owl is awake at night and sleeps all day.", clue:"awake at night and sleeps all day", t:"def", a:"active at night", d:["very loud","very tiny","always hungry"], why:"The sentence tells us the owl is awake at night. That's what nocturnal means."},
+ {s:"Mom said the puppy was *drowsy*, or sleepy, after the long walk.", clue:"or sleepy", t:"syn", a:"sleepy", d:["muddy","excited","hungry"], why:"The word \"or\" is a signal! Drowsy, or sleepy, means they are the same."},
+ {s:"My brother is *timid* around new people, but my sister is brave and talks to everyone.", clue:"but my sister is brave", t:"ant", a:"shy", d:["bossy","tall","funny"], why:"\"But\" means the sister is the opposite. Brave is the opposite of timid, so timid means shy."},
+ {s:"We packed *provisions* for the hike, such as water, apples, and sandwiches.", clue:"such as water, apples, and sandwiches", t:"ex", a:"food and drinks for a trip", d:["warm jackets","hiking boots","trail maps"], why:"Water, apples, and sandwiches are all things to eat and drink. Provisions are supplies of food and drink."},
+ {s:"The *famished* boy ate three bowls of cereal and still asked for toast.", clue:"ate three bowls of cereal and still asked for toast", t:"inf", a:"very hungry", d:["very tired","very cold","very silly"], why:"Who eats three bowls and still wants more? Someone very hungry!"},
+ {s:"A *meteorologist* is a scientist who studies the weather.", clue:"a scientist who studies the weather", t:"def", a:"a weather scientist", d:["an animal doctor","a rock collector","a house builder"], why:"The word \"is\" points right to the meaning: a scientist who studies the weather."},
+ {s:"Unlike the *fragile* glass vase, the plastic cup did not break when it fell.", clue:"the plastic cup did not break", t:"ant", a:"easy to break", d:["very heavy","brightly colored","full of water"], why:"\"Unlike\" tells us the vase is the opposite of the cup. The cup did NOT break, so fragile means easy to break."},
+ {s:"The giant pumpkin was *enormous*. It was so huge that it filled the whole wagon.", clue:"so huge", t:"syn", a:"very big", d:["very orange","very soft","very old"], why:"The next sentence uses \"huge,\" which means the same as enormous."},
+ {s:"Grace loves *citrus* fruits like oranges, lemons, and limes.", clue:"like oranges, lemons, and limes", t:"ex", a:"juicy, tangy fruits with a peel", d:["fruits that grow underground","tiny dried fruits","fruits that are always red"], why:"Oranges, lemons, and limes are all juicy, tangy, and have a peel. Those are citrus fruits!"},
+ {s:"After the storm, the yard was full of *debris*: broken branches, leaves, and pieces of a fence.", clue:"broken branches, leaves, and pieces of a fence", t:"ex", a:"scattered pieces and junk", d:["deep puddles","new flowers","loud thunder"], why:"The examples are all broken bits lying around. That's debris."},
+ {s:"Sam was *elated* when he won first prize. He jumped up and down and cheered.", clue:"jumped up and down and cheered", t:"inf", a:"very happy", d:["very scared","very angry","very bored"], why:"People jump and cheer when they're very happy. Elated means super happy!"},
+ {s:"The first math problem was simple, but the last one was *complex*.", clue:"simple, but", t:"ant", a:"hard and tricky", d:["short and quick","funny","easy"], why:"\"But\" signals an opposite. The opposite of simple is hard, so complex means hard and tricky."},
+ {s:"Bats *hibernate*, which means they sleep through the cold winter months.", clue:"which means they sleep through the cold winter months", t:"def", a:"sleep through the winter", d:["fly south","hunt for food","build a home"], why:"\"Which means\" is a giant signal. It tells you exactly what hibernate means."},
+ {s:"The path was *narrow*, or thin, so we had to walk in a single line.", clue:"or thin", t:"syn", a:"not wide", d:["very long","very muddy","very steep"], why:"\"Or thin\" gives a word that means the same. Walking in a single line is another clue: the path isn't wide."},
+ {s:"Grandpa's old car was so *sluggish* that kids on bikes passed it going up the hill.", clue:"kids on bikes passed it going up the hill", t:"inf", a:"slow", d:["shiny","loud","brand new"], why:"If bikes can pass a car, the car must be very slow."},
+ {s:"The zoo has many *reptiles*, including snakes, lizards, and turtles.", clue:"including snakes, lizards, and turtles", t:"ex", a:"animals with scaly skin", d:["animals with feathers","animals that live in trees","baby animals"], why:"Snakes, lizards, and turtles all have scales. They are reptiles."},
+ {s:"Lena kept her room *tidy*, while her brother's room was a messy disaster.", clue:"while her brother's room was a messy disaster", t:"ant", a:"neat and clean", d:["small","dark","noisy"], why:"\"While\" shows an opposite. Her brother's room is messy, so tidy means neat and clean."},
+ {s:"The lake water was so *frigid* that Mia's teeth chattered and her toes turned blue.", clue:"teeth chattered and her toes turned blue", t:"inf", a:"very cold", d:["very deep","very dirty","very warm"], why:"Chattering teeth and blue toes happen when you're very cold."},
+ {s:"Our class visited the *aquarium*, a place where people can see fish and other sea animals.", clue:"a place where people can see fish and other sea animals", t:"def", a:"a place to see sea animals", d:["a place to buy toys","a big library","a farm with horses"], why:"After the comma, the sentence tells you exactly what an aquarium is."},
+ {s:"Dad will *pitch* the tent near the lake so we can sleep in it tonight.", clue:"the tent", t:"inf", a:"set up", d:["throw a ball","sing very high","a dark sticky goo"], why:"Pitch has many meanings! But you pitch a TENT so you can sleep in it. That means set it up."},
+ {s:"The tree's rough *bark* scratched my hands as I climbed up to the branch.", clue:"The tree's rough", t:"inf", a:"the outside covering of a tree", d:["the sound a dog makes","a small boat","a loud yell"], why:"Bark has two meanings. This one belongs to a tree and is rough, so it's the tree's outside covering."},
+ {s:"Max was eager to dive into the pool, but his sister was *reluctant* and stayed on the steps.", clue:"but his sister", t:"ant", a:"not wanting to do something", d:["very excited","super fast","soaking wet"], why:"\"But\" tells us the sister is the opposite of eager. She stayed on the steps, so reluctant means not wanting to."},
+ {s:"The kitten was *curious*. She was nosy and sniffed every box and bag in the house.", clue:"nosy and sniffed every box and bag", t:"syn", a:"wanting to explore and learn", d:["sleepy","grumpy","afraid"], why:"Nosy is a lot like curious. She wanted to check out everything!"},
+ {s:"The *aroma* of fresh cookies drifted from the kitchen, and we all sniffed the air.", clue:"we all sniffed the air", t:"inf", a:"a smell", d:["a sound","a color","a taste"], why:"You sniff to smell something. An aroma is a smell, usually a nice one!"}
+];
+
+// IREAD-style: text with {0},{1}; blanks: a = answer, d = distractors, why
+const PAS = [
+ {title:"Fall Leaves", text:"Every fall, the leaves on the maple tree turn bright red. When the wind blows, they slowly {0} to the ground. The kids rake them into big {1} and jump right in!",
+  blanks:[{a:"drift",d:["swim","bark","melt"],why:"Leaves float down slowly. \"Drift\" means float gently. Leaves can't swim or bark!"},
+          {a:"piles",d:["cups","shoes","clouds"],why:"You rake leaves into piles, and you can jump into a pile."}]},
+ {title:"A Card for Grandma", text:"Ava made a card for her grandma. She wanted the letters to be neat, so she wrote very {0}. When Grandma opened the card, she {1} and gave Ava a big hug.",
+  blanks:[{a:"carefully",d:["loudly","quickly","angrily"],why:"Ava wanted neat letters. You write carefully to make neat letters."},
+          {a:"smiled",d:["sneezed","frowned","slept"],why:"Grandma gave a big hug, so she was happy. Happy people smile."}]},
+ {title:"Busy Bees", text:"Honeybees live together in a hive. Some bees fly out to {0} nectar from flowers. They bring it back to make honey. Bees are very {1}. They stay busy all day long.",
+  blanks:[{a:"collect",d:["paint","bury","forget"],why:"The bees bring the nectar back. To bring something back, you first have to collect, or gather, it."},
+          {a:"hardworking",d:["lazy","sleepy","noisy"],why:"The next sentence is the clue: \"They stay busy all day long.\" That means hardworking."}]},
+ {title:"Storm Coming", text:"The sky turned dark gray, and the wind began to howl. Dad looked out the window and said, \"A storm is {0}.\" We brought our bikes inside so they would stay {1}.",
+  blanks:[{a:"coming",d:["sleeping","singing","leaving"],why:"Dark sky and howling wind mean a storm is on the way, so it's coming."},
+          {a:"dry",d:["wet","broken","hungry"],why:"We brought the bikes inside to keep the rain off them, so they stay dry."}]},
+ {title:"From Tadpole to Frog", text:"Frogs begin life as tiny eggs in a pond. The eggs hatch into tadpoles. Tadpoles have long tails that help them {0} through the water. As they grow, their tails {1} and they grow legs instead.",
+  blanks:[{a:"swim",d:["fly","read","climb"],why:"\"Through the water\" is the clue. Things move through water by swimming."},
+          {a:"shrink",d:["grow","laugh","sparkle"],why:"\"Grow legs instead\" tells us the tail goes away. Shrink means get smaller."}]},
+ {title:"New School", text:"Leo was nervous on his first day at a new school. He did not know anyone. At lunch, a girl named Rosa sat next to him and shared her crackers. Leo felt {0}. By the end of the day, Leo and Rosa were {1}.",
+  blanks:[{a:"relieved",d:["worried","lost","sick"],why:"Leo was nervous, but then someone was kind to him. Relieved means the worry went away."},
+          {a:"friends",d:["strangers","enemies","teachers"],why:"They sat together and shared. That's what friends do!"}]},
+ {title:"Desert Cactus", text:"A cactus lives in the desert, where it hardly ever rains. Its thick stem {0} water for a long time, so the cactus can stay alive. Sharp spines {1} the cactus from hungry animals.",
+  blanks:[{a:"stores",d:["spills","paints","throws"],why:"It hardly rains, so the cactus has to keep, or store, water for later."},
+          {a:"protect",d:["invite","tickle","wash"],why:"Sharp spines keep animals away. That protects the cactus."}]},
+ {title:"Pepper Plays Fetch", text:"Max's dog, Pepper, loves to play fetch. Max throws the ball as far as he can. Pepper {0} across the yard to get it. Then she drops the ball at Max's feet and wags her tail {1}.",
+  blanks:[{a:"races",d:["tiptoes","naps","sits"],why:"The ball went far and Pepper loves fetch. She runs fast, so she races."},
+          {a:"happily",d:["angrily","sleepily","sadly"],why:"Pepper loves fetch, and a wagging tail means a happy dog."}]},
+ {title:"At the Library", text:"The library is a great place to find books. You can {0} a book and take it home for two weeks. When you are done, you must {1} it so someone else can read it.",
+  blanks:[{a:"borrow",d:["sell","tear","bake"],why:"You take it home for a while and then bring it back. That's borrowing."},
+          {a:"return",d:["keep","hide","lose"],why:"\"So someone else can read it\" means you give it back. Return means give back."}]},
+ {title:"Pumpkin Patch", text:"Pumpkins grow on long vines. At first, a pumpkin is small and green. Over the summer, it gets bigger and {0} to orange. In the fall, farmers {1} the ripe pumpkins and take them to the market.",
+  blanks:[{a:"changes",d:["jumps","melts","whispers"],why:"It goes from green to orange, so its color changes."},
+          {a:"harvest",d:["plant","bury","throw"],why:"The pumpkins are ripe and going to market, so farmers pick them. Harvest means pick crops when they're ready."}]},
+ {title:"The Lost Mitten", text:"Nora lost her red mitten on the playground. She looked under the slide and behind the swings, but it was {0}. The next day, her teacher found it in the sand. Nora was so {1} to get it back!",
+  blanks:[{a:"nowhere",d:["everywhere","delicious","purple"],why:"She looked and looked but didn't find it, so the mitten was nowhere to be seen."},
+          {a:"grateful",d:["upset","bored","sleepy"],why:"Getting back something you lost makes you thankful. Grateful means thankful."}]},
+ {title:"Butterfly Garden", text:"Butterflies are {0} to bright flowers. They land on the petals and sip sweet nectar. Some people plant special gardens to {1} more butterflies to their yards.",
+  blanks:[{a:"attracted",d:["allergic","asleep","angry"],why:"The butterflies come and land on the flowers, so the flowers pull them in. That's \"attracted.\""},
+          {a:"invite",d:["chase","scare","hide"],why:"People plant gardens because they want MORE butterflies. They want to invite them, not scare them."}]}
+];
+
+/* ---------------- STATE ---------------- */
+const KEY="tillyClueQuest_v1";
+function load(){try{return Object.assign({stars:0,det:[0,0],pas:[0,0],best:null,cleared:0},JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(e){return {stars:0,det:[0,0],pas:[0,0],best:null,cleared:0}}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+let S=load();
+const decks={det:[],pas:[]};
+function draw(kind,n){const src=kind==="det"?DET:PAS;const out=[];while(out.length<n){if(!decks[kind].length)decks[kind]=shuffle(src.map((_,i)=>i));out.push(decks[kind].pop());}return out.map(i=>src[i]);}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+const $=s=>document.querySelector(s);
+const esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const canSpeak=("speechSynthesis" in window);
+function speak(t){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.replace(/\{\d\}/g," blank ").replace(/\*/g,""));u.rate=.88;speechSynthesis.speak(u)}catch(e){}}
+function speakBtn(t){return canSpeak?`<button class="speak" data-say="${esc(t).replace(/"/g,'&quot;')}">🔊 Read to me</button>`:""}
+
+const BADGES=[
+ {n:5,e:"🔎",t:"Clue Rookie"},{n:25,e:"🕵️‍♀️",t:"Junior Detective"},{n:60,e:"🧠",t:"Context Clue Pro"},
+ {n:100,e:"🏅",t:"Super Sleuth"},{n:175,e:"🚀",t:"IREAD Ready"},{n:250,e:"👑",t:"Word Queen"}];
+
+function addStars(n){S.stars+=n;save();$("#starCount").textContent=S.stars;const p=$(".pill");p.classList.remove("shake");void p.offsetWidth;p.classList.add("shake")}
+
+/* ---------------- NAV ---------------- */
+function show(id){document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id==="v-"+id));$("#homeBtn").style.display=id==="home"?"none":"";window.scrollTo({top:0,behavior:"smooth"});try{speechSynthesis.cancel()}catch(e){}}
+function home(){renderHome();show("home")}
+document.addEventListener("click",e=>{
+  const g=e.target.closest("[data-go]");if(g){go(g.dataset.go);return}
+  const sp=e.target.closest("[data-say]");if(sp){speak(sp.dataset.say)}
+});
+$("#homeBtn").onclick=home;
+$("#resetBtn").onclick=()=>{const b=$("#resetBtn");if(b.dataset.sure){S={stars:0,det:[0,0],pas:[0,0],best:null,cleared:0};save();b.textContent="Reset progress";delete b.dataset.sure;renderHome()}else{b.dataset.sure=1;b.textContent="Tap again to reset everything"}};
+function go(m){
+  if(m==="learn"){renderLearn();show("learn")}
+  else if(m==="detective")startRound("det")
+  else if(m==="passages")startRound("pas")
+  else if(m==="challenge")startRound("ch")
+  else home();
+}
+
+function renderHome(){
+  $("#starCount").textContent=S.stars;
+  const pct=a=>a[1]?Math.round(100*a[0]/a[1])+"% correct":"";
+  $("#metaDet").textContent="6 words per round"+(S.det[1]?" · "+pct(S.det):"");
+  $("#metaPas").textContent="4 passages per round"+(S.pas[1]?" · "+pct(S.pas):"");
+  $("#metaCh").textContent="Best score: "+(S.best==null?"—":S.best+" / 10");
+  $("#badges").innerHTML=BADGES.map(b=>`<div class="badge ${S.stars>=b.n?"got":""}"><span class="e">${b.e}</span>${b.t}<span style="font-weight:400;opacity:.8">· ${b.n}⭐</span></div>`).join("");
+}
+function renderLearn(){
+  $("#clueCards").innerHTML=Object.values(TYPES).map(t=>`
+   <div class="clue-card" style="--c:${t.c};--cl:${t.cl}">
+     <h3><span style="font-size:28px">${t.icon}</span>${t.name}</h3>
+     <p class="what">${t.what}</p>
+     <div class="sig">${t.sig.map(s=>`<span>${s}</span>`).join("")}</div>
+     <div class="ex">${t.ex}</div>
+   </div>`).join("");
+}
+
+/* ---------------- ROUNDS ---------------- */
+let R=null;
+function startRound(kind){
+  let items;
+  if(kind==="det")items=draw("det",6).map(x=>({k:"det",x}));
+  else if(kind==="pas")items=draw("pas",4).map(x=>({k:"pas",x}));
+  else items=shuffle([...draw("det",6).map(x=>({k:"det",x})),...draw("pas",4).map(x=>({k:"pas",x}))]);
+  // challenge: 6 detective + 4 passages; a passage counts 2 blanks → normalize score to 10 questions
+  R={kind,items,i:0,right:0,total:0,stars:0};
+  show("play");renderItem();
+}
+function setProg(){$("#progBar").style.width=(100*R.i/R.items.length)+"%";$("#progText").textContent=(R.i+1)+" / "+R.items.length}
+function next(){R.i++;if(R.i>=R.items.length)finish();else{renderItem();window.scrollTo({top:0,behavior:"smooth"})}}
+function renderItem(){setProg();const it=R.items[R.i];if(it.k==="det")renderDet(it.x);else renderPas(it.x)}
+
+/* ---- Detective item ---- */
+function tokenize(s){
+  const ti=s.indexOf("*"),tj=s.indexOf("*",ti+1);
+  const plain=s.replace(/\*/g,"");const tStart=ti,tEnd=tj-1;
+  return {plain,tStart,tEnd};
+}
+function renderDet(x){
+  const challenge=R.kind==="ch";
+  const {plain,tStart,tEnd}=tokenize(x.s);
+  const word=plain.slice(tStart,tEnd);
+  const cs=plain.indexOf(x.clue),ce=cs+x.clue.length;
+  let html="",pos=0;
+  plain.split(/(\s+)/).forEach(part=>{
+    const st=pos,en=pos+part.length;pos=en;
+    if(/^\s+$/.test(part)||!part){html+=part;return}
+    const isT=st<tEnd&&en>tStart, isC=cs>=0&&st<ce&&en>cs;
+    html+=`<span class="tok w${isT?" target":""}" data-t="${isT?1:0}" data-c="${isC?1:0}">${esc(part)}</span>`;
+  });
+  const opts=shuffle([x.a,...x.d]);
+  const card=$("#playCard");
+  card.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px">
+      <span class="fred" style="color:var(--teal);font-size:18px">🔍 Word Detective</span>${speakBtn(plain)}
+    </div>
+    <div class="sentence" id="sent">${html}</div>
+    <div class="q" id="qtext">What does <b>${esc(word)}</b> mean?</div>
+    <div class="choices" id="chs">${opts.map((o,i)=>`<button class="ch" data-v="${esc(o)}"><span class="L">${"ABCD"[i]}</span>${esc(o)}</button>`).join("")}</div>
+    <div class="feedback" id="fb"></div>
+    <div class="actions" id="acts"></div>`;
+  let tries=0,phase=1,clueMiss=0;
+  const fb=$("#fb"),acts=$("#acts"),sent=$("#sent");
+  const reveal=(msg,cls)=>{
+    sent.classList.remove("tappable");
+    sent.querySelectorAll('.tok[data-c="1"]').forEach(t=>t.classList.add("clue"));
+    const T=TYPES[x.t];
+    fb.className="feedback on "+cls;
+    fb.innerHTML=`${msg?`<h4>${msg}</h4>`:""}<div class="typetag" style="color:${T.c}">${T.icon} ${T.name}</div><div>${esc(x.why)}</div>`;
+    acts.innerHTML=`<button class="btn" id="nx">${R.i+1<R.items.length?"Next →":"See my score →"}</button>`;
+    $("#nx").onclick=next;$("#nx").focus();
+  };
+  card.querySelectorAll(".ch").forEach(b=>b.onclick=()=>{
+    if(phase!==1)return;
+    const ok=b.dataset.v===x.a;tries++;
+    if(challenge){
+      phase=2;R.total++;if(ok){R.right++;addStars(1);R.stars++}
+      card.querySelectorAll(".ch").forEach(c=>{c.disabled=true;if(c.dataset.v===x.a)c.classList.add("right");else if(c===b)c.classList.add("wrong");else c.classList.add("dim")});
+      reveal(ok?"Correct! 🎉":`Not quite. ${esc(word)} means "${esc(x.a)}."`,ok?"good":"bad");
+      return;
+    }
+    if(ok){
+      if(tries===1){R.right++;addStars(1);R.stars++}
+      R.total++;
+      card.querySelectorAll(".ch").forEach(c=>{c.disabled=true;if(c===b)c.classList.add("right");else c.classList.add("dim")});
+      phase=2;
+      fb.className="feedback on good";
+      fb.innerHTML=`<h4>${tries===1?"Yes! Tilly does a twirl! ⭐":"You got it!"} Now prove it, detective!</h4>Tap a word in the sentence that gave you the clue.`;
+      sent.classList.add("tappable");
+      $("#qtext").innerHTML=`Which words are the clue? <span style="font-weight:400;font-size:17px;color:var(--soft)">(tap one)</span>`;
+      acts.innerHTML=`<button class="btn ghost" id="skip">Show me</button>`;
+      $("#skip").onclick=()=>{phase=3;reveal("Here's the clue:","info")};
+    }else{
+      b.classList.add("wrong","shake");b.disabled=true;
+      fb.className="feedback on try";
+      fb.innerHTML=tries===1?`<h4>Oops! I wobbled. Not that one.</h4>Try swapping it into the sentence. Does it make sense? Look at the words around <b>${esc(word)}</b> for a clue.`:`<h4>Keep going!</h4>Reread the whole sentence and try another choice.`;
+    }
+  });
+  sent.addEventListener("click",e=>{
+    const t=e.target.closest(".tok");if(!t||phase!==2)return;
+    if(t.dataset.t==="1"){fb.className="feedback on try";fb.innerHTML=`<h4>That's the mystery word!</h4>Look at the words <b>around</b> it for the clue.`;return}
+    if(t.dataset.c==="1"){phase=3;addStars(1);R.stars++;reveal("You found the clue! ⭐","good")}
+    else{
+      clueMiss++;t.classList.add("miss");setTimeout(()=>t.classList.remove("miss"),600);
+      if(clueMiss>=3){phase=3;reveal("Good try! Here's the clue:","info")}
+      else{fb.className="feedback on try";fb.innerHTML=`<h4>Not that word.</h4>Which words helped you know what <b>${esc(word)}</b> means? ${clueMiss===2?"Hint: look for "+TYPES[x.t].sig.slice(0,3).map(s=>"<b>"+s+"</b>").join(", ")+", or what's happening.":""}`}
+    }
+  });
+}
+
+/* ---- Passage (IREAD-style) item ---- */
+function renderPas(x){
+  const card=$("#playCard");
+  const choices=x.blanks.map(b=>shuffle([b.a,...b.d]));
+  const pick=[null,null];
+  const plainForSpeech=x.text;
+  const passHTML=()=>esc(x.text).replace(/\{(\d)\}/g,(m,n)=>`<span class="blank" id="bl${n}"><span class="num">${+n+1}</span> ${pick[n]?esc(pick[n]):"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"}</span>`);
+  card.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px">
+      <span class="fred" style="color:var(--teal);font-size:18px">📝 ${esc(x.title)}</span>${speakBtn(plainForSpeech)}
+    </div>
+    <p class="direc">Read the passage. Choose the word that best completes each blank.</p>
+    <div class="passage" id="pass">${passHTML()}</div>
+    ${x.blanks.map((b,bi)=>`<div class="bgroup"><h4>Blank ${bi+1}</h4><div class="choices" data-b="${bi}">${choices[bi].map((o,i)=>`<button class="ch" data-v="${esc(o)}"><span class="L">${"ABCD"[i]}</span>${esc(o)}</button>`).join("")}</div></div>`).join("")}
+    <div class="feedback" id="fb"></div>
+    <div class="actions" id="acts"><button class="btn" id="chk" disabled>Check my answers</button></div>`;
+  let done=false;
+  card.querySelectorAll(".choices").forEach(g=>{
+    const bi=+g.dataset.b;
+    g.querySelectorAll(".ch").forEach(b=>b.onclick=()=>{
+      if(done)return;pick[bi]=b.dataset.v;
+      g.querySelectorAll(".ch").forEach(c=>c.classList.toggle("sel",c===b));
+      $("#pass").innerHTML=passHTML();
+      $("#chk").disabled=!(pick[0]&&pick[1]);
+    });
+  });
+  $("#chk").onclick=()=>{
+    done=true;let got=0;
+    x.blanks.forEach((b,bi)=>{
+      const ok=pick[bi]===b.a;if(ok)got++;
+      card.querySelectorAll(`.choices[data-b="${bi}"] .ch`).forEach(c=>{c.disabled=true;c.classList.remove("sel");if(c.dataset.v===b.a)c.classList.add("right");else if(c.dataset.v===pick[bi])c.classList.add("wrong");else c.classList.add("dim")});
+    });
+    // show passage with results
+    $("#pass").innerHTML=esc(x.text).replace(/\{(\d)\}/g,(m,n)=>{const b=x.blanks[n],ok=pick[n]===b.a;return ok?`<span class="blank right">✓ ${esc(b.a)}</span>`:`<span class="blank wrong">${esc(pick[n])}</span><span class="fix">${esc(b.a)}</span>`});
+    R.right+=got;R.total+=2;addStars(got);R.stars+=got;
+    const fb=$("#fb");
+    fb.className="feedback on "+(got===2?"good":got===1?"try":"bad");
+    fb.innerHTML=`<h4>${got===2?"Both right! Tilly spins for joy! ⭐⭐":got===1?"One out of two. Nice try! ⭐":"Let's look at the clues together."}</h4>`+
+      x.blanks.map((b,bi)=>`<div style="margin-top:6px"><b>Blank ${bi+1}: ${esc(b.a)}.</b> ${esc(b.why)}</div>`).join("");
+    $("#acts").innerHTML=`<button class="btn" id="nx">${R.i+1<R.items.length?"Next →":"See my score →"}</button>`;
+    $("#nx").onclick=next;$("#nx").focus();
+  };
+}
+
+/* ---- Finish ---- */
+function finish(){
+  $("#progBar").style.width="100%";
+  const pct=R.total?R.right/R.total:0;
+  if(R.kind==="det"){S.det[0]+=R.right;S.det[1]+=R.total}
+  if(R.kind==="pas"){S.pas[0]+=R.right;S.pas[1]+=R.total}
+  let line;
+  if(R.kind==="ch"){
+    const ten=Math.round(pct*10);
+    const newBest=S.best==null||ten>S.best;if(newBest)S.best=ten;
+    line=`<div class="score">You got ${R.right} out of ${R.total} right. That's <b>${ten} / 10</b>${newBest?" · New best! 🎉":""}</div>`;
+  }else line=`<div class="score">You got ${R.right} out of ${R.total} on the first try.</div>`;
+  save();
+  const big=pct>=.9?"🏆":pct>=.7?"🌟":pct>=.5?"💪":"🔍";
+  const msg=pct>=.9?"Ta-da! A perfect pirouette, Ruth!":pct>=.7?"Great detective work, Ruth!":pct>=.5?"You're getting sharper!":"Even ballerinas wobble. Let's practice again!";
+  const earned=BADGES.filter(b=>S.stars>=b.n&&S.stars-R.stars<b.n);
+  $("#resultsCard").innerHTML=`
+    <div class="big">${big}</div><h2 class="fred">${msg}</h2>${line}
+    <div class="stars-row">${"⭐".repeat(Math.min(R.stars,12))}</div>
+    <div class="score">+${R.stars} stars this round · ${S.stars} total</div>
+    ${earned.map(b=>`<div class="badge got" style="display:inline-flex;margin-top:14px;font-size:18px"><span class="e">${b.e}</span>New badge: ${b.t}!</div>`).join(" ")}
+    <div class="actions" style="justify-content:center;margin-top:22px">
+      <button class="btn ghost" data-go="home">🏠 Home</button>
+      <button class="btn" data-go="${R.kind==="det"?"detective":R.kind==="pas"?"passages":"challenge"}">Play again</button>
+    </div>`;
+  show("results");
+  if(pct>=.7)burst();
+}
+function burst(){
+  const em=["⭐","🎉","✨","🔍","📚"];
+  for(let i=0;i<26;i++){const s=document.createElement("span");s.className="burst";s.textContent=em[i%em.length];
+    s.style.left=(window.innerWidth/2)+"px";s.style.top="180px";
+    s.style.setProperty("--dx",(Math.random()*600-300)+"px");s.style.setProperty("--dy",(Math.random()*500+80)+"px");s.style.setProperty("--rot",(Math.random()*720-360)+"deg");
+    document.body.appendChild(s);setTimeout(()=>s.remove(),1500)}
+}
+
+renderHome();
+</script>
+</body>
+</html>

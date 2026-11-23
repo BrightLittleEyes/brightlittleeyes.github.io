@@ -1928,14 +1928,19 @@ document.getElementById("homeBtn").onclick = () => { state.section = null; state
 
 /* ---------- help pip (teacher-student swap) ---------- */
 const pipFace = `<svg viewBox="0 0 56 56" aria-hidden="true">
-  <path d="M10 30 L3 54 L28 47 L53 54 L46 30 Z" fill="#F2B705" stroke="#B07F00" stroke-width="1.2" stroke-linejoin="round"/>
-  <path d="M30 1 L24 9 L29 9 L26 15 L33 6 L28 6 Z" fill="#F2B705" stroke="#8A6500" stroke-width="1"/>
-  <line x1="28" y1="10" x2="28" y2="14" stroke="#3E1D6E" stroke-width="2"/>
-  <rect x="8" y="14" width="40" height="34" rx="11" fill="#8A4FD8"/>
-  <path d="M8 22 Q28 17 48 22 L48 32 Q28 28 8 32 Z" fill="#3E1D6E"/>
-  <circle cx="20" cy="26" r="5" fill="#fff"/><circle cx="36" cy="26" r="5" fill="#fff"/>
-  <circle cx="21" cy="26.5" r="2.3" fill="#1A1A2E"/><circle cx="35" cy="25.5" r="2.3" fill="#1A1A2E"/>
-  <path d="M17 37 Q28 47 39 37 Z" fill="#fff" stroke="#3E1D6E" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M14 33 L3 56 L53 56 L42 33 Z" fill="#F2B705" stroke="#B07F00" stroke-width="1.2" stroke-linejoin="round"/>
+  <rect x="15" y="32" width="26" height="24" rx="7" fill="#8A4FD8"/>
+  <path d="M15 40 Q28 36 41 40" fill="none" stroke="#3E1D6E" stroke-width="1.2" opacity=".5"/>
+  <circle cx="28" cy="45" r="6.5" fill="#F2B705" stroke="#B07F00" stroke-width="1"/>
+  <path d="M29.5 39.5 L25 46 L28 46 L26.5 50.5 L31 44 L28 44 Z" fill="#3E1D6E"/>
+  <circle cx="16.5" cy="35" r="2" fill="#F2B705" stroke="#B07F00" stroke-width=".8"/><circle cx="39.5" cy="35" r="2" fill="#F2B705" stroke="#B07F00" stroke-width=".8"/>
+  <path d="M29 0 L24.5 6 L28 6 L26 10 L31.5 4 L28 4 Z" fill="#F2B705" stroke="#8A6500" stroke-width=".8"/>
+  <line x1="28" y1="7.5" x2="28" y2="10" stroke="#3E1D6E" stroke-width="2"/>
+  <rect x="12" y="9" width="32" height="24" rx="9" fill="#8A4FD8"/>
+  <path d="M12 15 Q28 11 44 15 L44 23 Q28 20 12 23 Z" fill="#3E1D6E"/>
+  <circle cx="21.5" cy="18.5" r="4" fill="#fff"/><circle cx="34.5" cy="18.5" r="4" fill="#fff"/>
+  <circle cx="22.3" cy="19" r="1.9" fill="#1A1A2E"/><circle cx="33.7" cy="18.2" r="1.9" fill="#1A1A2E"/>
+  <path d="M20 26 Q28 33 36 26 Z" fill="#fff" stroke="#3E1D6E" stroke-width="1.6" stroke-linejoin="round"/>
 </svg>`;
 const pipSay = t => `<div class="pip">${pipFace}<div class="bubble">${t}</div></div>`;
 const pipPeople = ["Maya", "Leo", "Grandpa Joe", "Aunt Rosa", "Christine", "Frank", "Omar", "Jessica"];

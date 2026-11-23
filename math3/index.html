@@ -424,12 +424,12 @@ const stage = document.getElementById("stage");
 
 const sections = {
   parent: { title: "Parent area", sub: "Daily totals, the problem log, and backups.", steps: [] },
-  pip:  { title: "Help Pip", sub: "Pip the robot did some math. You're the teacher.", steps: ["Meet Pip", "Does it make sense?", "Find the step", "Fix it"] }
+  pip:  { title: "Help Tilly", sub: "Tilly the robot ballerina did some math. You're the teacher.", steps: ["Meet Tilly", "Does it make sense?", "Find the step", "Fix it"] }
 };
 /* ===================== activity engine =====================
    Every activity is a short list of steps. Each step is one question: tap a choice, or type a number.
    The first step is usually a "think first" question, so the steps never replace the thinking.
-   Help Pip is made from the same problems: Pip makes one of the common mistakes listed in "bads". */
+   Help Tilly is made from the same problems: Tilly makes one of the common mistakes listed in "bads". */
 const ACTS = {}, ACT_TILES = [], ACT_RECIPES = {}, ACT_PIP = {};
 function act(key, spec) {
   ACTS[key] = spec;
@@ -633,7 +633,7 @@ function actDone(P, fb) {
   row.append(again, other); fb.appendChild(row);
 }
 
-/* ---------- Help Pip, made from an activity ---------- */
+/* ---------- Help Tilly, made from an activity ---------- */
 function pipFromAct(k) {
   const A = ACTS[k]; let P;
   for (let i = 0; i < 30; i++) { P = A.make(pick(A.levels).at(0)); if (P.bads && P.bads.length) break; }
@@ -651,7 +651,7 @@ function pipFromAct(k) {
     offWrong: `Let's check together. ${P.check}`,
     stepOk: i => i < w ? `${good[i].label} is right.` : `${good[i].label} used a number from an earlier step.`,
     fixQ: bad ? (bad.fixQ || `In ${good[bad.at].label} I wrote “${bad.work}”. What should it be?`) : "",
-    fixes: bad ? (bad.fixes || [[good[bad.at].math, true], [bad.work, false, `That's what Pip did. ${bad.why || ""}`]].concat(bad.also ? [bad.also] : [])) : [],
+    fixes: bad ? (bad.fixes || [[good[bad.at].math, true], [bad.work, false, `That's what Tilly did. ${bad.why || ""}`]].concat(bad.also ? [bad.also] : [])) : [],
     fixed: `<b>${P.ans}.</b> ${P.check}`
   };
 }
@@ -938,7 +938,7 @@ act("pattern", { title: "Number Patterns", sub: "Find the rule, test it, then us
           ok: d % 2 === 0 ? `Yes, ${even ? "even" : "odd"}. Adding or taking away an even number like ${d} keeps every number ${seq[0] % 2 === 0 ? "even" : "odd"}.` : `Yes, ${even ? "even" : "odd"}. Adding or taking away an odd number like ${d} switches between odd and even each time.`,
           work: `${nx} is ${even ? "even" : "odd"}` }],
       bads: [{ at: 0, work: `Rule: ${sgn}${wrongD}`, then: { 1: `${seq[4]} ${sgn} ${wrongD} = ${badNext}`, 2: `${badNext} is ${badNext % 2 ? "odd" : "even"}` }, ans: `${badNext}`, why: `It only works if it works for every pair.`,
-        test: `Test Pip's rule on the first pair: ${seq[0]} ${sgn} ${wrongD} = ${seq[0] + (down ? -1 : 1) * wrongD}, but the next number is ${seq[1]}.` }]
+        test: `Test Tilly's rule on the first pair: ${seq[0]} ${sgn} ${wrongD} = ${seq[0] + (down ? -1 : 1) * wrongD}, but the next number is ${seq[1]}.` }]
     };
   } });
 
@@ -1030,7 +1030,7 @@ act("addsub", { title: "Add & Subtract to 1,000", sub: "Estimate first. Then one
         { q: `Hundreds: ${hA} − ${B[2]} = ?`, num: h, test: v => `Count back ${B[2]} from ${hA}.`, ok: `So ${a} − ${b} = ${d}.`, work: `${hA} − ${B[2]} = ${h}` }],
       bads: bad && bad.v !== d ? [{ at: 1, work: `${B[0]} − ${A[0]} = ${bad.ob}`, then: { 2: bad.tb1 ? `trade a hundred: ${A[1] + 10} − ${B[1]} = ${bad.tnb}` : `${A[1]} − ${B[1]} = ${bad.tnb}`, 3: `${A[2] - (bad.tb1 ? 1 : 0)} − ${B[2]} = ${bad.hb}` },
         ans: `${bad.v}`, why: `You can't flip the ones around. ${A[0]} − ${B[0]} needs a trade.`, fixQ: `In the ones I did ${B[0]} − ${A[0]}, because ${A[0]} − ${B[0]} looked too hard. What should I do?`,
-        fixes: [[`Trade 1 ten: ${A[0] + 10} − ${B[0]} = ${o}`, true], [`Flip it: ${B[0]} − ${A[0]} = ${bad.ob}`, false, `That's what Pip did. The top number always goes first. When there aren't enough, trade.`], [`Write 0`, false, "There are still ones left after a trade. Trade a ten and subtract."]],
+        fixes: [[`Trade 1 ten: ${A[0] + 10} − ${B[0]} = ${o}`, true], [`Flip it: ${B[0]} − ${A[0]} = ${bad.ob}`, false, `That's what Tilly did. The top number always goes first. When there aren't enough, trade.`], [`Write 0`, false, "There are still ones left after a trade. Trade a ten and subtract."]],
         test: `Add back to check: ${bad.v} + ${b} = ${bad.v + b}, not ${a}.` }] : []
     };
   } });
@@ -1166,7 +1166,7 @@ act("time", { title: "Time & How Long", sub: "Read the clock, then count up to t
           opts: opts(ok(E), no(`${h}:${m + e}`, "There are only 60 minutes in an hour. After :59 comes the next hour."), no(`${h}:${pad2(m2)}`, `Once you pass :00, the hour goes up to ${h2}.`), m2 + 10 < 60 && no(`${h2}:${pad2(m2 + 10)}`, `${h2}:00 plus ${m2} minutes. Count again from ${h2}:00.`)),
           ok: `Yes, ${E}.`, work: `${h2}:00 + ${m2} min = ${E}` }],
       bads: [{ at: 3, work: `${T} + ${e} = ${h}:${m + e}`, then: { 2: `I added the minutes straight: ${m} + ${e} = ${m + e}` }, ans: `${h}:${m + e}`, why: "After :59 comes the next hour.",
-        fixQ: `I wrote ${h}:${m + e}. What should the end time be?`, fixes: [[E, true], [`${h}:${m + e}`, false, "That's what Pip did. A clock never goes past :59."], [`${h}:${pad2(m2)}`, false, `Once you pass :00, the hour goes up to ${h2}.`]],
+        fixQ: `I wrote ${h}:${m + e}. What should the end time be?`, fixes: [[E, true], [`${h}:${m + e}`, false, "That's what Tilly did. A clock never goes past :59."], [`${h}:${pad2(m2)}`, false, `Once you pass :00, the hour goes up to ${h2}.`]],
         test: `A clock never shows :${m + e}. After ${h}:59 comes ${h2}:00.` }]
     };
   } });
@@ -1286,7 +1286,7 @@ act("lshape", { title: "Area of Odd Shapes", sub: "Split it into rectangles, fin
         { q: `Part B is ${B.w} by ${B.h}. What is its area?`, num: b, unit: "square feet", test: v => `${B.h} rows with ${B.w} in each: ${B.h} × ${B.w}.`, ok: `Yes, ${b}.`, work: `B: ${B.w} × ${B.h} = ${b}` },
         { q: `${a} + ${b} = ?`, num: T, unit: "square feet", test: v => `Add the two parts again: ${a} + ${b}.`, ok: `Yes, ${T} square feet.`, work: `${a} + ${b} = ${T}` }],
       bads: [{ at: 0, work: `Multiply the longest sides`, then: { 1: `${W} × ${H} = ${W * H}`, 2: "(skipped)", 3: `${W * H}` }, ans: `${W * H} square feet`, why: "One big rectangle covers the empty corner too.",
-        fixes: [["Find A and B, then add", true], ["Multiply the longest sides", false, "That's what Pip did. It fills in the empty corner, so it's too big."], ["Add all the sides", false, "That's like perimeter. Area counts squares inside."]],
+        fixes: [["Find A and B, then add", true], ["Multiply the longest sides", false, "That's what Tilly did. It fills in the empty corner, so it's too big."], ["Add all the sides", false, "That's like perimeter. Area counts squares inside."]],
         test: `${W} × ${H} would fill in the empty corner too. That's ${W * H - T} extra squares that aren't part of the shape.` }]
     };
   } });
@@ -1524,7 +1524,7 @@ document.addEventListener("click", e => {
 /* ---------- parent area (behind the PIN): daily totals, problem log, backup ---------- */
 function renderParent() {
   pinOkUntil = Date.now() + 10 * 60000;
-  const tabs = [["daily", "Daily totals", renderDaily], ["log", "Problem log", renderLog], ["backup", "Backup & restore", renderBackup], ["notes", "Notes", renderNotes], ["settings", "Settings", () => { renderSettingsCard(); renderSelfCard(); }]];
+  const tabs = [["daily", "Daily totals", renderDaily], ["log", "Problem log", renderLog], ["backup", "Backup & restore", renderBackup], ["notes", "Ruth's notes", renderNotes], ["settings", "Settings", () => { renderSettingsCard(); renderSelfCard(); }]];
   const cur = tabs.find(t => t[0] === state.parentTab) || tabs[0];
   const bar = el(`<section class="card" style="margin-bottom:14px"><div class="choices" role="tablist">${tabs.map(([k, n]) =>
     `<button type="button" role="tab" data-t="${k}" aria-selected="${k === cur[0]}" class="${k === cur[0] ? "picked" : ""}">${n}</button>`).join("")}</div></section>`);
@@ -1536,15 +1536,15 @@ function renderParent() {
   lock.firstElementChild.onclick = () => { pinOkUntil = 0; state.section = null; state.step = 0; render(); };
   stage.appendChild(lock);
 }
-/* ---------- Help Pip limit: after some Pip problems, Pip rests until she finishes problems in other activities ---------- */
+/* ---------- Help Tilly limit: after some Tilly problems, Tilly rests until she finishes problems in other activities ---------- */
 let pipRule = { pip: 1, other: 3 }, pipGate = { pipRun: 0, others: 0, resting: false }, pipWoke = false, pipMissed = false;
 try { const r = JSON.parse(localStorage.getItem("math3PipRule")); if (r && r.pip > 0 && r.other > 0) pipRule = r; } catch (e) {}
 try { const g = JSON.parse(localStorage.getItem("math3PipGate")); if (g) pipGate = Object.assign(pipGate, g); } catch (e) {}
-try { if (localStorage.getItem("math3PipRuleV2") !== "1") {   // Nov 19: 1 Help Pip problem, then 3 of her own
+try { if (localStorage.getItem("math3PipRuleV2") !== "1") {   // Nov 19: 1 Help Tilly problem, then 3 of her own
   pipRule.pip = 1; localStorage.setItem("math3PipRule", JSON.stringify(pipRule)); localStorage.setItem("math3PipRuleV2", "1");
   if (pipGate.pipRun >= 1 && !pipGate.resting) { pipGate.resting = true; pipGate.others = 0; localStorage.setItem("math3PipGate", JSON.stringify(pipGate)); }
 } } catch (e) {}
-/* Earned Help Pip problems add up (Nov 19): every ${pipRule.other} of her own earns ${pipRule.pip} more, each Help Pip problem uses 1. Never taken away. */
+/* Earned Help Tilly problems add up (Nov 19): every ${pipRule.other} of her own earns ${pipRule.pip} more, each Help Tilly problem uses 1. Never taken away. */
 if (typeof pipGate.tokens !== "number") { pipGate.tokens = pipGate.resting ? 0 : Math.max(0, pipRule.pip - pipGate.pipRun); pipGate.resting = pipGate.tokens <= 0; try { localStorage.setItem("math3PipGate", JSON.stringify(pipGate)); } catch (e) {} }
 let gateSnap = { pip: state.solved.pip || 0, all: sumSolved() };
 function saveGate() { try { localStorage.setItem("math3PipGate", JSON.stringify(pipGate)); } catch (e) {} }
@@ -1563,7 +1563,7 @@ function gateCount() {
   if (!pipGate.resting) return pm0();
   const left = pipRule.other - pipGate.others;
   const c = el(`<section class="card">
-    ${pipSay(`My batteries need a recharge! 🔋 Go solve ${left} more ${left === 1 ? "problem" : "problems"} in other activities with no wrong answers, and I'll be ready to learn again. Hints are OK!`)}
+    ${pipSay(`My toes need a rest after all that dancing! Go solve ${left} more ${left === 1 ? "problem" : "problems"} in other activities with no wrong answers, and I'll be ready to dance again. Hints are OK!`)}
     <div class="meter"><span style="width:${pipGate.others / pipRule.other * 100}%"></span></div>
     <p class="sub" style="margin:0">${pipGate.others} of ${pipRule.other} done</p>
     <button class="primary" type="button" id="pipHome">Pick another activity</button>
@@ -1574,26 +1574,26 @@ function gateCount() {
 { const rh0 = renderHome; renderHome = function () {
   rh0();
   const t = stage.querySelector('[data-s="pip"] .ct');
-  if (t && pipGate.resting) { const left = pipRule.other - pipGate.others; t.textContent = `Pip is recharging 🔋 Finish ${left} more ${left === 1 ? "problem" : "problems"} with no wrong answers to wake him. Hints are OK.`; }
+  if (t && pipGate.resting) { const left = pipRule.other - pipGate.others; t.textContent = `Tilly is resting her toes. Finish ${left} more ${left === 1 ? "problem" : "problems"} with no wrong answers to wake him. Hints are OK.`; }
 }; }
 function renderSettingsCard() {
   const d = el(`<details class="card backup" open><summary>Settings</summary>
-    <h3 style="margin:8px 0 0">Help Pip limit</h3>
-    <p class="sub">Each time your child finishes the number of their own problems below, they earn Help Pip problems. Earned ones add up and are never taken away.</p>
+    <h3 style="margin:8px 0 0">Help Tilly limit</h3>
+    <p class="sub">Each time Ruth finishes the number of her own problems below, she earns Help Tilly problems. Earned ones add up and are never taken away.</p>
     <div class="row" style="align-items:center">
-      <label>Help Pip problems earned <input type="number" id="rp" min="1" max="20" value="${pipRule.pip}" style="width:80px"></label>
+      <label>Help Tilly problems earned <input type="number" id="rp" min="1" max="20" value="${pipRule.pip}" style="width:80px"></label>
       <label>Own problems to earn them <input type="number" id="ro" min="1" max="20" value="${pipRule.other}" style="width:80px"></label>
     </div>
     <div class="row" style="align-items:center"><button class="primary" type="button" id="rsave">Save</button><span class="sub" id="rmsg" style="margin:0"></span></div>
-    <p class="sub">Right now: ${pipGate.tokens} Help Pip ${pipGate.tokens === 1 ? "problem" : "problems"} saved, and ${pipGate.others} of ${pipRule.other} of their own toward the next.</p>
-    <div><button class="quiet" type="button" id="rwake">Give 1 Help Pip problem now</button></div>
+    <p class="sub">Right now: ${pipGate.tokens} Help Tilly ${pipGate.tokens === 1 ? "problem" : "problems"} saved, and ${pipGate.others} of ${pipRule.other} of her own toward the next.</p>
+    <div><button class="quiet" type="button" id="rwake">Give 1 Help Tilly problem now</button></div>
   </details>`);
   stage.appendChild(d);
   d.querySelector("#rsave").onclick = () => {
     const a = Math.max(1, Math.min(20, Math.round(+d.querySelector("#rp").value) || 3)), b = Math.max(1, Math.min(20, Math.round(+d.querySelector("#ro").value) || 3));
     pipRule = { pip: a, other: b }; try { localStorage.setItem("math3PipRule", JSON.stringify(pipRule)); } catch (e) {}
     saveGate();
-    d.querySelector("#rmsg").textContent = `Saved: ${a} Help Pip, then ${b} other problems.`;
+    d.querySelector("#rmsg").textContent = `Saved: ${a} Help Tilly, then ${b} other problems.`;
   };
   d.querySelector("#rwake").onclick = () => { pipGate.tokens += 1; pipGate.resting = false; saveGate(); render(); };
 }
@@ -1636,7 +1636,7 @@ function renderHome() {
     <div class="tiles">
       <button class="tile wide" type="button" data-s="pip" style="--c:var(--g-think)">
         <span class="sym">${pipFace}</span>
-        <span><span class="nm">Help Pip</span><span class="ct" style="display:block">Pip's math got tangled again. Be the teacher!${state.solved.pip ? ` · ${state.solved.pip} finished` : ""}</span></span>
+        <span><span class="nm">Help Tilly</span><span class="ct" style="display:block">Tilly's math got dizzy from spinning! Be the teacher!${state.solved.pip ? ` · ${state.solved.pip} finished` : ""}</span></span>
       </button>
       ${HOME_TILES.map(([k, n, sym, g]) => {
       const done = state.solved[k] || 0;
@@ -1649,7 +1649,7 @@ function renderHome() {
   c.querySelectorAll("[data-s]").forEach(b => b.onclick = () => { state.section = b.dataset.s; state.step = 0; render(); });
 }
 
-/* ---------- home: Help Pip, or "Do it yourself" with the same rotation as Pip ----------
+/* ---------- home: Help Tilly, or "Do it yourself" with the same rotation as Tilly ----------
    She picks between the 2 activities she has done the least, does 3 problems there, then picks again. */
 let selfRule = { per: 3 }, selfState = { done: {}, set: null, offer: null };
 try { const r = JSON.parse(localStorage.getItem("math3SelfRule")); if (r && r.per > 0) selfRule = r; } catch (e) {}
@@ -1688,9 +1688,9 @@ renderHome = function () {
     <div class="tiles">
       <button class="tile wide" type="button" data-s="pip" style="--c:var(--g-think)">
         <span class="sym">${pipFace}</span>
-        <span><span class="nm">Help Pip</span><span class="ct" style="display:block">${pipGate.resting
-          ? `Pip is recharging 🔋 Finish ${leftPip} more ${leftPip === 1 ? "problem" : "problems"} on your own with no wrong answers to wake him. Hints are OK.`
-          : `Pip's math got tangled again. Be the teacher! ${pipGate.tokens} ready.`}</span></span>
+        <span><span class="nm">Help Tilly</span><span class="ct" style="display:block">${pipGate.resting
+          ? `Tilly is resting her toes. Finish ${leftPip} more ${leftPip === 1 ? "problem" : "problems"} on your own with no wrong answers to wake him. Hints are OK.`
+          : `Tilly's math got dizzy from spinning! Be the teacher! ${pipGate.tokens} ready.`}</span></span>
       </button>
     </div>
     <h2 style="margin-top:6px">Or do it yourself: ${set ? "finish what you started" : "pick one"}</h2>
@@ -1709,14 +1709,14 @@ renderHome = function () {
 function renderSelfCard() {
   const cur = selfState.set ? `working on ${tileFor(selfState.set.key)[1]}, ${selfState.set.n} of ${selfRule.per} done` : `choosing between ${selfOffer().map(k => tileFor(k)[1]).join(" and ")}`;
   const d = el(`<details class="card backup" open style="margin-top:14px"><summary>Do it yourself</summary>
-    <p class="sub">On the home screen your child picks between the 2 activities done the least, then does this many problems there before picking again.</p>
+    <p class="sub">On the home screen Ruth picks between the 2 activities she has done the least, then does this many problems there before picking again.</p>
     <div class="row" style="align-items:center"><label>Problems per activity <input type="number" id="sp" min="1" max="10" value="${selfRule.per}" style="width:80px"></label>
       <button class="primary" type="button" id="ssave">Save</button><span class="sub" id="smsg" style="margin:0"></span></div>
     <p class="sub">Right now: ${cur}.</p>
     <div class="tbl-wrap"><table class="rt"><tr><th scope="col">Activity</th><th scope="col">Problems done</th><th></th></tr>
       ${SELF_KEYS.map(k => `<tr><th scope="row">${tileFor(k)[1]}</th><td>${selfState.done[k] || 0}</td><td><button class="quiet" type="button" data-open="${k}" style="padding:6px 10px">Open</button></td></tr>`).join("")}
     </table></div>
-    <p class="sub">"Open" takes you into any activity yourself, to show them or try it. Problems you finish there count like theirs.</p>
+    <p class="sub">"Open" takes you into any activity yourself, to show her or try it. Problems you finish there count like hers.</p>
   </details>`);
   stage.appendChild(d);
   d.querySelector("#ssave").onclick = () => {
@@ -1771,7 +1771,7 @@ new MutationObserver(muts => {
   if (!wrong) return;
   card.classList.add("nudge"); card.querySelector("summary").textContent = "📋 Want to see the steps?";
 }).observe(stage, { childList: true, subtree: true });
-/* ---------- Pip battery: she can always see how close she is to earning Help Pip, so she never has to leave to check ---------- */
+/* ---------- Tilly battery: she can always see how close she is to earning Help Tilly, so she never has to leave to check ---------- */
 (() => { const st = document.createElement("style"); st.textContent = `
   .pipbat{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;font-weight:600;font-size:.95rem;color:var(--ink)}
   .pipbat .cells{display:inline-flex;gap:4px}
@@ -1790,16 +1790,16 @@ function paintPipBat() {
   const cells = `<span class="cells">${Array.from({ length: pipRule.other }, (_, i) => `<i class="${i < pipGate.others ? "on" : ""}"></i>`).join("")}</span>`;
   b.classList.toggle("awake", ready > 0);
   b.innerHTML = ready > 0
-    ? `<span class="pf">${pipFace}</span><span>${ready} Help Pip ${ready === 1 ? "problem" : "problems"} ready</span><span>·</span>${cells}<span>${left} more with no wrong answers for another!</span>`
-    : `<span class="pf">${pipFace}</span><span>Pip:</span>${cells}<span>${left} more with no wrong answers to wake Pip!</span>`;
+    ? `<span class="pf">${pipFace}</span><span>${ready} Help Tilly ${ready === 1 ? "problem" : "problems"} ready</span><span>·</span>${cells}<span>${left} more with no wrong answers for another!</span>`
+    : `<span class="pf">${pipFace}</span><span>Tilly:</span>${cells}<span>${left} more with no wrong answers to wake Tilly!</span>`;
 }
 function showWoke() {
   const n = pipRule.pip, t = pipGate.tokens, more = t > n;
   const d = el(`<div class="woke" role="dialog" aria-modal="true" aria-labelledby="wokeT"><section class="card">
     <div class="big pf">${pipFace}</div>
-    <h2 id="wokeT">${more ? "You earned another Help Pip problem!" : "You woke Pip up!"}</h2>
-    <p>You earned ${n} Help Pip ${n === 1 ? "problem" : "problems"}. You have <b>${t}</b> saved now. Pip will wait until you're ready.</p>
-    <div class="row" style="width:100%"><button class="primary" type="button" id="wokeGo">Help Pip now</button><button type="button" id="wokeLater">Keep going here first</button></div>
+    <h2 id="wokeT">${more ? "You earned another Help Tilly problem!" : "Tilly is ready to dance again!"}</h2>
+    <p>You earned ${n} Help Tilly ${n === 1 ? "problem" : "problems"}. You have <b>${t}</b> saved now. Tilly will wait until you're ready.</p>
+    <div class="row" style="width:100%"><button class="primary" type="button" id="wokeGo">Help Tilly now</button><button type="button" id="wokeLater">Keep going here first</button></div>
   </section></div>`);
   document.body.appendChild(d);
   d.querySelector("#wokeGo").onclick = () => { d.remove(); state.section = "pip"; state.step = 0; render(); };
@@ -1809,11 +1809,11 @@ function showWoke() {
   r7(); paintPipBat();
   if (pipWoke && state.section !== "pip") { pipWoke = false; showWoke(); }
   if (pipMissed) { pipMissed = false;
-    const b = document.getElementById("pipbat"), m = el(`<div class="pipmiss">That one had a wrong answer, so it didn't charge Pip. The next one can!</div>`);
+    const b = document.getElementById("pipbat"), m = el(`<div class="pipmiss">That one had a wrong answer, so it didn't charge Tilly. The next one can!</div>`);
     if (b) { document.querySelectorAll(".pipmiss").forEach(x => x.remove()); b.after(m); setTimeout(() => m.remove(), 8000); } }
 }; }
 
-/* ---------- every activity: on her first wrong answer in a step, Pip asks her why (her words go to Parent → Her notes) ---------- */
+/* ---------- every activity: on her first wrong answer in a step, Tilly asks her why (her words go to Parent → Her notes) ---------- */
 (() => { const st = document.createElement("style"); st.textContent = `
   #stage.whyLock button:not(#whyGo2):not(.quiet), #stage.whyLock input { pointer-events:none; opacity:.45 }`; document.head.appendChild(st); })();
 let lastChoice = "";
@@ -1837,8 +1837,8 @@ new MutationObserver(muts => {
   const choice = lastChoice || "that";
   const box = el(`<div class="card" style="padding:14px;gap:8px;margin-top:10px">
     ${pipSay(`Hmm, why do you think “${String(choice).replace(/"/g, "&quot;")}” wasn't right? Tell me in your own words, so I can learn too!`)}
-    <textarea id="whyIn2" rows="3" aria-label="Tell Pip why" style="font:inherit;padding:10px;border-radius:10px;border:2px solid var(--line);background:var(--card);color:var(--ink);width:100%;min-width:0"></textarea>
-    <div class="row" style="align-items:center"><button class="primary" type="button" id="whyGo2" disabled>Tell Pip</button>
+    <textarea id="whyIn2" rows="3" aria-label="Tell Tilly why" style="font:inherit;padding:10px;border-radius:10px;border:2px solid var(--line);background:var(--card);color:var(--ink);width:100%;min-width:0"></textarea>
+    <div class="row" style="align-items:center"><button class="primary" type="button" id="whyGo2" disabled>Tell Tilly</button>
       <span class="sub" id="whyMsg2" style="margin:0">Write at least a few words.</span></div>
   </div>`);
   look.after(box);
@@ -1857,18 +1857,18 @@ new MutationObserver(muts => {
 }).observe(stage, { childList: true, subtree: true });
 { const r8 = render; render = function () { stage.classList.remove("whyLock"); r8(); }; }
 
-/* ---------- Parent → Her notes: what she wrote after a wrong pick in Help Pip (for understanding her thinking, not for grading) ---------- */
+/* ---------- Parent → Her notes: what she wrote after a wrong pick in Help Tilly (for understanding her thinking, not for grading) ---------- */
 function renderNotes() {
   const esc = s => String(s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
   const rows = probLog.filter(r => r.why && r.why.length).slice().reverse();
   const when = t => new Date(t).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
-  stage.appendChild(el(`<details class="card backup" open><summary>Notes</summary>
-    <p class="sub">After a wrong answer (in Help Pip, and the first time in each step of the other activities), Pip asks why, and your child writes it in their own words. These are here so you can see how they're thinking. They don't count toward any score. Newest first.</p>
+  stage.appendChild(el(`<details class="card backup" open><summary>Ruth's notes</summary>
+    <p class="sub">After a wrong answer (in Help Tilly, and the first time in each step of the other activities), Tilly asks why, and Ruth writes it in her own words. These are here so you can see how she's thinking. They don't count toward any score. Newest first.</p>
     ${rows.length ? rows.map(r => `<div style="border-top:1px solid var(--line);padding:10px 0;display:grid;gap:4px">
-        <span class="sub" style="margin:0">${when(r.t0)} · ${r.sec === "pip" ? `Help Pip: ${esc((PIP_TOPICS[r.topic] || {}).label || "")}` : esc((sections[r.sec] || {}).title || r.sec)}</span>
+        <span class="sub" style="margin:0">${when(r.t0)} · ${r.sec === "pip" ? `Help Tilly: ${esc((PIP_TOPICS[r.topic] || {}).label || "")}` : esc((sections[r.sec] || {}).title || r.sec)}</span>
         <span style="font-size:.9rem">${esc(r.label)}</span>
         ${r.why.map(w => `<div class="note look" style="margin-top:4px"><span class="sub" style="margin:0">${esc(w.step)} · answered “${esc(w.choice)}”</span><br><b>“${esc(w.said)}”</b></div>`).join("")}
-      </div>`).join("") : "<p>No notes yet. They'll show up here after the first one is written.</p>"}
+      </div>`).join("") : "<p>No notes yet. They'll show up here after Ruth writes one.</p>"}
   </details>`));
 }
 
@@ -1878,7 +1878,7 @@ function renderLog() {
   const since = Date.now() - 30 * 864e5, rows = probLog.filter(r => r.t0 >= since);
   const fmtS = s => s < 60 ? `${s} sec` : `${Math.floor(s / 60)} min ${String(s % 60).padStart(2, "0")} sec`;
   const pct = (a, b) => b ? `${Math.round(a / b * 100)}%` : "–";
-  const nameOf = r => r.sec === "pip" ? `Help Pip: ${(PIP_TOPICS[r.topic] || {}).label || "mixed"}` : (sections[r.sec] || {}).title || r.sec;
+  const nameOf = r => r.sec === "pip" ? `Help Tilly: ${(PIP_TOPICS[r.topic] || {}).label || "mixed"}` : (sections[r.sec] || {}).title || r.sec;
   const clean = r => Object.values(r.steps).every(s => !s.miss);
   const groups = {};
   rows.filter(r => r.done).forEach(r => (groups[nameOf(r)] = groups[nameOf(r)] || []).push(r));
@@ -1904,7 +1904,7 @@ function renderLog() {
   const recent = rows.slice(-25).reverse();
   stage.appendChild(el(`<details class="card backup">
     <summary>Problem log · accuracy and time, last 30 days</summary>
-    <p class="sub">Every problem worked on: how long it took, and whether each step was right on the first try. A wrong try is any time the app showed a "look again" message. Time pauses during breaks and when no one is tapping. Tap an activity to see each step.</p>
+    <p class="sub">Every problem Ruth works on: how long it took, and whether each step was right on the first try. A wrong try is any time the app showed a "look again" message. Time pauses during breaks and when no one is tapping. Tap an activity to see each step.</p>
     ${acts || "<p>No finished problems yet.</p>"}
     ${recent.length ? `<span class="label" style="margin-top:8px">Recent problems</span>
     <div class="tbl-wrap"><table class="rt">
@@ -2002,18 +2002,23 @@ document.getElementById("homeBtn").onclick = () => { state.section = null; state
 
 /* ---------- help pip (teacher-student swap) ---------- */
 const pipFace = `<svg viewBox="0 0 56 56" aria-hidden="true">
-  <line x1="28" y1="5" x2="28" y2="12" style="stroke:var(--soft);stroke-width:3"/>
-  <circle cx="28" cy="5" r="3.5" style="fill:var(--look)"/>
-  <rect x="7" y="12" width="42" height="36" rx="11" style="fill:var(--block)"/>
-  <circle cx="20" cy="27" r="6" style="fill:var(--card)"/><circle cx="36" cy="27" r="6" style="fill:var(--card)"/>
-  <circle cx="21.5" cy="28.5" r="2.5" style="fill:var(--ink)"/><circle cx="34.5" cy="25.5" r="2.5" style="fill:var(--ink)"/>
-  <path d="M19 39 q4.5 -4 9 0 t9 0" style="fill:none;stroke:var(--ink);stroke-width:2.5;stroke-linecap:round"/>
+  <path d="M6 56 Q10 47 16 49 Q20 45 24 49 Q28 45 32 49 Q36 45 40 49 Q46 47 50 56 Z" style="fill:var(--look-wash);stroke:var(--look);stroke-width:1.5"/>
+  <circle cx="28" cy="7.5" r="6" style="fill:#f1cf6e;stroke:#c99a2e;stroke-width:1.5"/>
+  <circle cx="8" cy="29" r="3.5" style="fill:var(--soft)"/><circle cx="48" cy="29" r="3.5" style="fill:var(--soft)"/>
+  <rect x="9" y="13" width="38" height="33" rx="11" style="fill:var(--block)"/>
+  <path d="M9 24 Q9 13 20 13 L36 13 Q47 13 47 24 Q40 17 33 20 Q28 15 23 20 Q16 17 9 24 Z" style="fill:#f1cf6e;stroke:#c99a2e;stroke-width:1.2"/>
+  <path d="M19 15 L21 8.5 L24.5 12.5 L28 6 L31.5 12.5 L35 8.5 L37 15 Q28 12.5 19 15 Z" style="fill:#e9b8ec;stroke:#8a5a8f;stroke-width:1.2;stroke-linejoin:round"/>
+  <circle cx="20" cy="29" r="5.5" style="fill:var(--card)"/><circle cx="36" cy="29" r="5.5" style="fill:var(--card)"/>
+  <circle cx="20.5" cy="29.5" r="2.4" style="fill:var(--ink)"/><circle cx="35.5" cy="29.5" r="2.4" style="fill:var(--ink)"/>
+  <path d="M15 24.5 l-2 -2 M18 23.2 l-1 -2.6 M41 24.5 l2 -2 M38 23.2 l1 -2.6" style="stroke:var(--ink);stroke-width:1.4;stroke-linecap:round"/>
+  <circle cx="14.5" cy="36" r="2.6" style="fill:#e9b8ec"/><circle cx="41.5" cy="36" r="2.6" style="fill:#e9b8ec"/>
+  <path d="M22 37 Q28 42.5 34 37" style="fill:none;stroke:var(--ink);stroke-width:2;stroke-linecap:round"/>
 </svg>`;
 const pipSay = t => `<div class="pip">${pipFace}<div class="bubble">${t}</div></div>`;
 const pipPeople = ["Maya", "Leo", "Grandpa Joe", "Aunt Rosa", "Christine", "Frank", "Omar", "Jessica"];
 const fx = (t, b) => `${t}/${b}`;
 
-/* Each topic makes one problem: Pip's work, where it went wrong (or -1 if Pip is right), and what to say. */
+/* Each topic makes one problem: Tilly's work, where it went wrong (or -1 if Tilly is right), and what to say. */
 const PIP_TOPICS = ACT_PIP;
 
 function pipStart(topic) {
@@ -2029,11 +2034,11 @@ function pipAnswer(pp) {
   const line = (expr ? `${expr} ${pp.key === "round" ? "≈" : "="} ${ans}` : ans).replace(/</g, "&lt;");
   return ans ? `<div><span class="label">The answer</span><div class="fx" style="font-size:1.6rem">${line}</div></div>` : "";
 }
-const pipWork = (pp, fixed = false) => `<div><span class="label">${fixed ? "Pip's work, fixed" : "Pip's work"}</span><div class="work">${(fixed ? pp.good : pp.steps).map(s =>
+const pipWork = (pp, fixed = false) => `<div><span class="label">${fixed ? "Tilly's work, fixed" : "Tilly's work"}</span><div class="work">${(fixed ? pp.good : pp.steps).map(s =>
   `<div class="step${fixed ? " fixed" : ""}"><small>${s.label}</small><b>${s.math}</b></div>`).join("")}</div></div>`;
 const pipQ = pp => `<p class="story">${pp.q}</p>`;
 
-/* Pip offers the 2 topics she has helped with the least, so every topic comes around. */
+/* Tilly offers the 2 topics she has helped with the least, so every topic comes around. */
 function pipOffer() {
   if (state.pipOffer) return state.pipOffer;
   const done = k => state.pipDone[k] || 0;
@@ -2044,9 +2049,9 @@ function pipMeet() {
   const keys = Object.keys(PIP_TOPICS), counts = keys.map(k => state.pipDone[k] || 0), low = Math.min(...counts);
   const round = low + 1, helped = counts.filter(n => n > low).length;
   const c = el(`<section class="card">
-    ${pipSay("Hi! I'm Pip. I'm still learning math, and sometimes my circuits get tangled. Will you be my teacher and check my work? Which one should I try?")}
+    ${pipSay("Hi! I'm Tilly, the twirling robot ballerina! Sometimes I spin so fast my math gets dizzy. Will you be my teacher and check my work? Pick a dance!")}
     <div class="tiles small" id="topics"></div>
-    <p class="sub">Round ${round}: you've helped Pip with ${helped} of ${keys.length} topics. When you've done them all, a new round starts.</p>
+    <p class="sub">Round ${round}: you've helped Tilly with ${helped} of ${keys.length} topics. When you've done them all, a new round starts.</p>
     <div class="meter"><span style="width:${helped / keys.length * 100}%"></span></div>
   </section>`);
   stage.appendChild(c);
@@ -2062,9 +2067,9 @@ function pipMeet() {
 const plain = s => String(s).replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
 function pipWhy(fb, choice, after) {
   const box = el(`<div class="card" style="padding:14px;gap:8px;margin-top:10px">
-    ${pipSay(`Hmm, why was “${plain(choice).replace(/"/g, "&quot;")}” wrong? Tell me in your own words, so I don't make that mistake next time!`)}
-    <textarea id="whyIn" rows="3" aria-label="Tell Pip why" style="font:inherit;padding:10px;border-radius:10px;border:2px solid var(--line);background:var(--card);color:var(--ink);width:100%;min-width:0"></textarea>
-    <div class="row" style="align-items:center"><button class="primary" type="button" id="whyGo" disabled>Tell Pip</button>
+    ${pipSay(`Hmm, why was “${plain(choice).replace(/"/g, "&quot;")}” wrong? Tell me in your own words, so I don't wobble on that again!`)}
+    <textarea id="whyIn" rows="3" aria-label="Tell Tilly why" style="font:inherit;padding:10px;border-radius:10px;border:2px solid var(--line);background:var(--card);color:var(--ink);width:100%;min-width:0"></textarea>
+    <div class="row" style="align-items:center"><button class="primary" type="button" id="whyGo" disabled>Tell Tilly</button>
       <span class="sub" id="whyMsg" style="margin:0">Write at least a few words.</span></div>
   </div>`);
   fb.appendChild(box);
@@ -2083,8 +2088,8 @@ function pipSense() {
   const c = el(`<section class="card">
     ${pipQ(pp)}
     ${pipWork(pp)}
-    ${pipSay(pp.claim + " Did I get it?")}
-    <h2>Does Pip's answer make sense?</h2>
+    ${pipSay(pp.claim + " Did I land it?")}
+    <h2>Does Tilly's answer make sense?</h2>
     <p class="sub">You get one try, so check before you tap.</p>
     <div class="choices">
       <button type="button" data-a="yes">Yes, it makes sense</button>
@@ -2093,8 +2098,8 @@ function pipSense() {
     <div id="fb"></div>
   </section>`);
   stage.appendChild(c);
-  const done = () => { const fb = c.querySelector("#fb"); fb.innerHTML = `${pipAnswer(pp)}<div class="note ok">${pp.yesRight}</div>${pipSay("Thanks for checking my work, teacher.")}`; fb.appendChild(pipNextRow()); };
-  const toFind = () => { const fb = c.querySelector("#fb"); fb.appendChild(nextBtn(() => { state.step = 2; render(); }, "Find Pip's mistake")); };
+  const done = () => { const fb = c.querySelector("#fb"); fb.innerHTML = `${pipAnswer(pp)}<div class="note ok">${pp.yesRight}</div>${pipSay("Thank you, teacher! *happy twirl*")}`; fb.appendChild(pipNextRow()); };
+  const toFind = () => { const fb = c.querySelector("#fb"); fb.appendChild(nextBtn(() => { state.step = 2; render(); }, "Find Tilly's mistake")); };
   c.querySelectorAll("[data-a]").forEach(b => b.onclick = () => {
     const fb = c.querySelector("#fb"), saysOk = b.dataset.a === "yes", right = (pp.wrong < 0) === saysOk;
     c.querySelectorAll("[data-a]").forEach(x => x.disabled = true);
@@ -2104,7 +2109,7 @@ function pipSense() {
       fb.innerHTML = `<div class="note ok">${pp.offRight}</div>`; return toFind();
     }
     fb.innerHTML = pp.wrong < 0
-      ? `<div class="note look">Actually, Pip got this one right. ${pp.yesRight.replace(/^You checked it\. /, "")}</div>`
+      ? `<div class="note look">Actually, Tilly got this one right. ${pp.yesRight.replace(/^You checked it\. /, "")}</div>`
       : `<div class="note look">Actually, something is off. ${pp.offRight.replace(/^Good eye\. /, "")}</div>`;
     pipWhy(fb, b.textContent, () => {
       if (pp.wrong < 0) { fb.innerHTML += pipAnswer(pp); fb.appendChild(pipNextRow()); }
@@ -2117,7 +2122,7 @@ function pipFind() {
   const pp = state.pp;
   const c = el(`<section class="card">
     ${pipQ(pp)}
-    ${pipSay("Oh no, you're right. My circuits got tangled somewhere. Which step did I mess up? Tap it.")}
+    ${pipSay("Oops! I wobbled somewhere. Which step did I wobble on? Tap it.")}
     <p class="sub">One try. Check each step before you tap.</p>
     <div class="work" id="steps"></div>
     <div id="fb"></div>
@@ -2131,7 +2136,7 @@ function pipFind() {
       btns.forEach(x => x.disabled = true); btns[pp.wrong].classList.add("fixed");
       const fb = c.querySelector("#fb");
       fb.innerHTML = `<div class="note look">${pp.stepOk(i)} The mistake is in <b>${pp.steps[pp.wrong].label}</b>.</div>`;
-      pipWhy(fb, `${s.label}`, () => fb.appendChild(nextBtn(() => { state.step = 3; render(); }, "Fix Pip's step")));
+      pipWhy(fb, `${s.label}`, () => fb.appendChild(nextBtn(() => { state.step = 3; render(); }, "Fix Tilly's step")));
     };
     btns.push(b); c.querySelector("#steps").appendChild(b);
   });
@@ -2148,7 +2153,7 @@ function pipFix() {
     <div id="fb"></div>
   </section>`);
   stage.appendChild(c);
-  const finish = fb => { fb.insertAdjacentHTML("beforeend", `${pipAnswer(pp)}${pipWork(pp, true)}<div class="note ok">${pp.fixed}</div>${pipSay("Oh! I see it now. Thank you, teacher. My circuits feel much better.")}`); fb.appendChild(pipNextRow()); };
+  const finish = fb => { fb.insertAdjacentHTML("beforeend", `${pipAnswer(pp)}${pipWork(pp, true)}<div class="note ok">${pp.fixed}</div>${pipSay("Ta-da! Now my math is as smooth as a pirouette. Thank you, teacher!")}`); fb.appendChild(pipNextRow()); };
   const opts = [...pp.fixes].sort(() => Math.random() - .5), btns = [];
   opts.forEach(([t, ok, why]) => {
     const b = el(`<button type="button">${t}</button>`);
@@ -2165,7 +2170,7 @@ function pipFix() {
 }
 function pipNextRow() {
   const row = el(`<div class="row" style="margin-top:10px"></div>`);
-  const again = el(`<button class="primary" type="button">Help Pip again</button>`);
+  const again = el(`<button class="primary" type="button">Help Tilly again</button>`);
   again.onclick = () => {
     state.solved.pip++; state.pipDone[state.pp.key] = (state.pipDone[state.pp.key] || 0) + 1;
     state.pipOffer = null; save(); state.step = 0; render();

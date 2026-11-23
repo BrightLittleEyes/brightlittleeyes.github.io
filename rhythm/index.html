@@ -938,6 +938,10 @@ function normalize(d){
     }
     ruth.clueV=1;
   }
+  if(ruth && Array.isArray(ruth.blocks) && !(ruth.readV>=1)){   // Ruth: Clue Quest replaces her old Reading Block
+    ruth.blocks.forEach(b=>{ b.items = b.items.filter(i=>i.id!=='r_reading'); });
+    ruth.readV=1;
+  }
   if(ruth && Array.isArray(ruth.blocks) && !(ruth.danceV>=1)){   // Ruth: Dance on Monday evenings, no evening Fun Choice that day
     const eve = ruth.blocks.find(b=>b.id==='r_evening') || ruth.blocks.find(b=>/evening/i.test(b.name||'')) || ruth.blocks[ruth.blocks.length-1];
     if(eve){

@@ -1228,6 +1228,12 @@ function normalizeMain(d){
     (c.tags.fun||[]).forEach(t=>{ if(t.id==='build' || norm(t.name)==='build something'){ t.name='Magna-Tiles, LEGO or Minecraft Blocks'; t.sub='Build something'; } });
     c.v = 36;
   }
+  if(c.v < 37){                       // music time: a Christian radio station only
+    c.tags.fun = c.tags.fun||[];
+    if(!c.tags.fun.some(t=>t.id==='radio' || norm(t.name)==='christian radio'))
+      c.tags.fun.push({id:'radio', name:'Christian Radio', sub:'Listen to a Christian radio station', timer:2700});
+    c.v = 37;
+  }
   return c;
 }
 const BOARD_OF_DAY = {6:'satBlocks', 0:'sunBlocks'};   // Saturday, Sunday; every other day uses "blocks"

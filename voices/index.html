@@ -48,6 +48,8 @@
     </ol>
   </div>
 
+  <div class="card" id="joelleCard" hidden><b>Joelle isn't in the list below.</b> That means Safari can't use her yet. Try: restart the iPad after the download finishes, then open this page again. If she's still missing, check that you downloaded <b>Joelle (Enhanced)</b> or <b>(Premium)</b> under Settings → Accessibility → Spoken Content → Voices → English.</div>
+
   <div class="card"><b>All English voices on this iPad</b> <span class="sub" style="display:block;margin:2px 0 6px">Best first. The top one is what her apps use.</span>
     <div id="list"></div></div>
 </div>
@@ -59,7 +61,8 @@ function paint(){
   const vs=bleVoices(); if(!vs.length) return;
   const b=vs[0];
   $('best').innerHTML=`<span class="vname">${esc(b.name)}</span><span class="tag ${bleVoiceKind(b)}">${bleVoiceKind(b)}</span> <span class="sub">${esc(b.lang)}</span>`;
-  $('tip').hidden = vs.some(v=>bleVoiceKind(v)==='Premium');
+  $('tip').hidden = vs.some(v=>bleVoiceKind(v)!=='Standard');
+  $('joelleCard').hidden = vs.some(v=>/joelle/i.test(v.name+v.voiceURI));
   $('list').innerHTML='';
   vs.forEach((v,i)=>{ const r=document.createElement('div'); r.className='row';
     r.innerHTML=`<div class="n"><b>${esc(v.name)}</b><span class="tag ${bleVoiceKind(v)}">${bleVoiceKind(v)}</span><small>${esc(v.lang)}${i===0?' · her apps use this one':''}</small></div>`;

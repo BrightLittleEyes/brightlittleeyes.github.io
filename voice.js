@@ -5,13 +5,14 @@
 (function(){
   if(!('speechSynthesis' in window)) return;
   var NOVELTY = /albert|bad news|bahh|bells|boing|bubbles|cellos|deranged|good news|hysterical|jester|organ|superstar|trinoids|whisper|wobble|zarvox|fred|junior|ralph|kathy|eddy|flo|grandma|grandpa|reed|rocko|sandy|shelley|pipe/i;
-  var LIKE = ['ava','zoe','joelle','samantha','allison','nicky','susan','evan','nathan','noelle','tom','aaron','jenny','aria','google us english'];
+  var LIKE = ['joelle','ava','zoe','samantha','allison','nicky','susan','evan','nathan','noelle','tom','aaron','jenny','aria','google us english'];
   function score(v){
     var id = (v.name+' '+v.voiceURI).toLowerCase(), s = 25;
     if(!/^en[-_]/i.test(v.lang) || NOVELTY.test(v.name)) return -1;
     if(/premium/.test(id)) s += 300; else if(/enhanced/.test(id)) s += 200; else if(/siri/.test(id)) s += 150; else if(/compact/.test(id)) s -= 20;
     if(/^en[-_]us/i.test(v.lang)) s += 30;
     var i = LIKE.findIndex(function(n){ return id.indexOf(n) >= 0; }); if(i >= 0) s += 60 - i*3;
+    if(/joelle/.test(id)) s += 150;   /* Mom's pick for Ruth: Joelle wins whenever she's installed */
     if(v.localService) s += 5;
     return s;
   }

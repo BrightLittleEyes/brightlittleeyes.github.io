@@ -929,6 +929,18 @@ function normalize(d){
     if(!(ruth.tags.flag||[]).length) ruth.tags.flag = clone(c.tags.flag||[]);
     ruth.flagV=1;
   }
+  if(ruth && Array.isArray(ruth.blocks) && !(ruth.danceV>=1)){   // Ruth: Dance on Monday evenings, no evening Fun Choice that day
+    const eve = ruth.blocks.find(b=>b.id==='r_evening') || ruth.blocks.find(b=>/evening/i.test(b.name||'')) || ruth.blocks[ruth.blocks.length-1];
+    if(eve){
+      const f2 = eve.items.find(i=>i.id==='r_f2') || eve.items.find(i=>i.slot==='fun');
+      if(f2 && !Array.isArray(f2.days)) f2.days=[0,2,3,4,5,6];
+      if(!eve.items.some(i=>i.id==='r_danceclass')){
+        const at = f2 ? eve.items.indexOf(f2) : eve.items.length;
+        eve.items.splice(at, 0, {id:'r_danceclass', t:'Dance', d:'Dance class tonight!', days:[1]});
+      }
+    }
+    ruth.danceV=1;
+  }
   if(ruth && Array.isArray(ruth.blocks) && !(ruth.radioV>=1)){   // Ruth: Christian Radio too (no timer on her board)
     ruth.tags.fun = ruth.tags.fun||[];
     if(!ruth.tags.fun.some(t=>t.id==='radio' || String(t.name||'').trim().toLowerCase()==='christian radio'))
@@ -1265,7 +1277,10 @@ function useDay(){
   const bc = BC();
   if(weekendOff()){ BLOCKS=[]; TAGS=bc.tags; ALL_ITEMS=[]; SLOT_IDS=[]; return; }
   /* an item with "until" (a date) stays on the board through that day, then comes off */
-  BLOCKS = bc[dayRoot(S.date)].map(b=>b.items.some(i=>i.until) ? {...b, items:b.items.filter(i=>!(i.until && S.date>i.until))} : b);
+  /* an item with "days" (0=Sun … 6=Sat) shows only on those days of the week */
+  const dow = fromKey(S.date).getDay();
+  const shows = i => !(i.until && S.date>i.until) && !(Array.isArray(i.days) && !i.days.includes(dow));
+  BLOCKS = bc[dayRoot(S.date)].map(b=>b.items.some(i=>i.until || Array.isArray(i.days)) ? {...b, items:b.items.filter(shows)} : b);
   BLOCKS = BLOCKS.filter(b=>b.items.length || !bc[dayRoot(S.date)].find(x=>x.id===b.id).items.length);
   TAGS = bc.tags;
   if(downOn() && BLOCKS.length){
@@ -1841,7 +1856,9 @@ function itemEd(it, bi, ii, len, R='blocks'){
   } else {
     more = `<div class="ed-note">She picks a ${KIND_NAME[kind]||''} tag here.</div>`;
   }
-  return `<div class="ed-item"><div class="ed-row">${sel}<input data-path="${p}.t" value="${esc(it.t)}" placeholder="Title">${itemMv(bi,ii,len,R)}</div>${more}</div>`;
+  const DN = R==='satBlocks' ? [[6,'Sat']] : R==='sunBlocks' ? [[0,'Sun']] : [[1,'Mon'],[2,'Tue'],[3,'Wed'],[4,'Thu'],[5,'Fri']];
+  const daysRow = DN.length>1 ? `<div class="ed-row2 ed-days"><span class="ed-min">Days:</span>${DN.map(([d,n])=>`<label class="ed-min"><input type="checkbox" data-days="${p}" value="${d}" ${!Array.isArray(it.days)||it.days.includes(d)?'checked':''}> ${n}</label>`).join('')}</div>` : '';
+  return `<div class="ed-item"><div class="ed-row">${sel}<input data-path="${p}.t" value="${esc(it.t)}" placeholder="Title">${itemMv(bi,ii,len,R)}</div>${more}${daysRow}</div>`;
 }
 function blockEd(b, bi, len, R='blocks'){
   const p=`${R}.${bi}`;
@@ -1945,6 +1962,12 @@ function readField(el){
 }
 $('#editor').addEventListener('input', e=>{ const el=e.target; if(el.dataset.path) setAt(el.dataset.path, readField(el)); });
 $('#editor').addEventListener('change', e=>{
+  if(e.target.dataset.days){            // which weekdays an item shows on (all checked = every day)
+    const it=getAt(e.target.dataset.days), boxes=[...document.querySelectorAll(`[data-days="${e.target.dataset.days}"]`)];
+    const on=boxes.filter(b=>b.checked).map(b=>+b.value);
+    if(on.length===boxes.length) delete it.days; else it.days=[0,6,...on].filter((d,n,a)=>a.indexOf(d)===n).sort();
+    return;
+  }
   const el=e.target;
   if(el.dataset.kind){
     const it=getAt(el.dataset.kind), v=el.value;

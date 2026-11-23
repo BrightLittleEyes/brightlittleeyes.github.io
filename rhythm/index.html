@@ -218,6 +218,11 @@ body.theme-dance .ord button{border-radius:50%;width:36px;height:36px;border-col
 .row:not(.done) .check.bylesson{background:#F1F3F5;border-style:dashed}
 .applink{display:inline-block;margin-top:8px;padding:10px 16px;border-radius:10px;background:var(--navy);color:#fff;font-weight:700;text-decoration:none;min-height:44px}
 .slotbtn.mech.filled small{font-weight:700}
+.block.weekend{text-align:center;padding:36px 20px}
+.block.weekend .wk-big{font-size:56px;line-height:1;color:var(--done)}
+.block.weekend h2{font-family:"Bricolage Grotesque",sans-serif;font-size:28px;margin:10px 0 6px;color:var(--navy)}
+body.theme-dance .block.weekend h2{font-family:"Fredoka",sans-serif}
+.block.weekend p{margin:0;color:var(--muted);font-size:18px}
 .kidswitch{display:flex;gap:8px;justify-content:center;margin:10px 0 4px;flex-wrap:wrap}
 .kidswitch button{min-height:44px;padding:0 20px;border-radius:22px;border:2px solid var(--navy);background:#fff;color:var(--navy);font-weight:700;font-size:16px;cursor:pointer}
 .kidswitch button[aria-pressed=true]{background:var(--navy);color:#fff}
@@ -917,6 +922,7 @@ function normalize(d){
     if(!(ruth.tags.flag||[]).length) ruth.tags.flag = clone(c.tags.flag||[]);
     ruth.flagV=1;
   }
+  if(ruth && Array.isArray(ruth.blocks) && !(ruth.weekendV>=1)){ ruth.weekendOff=true; ruth.weekendV=1; }   // Ruth: no structure on weekends
   if(ruth && !(ruth.appsV>=1)){ tieApps([ruth.blocks], APP_OF_RUTH); ruth.appsV=1; }
   if(ruth && !(ruth.funV>=1)){        // Ruth: one fewer weekday Fun Choice from Nov 18, 2026, so her fun picks match Bekah's
     (ruth.blocks||[]).forEach(b=>b.items.forEach(i=>{ if(i.id==='r_f1') i.until='2026-11-17'; }));
@@ -1181,8 +1187,11 @@ function dayRoot(key){
   const bc = BC();
   return r && Array.isArray(bc[r]) && bc[r].length>0 ? r : 'blocks';
 }
+/* A child's own board can skip Saturday and Sunday (Ruth) */
+const weekendOff = () => { const o=OWN(); return !!(o && o.weekendOff) && [0,6].includes(fromKey(S.date).getDay()); };
 function useDay(){
   const bc = BC();
+  if(weekendOff()){ BLOCKS=[]; TAGS=bc.tags; ALL_ITEMS=[]; SLOT_IDS=[]; return; }
   /* an item with "until" (a date) stays on the board through that day, then comes off */
   BLOCKS = bc[dayRoot(S.date)].map(b=>b.items.some(i=>i.until) ? {...b, items:b.items.filter(i=>!(i.until && S.date>i.until))} : b);
   BLOCKS = BLOCKS.filter(b=>b.items.length || !bc[dayRoot(S.date)].find(x=>x.id===b.id).items.length);
@@ -1428,6 +1437,9 @@ function render(){
   $('#flags').hidden = (kidView && !placed.length) || !(TAGS.flag||[]).length;
   $('#flags .hint').textContent = kidView ? 'Today won\'t follow the usual rhythm. We\'ll talk it through at breakfast.' : 'If today won\'t follow the usual rhythm, put a red tag here (up to 3) and talk it through at breakfast.';
 
+  const off = weekendOff();
+  document.querySelector('.progress').hidden = off; $('#ptxt').hidden = off; document.querySelector('.tools').hidden = off;
+  if(off){ $('#board').innerHTML = `<section class="block weekend"><div class="wk-big" aria-hidden="true">♪</div><h2>No schedule today!</h2><p>It's the weekend. Enjoy it, ${esc(kidLabel(S.kid))}!</p></section>`; paintTimer(); return; }
   $('#board').innerHTML = BLOCKS.map(b=>`
     <section class="block">
       <div class="block-h" style="background:${esc(b.color||'#2C3E50')}">${ICON[b.icon]||''}<span>${esc(b.name)}${b.sub?` <small>(${esc(b.sub)})</small>`:''}</span></div>
@@ -1789,6 +1801,7 @@ function renderEditor(){
         <label class="ed-f">Verse reference<input data-path="kids.${id}.verseRef" value="${esc(k.verseRef)}"></label>
         <label class="ed-f">Her name<input data-path="kids.${id}.name" value="${esc(k.name)}"></label>
       </div>
+      ${Array.isArray(k.blocks)?`<label class="ed-chk"><input type="checkbox" data-path="kids.${id}.weekendOff" data-type="flag" ${k.weekendOff?'checked':''}> No schedule on Saturday and Sunday (her board just says to enjoy the weekend)</label>`:''}
       <label class="ed-f">${k.pw?'New password for her <small>(leave blank to keep it)</small>':'Her password <small>(she can\'t log in until you set one)</small>'}<input type="password" class="kidpw" data-kidpw="${esc(id)}" autocomplete="new-password"></label></div>`).join('')}
     <div class="ed-sec"><h3>Blocks</h3>
       <div class="ed-tabs" role="group" aria-label="Which board">

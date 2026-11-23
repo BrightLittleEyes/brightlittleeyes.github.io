@@ -206,6 +206,12 @@ table.log td,table.log th{text-align:left;padding:5px 6px;border-bottom:1px soli
 .swap b{color:var(--lav)}
 .rule input{width:64px;font:inherit;padding:4px 8px;border-radius:8px;border:2px solid #E7DFCF}
 .notes .n{border-top:1px solid #eee;padding:8px 0}
+.goal{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#fff;border-radius:16px;box-shadow:var(--shadow);padding:12px 16px;margin:0 0 14px;font-size:17px}
+.goal.done{background:var(--green-l)}
+.goal .gdots{display:inline-flex;gap:6px}
+.goal .gdots i{width:22px;height:22px;border-radius:50%;border:3px solid var(--teal);display:inline-block}
+.goal .gdots i.on{background:var(--teal)}
+.goal.done .gdots i{border-color:var(--green);background:var(--green)}
 </style>
 <script src="../voice.js" data-only="joelle"></script>
 </head>
@@ -256,6 +262,7 @@ table.log td,table.log th{text-align:left;padding:5px 6px;border-bottom:1px soli
       <p>I'm a twirling robot ballerina, and today I'm a word detective too! When we meet a tricky word, the words around it leave clues. Let's dance through them and get ready for IREAD!</p>
     </div>
   </div>
+  <div id="goalBox"></div>
   <div class="grid">
     <button class="mode" data-go="learn"><div class="ic">📚</div><h3>Learn the Clues</h3><p>The 5 kinds of clues and the 4 detective steps.</p><div class="meta">Start here!</div></button>
     <button class="mode" data-go="read"><div class="ic">🎤</div><h3>Read with Tilly</h3><p>Take turns reading a story out loud with Tilly. She listens and shows the words to practice.</p><div class="meta">Uses the microphone</div></button>
@@ -657,7 +664,7 @@ function finish(){
       <button class="btn" data-go="${R.kind==="det"?"detective":R.kind==="pas"?"passages":"challenge"}">Play again</button>
     </div>`;
   show("results");
-  if(window.rhythmReport) rhythmReport('read3');   /* checks off Clue Quest on Ruth's rhythm board */
+  questDone(R.kind);document.getElementById("resultsCard").insertAdjacentHTML("beforeend",goalHTML());   /* 2 different quests a day check off Clue Quest on Ruth's rhythm board */
   if(pct>=.7)burst();
 }
 function burst(){
@@ -910,10 +917,11 @@ function totalsRead(){let ok=0,total=0,secs=0,manual=false;const tricky=[];
   return{ok,total,secs,manual,tricky:uniqT(tricky),pct:total?Math.round(100*ok/total):0}}
 function finishRead(){
   RS.done=true;
-  if(!RS.finished){RS.finished=true;addStars(2);RS.stars+=2;if(window.rhythmReport)rhythmReport('read3')}
+  if(!RS.finished){RS.finished=true;addStars(2);RS.stars+=2;questDone("read")}
   document.querySelectorAll(".seg").forEach(e=>e.classList.remove("active"));
   RS.segs.forEach((sg,si)=>{if(sg.who==="ruth"&&sg.res)paintSeg(si,true)});
   renderSummary(true);
+  $("#rctl").insertAdjacentHTML("afterbegin",goalHTML());
 }
 function renderSummary(first){
   const T=totalsRead();
@@ -1107,6 +1115,23 @@ function renderHelpParent(){renderSpeed();
   });
   const r0=renderHome;renderHome=function(){if(d.open&&window.BLEPin&&!BLEPin.unlocked())d.open=false;r0()};
 })();
+/* ---- today's goal: finish 2 different quests ---- */
+const QUESTS={det:"Word Detective",pas:"IREAD Practice",ch:"Big Challenge",read:"Read with Tilly"};
+function dayK(){const d=new Date();return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate()}
+function todayDone(){return S.today&&S.today.day===dayK()?S.today.done:[]}
+function questDone(k){
+  if(!S.today||S.today.day!==dayK())S.today={day:dayK(),done:[],reported:false};
+  if(!S.today.done.includes(k))S.today.done.push(k);
+  if(S.today.done.length>=2&&!S.today.reported){S.today.reported=true;if(window.rhythmReport)rhythmReport('read3')}
+  save();renderGoal();
+}
+function goalHTML(){const d=todayDone(),n=Math.min(d.length,2),names=d.map(k=>QUESTS[k]).join(" and ");
+  const dots=`<span class="gdots"><i class="${n>0?"on":""}"></i><i class="${n>1?"on":""}"></i></span>`;
+  return n>=2?`<div class="goal done">${dots}<span><b>🎉 Today's Clue Quest is done!</b> You finished ${esc(names)}.</span></div>`
+   :n===1?`<div class="goal">${dots}<span><b>Today's goal: 1 of 2.</b> You finished ${esc(names)}. Finish one more <b>different</b> quest!</span></div>`
+   :`<div class="goal">${dots}<span><b>Today's goal:</b> finish 2 different quests (Read with Tilly, Word Detective, IREAD Practice, or Big Challenge).</span></div>`}
+function renderGoal(){const g=$("#goalBox");if(g)g.innerHTML=goalHTML()}
+{const r1=renderHome;renderHome=function(){r1();renderGoal()}}
 renderHome();
 </script>
 <script src="../rhythm/report.js"></script>

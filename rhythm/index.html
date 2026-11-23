@@ -1220,6 +1220,10 @@ function normalizeMain(d){
       .forEach(t=>{ if(!c.tags.fun.some(x=>x.id===t.id || norm(x.name)===norm(t.name))) c.tags.fun.push(t); });
     c.v = 34;
   }
+  if(c.v < 35){                       // the new crafts replace Free Crafting
+    c.tags.fun = (c.tags.fun||[]).filter(t=>!(t.id==='crafting' || norm(t.name)==='free crafting'));
+    c.v = 35;
+  }
   return c;
 }
 const BOARD_OF_DAY = {6:'satBlocks', 0:'sunBlocks'};   // Saturday, Sunday; every other day uses "blocks"

@@ -292,6 +292,7 @@ ol.steps li::before{content:counter(st);width:30px;height:30px;border-radius:50%
   addEventListener('compositionend',function(e){ if(isField(e.target)) clean(e.target); },true);
 })();
 </script>
+<script src="../voice.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -1488,7 +1489,7 @@ const LP=(i,s=student)=>{ const p=P(s); if(!p.lessons[i]) p.lessons[i]={sec:{},d
 function bleVoice(){ try{ var want=localStorage.getItem("ble-voice")||""; if(want==="system") return null;
   var vs=speechSynthesis.getVoices().filter(function(v){return /^en(-|_)/i.test(v.lang);});
   if(want){ var w=vs.find(function(v){return v.voiceURI===want;})||vs.find(function(v){return v.name===want;}); if(w) return w; }
-  return vs.find(function(v){return /joelle/i.test(v.name) && /premium|enhanced/i.test(v.name+v.voiceURI);})||vs.find(function(v){return /joelle/i.test(v.name);})||null;
+  return (window.bleBestVoice && bleBestVoice()) || vs.find(function(v){return /joelle/i.test(v.name) && /premium|enhanced/i.test(v.name+v.voiceURI);})||vs.find(function(v){return /joelle/i.test(v.name);})||null;
  }catch(e){ return null; } }
 try{ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices(); }catch(e){}
 function say(text,rate=.9){ try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(strip(text).replace(/[“”]/g,'"')); const v=bleVoice(); if(v){ u.voice=v; u.lang=v.lang; } else u.lang="en-US"; u.rate=rate; speechSynthesis.speak(u); return true; }catch(e){ return false; } }

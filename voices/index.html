@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voices on this iPad</title>
+<script src="../voice.js"></script>
+<style>
+  :root{--bg:#F6F4EF;--card:#fff;--ink:#22303C;--muted:#5F6E7A;--line:#E2DDD2;--accent:#2F7D6D;--gold:#B7791F}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+  .wrap{max-width:720px;margin:0 auto;padding:20px 16px 48px}
+  h1{font-size:28px;margin:4px 0 4px}
+  .sub{color:var(--muted);margin:0 0 18px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+  .now{border:2px solid var(--accent)}
+  .now h2{margin:0 0 4px;font-size:15px;color:var(--accent);text-transform:uppercase;letter-spacing:.04em}
+  .vname{font-size:22px;font-weight:700}
+  .tag{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:2px 9px;margin-left:6px;vertical-align:middle}
+  .Premium{background:#E6F5EC;color:#14532D}.Enhanced{background:#E7F0FB;color:#1F4E85}.Standard{background:#F1EEE8;color:#6B6458}
+  button{font:inherit;font-weight:600;border:0;border-radius:12px;background:var(--accent);color:#fff;min-height:44px;padding:0 16px;cursor:pointer}
+  button.light{background:#fff;color:var(--accent);border:2px solid var(--accent)}
+  .row{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+  .row:first-child{border-top:0}
+  .row .n{flex:1;min-width:0}
+  .row small{display:block;color:var(--muted)}
+  textarea{width:100%;font:inherit;padding:10px;border-radius:10px;border:1px solid var(--line);margin:8px 0}
+  .warn{background:#FFF6E5;border-color:#F0D9A8}
+  ol{margin:6px 0 0;padding-left:22px}
+  li{margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Voices on this iPad</h1>
+  <p class="sub">Ruth's apps read aloud with the most natural voice on this device. Hear them here.</p>
+
+  <div class="card now" id="now"><h2>Her apps use</h2><div id="best">Loading voices…</div>
+    <textarea id="sample" rows="2">Hi Ruth! Let's read together. Tilly the robot is ready to help.</textarea>
+    <button id="playBest">▶ Hear it</button></div>
+
+  <div class="card warn" id="tip" hidden>
+    <b>For a much more natural voice, download a Premium one (free):</b>
+    <ol>
+      <li>On this iPad, open <b>Settings → Accessibility → Spoken Content → Voices → English</b>.</li>
+      <li>Tap a voice such as <b>Ava</b>, <b>Zoe</b> or <b>Evan</b>, then tap the <b>(Premium)</b> version to download it.</li>
+      <li>When it's done, close her apps completely and open them again. They'll use it on their own.</li>
+    </ol>
+  </div>
+
+  <div class="card"><b>All English voices on this iPad</b> <span class="sub" style="display:block;margin:2px 0 6px">Best first. The top one is what her apps use.</span>
+    <div id="list"></div></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function say(v){ try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance($('sample').value||'Hello!'); if(v){u.voice=v;u.lang=v.lang;} u.rate=.95; speechSynthesis.speak(u); }catch(e){} }
+function paint(){
+  const vs=bleVoices(); if(!vs.length) return;
+  const b=vs[0];
+  $('best').innerHTML=`<span class="vname">${esc(b.name)}</span><span class="tag ${bleVoiceKind(b)}">${bleVoiceKind(b)}</span> <span class="sub">${esc(b.lang)}</span>`;
+  $('tip').hidden = vs.some(v=>bleVoiceKind(v)==='Premium');
+  $('list').innerHTML='';
+  vs.forEach((v,i)=>{ const r=document.createElement('div'); r.className='row';
+    r.innerHTML=`<div class="n"><b>${esc(v.name)}</b><span class="tag ${bleVoiceKind(v)}">${bleVoiceKind(v)}</span><small>${esc(v.lang)}${i===0?' · her apps use this one':''}</small></div>`;
+    const p=document.createElement('button'); p.className='light'; p.textContent='▶ Hear'; p.onclick=()=>say(v); r.appendChild(p); $('list').appendChild(r); });
+}
+$('playBest').onclick=()=>say(bleBestVoice());
+try{ speechSynthesis.addEventListener('voiceschanged', paint); }catch(e){}
+paint(); setTimeout(paint,400); setTimeout(paint,1500);
+</script>
+</body>
+</html>

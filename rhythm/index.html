@@ -223,6 +223,11 @@ body.theme-dance .ord button{border-radius:50%;width:36px;height:36px;border-col
 .block.weekend h2{font-family:"Bricolage Grotesque",sans-serif;font-size:28px;margin:10px 0 6px;color:var(--navy)}
 body.theme-dance .block.weekend h2{font-family:"Fredoka",sans-serif}
 .block.weekend p{margin:0;color:var(--muted);font-size:18px}
+.vidbox{background:#000;border-radius:16px;padding:10px;width:min(900px,100%);display:flex;flex-direction:column;gap:10px}
+.vidframe{position:relative;width:100%;padding-top:56.25%}
+.vidframe iframe{position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:10px}
+#vidClose{min-height:48px;border:0;border-radius:12px;background:#fff;color:#22303C;font-weight:700;font-size:17px;cursor:pointer}
+button.applink{border:0;cursor:pointer;font:inherit;font-weight:700}
 .taglinks{display:flex;gap:8px;flex-wrap:wrap}
 .momonly{margin-top:6px;font-size:13px;color:var(--muted);font-weight:700}
 .kidswitch{display:flex;gap:8px;justify-content:center;margin:10px 0 4px;flex-wrap:wrap}
@@ -339,6 +344,9 @@ body.theme-dance .block.weekend h2{font-family:"Fredoka",sans-serif}
     <p id="clockRemMsg"></p>
     <ol class="crsteps"><li>Say <b>"Hey Siri, set a timer for <span class="crmin"></span> minutes"</b></li><li>or swipe down from the top-right corner and tap the <b>timer</b> button, or open the <b>Clock</b> app → <b>Timers</b>.</li></ol>
     <button id="clockRemOk">OK, it's started</button></div>
+</div>
+<div class="alarm" id="vidModal" hidden role="dialog" aria-modal="true" aria-label="Video">
+  <div class="vidbox"><div class="vidframe" id="vidFrame"></div><button type="button" id="vidClose">Close video</button></div>
 </div>
 <div class="toast" id="toast" hidden></div>
 
@@ -1300,6 +1308,13 @@ function normalizeMain(d){
     (c.tags.fun||[]).forEach(t=>{ if(t.id==='yarn') t.links=(t.links||[]).filter(l=>!/knittinghelp\.com|youtube/i.test(l.url||'')); });
     c.v = 42;
   }
+  if(c.v < 43){                       // knitting and crochet videos play right on the board
+    (c.tags.fun||[]).forEach(t=>{ if(t.id==='yarn') t.links=[
+      {name:'▶ Knitting video', video:'Tff3ng-djtk'},
+      {name:'▶ Crochet video', video:'aMVNXeL_E6w'},
+      ...(t.links||[]).filter(l=>!l.video && !/knittinghelp\.com|youtube/i.test(l.url||''))]; });
+    c.v = 43;
+  }
   return c;
 }
 const BOARD_OF_DAY = {6:'satBlocks', 0:'sunBlocks'};   // Saturday, Sunday; every other day uses "blocks"
@@ -1530,6 +1545,16 @@ function tryMust(){
   if(changed){ save(); render(); }
 }
 
+/* Videos play here on the board in YouTube's privacy player, in a locked frame (no way out to YouTube) */
+function openVideo(id, title){
+  if(!/^[A-Za-z0-9_-]{6,20}$/.test(id||'')) return;
+  $('#vidFrame').innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1" title="${esc(title||'Video')}" sandbox="allow-scripts allow-same-origin allow-presentation" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+  $('#vidModal').hidden = false;
+}
+function closeVideo(){ $('#vidFrame').innerHTML=''; $('#vidModal').hidden = true; }
+document.getElementById('vidClose').addEventListener('click', closeVideo);
+document.getElementById('vidModal').addEventListener('click', e=>{ if(e.target.id==='vidModal') closeVideo(); });
+
 /* ---------- board ---------- */
 /* iPad: a web page can't ring while she's in another app, so for timers marked "clock" (Math) remind her to start the iPad's own Clock timer */
 function clockTimer(ms){
@@ -1601,7 +1626,9 @@ function rowHTML(i, ord){
     if(tag && tag.note) extra += noteHTML(tag.note);
     if(tag && tag.timer) extra += timerBox(i.id);
     if(tag && Array.isArray(tag.links) && tag.links.length && !tag.gate){
-      extra += `<div class="taglinks">${tag.links.map(l=>`<a class="applink" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.name)}</a>`).join('')}</div>`;
+      extra += `<div class="taglinks">${tag.links.map(l=> l.video
+        ? `<button type="button" class="applink" data-video="${esc(l.video)}" data-vtitle="${esc(l.name)}">${esc(l.name)}</button>`
+        : `<a class="applink" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.name)}</a>`).join('')}</div>`;
     } else if(tag && Array.isArray(tag.links) && tag.links.length){
       /* Gated links (radio): only on the day she picked it, and (when it has a timer) only while that timer is running */
       const today = S.date===keyOf(new Date()), ended = !!(S.ended||{})[i.id], running = !!S.timers[i.id];
@@ -1773,6 +1800,7 @@ $('#app').addEventListener('click', e=>{
     if(it && it.app && APPS[it.app] && S.role!=='parent'){ toast(`To check this off, ${APPS[it.app].how} in ${APPS[it.app].name}. It checks itself!`, 4200); return; }
     if(D.checks[k]) delete D.checks[k]; else { D.checks[k]=true; S.just=k; } (S.ck=S.ck||{})[k]=1; save(); render(); return; }
   if(t.dataset.remind){ clockTimer(+t.dataset.remind*60000); return; }
+  if(t.dataset.video){ openVideo(t.dataset.video, t.dataset.vtitle); return; }
   if(t.dataset.ord){ const b=BLOCKS.find(x=>x.id===t.dataset.ob); if(!b) return;
     const ids=ordered(b).map(i=>i.id), n=ids.indexOf(t.dataset.oid), m=n+(t.dataset.ord==='up'?-1:1);
     if(n<0 || m<0 || m>=ids.length) return;

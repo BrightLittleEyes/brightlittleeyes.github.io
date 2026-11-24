@@ -1288,6 +1288,14 @@ function normalizeMain(d){
     });
     c.v = 40;
   }
+  if(c.v < 41){                       // videos for knitting and crochet, plus the written guides
+    (c.tags.fun||[]).forEach(t=>{ if(t.id==='yarn') t.links=[
+      {name:'▶ Knitting video', url:'https://www.knittinghelp.com/video/play/how-to-knit-basics-beginner-tutorial-part-1'},
+      {name:'▶ Crochet video', url:'https://knittinghelp.com/video/play/erins-crochet-kids'},
+      {name:'Knitting guide', url:'https://imaginationsoup.net/teaching-kids-knit/'},
+      {name:'Crochet guide', url:'https://www.redtedart.com/how-to-crochet-beginners-guide-to-teaching-yourself/'}]; });
+    c.v = 41;
+  }
   return c;
 }
 const BOARD_OF_DAY = {6:'satBlocks', 0:'sunBlocks'};   // Saturday, Sunday; every other day uses "blocks"

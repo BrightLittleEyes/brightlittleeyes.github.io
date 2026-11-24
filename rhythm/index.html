@@ -962,9 +962,10 @@ function normalize(d){
     ruth.tags.fun = ruth.tags.fun||[];
     if(!ruth.tags.fun.some(t=>t.id==='radio' || String(t.name||'').trim().toLowerCase()==='christian radio'))
       ruth.tags.fun.push({id:'radio', name:'Christian Radio', sub:'Listen to a Christian radio station',
-        links:[{name:'Listen to K-LOVE', url:'https://www.klove.com/music/streaming'}, {name:'Listen to Air1', url:'https://www.air1.com/streaming'}]});
+        gate:true, links:[{name:'Listen to K-LOVE', url:'https://www.klove.com/music/streaming'}, {name:'Listen to Air1', url:'https://www.air1.com/streaming'}]});
     ruth.radioV=1;
   }
+  if(ruth && Array.isArray(ruth.blocks) && !(ruth.radioV>=2)){ (ruth.tags.fun||[]).forEach(t=>{ if(t.id==='radio') t.gate=true; }); ruth.radioV=2; }
   if(ruth && Array.isArray(ruth.blocks) && !(ruth.weekendV>=1)){ ruth.weekendOff=true; ruth.weekendV=1; }   // Ruth: no structure on weekends
   if(ruth && !(ruth.appsV>=1)){ tieApps([ruth.blocks], APP_OF_RUTH); ruth.appsV=1; }
   if(ruth && Array.isArray(ruth.blocks) && !(ruth.tillyV>=1)){   // Ruth: Tilly Math, checked off by her 3rd Grade Math app after 30 minutes
@@ -1280,6 +1281,13 @@ function normalizeMain(d){
     (c.tags.fun||[]).forEach(t=>{ if(t.id==='radio') t.timer=3600; });
     c.v = 39;
   }
+  if(c.v < 40){                       // radio buttons stay timed; knitting & crochet tutorials for the yarn choice
+    (c.tags.fun||[]).forEach(t=>{
+      if(t.id==='radio') t.gate=true;
+      if(t.id==='yarn') t.links=[{name:'Learn to Knit', url:'https://imaginationsoup.net/teaching-kids-knit/'}, {name:'Learn to Crochet', url:'https://www.redtedart.com/how-to-crochet-beginners-guide-to-teaching-yourself/'}];
+    });
+    c.v = 40;
+  }
   return c;
 }
 const BOARD_OF_DAY = {6:'satBlocks', 0:'sunBlocks'};   // Saturday, Sunday; every other day uses "blocks"
@@ -1580,8 +1588,10 @@ function rowHTML(i, ord){
     if(tag && tag.snack) extra += snackBoxes(i.id);
     if(tag && tag.note) extra += noteHTML(tag.note);
     if(tag && tag.timer) extra += timerBox(i.id);
-    if(tag && Array.isArray(tag.links) && tag.links.length){
-      /* Links work only on the day she picked it, and (when it has a timer) only while that timer is running */
+    if(tag && Array.isArray(tag.links) && tag.links.length && !tag.gate){
+      extra += `<div class="taglinks">${tag.links.map(l=>`<a class="applink" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.name)}</a>`).join('')}</div>`;
+    } else if(tag && Array.isArray(tag.links) && tag.links.length){
+      /* Gated links (radio): only on the day she picked it, and (when it has a timer) only while that timer is running */
       const today = S.date===keyOf(new Date()), ended = !!(S.ended||{})[i.id], running = !!S.timers[i.id];
       if(!today) extra += `<div class="momonly">The station buttons only work on the day it's picked.</div>`;
       else if(tag.timer && ended) extra += `<div class="momonly">Radio time is done for today.</div>`;
@@ -1763,7 +1773,7 @@ $('#app').addEventListener('click', e=>{
     openPicker(t.dataset.slot); return; }
   if(t.dataset.tact){ const id=t.dataset.tid, a=t.dataset.tact, info=timerInfo(id); if(!info) return;
     if(a==='start' && S.role!=='parent' && (S.ended||{})[id]){ const tg=findTag((itemById(id)||{}).slot, D.slots[id]);
-      if(tg && Array.isArray(tg.links) && tg.links.length){ toast(`${tg.name} time is done for today.`, 3000); return; } }
+      if(tg && tg.gate && Array.isArray(tg.links) && tg.links.length){ toast(`${tg.name} time is done for today.`, 3000); return; } }
     if(a==='start' && S.role==='parent' && S.ended) delete S.ended[id];
     if(a==='start'){ S.timers[id]=Date.now()+info.secs*1000; delete S.paused[id]; if(info.clock) clockTimer(info.secs*1000); }
     if(a==='pause'){ S.paused[id]=Math.max(0,S.timers[id]-Date.now()); delete S.timers[id]; }

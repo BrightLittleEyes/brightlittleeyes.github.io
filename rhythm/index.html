@@ -1315,6 +1315,10 @@ function normalizeMain(d){
       ...(t.links||[]).filter(l=>!l.video && !/knittinghelp\.com|youtube/i.test(l.url||''))]; });
     c.v = 43;
   }
+  if(c.v < 44){                       // just the videos on the yarn choice, no outside guides
+    (c.tags.fun||[]).forEach(t=>{ if(t.id==='yarn') t.links=(t.links||[]).filter(l=>l.video); });
+    c.v = 44;
+  }
   return c;
 }
 const BOARD_OF_DAY = {6:'satBlocks', 0:'sunBlocks'};   // Saturday, Sunday; every other day uses "blocks"

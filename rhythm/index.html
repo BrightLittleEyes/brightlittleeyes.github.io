@@ -1296,6 +1296,10 @@ function normalizeMain(d){
       {name:'Crochet guide', url:'https://www.redtedart.com/how-to-crochet-beginners-guide-to-teaching-yourself/'}]; });
     c.v = 41;
   }
+  if(c.v < 42){                       // no YouTube: the yarn choice keeps only the written guides
+    (c.tags.fun||[]).forEach(t=>{ if(t.id==='yarn') t.links=(t.links||[]).filter(l=>!/knittinghelp\.com|youtube/i.test(l.url||'')); });
+    c.v = 42;
+  }
   return c;
 }
 const BOARD_OF_DAY = {6:'satBlocks', 0:'sunBlocks'};   // Saturday, Sunday; every other day uses "blocks"

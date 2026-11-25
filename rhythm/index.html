@@ -842,7 +842,7 @@ const APPS = {
   bible3:  {name:'Through the Word 3 (Bible)',     how:'finish a Bible lesson'},
   hist3:   {name:'Through the Word 3 (History)',   how:'finish a History lesson'},
   la3:     {name:'Wildflower Language Arts',       how:'finish a Language Arts lesson'},
-  sciexp:  {name:'Science Explorers',              how:'finish a Science lesson'},
+  sciexp:  {name:'Science Explorers',              how:'finish a Science lesson or a Unit Test'},
   read3:   {name:'Clue Quest with Tilly',          how:'finish two different quests'},
   math3:   {name:'3rd Grade Math',                 how:"reach today's goal (30 minutes of work and 10 problems right on the first try)"}
 };
@@ -953,6 +953,12 @@ function normalize(d){
   if(ruth && Array.isArray(ruth.blocks) && !(ruth.readV>=1)){   // Ruth: Clue Quest replaces her old Reading Block
     ruth.blocks.forEach(b=>{ b.items = b.items.filter(i=>i.id!=='r_reading'); });
     ruth.readV=1;
+  }
+  if(ruth && Array.isArray(ruth.blocks) && !(ruth.breakV>=1)){   // Ruth on break days: her weekday board without school subjects (Tilly Math and Clue Quest stay)
+    ruth.breakLight = true;
+    const subj = ruth.blocks.find(b=>b.id==='r_subjects');
+    if(subj) subj.items.forEach(i=>{ if(!['r_tilly','r_clue'].includes(i.id)) i.offOnBreak = true; });
+    ruth.breakV=1;
   }
   if(ruth && Array.isArray(ruth.blocks) && !(ruth.danceV>=1)){   // Ruth: Dance on Monday evenings, no evening Fun Choice that day
     const eve = ruth.blocks.find(b=>b.id==='r_evening') || ruth.blocks.find(b=>/evening/i.test(b.name||'')) || ruth.blocks[ruth.blocks.length-1];
@@ -1329,7 +1335,9 @@ function normalizeMain(d){
 const BOARD_OF_DAY = {6:'satBlocks', 0:'sunBlocks'};
 /* Break days (no school): they work like a Saturday for both girls */
 const isBreak = k => Array.isArray(CFG.breakDays) && CFG.breakDays.includes(k);
-const dowOf = k => isBreak(k) ? 6 : fromKey(k).getDay();   // Saturday, Sunday; every other day uses "blocks"
+/* A child set to "light break days" (Ruth) keeps her weekday board on breaks, minus the items marked "not on break days" */
+const breakLight = () => { const o=OWN(); return !!(o && o.breakLight); };
+const dowOf = k => isBreak(k) && !breakLight() ? 6 : fromKey(k).getDay();   // Saturday, Sunday; every other day uses "blocks"
 function dayRoot(key){
   const r = BOARD_OF_DAY[dowOf(key)];
   const bc = BC();
@@ -1343,8 +1351,9 @@ function useDay(){
   /* an item with "until" (a date) stays on the board through that day, then comes off */
   /* an item with "days" (0=Sun … 6=Sat) shows only on those days of the week */
   const dow = dowOf(S.date);
-  const shows = i => !(i.until && S.date>i.until) && !(Array.isArray(i.days) && !i.days.includes(dow));
-  BLOCKS = bc[dayRoot(S.date)].map(b=>b.items.some(i=>i.until || Array.isArray(i.days)) ? {...b, items:b.items.filter(shows)} : b);
+  const brk = isBreak(S.date);
+  const shows = i => !(i.until && S.date>i.until) && !(Array.isArray(i.days) && !i.days.includes(dow)) && !(brk && i.offOnBreak);
+  BLOCKS = bc[dayRoot(S.date)].map(b=>b.items.some(i=>i.until || Array.isArray(i.days) || (brk && i.offOnBreak)) ? {...b, items:b.items.filter(shows)} : b);
   BLOCKS = BLOCKS.filter(b=>b.items.length || !bc[dayRoot(S.date)].find(x=>x.id===b.id).items.length);
   TAGS = bc.tags;
   if(downOn() && BLOCKS.length){
@@ -1936,7 +1945,7 @@ function itemEd(it, bi, ii, len, R='blocks'){
     more = `<div class="ed-note">She picks a ${KIND_NAME[kind]||''} tag here.</div>`;
   }
   const DN = R==='satBlocks' ? [[6,'Sat']] : R==='sunBlocks' ? [[0,'Sun']] : [[1,'Mon'],[2,'Tue'],[3,'Wed'],[4,'Thu'],[5,'Fri']];
-  const daysRow = DN.length>1 ? `<div class="ed-row2 ed-days"><span class="ed-min">Days:</span>${DN.map(([d,n])=>`<label class="ed-min"><input type="checkbox" data-days="${p}" value="${d}" ${!Array.isArray(it.days)||it.days.includes(d)?'checked':''}> ${n}</label>`).join('')}</div>` : '';
+  const daysRow = DN.length>1 ? `<div class="ed-row2 ed-days"><span class="ed-min">Days:</span>${DN.map(([d,n])=>`<label class="ed-min"><input type="checkbox" data-days="${p}" value="${d}" ${!Array.isArray(it.days)||it.days.includes(d)?'checked':''}> ${n}</label>`).join('')}${S.edit._main && (S.edit.kids[S.kid]||{}).breakLight?`<label class="ed-min" style="margin-left:10px"><input type="checkbox" data-path="${p}.offOnBreak" data-type="flag" ${it.offOnBreak?'checked':''}> Not on break days</label>`:''}</div>` : '';
   return `<div class="ed-item"><div class="ed-row">${sel}<input data-path="${p}.t" value="${esc(it.t)}" placeholder="Title">${itemMv(bi,ii,len,R)}</div>${more}${daysRow}</div>`;
 }
 function blockEd(b, bi, len, R='blocks'){
@@ -2009,7 +2018,7 @@ function renderEditor(){
     ${tagsEd('mech','Helping Hands tags','She picks these for the Helping Hands slots. "Shows on" picks which days a tag is offered.',true,true,true)}
     <div class="ed-sec" style="margin-top:-8px"><label class="ed-chk" style="font-weight:700;color:var(--ink)"><input type="checkbox" data-path="noRepeat" data-type="flag" ${E.noRepeat!==false?'checked':''}> No repeats: a Helping Hands job she did yesterday is greyed out today ("You did this yesterday")</label></div>
     ${tagsEd('flag','Change of Routine tags','The red tags for "Anything different today?"',false,false)}
-    <div class="ed-sec"><h3>Break days</h3><p class="help">Days off school. They work like a Saturday: ${esc(kidLabel('main'))} gets her Saturday board${Object.values(E.kids||{}).some(k=>k.weekendOff)?' and '+Object.entries(E.kids||{}).filter(([,k])=>k.weekendOff).map(([id])=>esc(kidLabel(id))).join(' and ')+' has no schedule':''}. For both girls.</p>
+    <div class="ed-sec"><h3>Break days</h3><p class="help">Days off school. They work like a Saturday: ${esc(kidLabel('main'))} gets her Saturday board${Object.entries(E.kids||{}).filter(([,k])=>Array.isArray(k.blocks)).map(([id,k])=>' · '+esc(kidLabel(id))+(k.breakLight?' gets her weekday board without the items marked "Not on break days"':k.weekendOff?' has no schedule':' gets her Saturday board')).join('')}. For both girls.</p>
       ${(E.breakDays||[]).filter(d=>d>=keyOf(new Date())).map(d=>`<div class="ed-tag"><span style="flex:1">${esc(fromKey(d).toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric', year:'numeric'}))}</span><div class="ed-mv"><button class="del" data-act="delbreak" data-d="${esc(d)}" aria-label="Remove">✕</button></div></div>`).join('') || '<p class="help">No break days coming up.</p>'}
       <div class="ed-row2"><input type="date" id="breakNew" style="width:auto!important"><button class="ed-add" style="width:auto;padding:0 16px" data-act="addbreak">+ Add a break day</button></div></div>
     <div class="ed-sec"><h3>Timer sound</h3><p class="help">What plays when a timer runs out. A "Time's up!" card also pops up until she taps OK.</p>

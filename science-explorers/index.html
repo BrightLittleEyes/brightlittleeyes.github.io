@@ -1443,6 +1443,7 @@ function gameTest(u, box, stat){
     const right = TEST_N - wrong.length, passed = right >= TEST_PASS;
     const gain = passed ? award(`${u.id}-test`, 3) : 0;
     logResult({unit:u.id, kind:'test', stars: passed?3:0, right, total:TEST_N, passed, missed: wrong.map(x=>x.q[0])});
+    try{ localStorage.setItem('sciexp-lastdone', new Date().toISOString()); }catch(e){} try{ window.rhythmReport && rhythmReport('sciexp'); }catch(e){}   /* a finished Unit Test counts as science for the day */
     if (passed) confetti(24);
     box.innerHTML = `<div class="result"><div class="big">${passed?'🏆':'💪'}</div>
       <p class="qtext">You got ${right} out of ${TEST_N}!</p>

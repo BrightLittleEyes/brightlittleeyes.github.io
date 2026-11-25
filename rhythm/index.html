@@ -1044,7 +1044,8 @@ function normalizeMain(d){
   ['verse','verseRef','kidName','pwKid','pwParent','sound','theme'].forEach(k=>{ if(typeof d[k]==='string') c[k]=d[k]; });
   if(typeof d.repeat==='boolean') c.repeat=d.repeat;
   if(typeof d.funNone==='boolean') c.funNone=d.funNone;
-  if(typeof d.downTime==='boolean') c.downTime=d.downTime;   // "None today" for Fun Choices is kept when the board is saved
+  if(typeof d.downTime==='boolean') c.downTime=d.downTime;
+  if(Array.isArray(d.breakDays)) c.breakDays=d.breakDays.filter(x=>/^\d{4}-\d\d-\d\d$/.test(x));   // "None today" for Fun Choices is kept when the board is saved
   if(typeof d.noRepeat==='boolean') c.noRepeat=d.noRepeat;
   if(d.kids && typeof d.kids==='object') c.kids=clone(d.kids);
   if(d.original && typeof d.original==='object') c.original=d.original;
@@ -1319,22 +1320,29 @@ function normalizeMain(d){
     (c.tags.fun||[]).forEach(t=>{ if(t.id==='yarn') t.links=(t.links||[]).filter(l=>l.video); });
     c.v = 44;
   }
+  if(c.v < 45){                       // Thanksgiving break: Wed–Fri work like a Saturday
+    c.breakDays = [...new Set([...(c.breakDays||[]), '2026-11-25','2026-11-26','2026-11-27'])].sort();
+    c.v = 45;
+  }
   return c;
 }
-const BOARD_OF_DAY = {6:'satBlocks', 0:'sunBlocks'};   // Saturday, Sunday; every other day uses "blocks"
+const BOARD_OF_DAY = {6:'satBlocks', 0:'sunBlocks'};
+/* Break days (no school): they work like a Saturday for both girls */
+const isBreak = k => Array.isArray(CFG.breakDays) && CFG.breakDays.includes(k);
+const dowOf = k => isBreak(k) ? 6 : fromKey(k).getDay();   // Saturday, Sunday; every other day uses "blocks"
 function dayRoot(key){
-  const r = BOARD_OF_DAY[fromKey(key).getDay()];
+  const r = BOARD_OF_DAY[dowOf(key)];
   const bc = BC();
   return r && Array.isArray(bc[r]) && bc[r].length>0 ? r : 'blocks';
 }
 /* A child's own board can skip Saturday and Sunday (Ruth) */
-const weekendOff = () => { const o=OWN(); return !!(o && o.weekendOff) && [0,6].includes(fromKey(S.date).getDay()); };
+const weekendOff = () => { const o=OWN(); return !!(o && o.weekendOff) && [0,6].includes(dowOf(S.date)); };
 function useDay(){
   const bc = BC();
   if(weekendOff()){ BLOCKS=[]; TAGS=bc.tags; ALL_ITEMS=[]; SLOT_IDS=[]; return; }
   /* an item with "until" (a date) stays on the board through that day, then comes off */
   /* an item with "days" (0=Sun … 6=Sat) shows only on those days of the week */
-  const dow = fromKey(S.date).getDay();
+  const dow = dowOf(S.date);
   const shows = i => !(i.until && S.date>i.until) && !(Array.isArray(i.days) && !i.days.includes(dow));
   BLOCKS = bc[dayRoot(S.date)].map(b=>b.items.some(i=>i.until || Array.isArray(i.days)) ? {...b, items:b.items.filter(shows)} : b);
   BLOCKS = BLOCKS.filter(b=>b.items.length || !bc[dayRoot(S.date)].find(x=>x.id===b.id).items.length);
@@ -1528,7 +1536,7 @@ function lastDoneOf(t){
   return last;
 }
 function mustDue(t){
-  if(!(+t.must>1) || !tagToday(t, fromKey(S.date).getDay())) return false;
+  if(!(+t.must>1) || !tagToday(t, dowOf(S.date))) return false;
   const l=lastDoneOf(t);
   return !l || S.date >= shift(l, +t.must);
 }
@@ -1580,7 +1588,7 @@ function render(){
   useDay();
   const d=fromKey(S.date), todayKey=keyOf(new Date());
   const rel = S.date===todayKey?'Today':S.date===shift(todayKey,-1)?'Yesterday':S.date===shift(todayKey,1)?'Tomorrow':'';
-  $('#dayLabel').innerHTML = esc(d.toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric'})) + (rel?`<small>${rel}</small>`:'<small>&nbsp;</small>');
+  $('#dayLabel').innerHTML = esc(d.toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric'})) + ((rel||isBreak(S.date))?`<small>${[rel, isBreak(S.date)?'Break day':''].filter(Boolean).join(' · ')}</small>`:'<small>&nbsp;</small>');
   $('#todayRow').style.display = S.date===todayKey?'none':'flex';
 
   const D=S.data;
@@ -1597,7 +1605,7 @@ function render(){
 
   const off = weekendOff();
   document.querySelector('.progress').hidden = off; $('#ptxt').hidden = off; document.querySelector('.tools').hidden = off;
-  if(off){ $('#board').innerHTML = `<section class="block weekend"><div class="wk-big" aria-hidden="true">♪</div><h2>No schedule today!</h2><p>It's the weekend. Enjoy it, ${esc(kidLabel(S.kid))}!</p></section>`; paintTimer(); return; }
+  if(off){ $('#board').innerHTML = `<section class="block weekend"><div class="wk-big" aria-hidden="true">♪</div><h2>No schedule today!</h2><p>${isBreak(S.date)?"It's a break day":"It's the weekend"}. Enjoy it, ${esc(kidLabel(S.kid))}!</p></section>`; paintTimer(); return; }
   $('#board').innerHTML = BLOCKS.map(b=>`
     <section class="block">
       <div class="block-h" style="background:${esc(b.color||'#2C3E50')}">${ICON[b.icon]||''}<span>${esc(b.name)}${b.sub?` <small>(${esc(b.sub)})</small>`:''}</span></div>
@@ -1757,7 +1765,7 @@ function openPicker(slotId){
   const kind=item.slot, D=S.data;
   S.picking=slotId;
   $('#sheetTitle').textContent = item.t;
-  const dow=fromKey(S.date).getDay();
+  const dow=dowOf(S.date);
   const list=(TAGS[kind]||[]).filter(t=>kind==='flag' || tagToday(t,dow) || D.slots[slotId]===t.id);
   const usedOf = t => (kind==='flag'?CHG_IDS:SLOT_IDS).find(s=>s!==slotId && D.slots[s]===t.id);
   // No repeats: a Helping Hands job done yesterday can't be picked today (unless nothing else would be left)
@@ -2001,6 +2009,9 @@ function renderEditor(){
     ${tagsEd('mech','Helping Hands tags','She picks these for the Helping Hands slots. "Shows on" picks which days a tag is offered.',true,true,true)}
     <div class="ed-sec" style="margin-top:-8px"><label class="ed-chk" style="font-weight:700;color:var(--ink)"><input type="checkbox" data-path="noRepeat" data-type="flag" ${E.noRepeat!==false?'checked':''}> No repeats: a Helping Hands job she did yesterday is greyed out today ("You did this yesterday")</label></div>
     ${tagsEd('flag','Change of Routine tags','The red tags for "Anything different today?"',false,false)}
+    <div class="ed-sec"><h3>Break days</h3><p class="help">Days off school. They work like a Saturday: ${esc(kidLabel('main'))} gets her Saturday board${Object.values(E.kids||{}).some(k=>k.weekendOff)?' and '+Object.entries(E.kids||{}).filter(([,k])=>k.weekendOff).map(([id])=>esc(kidLabel(id))).join(' and ')+' has no schedule':''}. For both girls.</p>
+      ${(E.breakDays||[]).filter(d=>d>=keyOf(new Date())).map(d=>`<div class="ed-tag"><span style="flex:1">${esc(fromKey(d).toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric', year:'numeric'}))}</span><div class="ed-mv"><button class="del" data-act="delbreak" data-d="${esc(d)}" aria-label="Remove">✕</button></div></div>`).join('') || '<p class="help">No break days coming up.</p>'}
+      <div class="ed-row2"><input type="date" id="breakNew" style="width:auto!important"><button class="ed-add" style="width:auto;padding:0 16px" data-act="addbreak">+ Add a break day</button></div></div>
     <div class="ed-sec"><h3>Timer sound</h3><p class="help">What plays when a timer runs out. A "Time's up!" card also pops up until she taps OK.</p>
       <div class="ed-grid" style="align-items:center">
         <label class="ed-f" style="flex:0 1 220px">Sound<select data-path="sound">
@@ -2076,6 +2087,9 @@ $('#editor').addEventListener('click', async e=>{
   if(a==='testsound'){ playSound(S.edit.sound); return; }
   if(a==='additem'){ const R=t.dataset.root||'blocks'; E[R][+t.dataset.b].items.push({id:newId('i'), t:''}); renderEditor(); focusLast(`[data-path^="${R}.${t.dataset.b}.items."][data-path$=".t"]`); return; }
   if(a==='addblock'){ const R=t.dataset.root||'blocks', c=COLORS[E[R].length % COLORS.length][0]; E[R].push({id:newId('b'), name:'', sub:'', color:c, icon:'star', items:[]}); renderEditor(); focusLast(`[data-path^="${R}."][data-path$=".name"]`); return; }
+  if(a==='addbreak'){ const v=($('#breakNew')||{}).value; if(!/^\d{4}-\d\d-\d\d$/.test(v||'')) return toast('Pick a date first.');
+    E.breakDays=[...new Set([...(E.breakDays||[]), v])].sort(); renderEditor(); return; }
+  if(a==='delbreak'){ E.breakDays=(E.breakDays||[]).filter(d=>d!==t.dataset.d); renderEditor(); return; }
   if(a==='addtag'){ E.tags[t.dataset.k]=E.tags[t.dataset.k]||[]; E.tags[t.dataset.k].push({id:newId('t'), name:''}); renderEditor(); focusLast(`[data-path^="tags.${t.dataset.k}."][data-path$=".name"]`); return; }
   if(a==='setorig'){
     if(!confirm('Make the board as it is on this screen your new original? "Reset" will go back to this from now on.')) return;

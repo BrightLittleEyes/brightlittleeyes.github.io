@@ -1122,7 +1122,7 @@ new MutationObserver(muts => {
   curProb.asked = curProb.asked || {};
   if (curProb.asked[stepKey]) return;   // only the first wrong answer in each step
   curProb.asked[stepKey] = true;
-  pendingWhy = { sec: state.section, step: state.step, stepKey, choice: lastChoice || "that" };
+  /* Mom: no more "tell Pip why" box. A wrong answer just gets the calm "let's look again" note. */
 }).observe(stage, { childList: true, subtree: true });
 { const r8 = render; render = function () {
   stage.classList.remove("whyLock");
@@ -2580,6 +2580,7 @@ const plain = s => String(s).replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim()
 /* the real answer: the bold part at the start of the fixed answer */
 const pipRightAns = pp => plain((String(pp.fixed).match(/<b>(.*?)<\/b>/) || [])[1] || "").replace(/\.$/, "");
 function pipWhy(fb, choice, after, right, lead) {
+  return after();   /* Mom: no more "tell Pip why" box */
   const R = plain(right || "").replace(/"/g, "&quot;");
   const box = el(`<div class="card" style="padding:14px;gap:8px;margin-top:10px">
     ${pipSay(`${lead || "The right answer is"} “<b>${R}</b>”. Why is that the right answer? Tell me in your own words, so I get it right next time!`)}

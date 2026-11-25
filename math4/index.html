@@ -2017,6 +2017,7 @@ const SR = IOS ? null : (window.SpeechRecognition || window.webkitSpeechRecognit
 /* the real answer to say out loud: the bold part at the start of the fixed answer */
 const pipRightAns = pp => plain((String(pp.fixed).match(/<b>(.*?)<\/b>/) || [])[1] || "").replace(/\.$/, "");
 function pipWhy(fb, choice, after, right, lead) {
+  return after();   /* Mom: no more say-it / type-it box */
   const ans = plain(right || "");
   const box = el(`<div class="card" style="padding:14px;gap:8px;margin-top:10px">
     ${pipSay(`${lead || "The right answer is"} “<b>${ans.replace(/</g, "&lt;")}</b>”. Say it or type it to me, so it sticks in my head!`)}

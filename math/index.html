@@ -832,13 +832,14 @@ function saveSelf() { try { localStorage.setItem("mathSelf", JSON.stringify(self
 const SELF_KEYS = HOME_TILES.map(t => t[0]);
 const tileFor = k => HOME_TILES.find(t => t[0] === k);
 let selfSnap = Object.assign({}, state.solved);
+let selfDoneKey = null;   // the activity she just finished her set in: she goes back Home to pick the next one
 function selfCount() {
   const diffs = SELF_KEYS.map(k => [k, (state.solved[k] || 0) - (selfSnap[k] || 0)]).filter(([, d]) => d);
   selfSnap = Object.assign({}, state.solved);
   if (diffs.some(([, d]) => d < 0 || d > 5)) return;   // a restore or reset, not real work
   diffs.forEach(([k, d]) => {
     selfState.done[k] = (selfState.done[k] || 0) + d;
-    if (selfState.set && selfState.set.key === k) { selfState.set.n += d; if (selfState.set.n >= selfRule.per) { selfState.set = null; selfState.offer = null; } }
+    if (selfState.set && selfState.set.key === k) { selfState.set.n += d; if (selfState.set.n >= selfRule.per) { selfState.set = null; selfState.offer = null; selfDoneKey = k; } }
   });
   saveSelf();
 }
@@ -1069,7 +1070,7 @@ function showWoke() {
     if (b) { document.querySelectorAll(".pipmiss").forEach(x => x.remove()); b.after(m); setTimeout(() => m.remove(), 8000); } }
 }; }
 
-/* ---------- every activity: on her first wrong answer in a step, Pip asks her why (her words go to Parent → Her notes) ---------- */
+/* ---------- every activity: after her first wrong answer in a step, once she finds the right one, Pip asks her why the right one is right (her words go to Parent → Her notes) ---------- */
 (() => { const st = document.createElement("style"); st.textContent = `
   #stage.whyLock button:not(#whyGo2):not(.quiet), #stage.whyLock input { pointer-events:none; opacity:.45 }`; document.head.appendChild(st); })();
 let lastChoice = "";
@@ -1079,9 +1080,40 @@ document.addEventListener("click", e => {
   lastChoice = (b.id === "chk" || /^check/i.test(b.textContent.trim())) && inp ? inp.value : plain(b.textContent);
 }, true);
 document.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.matches && e.target.matches("#stage input")) lastChoice = e.target.value; }, true);
+let pendingWhy = null;   // her first wrong pick in this step; Pip asks about it once she finds the right answer
+function askWhyRight(where, before) {
+  const pw = pendingWhy; pendingWhy = null;
+  if (!pw || stage.querySelector("#whyIn2")) return;
+  const q = s => String(s).replace(/"/g, "&quot;"), right = /^(next|check|another|multiply it|simplify)/i.test(String(lastChoice).trim()) ? "" : lastChoice;
+  const box = el(`<div class="card" style="padding:14px;gap:8px;margin-top:10px">
+    ${pipSay(right ? `You first tried “${q(pw.choice)}”, then you found “<b>${q(right)}</b>”. Why is “${q(right)}” the right answer? Tell me in your own words, so I can learn too!`
+                   : `You first tried “${q(pw.choice)}”, then you found the right answer. Why is the right one right? Tell me in your own words, so I can learn too!`)}
+    <textarea id="whyIn2" rows="3" aria-label="Tell Pip why" style="font:inherit;padding:10px;border-radius:10px;border:2px solid var(--line);background:var(--card);color:var(--ink);width:100%;min-width:0"></textarea>
+    <div class="row" style="align-items:center"><button class="primary" type="button" id="whyGo2" disabled>Tell Pip</button>
+      <span class="sub" id="whyMsg2" style="margin:0">Write at least a few words.</span></div>
+  </div>`);
+  before ? where.before(box) : where.after(box);
+  stage.classList.add("whyLock");
+  const ta = box.querySelector("#whyIn2"), go = box.querySelector("#whyGo2");
+  ta.addEventListener("input", () => {
+    const ok = ta.value.trim().split(/\s+/).filter(Boolean).length >= 3;
+    go.disabled = !ok; box.querySelector("#whyMsg2").textContent = ok ? "" : "Write at least a few words.";
+  });
+  go.onclick = () => {
+    if (curProb) (curProb.why = curProb.why || []).push({ step: pw.stepKey, choice: String(pw.choice), right: String(right), said: ta.value.trim() });
+    box.remove(); stage.classList.remove("whyLock");
+    const inp = stage.querySelector("input[type=number]:not([disabled])"); if (inp) inp.focus();
+  };
+  setTimeout(() => ta.focus(), 50);
+}
 new MutationObserver(muts => {
   if (!curProb || !state.section || state.section === "pip" || state.section !== curProb.sec || Date.now() - lastPress > 1500) return;
   if (stage.querySelector("#whyIn2")) return;
+  /* she found the right answer in the same step: ask now, under the "yes" note */
+  if (pendingWhy && pendingWhy.sec === state.section && pendingWhy.step === state.step) {
+    const okN = muts.flatMap(m => [...m.addedNodes]).filter(n => n.nodeType === 1).map(n => n.matches(".note.ok") ? n : n.querySelector(".note.ok")).find(Boolean);
+    if (okN) return askWhyRight(okN);
+  }
   const look = muts.flatMap(m => [...m.addedNodes]).filter(n => n.nodeType === 1)
     .map(n => n.matches(".note.look") ? n : n.querySelector(".note.look")).filter(Boolean)
     .find(n => !/^(Type a number first|Tap the line to put your dot)/.test(n.textContent.trim()));
@@ -1090,28 +1122,17 @@ new MutationObserver(muts => {
   curProb.asked = curProb.asked || {};
   if (curProb.asked[stepKey]) return;   // only the first wrong answer in each step
   curProb.asked[stepKey] = true;
-  const choice = lastChoice || "that";
-  const box = el(`<div class="card" style="padding:14px;gap:8px;margin-top:10px">
-    ${pipSay(`Hmm, why do you think “${String(choice).replace(/"/g, "&quot;")}” wasn't right? Tell me in your own words, so I can learn too!`)}
-    <textarea id="whyIn2" rows="3" aria-label="Tell Pip why" style="font:inherit;padding:10px;border-radius:10px;border:2px solid var(--line);background:var(--card);color:var(--ink);width:100%;min-width:0"></textarea>
-    <div class="row" style="align-items:center"><button class="primary" type="button" id="whyGo2" disabled>Tell Pip</button>
-      <span class="sub" id="whyMsg2" style="margin:0">Write at least a few words.</span></div>
-  </div>`);
-  look.after(box);
-  stage.classList.add("whyLock");
-  const ta = box.querySelector("#whyIn2"), go = box.querySelector("#whyGo2");
-  ta.addEventListener("input", () => {
-    const ok = ta.value.trim().split(/\s+/).filter(Boolean).length >= 3;
-    go.disabled = !ok; box.querySelector("#whyMsg2").textContent = ok ? "" : "Write at least a few words.";
-  });
-  go.onclick = () => {
-    if (curProb) (curProb.why = curProb.why || []).push({ step: stepKey, choice: String(choice), said: ta.value.trim() });
-    box.remove(); stage.classList.remove("whyLock");
-    const inp = stage.querySelector("input[type=number]:not([disabled])"); if (inp) inp.focus();
-  };
-  setTimeout(() => ta.focus(), 50);
+  pendingWhy = { sec: state.section, step: state.step, stepKey, choice: lastChoice || "that" };
 }).observe(stage, { childList: true, subtree: true });
-{ const r8 = render; render = function () { stage.classList.remove("whyLock"); r8(); }; }
+{ const r8 = render; render = function () {
+  stage.classList.remove("whyLock");
+  const pw = pendingWhy, fresh = Date.now() - lastPress < 1500;
+  r8();
+  if (!pw) return;
+  /* a right answer that moves straight to the next step: ask at the top of the next step */
+  if (fresh && state.section === pw.sec && state.step === pw.step + 1) { const card = stage.querySelector("section.card"); if (card) return askWhyRight(card, true); }
+  if (state.section !== pw.sec || state.step !== pw.step) pendingWhy = null;
+}; }
 
 /* ---------- Parent → Her notes: what she wrote after a wrong pick in Help Pip (for understanding her thinking, not for grading) ---------- */
 function renderNotes() {
@@ -1123,7 +1144,7 @@ function renderNotes() {
     ${rows.length ? rows.map(r => `<div style="border-top:1px solid var(--line);padding:10px 0;display:grid;gap:4px">
         <span class="sub" style="margin:0">${when(r.t0)} · ${r.sec === "pip" ? `Help Pip: ${esc((PIP_TOPICS[r.topic] || {}).label || "")}` : esc((sections[r.sec] || {}).title || r.sec)}</span>
         <span style="font-size:.9rem">${esc(r.label)}</span>
-        ${r.why.map(w => `<div class="note look" style="margin-top:4px"><span class="sub" style="margin:0">${esc(w.step)} · she answered “${esc(w.choice)}”</span><br><b>“${esc(w.said)}”</b></div>`).join("")}
+        ${r.why.map(w => `<div class="note look" style="margin-top:4px"><span class="sub" style="margin:0">${esc(w.step)} · she answered “${esc(w.choice)}”${w.right ? ` · right answer “${esc(w.right)}”` : ""}</span><br><b>“${esc(w.said)}”</b></div>`).join("")}
       </div>`).join("") : "<p>No notes yet. They'll show up here after she writes one.</p>"}
   </details>`));
 }
@@ -2556,9 +2577,12 @@ function pipMeet() {
 
 /* One try per choice: a wrong pick shows the right one and why, then she writes in her own words why her pick was wrong. */
 const plain = s => String(s).replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
-function pipWhy(fb, choice, after) {
+/* the real answer: the bold part at the start of the fixed answer */
+const pipRightAns = pp => plain((String(pp.fixed).match(/<b>(.*?)<\/b>/) || [])[1] || "").replace(/\.$/, "");
+function pipWhy(fb, choice, after, right, lead) {
+  const R = plain(right || "").replace(/"/g, "&quot;");
   const box = el(`<div class="card" style="padding:14px;gap:8px;margin-top:10px">
-    ${pipSay(`Hmm, why was “${plain(choice).replace(/"/g, "&quot;")}” wrong? Tell me in your own words, so I don't make that mistake next time!`)}
+    ${pipSay(`${lead || "The right answer is"} “<b>${R}</b>”. Why is that the right answer? Tell me in your own words, so I get it right next time!`)}
     <textarea id="whyIn" rows="3" aria-label="Tell Pip why" style="font:inherit;padding:10px;border-radius:10px;border:2px solid var(--line);background:var(--card);color:var(--ink);width:100%;min-width:0"></textarea>
     <div class="row" style="align-items:center"><button class="primary" type="button" id="whyGo" disabled>Tell Pip</button>
       <span class="sub" id="whyMsg" style="margin:0">Write at least a few words.</span></div>
@@ -2570,7 +2594,7 @@ function pipWhy(fb, choice, after) {
     go.disabled = !ok; box.querySelector("#whyMsg").textContent = ok ? "" : "Write at least a few words.";
   });
   go.onclick = () => {
-    if (curProb) (curProb.why = curProb.why || []).push({ step: stepName("pip", state.step), choice: plain(choice), said: ta.value.trim() });
+    if (curProb) (curProb.why = curProb.why || []).push({ step: stepName("pip", state.step), choice: plain(choice), right: plain(right || ""), said: ta.value.trim() });
     box.remove(); after();
   };
 }
@@ -2605,7 +2629,7 @@ function pipSense() {
     pipWhy(fb, b.textContent, () => {
       if (pp.wrong < 0) { fb.innerHTML += pipAnswer(pp); fb.appendChild(pipNextRow()); }
       else toFind();
-    });
+    }, pipRightAns(pp), pp.wrong < 0 ? "My answer was right! The answer is" : "My answer was wrong. The right answer is");
   });
 }
 
@@ -2627,7 +2651,7 @@ function pipFind() {
       btns.forEach(x => x.disabled = true); btns[pp.wrong].classList.add("fixed");
       const fb = c.querySelector("#fb");
       fb.innerHTML = `<div class="note look">${pp.stepOk(i)} The mistake is in <b>${pp.steps[pp.wrong].label}</b>.</div>`;
-      pipWhy(fb, `${s.label}`, () => fb.appendChild(nextBtn(() => { state.step = 3; render(); }, "Fix Pip's step")));
+      pipWhy(fb, `${s.label}`, () => fb.appendChild(nextBtn(() => { state.step = 3; render(); }, "Fix Pip's step")), pp.good[pp.wrong].math, `My mistake was in ${pp.steps[pp.wrong].label.split(":")[0]}. It should say`);
     };
     btns.push(b); c.querySelector("#steps").appendChild(b);
   });
@@ -2654,7 +2678,7 @@ function pipFix() {
       btns[opts.findIndex(o => o[1])].classList.add("picked");
       if (ok) return finish(fb);
       fb.innerHTML = `<div class="note look">${why} The right way: <b>${pp.fixes.find(f => f[1])[0]}</b>.</div>`;
-      pipWhy(fb, t, () => finish(fb));
+      pipWhy(fb, t, () => finish(fb), pp.fixes.find(f => f[1])[0], "The right fix is");
     };
     btns.push(b); c.querySelector("#opts").appendChild(b);
   });
@@ -5968,6 +5992,20 @@ function arPacks() {
   });
 }
 
+
+/* After she finishes her set (3 problems) in an activity, "Another one" doesn't keep going:
+   she goes back Home and picks her next activity, so she can't stay in one activity all day. */
+{ const rS = render; render = function () {
+  const k = selfDoneKey; selfDoneKey = null;
+  if (k && state.section === k) {
+    state.section = null; state.step = 0; rS();
+    const t = (HOME_TILES.find(x => x[0] === k) || [k, "that activity"])[1];
+    const msg = el(`<section class="card" style="padding:14px"><div class="note ok" style="margin:0"><b>Nice work! You finished ${selfRule.per} ${t} problems.</b> Pick your next activity below.</div></section>`);
+    stage.prepend(msg);
+    return;
+  }
+  rS();
+}; }
 
 render();
 </script>

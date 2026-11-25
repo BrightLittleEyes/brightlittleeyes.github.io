@@ -1661,13 +1661,14 @@ function saveSelf() { try { localStorage.setItem("math3Self", JSON.stringify(sel
 const SELF_KEYS = HOME_TILES.map(t => t[0]);
 const tileFor = k => HOME_TILES.find(t => t[0] === k);
 let selfSnap = Object.assign({}, state.solved);
+let selfDoneKey = null;   // the activity she just finished her set in: she goes back Home to pick the next one
 function selfCount() {
   const diffs = SELF_KEYS.map(k => [k, (state.solved[k] || 0) - (selfSnap[k] || 0)]).filter(([, d]) => d);
   selfSnap = Object.assign({}, state.solved);
   if (diffs.some(([, d]) => d < 0 || d > 5)) return;   // a restore or reset, not real work
   diffs.forEach(([k, d]) => {
     selfState.done[k] = (selfState.done[k] || 0) + d;
-    if (selfState.set && selfState.set.key === k) { selfState.set.n += d; if (selfState.set.n >= selfRule.per) { selfState.set = null; selfState.offer = null; } }
+    if (selfState.set && selfState.set.key === k) { selfState.set.n += d; if (selfState.set.n >= selfRule.per) { selfState.set = null; selfState.offer = null; selfDoneKey = k; } }
   });
   saveSelf();
 }
@@ -2231,6 +2232,20 @@ function pipNextRow() {
 }
 
 
+
+/* After she finishes her set (3 problems) in an activity, "Another one" doesn't keep going:
+   she goes back Home and picks her next activity, so she can't stay in one activity all day. */
+{ const rS = render; render = function () {
+  const k = selfDoneKey; selfDoneKey = null;
+  if (k && state.section === k) {
+    state.section = null; state.step = 0; rS();
+    const t = (HOME_TILES.find(x => x[0] === k) || [k, "that activity"])[1];
+    const msg = el(`<section class="card" style="padding:14px"><div class="note ok" style="margin:0"><b>Nice work! You finished ${selfRule.per} ${t} problems.</b> Pick your next activity below.</div></section>`);
+    stage.prepend(msg);
+    return;
+  }
+  rS();
+}; }
 
 render();
 </script>

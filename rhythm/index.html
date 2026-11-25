@@ -113,6 +113,13 @@ h1{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:clamp(
 .crlink{display:block;border:2px solid var(--navy);color:var(--navy);border-radius:14px;min-height:52px;line-height:48px;font-weight:700;font-size:19px;text-decoration:none;margin-bottom:10px}
 @media (prefers-reduced-motion:reduce){.alarm-box,.alarm-box .bell{animation:none}}
 .ed-test{border:1px solid var(--line);background:#fff;border-radius:10px;min-height:40px;padding:0 14px;cursor:pointer;font-weight:700}
+.askwrap{position:fixed;inset:0;z-index:60;background:rgba(20,30,40,.45);display:grid;place-items:center;padding:20px}
+.askbox{background:#fff;border-radius:16px;padding:22px 22px 16px;max-width:420px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.25);font-size:17px;line-height:1.45}
+.askbox p{margin:0 0 18px}
+.askbtns{display:flex;gap:10px;justify-content:flex-end}
+.askbtns button{min-height:44px;padding:10px 18px;border-radius:10px;font-weight:700;font-size:16px;cursor:pointer;border:2px solid var(--navy)}
+.askno{background:#fff;color:var(--navy)}
+.askyes{background:var(--navy);color:#fff}
 .toast{pointer-events:none;position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:12px 18px;border-radius:12px;font-size:15px;z-index:40;max-width:90vw;text-align:center}
 
 /* login & setup */
@@ -364,7 +371,7 @@ window.FIREBASE_CONFIG = {
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
-const BUILD = '2026-11-20b';   // change this with every update, so open boards reload to the new version
+const BUILD = '2026-11-25a';   // change this with every update, so open boards reload to the new version
 const COL = 'rhythm_days', CFG_DOC = 'rhythm_config/main';
 
 /* ---------- the starting board (used until you save your own) ---------- */
@@ -880,8 +887,15 @@ const openPicks = () => ALL_ITEMS.filter(i=>i.slot && !S.data.slots[i.id]);
 const DOWN = {id:'downtime', t:'Down Time', d:'Quiet, calm time until bedtime.', momOnly:true};
 const downOn = () => !!(S.kid==='main' ? CFG.downTime : ((CFG.kids||{})[S.kid]||{}).downTime);
 const noneOK = () => !!(S.kid==='main' ? CFG.funNone : ((CFG.kids||{})[S.kid]||{}).funNone);
-const DAY_OPTS = {all:'Every day', notsat:'Every day but Saturday', weekdays:'Weekdays', sat:'Saturdays', sun:'Sundays', weekend:'Weekends'};
-function tagToday(t, dow){
+const DAY_OPTS = {all:'Every day', notsat:'Every day but Saturday', weekdays:'Weekdays', sat:'Saturdays', sun:'Sundays', weekend:'Weekends', break:'Break days only'};
+/* Light jobs for break days (no school, but not a Saturday deep clean) */
+const LIGHT_JOBS = [['lt_bath','Bathroom Wipe-Down','Sink, counter & mirror'],['lt_kitchen','Kitchen Counters','Clear & wipe counters and table'],
+  ['lt_sweep','Quick Sweep','Sweep or vacuum one room'],['lt_dust','Dust a Room','Shelves & surfaces']].map(([id,name,sub])=>({id,name,sub,on:'break'}));
+function addLight(mech){ LIGHT_JOBS.forEach(j=>{ if(!mech.some(t=>t.id===j.id)) mech.push({...j}); }); }
+/* Which day the tags follow: on a break day it's the real weekday, so Saturday-only deep cleaning stays off */
+const tagDow = k => isBreak(k) ? fromKey(k).getDay() : dowOf(k);
+function tagToday(t, dow, brk=isBreak(S.date)){
+  if((t.on||'all')==='break') return brk;
   switch(t.on||'all'){ case 'notsat': return dow!==6; case 'weekdays': return dow>=1&&dow<=5; case 'sat': return dow===6; case 'sun': return dow===0; case 'weekend': return dow===0||dow===6; default: return true; }
 }
 const CHG_IDS = ['chg','chg2','chg3'];      // up to 3 red tags a day
@@ -920,6 +934,18 @@ const BC = () => OWN() || CFG;
 function getKid(){ try{ return localStorage.getItem('rhythm:kid')||'main'; }catch(e){ return 'main'; } }
 function setKid(k){ try{ localStorage.setItem('rhythm:kid', k); }catch(e){} }
 
+/* A yes/no question in the middle of the screen (the iPad puts the browser's own at the top) */
+function ask(msg, yes='OK', no='Cancel'){
+  return new Promise(res=>{
+    const w=document.createElement('div'); w.className='askwrap';
+    w.innerHTML=`<div class="askbox" role="alertdialog" aria-modal="true"><p></p><div class="askbtns"><button type="button" class="askno"></button><button type="button" class="askyes"></button></div></div>`;
+    w.querySelector('p').textContent=msg; w.querySelector('.askno').textContent=no; w.querySelector('.askyes').textContent=yes;
+    const done=v=>{ w.remove(); res(v); };
+    w.querySelector('.askyes').onclick=()=>done(true); w.querySelector('.askno').onclick=()=>done(false);
+    w.addEventListener('click', e=>{ if(e.target===w) done(false); });
+    document.body.appendChild(w); setTimeout(()=>w.querySelector('.askyes').focus(),0);
+  });
+}
 function toast(msg, ms=2600){ const t=$('#toast'); t.textContent=msg; t.hidden=false; clearTimeout(t._h); t._h=setTimeout(()=>t.hidden=true, ms); }
 function setStatus(cls, txt){ const s=$('#status'); s.className='status '+cls; s.innerHTML='<i></i>'+txt; }
 function cacheLocal(key, data){ try{ localStorage.setItem('rhythm:'+key, JSON.stringify(data)); }catch(e){} }
@@ -1003,6 +1029,7 @@ function normalize(d){
     [...(ruth.blocks||[]),...(ruth.satBlocks||[]),...(ruth.sunBlocks||[])].forEach(b=>b.items.forEach(i=>{ if(i.id==='r_reading' && !('note' in i)) i.note=GB_READ; }));
     ruth.gbV=1;
   }
+  if(ruth && ruth.tags && !(ruth.lightV>=1)){ ruth.tags.mech = ruth.tags.mech||[]; addLight(ruth.tags.mech); ruth.lightV=1; }
   return c;
 }
 /* Ruth's own board, made from Bekah's: no timers, she picks her subject order, Mom & Me time, Explore time, no red tags. */
@@ -1330,6 +1357,11 @@ function normalizeMain(d){
     c.breakDays = [...new Set([...(c.breakDays||[]), '2026-11-25','2026-11-26','2026-11-27'])].sort();
     c.v = 45;
   }
+  if(c.v < 46){                       // break days: lighter cleaning jobs; the room tidy isn't only a Saturday thing now
+    c.tags.mech = c.tags.mech||[]; addLight(c.tags.mech);
+    [...(c.satBlocks||[]),...(c.blocks||[])].forEach(b=>b.items.forEach(i=>{ if(i.d==='Saturday room reset.') i.d='Room reset.'; }));
+    c.v = 46;
+  }
   return c;
 }
 const BOARD_OF_DAY = {6:'satBlocks', 0:'sunBlocks'};
@@ -1545,7 +1577,7 @@ function lastDoneOf(t){
   return last;
 }
 function mustDue(t){
-  if(!(+t.must>1) || !tagToday(t, dowOf(S.date))) return false;
+  if(!(+t.must>1) || !tagToday(t, tagDow(S.date))) return false;
   const l=lastDoneOf(t);
   return !l || S.date >= shift(l, +t.must);
 }
@@ -1774,7 +1806,7 @@ function openPicker(slotId){
   const kind=item.slot, D=S.data;
   S.picking=slotId;
   $('#sheetTitle').textContent = item.t;
-  const dow=dowOf(S.date);
+  const dow=tagDow(S.date);
   const list=(TAGS[kind]||[]).filter(t=>kind==='flag' || tagToday(t,dow) || D.slots[slotId]===t.id);
   const usedOf = t => (kind==='flag'?CHG_IDS:SLOT_IDS).find(s=>s!==slotId && D.slots[s]===t.id);
   // No repeats: a Helping Hands job done yesterday can't be picked today (unless nothing else would be left)
@@ -1804,7 +1836,7 @@ function openPicker(slotId){
 function closePicker(){ $('#scrim').hidden=true; S.picking=null; }
 
 /* ---------- board events ---------- */
-$('#app').addEventListener('click', e=>{
+$('#app').addEventListener('click', async e=>{
   const t=e.target.closest('button'); if(!t) return;
   const D=S.data;
   if(t.dataset.check){ const k=t.dataset.check, it=ALL_ITEMS.find(x=>x.id===k);
@@ -1816,7 +1848,7 @@ $('#app').addEventListener('click', e=>{
       D.checks[k]=true; S.just=k; (S.ck=S.ck||{})[k]=1; save(); render(); toast('Locked in! Have a great day.', 2600); return; }
     if(appDone(it)){
       if(S.role!=='parent'){ toast(`This was checked off when you finished a lesson in ${APPS[it.app].name}.`, 3200); return; }
-      if(!confirm(`Uncheck ${it.t}? ${APPS[it.app].name} checked it off at ${appTime(it)}. It will check itself again if she finishes another lesson today.`)) return;
+      if(!await ask(`Uncheck ${it.t}? ${APPS[it.app].name} checked it off at ${appTime(it)}. It will check itself again if she finishes another lesson today.`)) return;
       unApp(it.app); return; }
     if(it && it.app && APPS[it.app] && S.role!=='parent'){ toast(`To check this off, ${APPS[it.app].how} in ${APPS[it.app].name}. It checks itself!`, 4200); return; }
     if(D.checks[k]) delete D.checks[k]; else { D.checks[k]=true; S.just=k; } (S.ck=S.ck||{})[k]=1; save(); render(); return; }
@@ -1852,11 +1884,11 @@ $('#app').addEventListener('click', e=>{
     case 'clearTags':
       if(lockedIn()){ toast(LOCK_MSG, 3500); break; }
       if(!Object.keys(D.slots).length){ toast('No tags placed yet today.'); break; }
-      if(confirm('Take all tags off today\'s board?')){ const keep={}; if(S.role!=='parent') CHG_IDS.forEach(k=>{ if(D.slots[k]) keep[k]=D.slots[k]; }); if(S.role!=='parent') Object.keys(D.slots).forEach(k=>{ if(isLocked(k)) keep[k]=D.slots[k]; }); else if(Object.keys(D.slots).some(isLocked)) D.noMust=true;
+      if(await ask('Take all tags off today\'s board?')){ const keep={}; if(S.role!=='parent') CHG_IDS.forEach(k=>{ if(D.slots[k]) keep[k]=D.slots[k]; }); if(S.role!=='parent') Object.keys(D.slots).forEach(k=>{ if(isLocked(k)) keep[k]=D.slots[k]; }); else if(Object.keys(D.slots).some(isLocked)) D.noMust=true;
         D.slots=keep; S.timers={}; S.paused={}; saveTimers(); save(); render(); }
       break;
     case 'editBtn': if(S.role==='parent') openEditor(); break;
-    case 'logout': if(confirm('Log out on this device?')){ setRole(null); S.role=null; S.timers={}; S.paused={}; route(); } break;
+    case 'logout': if(await ask('Log out on this device?')){ setRole(null); S.role=null; S.timers={}; S.paused={}; route(); } break;
   }
 });
 $('#scrim').addEventListener('click', e=>{
@@ -2076,7 +2108,7 @@ $('#editor').addEventListener('click', async e=>{
     if(a==='del'){
       const what=list[i], label=what.name||what.t||'this';
       const n = what.items ? what.items.length : 0;
-      if(!confirm(n ? `Remove "${label}" and the ${n} item${n>1?'s':''} in it?` : `Remove "${label}"?`)) return;
+      if(!await ask(n ? `Remove "${label}" and the ${n} item${n>1?'s':''} in it?` : `Remove "${label}"?`)) return;
       list.splice(i,1);
     } else { const j=a==='up'?i-1:i+1; [list[i],list[j]]=[list[j],list[i]]; }
     renderEditor(); return;
@@ -2101,17 +2133,17 @@ $('#editor').addEventListener('click', async e=>{
   if(a==='delbreak'){ E.breakDays=(E.breakDays||[]).filter(d=>d!==t.dataset.d); renderEditor(); return; }
   if(a==='addtag'){ E.tags[t.dataset.k]=E.tags[t.dataset.k]||[]; E.tags[t.dataset.k].push({id:newId('t'), name:''}); renderEditor(); focusLast(`[data-path^="tags.${t.dataset.k}."][data-path$=".name"]`); return; }
   if(a==='setorig'){
-    if(!confirm('Make the board as it is on this screen your new original? "Reset" will go back to this from now on.')) return;
+    if(!await ask('Make the board as it is on this screen your new original? "Reset" will go back to this from now on.')) return;
     const o=clone(E); delete o.original; delete o.kidName; delete o.pwKid; delete o.pwParent; delete o.kids;
     o.savedOn=new Date().toLocaleDateString(undefined,{month:'long', day:'numeric', year:'numeric'});
     E.original=o; renderEditor(); toast('Set as your original. Press Save to keep it.', 3500); return;
   }
-  if(a==='reset'){ if(confirm('Put the board back to your original blocks, tags, verse and sound? Press Save after to keep it.')){
+  if(a==='reset'){ if(await ask('Put the board back to your original blocks, tags, verse and sound? Press Save after to keep it.')){
     const keepName=E.kidName, keepOrig=E.original;
     const base=normalize(clone(keepOrig||DEFAULT_CONFIG)); delete base.savedOn; delete base.original; delete base.pwKid; delete base.pwParent;
     const keepKids=E.kids; S.edit=base; S.edit.kidName=keepName; if(keepOrig) S.edit.original=keepOrig; if(keepKids) S.edit.kids=keepKids;
     renderEditor(); toast('Original board restored. Press Save to keep it.'); } return; }
-  if(t.id==='edCancel'){ if(confirm('Leave without saving your changes?')){ S.edit=null; show('app'); render(); } return; }
+  if(t.id==='edCancel'){ if(await ask('Leave without saving your changes?')){ S.edit=null; show('app'); render(); } return; }
   if(t.id==='edSave') saveEditor();
 });
 function focusLast(sel){ const els=document.querySelectorAll('#editor '+sel); const el=els[els.length-1]; if(el){ el.focus(); el.scrollIntoView({block:'center'}); } }

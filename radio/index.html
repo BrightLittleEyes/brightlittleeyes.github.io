@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Student Radio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+/*
+VOICE: calm, friendly, simple enough for any student
+IDEA: a tabletop radio — one big dial, a few preset buttons, nothing else to click
+PICTURE: the tuning dial with a glowing needle that slides to the chosen station
+COLOUR and TYPE: deep dawn indigo, white, warm rose accent; Outfit
+LAYOUT: dial on top, big play button, station presets, volume. No links anywhere.
+*/
+:root{color-scheme:light dark;
+  --bg:light-dark(#f4f1fb,#16112e);--panel:light-dark(#ffffff,#221a45);
+  --ink:light-dark(#1d1538,#f3efff);--soft:light-dark(#5d5480,#b8b0dc);
+  --deep:#2a1f5c;--rose:#ff7a93;--line:light-dark(#ddd6f0,#3a3068)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Outfit,system-ui,sans-serif;overflow-x:clip;
+  -webkit-user-select:none;user-select:none}
+main{max-width:760px;margin:0 auto;padding:clamp(20px,4vw,48px) max(4vw,16px)}
+h1{font-size:clamp(30px,5vw,44px);line-height:1.05;margin:0 0 4px;font-weight:800;text-wrap:balance}
+.sub{color:var(--soft);margin:0 0 22px}
+.radio{background:var(--deep);border-radius:28px;padding:clamp(18px,3vw,30px);color:#fff;
+  box-shadow:0 18px 40px -18px #2a1f5c99}
+.dial{position:relative;height:120px;border-radius:16px;background:#140e33;overflow:hidden;border:2px solid #3d3180}
+.ticks{position:absolute;inset:auto 0 0 0;height:40px;
+  background:repeating-linear-gradient(90deg,#6b5fb0 0 2px,transparent 2px 18px);opacity:.55}
+.marks{position:absolute;inset:12px 14px auto 14px;display:flex;justify-content:space-between;font-size:13px;color:#b8b0dc}
+.needle{position:absolute;top:0;bottom:0;width:4px;margin-left:-2px;background:var(--rose);
+  box-shadow:0 0 18px 4px #ff7a9388;left:10%;transition:left .7s cubic-bezier(.3,.8,.3,1)}
+.now{display:flex;align-items:center;gap:16px;margin-top:20px;flex-wrap:wrap}
+.play{width:76px;height:76px;border-radius:50%;border:0;background:var(--rose);color:#2a1f5c;cursor:pointer;
+  display:grid;place-items:center;flex:none}
+.play:focus-visible,.st:focus-visible,input:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.play svg{width:32px;height:32px}
+.info{flex:1}
+.name{font-size:26px;font-weight:800;line-height:1.1}
+.status{color:#d6d0f3;font-size:15px}
+.eq{display:flex;gap:4px;align-items:flex-end;height:30px}
+.eq i{width:6px;background:var(--rose);border-radius:3px;height:6px}
+.playing .eq i{animation:b 1s ease-in-out infinite}
+.eq i:nth-child(2){animation-delay:-.3s}.eq i:nth-child(3){animation-delay:-.6s}.eq i:nth-child(4){animation-delay:-.15s}
+@keyframes b{0%,100%{height:6px}50%{height:28px}}
+@media(prefers-reduced-motion:reduce){.playing .eq i{animation:none;height:18px}.needle{transition:none}}
+.vol{display:flex;align-items:center;gap:12px;margin-top:18px;font-size:15px;color:#d6d0f3}
+.vol input{flex:1;accent-color:var(--rose);height:44px}
+h2{font-size:20px;margin:28px 0 12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,210px),1fr));gap:12px}
+.st{min-height:72px;border-radius:16px;border:2px solid var(--line);background:var(--panel);color:var(--ink);
+  font:inherit;text-align:left;padding:12px 16px;cursor:pointer}
+.st b{display:block;font-size:18px}
+.st span{color:var(--soft);font-size:14px}
+.st[aria-pressed=true]{border-color:var(--rose);box-shadow:0 0 0 2px var(--rose) inset}
+.err{margin-top:14px;background:#ff7a9322;border:1px solid var(--rose);border-radius:12px;padding:10px 14px;color:#fff;display:none}
+.err.show{display:block}
+footer{margin-top:28px;color:var(--soft);font-size:13px}
+</style>
+</head>
+<body>
+<main>
+  <h1>Christian Radio</h1>
+  <p class="sub">Pick a station and press play.</p>
+
+  <section class="radio" id="radio" aria-label="Radio player">
+    <div class="dial" aria-hidden="true">
+      <div class="marks" id="marks"></div>
+      <div class="ticks"></div>
+      <div class="needle" id="needle"></div>
+    </div>
+    <div class="now">
+      <button class="play" id="play" aria-label="Play">
+        <svg id="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      </button>
+      <div class="info">
+        <div class="name" id="name">K-LOVE</div>
+        <div class="status" id="status">Ready</div>
+      </div>
+      <div class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    </div>
+    <label class="vol">Volume
+      <input type="range" id="vol" min="0" max="100" value="80" aria-label="Volume">
+    </label>
+    <div class="err" id="err" role="alert"></div>
+  </section>
+
+  <h2>Stations</h2>
+  <div class="grid" id="stations"></div>
+
+  <footer>Listen-only player. Music streams from K-LOVE and Air1 (Educational Media Foundation).</footer>
+</main>
+
+<audio id="audio" preload="none"></audio>
+
+<script>
+{
+  // Edit this list to add or remove stations. Only these streams can be played.
+  const STATIONS = [
+    {id:'klove',    name:'K-LOVE',           desc:'Positive, encouraging hits', url:'https://maestro.emfcdn.com/stream_for/k-love/web/aac'},
+    {id:'air1',     name:'Air1',             desc:'Worship music',              url:'https://maestro.emfcdn.com/stream_for/air1/web/aac'},
+    {id:'christmas',name:'K-LOVE Christmas', desc:'Christmas music',            url:'https://maestro.emfcdn.com/stream_for/k-love-christmas/web/aac'},
+    {id:'k90s',     name:'K-LOVE 90s',       desc:'Hits from the 1990s',        url:'https://maestro.emfcdn.com/stream_for/k-love-90s/web/aac'},
+    {id:'k2000s',   name:'K-LOVE 2000s',     desc:'Hits from the 2000s',        url:'https://maestro.emfcdn.com/stream_for/k-love-2000s/web/aac'}
+  ];
+
+  const $ = id => document.getElementById(id);
+  const audio = $('audio'), radio = $('radio');
+  const store = {
+    get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
+    set(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
+  };
+
+  let current = STATIONS.find(s => s.id === store.get('station')) || STATIONS[0];
+  let playing = false;
+
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  $('marks').innerHTML = STATIONS.map(s => `<span>${esc(s.name.replace('K-LOVE ','').replace('K-LOVE','K-LOVE'))}</span>`).join('');
+  $('stations').innerHTML = STATIONS.map(s =>
+    `<button class="st" data-id="${esc(s.id)}" aria-pressed="false"><b>${esc(s.name)}</b><span>${esc(s.desc)}</span></button>`
+  ).join('');
+
+  const playIcon  = '<path d="M8 5v14l11-7z"/>';
+  const pauseIcon = '<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>';
+
+  function showError(msg){ const e=$('err'); e.textContent=msg; e.classList.toggle('show', !!msg); }
+  function setStatus(t){ $('status').textContent = t; }
+
+  function render(){
+    $('name').textContent = current.name;
+    const i = STATIONS.indexOf(current);
+    $('needle').style.left = (8 + i * (84 / Math.max(1, STATIONS.length - 1))) + '%';
+    document.querySelectorAll('.st').forEach(b => b.setAttribute('aria-pressed', b.dataset.id === current.id));
+    $('icon').innerHTML = playing ? pauseIcon : playIcon;
+    $('play').setAttribute('aria-label', playing ? 'Pause' : 'Play');
+    radio.classList.toggle('playing', playing);
+  }
+
+  async function start(){
+    showError('');
+    setStatus('Connecting…');
+    // Add a cache-buster so the stream starts live, not from an old buffer.
+    audio.src = current.url + '?t=' + Date.now();
+    try {
+      await audio.play();
+    } catch(e) {
+      playing = false; render();
+      setStatus('Stopped');
+      showError('Could not start ' + current.name + '. Check the internet connection, or ask your teacher if this station is allowed on the school network.');
+    }
+  }
+
+  function stop(){
+    audio.pause();
+    audio.removeAttribute('src'); audio.load(); // fully disconnect from the stream
+    playing = false; setStatus('Stopped'); render();
+  }
+
+  $('play').addEventListener('click', () => { playing ? stop() : start(); });
+
+  $('stations').addEventListener('click', e => {
+    const b = e.target.closest('.st'); if (!b) return;
+    current = STATIONS.find(s => s.id === b.dataset.id);
+    store.set('station', current.id);
+    render(); start();
+  });
+
+  audio.addEventListener('playing', () => { playing = true; setStatus('Live now'); render(); });
+  audio.addEventListener('waiting', () => setStatus('Buffering…'));
+  audio.addEventListener('error', () => {
+    if (!audio.getAttribute('src')) return;
+    playing = false; render(); setStatus('Stopped');
+    showError(current.name + ' is not available right now. Try another station.');
+  });
+
+  const vol = $('vol');
+  vol.value = store.get('vol') ?? 80;
+  audio.volume = vol.value / 100;
+  vol.addEventListener('input', () => { audio.volume = vol.value / 100; store.set('vol', vol.value); });
+
+  // Lock-screen / keyboard media keys
+  if ('mediaSession' in navigator) {
+    navigator.mediaSession.setActionHandler('play', start);
+    navigator.mediaSession.setActionHandler('pause', stop);
+  }
+  document.addEventListener('keydown', e => {
+    if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') { e.preventDefault(); $('play').click(); }
+  });
+  // Block right-click menu so students can't "open in new tab" anything
+  document.addEventListener('contextmenu', e => e.preventDefault());
+
+  render();
+}
+</script>
+</body>
+</html>

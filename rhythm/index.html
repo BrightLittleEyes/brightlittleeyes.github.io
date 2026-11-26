@@ -1002,10 +1002,11 @@ function normalize(d){
     ruth.tags.fun = ruth.tags.fun||[];
     if(!ruth.tags.fun.some(t=>t.id==='radio' || String(t.name||'').trim().toLowerCase()==='christian radio'))
       ruth.tags.fun.push({id:'radio', name:'Christian Radio', sub:'Listen to a Christian radio station',
-        gate:true, links:[{name:'Listen to K-LOVE', url:'https://www.klove.com/music/streaming'}, {name:'Listen to Air1', url:'https://www.air1.com/streaming'}]});
+        gate:true, links:[{name:'Open Christian Radio', url:'/radio/'}]});
     ruth.radioV=1;
   }
   if(ruth && Array.isArray(ruth.blocks) && !(ruth.radioV>=2)){ (ruth.tags.fun||[]).forEach(t=>{ if(t.id==='radio') t.gate=true; }); ruth.radioV=2; }
+  if(ruth && Array.isArray(ruth.blocks) && !(ruth.radioV>=3)){ (ruth.tags.fun||[]).forEach(t=>{ if(t.id==='radio') t.links=[{name:'Open Christian Radio', url:'/radio/'}]; }); ruth.radioV=3; }   // Ruth: radio opens our own player, not the station websites
   if(ruth && Array.isArray(ruth.blocks) && !(ruth.weekendV>=1)){ ruth.weekendOff=true; ruth.weekendV=1; }   // Ruth: no structure on weekends
   if(ruth && !(ruth.appsV>=1)){ tieApps([ruth.blocks], APP_OF_RUTH); ruth.appsV=1; }
   if(ruth && Array.isArray(ruth.blocks) && !(ruth.tillyV>=1)){   // Ruth: Tilly Math, checked off by her 3rd Grade Math app after 30 minutes
@@ -1316,7 +1317,7 @@ function normalizeMain(d){
   }
   if(c.v < 38){                       // Christian Radio: links to K-LOVE and Air1
     (c.tags.fun||[]).forEach(t=>{ if(t.id==='radio'){ t.timer=2700;
-      t.links=[{name:'Listen to K-LOVE', url:'https://www.klove.com/music/streaming'}, {name:'Listen to Air1', url:'https://www.air1.com/streaming'}]; } });
+      t.links=[{name:'Open Christian Radio', url:'/radio/'}]; } });
     c.v = 38;
   }
   if(c.v < 39){                       // radio time is one hour
@@ -1361,6 +1362,10 @@ function normalizeMain(d){
     c.tags.mech = c.tags.mech||[]; addLight(c.tags.mech);
     [...(c.satBlocks||[]),...(c.blocks||[])].forEach(b=>b.items.forEach(i=>{ if(i.d==='Saturday room reset.') i.d='Room reset.'; }));
     c.v = 46;
+  }
+  if(c.v < 47){                       // Christian Radio opens our own listen-only player, not the K-LOVE/Air1 websites
+    (c.tags.fun||[]).forEach(t=>{ if(t.id==='radio') t.links=[{name:'Open Christian Radio', url:'/radio/'}]; });
+    c.v = 47;
   }
   return c;
 }

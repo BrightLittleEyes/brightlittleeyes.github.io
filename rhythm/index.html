@@ -13,7 +13,7 @@
 <title>Daily Rhythm</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fredoka:wght@500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fredoka:wght@500;600;700&family=Silkscreen:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap">
 <style>
 :root{
   --bg:#F4F6F8; --surface:#FFFFFF; --ink:#22303C; --muted:#5F6E7A; --line:#DCE2E7; --soft:#EEF2F5;
@@ -215,6 +215,28 @@ body.theme-dance .progress b{background:linear-gradient(90deg,#FF7EB6,#C86DD7,#7
 body.theme-dance .slotbtn,body.theme-dance .opt{border-radius:18px}
 body.theme-dance .datebar button,body.theme-dance .tools button,body.theme-dance .foot button{border-radius:22px}
 body.theme-dance .ord button{border-radius:50%;width:36px;height:36px;border-color:#D9B8EA;color:#8E44AD}
+/* ---- Sam's look: building blocks and magnetic tiles ---- */
+body.theme-build{--bg:#EAF4E4;--ink:#22301E;--muted:#5B6B52;--line:#C9DDBC;--soft:#DDEED2;--navy:#2F6B2A;--done:#3E8E3E;
+  background:#EAF4E4 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cg fill-opacity='.38'%3E%3Cpath d='M30 20l16 8-16 8-16-8z' fill='%23B7D99E'/%3E%3Cpath d='M14 28l16 8v18l-16-8z' fill='%23A98A63'/%3E%3Cpath d='M46 28l-16 8v18l16-8z' fill='%238C6E4B'/%3E%3Cpath d='M118 112l26 0-13 22z' fill='%23F2A7A0'/%3E%3Cpath d='M131 112h26l-13 22z' fill='%239FC3F0' transform='translate(0 0)'/%3E%3Crect x='112' y='30' width='22' height='22' fill='%23F4D78A'/%3E%3Crect x='136' y='30' width='22' height='22' fill='%23C3B1EC'/%3E%3Cpath d='M40 126h22v22H40z' fill='%23A9DDD6'/%3E%3Cpath d='M62 126l11 22H62z' fill='%23F2A7A0'/%3E%3C/g%3E%3C/svg%3E")}
+body.theme-build h1{font-family:"Silkscreen",monospace;font-weight:700;letter-spacing:.02em;color:#2F6B2A;display:inline-flex;align-items:center;gap:12px;text-shadow:3px 3px 0 #C9DDBC}
+body.theme-build h1::before{content:"";width:34px;height:34px;flex:none;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 34' shape-rendering='crispEdges'%3E%3Cpath d='M17 2l15 7.5-15 7.5L2 9.5z' fill='%235DA130'/%3E%3Cpath d='M2 9.5l15 7.5v15L2 24.5z' fill='%238B5A2B'/%3E%3Cpath d='M32 9.5L17 17v15l15-7.5z' fill='%236B4420'/%3E%3Cpath d='M2 9.5l15 7.5v4L2 13.5z' fill='%234C8A26'/%3E%3Cpath d='M32 9.5L17 17v4l15-7.5z' fill='%233D7220'/%3E%3C/svg%3E") no-repeat center/contain}
+body.theme-build .hello{font-family:"Silkscreen",monospace;font-size:20px;color:#8B5A2B}
+body.theme-build .tag-line{color:#4D5E45}
+body.theme-build .block{border-radius:6px;border:3px solid #22301E;box-shadow:5px 5px 0 #B3CBA3}
+body.theme-build .block-h{font-family:"Silkscreen",monospace;font-weight:700;font-size:17px;letter-spacing:.02em;border-bottom:3px solid #22301E;
+  background-image:linear-gradient(135deg,rgba(255,255,255,.22) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.22) 50%,rgba(255,255,255,.22) 75%,transparent 75%);background-size:16px 16px}
+body.theme-build .row{border-top:2px dashed #D3E3C8}
+body.theme-build .check{width:32px;height:32px;border-radius:3px;border:3px solid #5B6B52}
+body.theme-build .row.done .check{background:#3E8E3E;border-color:#22301E;box-shadow:inset -4px -4px 0 #2F6B2A}
+body.theme-build .row.done .txt b{text-decoration:none;color:#2F6B2A}
+body.theme-build .row.pop .check{animation:placeblock .35s steps(4)}
+@keyframes placeblock{0%{transform:translateY(-10px) scale(.7)}100%{transform:none}}
+body.theme-build .progress{height:16px;border-radius:2px;background:#22301E;border:2px solid #22301E}
+body.theme-build .progress b{border-radius:0;background:repeating-linear-gradient(90deg,#7BD13F 0 18px,#5DA130 18px 20px)}
+body.theme-build .slotbtn,body.theme-build .opt{border-radius:6px}
+body.theme-build .datebar button,body.theme-build .tools button,body.theme-build .foot button{border-radius:6px}
+body.theme-build .block.weekend h2{font-family:"Silkscreen",monospace}
+@media (prefers-reduced-motion:reduce){body.theme-build .row.pop .check{animation:none}}
 .remindbtn{border:2px solid var(--navy);background:var(--surface);color:var(--navy);border-radius:12px;min-height:48px;padding:0 16px;font-weight:700;font-size:16px;cursor:pointer}
 .slotbtn.nonepick{opacity:.75;font-style:italic}
 .opt.noneopt{border-style:dashed}
@@ -371,7 +393,7 @@ window.FIREBASE_CONFIG = {
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
-const BUILD = '2026-11-25a';   // change this with every update, so open boards reload to the new version
+const BUILD = '2026-11-26a';   // change this with every update, so open boards reload to the new version
 const COL = 'rhythm_days', CFG_DOC = 'rhythm_config/main';
 
 /* ---------- the starting board (used until you save your own) ---------- */
@@ -827,9 +849,11 @@ const ICON = {
   heart:'<svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z" fill="#FADBD8"/></svg>',
   star:'<svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4L2.8 9.5l6.4-.8L12 2.8z" fill="#F9D84A"/></svg>',
   apple:'<svg width="24" height="24" viewBox="4 2.5 16 18.5"><path d="M12 7.5c-1.6-1.3-5.5-1.6-6.6 2.1-1 3.4.9 8.4 3.6 10 1.1.7 2 .4 3 0 1 .4 1.9.7 3 0 2.7-1.6 4.6-6.6 3.6-10C17.5 5.9 13.6 6.2 12 7.5z" fill="#FADBD8"/><path d="M12 7.5c0-2 .6-3.4 2-4.5" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M12.6 5.6c1.6-1.5 3.6-1.4 4.6-.8-.9 1.4-2.8 1.9-4.6.8z" fill="#ABEBC6"/></svg>',
+  cube:'<svg width="24" height="24" viewBox="0 0 24 24" shape-rendering="crispEdges"><path d="M12 2l9 4.5-9 4.5-9-4.5z" fill="#9BE06B"/><path d="M3 6.5l9 4.5v11l-9-4.5z" fill="#C9925A"/><path d="M21 6.5L12 11v11l9-4.5z" fill="#A8743F"/></svg>',
+  tiles:'<svg width="24" height="24" viewBox="0 0 24 24"><rect x="2" y="10" width="9" height="9" fill="#F4D78A" stroke="#fff" stroke-width="1.5"/><rect x="12" y="10" width="9" height="9" fill="#9FC3F0" stroke="#fff" stroke-width="1.5"/><path d="M2 9l9.5-7L21 9z" fill="#F2A7A0" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>',
   none:''
 };
-const ICON_NAMES = {sun:'Sun', basket:'Basket', palette:'Paint palette', moon:'Moon', book:'Book', heart:'Heart', star:'Star', apple:'Apple', note:'Music note', mic:'Microphone', none:'No icon'};
+const ICON_NAMES = {sun:'Sun', basket:'Basket', palette:'Paint palette', moon:'Moon', book:'Book', heart:'Heart', star:'Star', apple:'Apple', note:'Music note', mic:'Microphone', cube:'Building block', tiles:'Magnetic tiles', none:'No icon'};
 ICON.note = '<svg width="24" height="24" viewBox="0 0 24 24"><path d="M9 17.5V5.5l11-2.5v12" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><ellipse cx="6.5" cy="17.5" rx="3" ry="2.4" fill="#fff"/><ellipse cx="17.5" cy="15" rx="3" ry="2.4" fill="#fff"/></svg>';
 ICON.mic = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="9" y="2.5" width="6" height="11" rx="3" fill="rgba(255,255,255,.35)"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg>';
 const COLORS = [['#2A7FBA','Blue'],['#27A55A','Green'],['#8E44AD','Purple'],['#D35400','Orange'],['#C0392B','Red'],['#16A085','Teal'],['#2C3E50','Navy'],['#B7950B','Gold'],['#D63384','Pink']];
@@ -1031,6 +1055,7 @@ function normalize(d){
     ruth.gbV=1;
   }
   if(ruth && ruth.tags && !(ruth.lightV>=1)){ ruth.tags.mech = ruth.tags.mech||[]; addLight(ruth.tags.mech); ruth.lightV=1; }
+  if(ruth && Array.isArray(ruth.blocks) && c.kids && !c.kids.sam) c.kids.sam = samBoard(c, ruth);   // Sam: third child, public school
   return c;
 }
 /* Ruth's own board, made from Bekah's: no timers, she picks her subject order, Mom & Me time, Explore time, no red tags. */
@@ -1067,6 +1092,33 @@ function ruthBoard(c){
     mom: [['mm_sing','Sing Together'],['mm_dance','Dance Together'],['mm_read','Read Together'],['mm_bake','Bake Together'],['mm_walk','Walk & Talk'],['mm_game','Play a Game'],['mm_hair','Hair & Nails'],['mm_craft','Craft Together']].map(([id,name])=>({id,name})),
     explore: [['x_cook','Cooking','Help make a real recipe'],['x_nature','Nature Walk','Look, listen, and collect'],['x_sci','Science Experiment','Try it and see what happens'],['x_games','Board Games','Pick a game to play']].map(([id,name,sub])=>({id,name,sub}))
   }};
+}
+/* Sam's own board, made from Ruth's: he goes to public school, so no school subjects, attendance or carpool.
+   Same rhythm otherwise: Helping Hands, Mom & Me, Explore & Play, Fun Choices, no timers, nothing on weekends. */
+function samBoard(c, ruth){
+  const R = ruth && ruth.tags ? ruth.tags : {};
+  const fun = clone(R.fun||c.tags.fun||[]).filter(t=>!['r_show','r_dance','r_sing','mom_game'].includes(t.id)).map(t=>{ delete t.timer; return t; });
+  if(!fun.some(t=>t.id==='s_tiles')) fun.unshift({id:'s_tiles', name:'Build with Magna-Tiles', sub:'Make something new'});
+  const mom = [['mm_build','Build Together'],['mm_game','Play a Game'],['mm_cook','Cook Together'],['mm_walk','Walk & Talk'],['mm_read','Read Together'],['mm_bike','Bike Ride'],['mm_bake','Bake Together']].map(([id,name])=>({id,name}));
+  const explore = clone(R.explore||[]);
+  if(!explore.some(t=>t.id==='x_build')) explore.unshift({id:'x_build', name:'Build Challenge', sub:'Build the tallest tower or strongest bridge you can'});
+  return {name:'Sam', verse:'', verseRef:'', theme:'build', weekendOff:true, breakLight:true,
+    blocks:[
+      {id:'s_morning', name:'Morning Build-Up', sub:'Built on the Rock · Matthew 7:24', color:'#3E8E3E', icon:'cube',
+        items:[{id:'s_breakfast', t:'Breakfast'}, {id:'s_ready', t:'Get Ready for School', d:'Dressed, teeth brushed, backpack packed.', offOnBreak:true}, {id:'s_bible', t:'Bible Time', d:'Read a chapter or your devotional.'}]},
+      {id:'s_after', name:'After School', sub:'With All Your Heart · Colossians 3:23', color:'#8A5A2C', icon:'book',
+        items:[{id:'s_snack', t:'Snack & Unpack', d:'Backpack emptied, papers to Mom.', offOnBreak:true}, {id:'s_homework', t:'Homework', d:'Finish it and put it back in your backpack.', offOnBreak:true}, {id:'s_m1', t:'Helping Hands', slot:'mech'}]},
+      {id:'s_momme', name:'Mom & Me', sub:'Just the two of us', color:'#2F7FD8', icon:'heart',
+        items:[{id:'s_mom', t:'Mom & Me Time', slot:'mom'}]},
+      {id:'s_explore', name:'Explore & Play', sub:'Every Good Gift · James 1:17', color:'#D9503F', icon:'tiles',
+        items:[{id:'s_x1', t:'Explore Time', slot:'explore'}, {id:'s_f1', t:'Fun Choice', slot:'fun'}, {id:'s_m2', t:'Helping Hands', slot:'mech'}]},
+      {id:'s_evening', name:'Evening Wind-Down', sub:'Safe to Rest · Psalm 4:8', color:'#6A4FB8', icon:'moon',
+        items:[{id:'s_dinner', t:'Dinner'}, {id:'s_f2', t:'Fun Choice', slot:'fun'}]}
+    ],
+    satBlocks: clone(ruth && ruth.satBlocks || []), sunBlocks: clone(ruth && ruth.sunBlocks || []),
+    tags:{ fun, mom, explore,
+      mech: clone(R.mech||[]).map(t=>{ delete t.timer; delete t.lastDone; return t; }),
+      flag: clone(R.flag||[]) }};
 }
 function normalizeMain(d){
   const c = clone(DEFAULT_CONFIG);
@@ -1410,7 +1462,8 @@ function paintKid(){
   const k=kidInfo(S.kid);
   document.body.classList.toggle('theme-dance', k.theme==='dance');
   document.body.classList.toggle('theme-books', k.theme==='books');
-  $('#app header h1').textContent = k.theme==='dance' ? `${(k.name||'MY').toUpperCase()}'S RHYTHM` : 'DAILY RHYTHM';
+  document.body.classList.toggle('theme-build', k.theme==='build');
+  $('#app header h1').textContent = (k.theme==='dance' || k.theme==='build') ? `${(k.name||'MY').toUpperCase()}'S RHYTHM` : 'DAILY RHYTHM';
   $('#verse').innerHTML = k.verse ? `&ldquo;${esc(k.verse)}&rdquo;${k.verseRef?`<span class="ref">${esc(k.verseRef)}</span>`:''}` : '';
   $('#verse').hidden = !k.verse;
   $('#hello').textContent = k.name ? `Hi, ${k.name}!` : '';
@@ -1651,7 +1704,7 @@ function render(){
 
   const off = weekendOff();
   document.querySelector('.progress').hidden = off; $('#ptxt').hidden = off; document.querySelector('.tools').hidden = off;
-  if(off){ $('#board').innerHTML = `<section class="block weekend"><div class="wk-big" aria-hidden="true">♪</div><h2>No schedule today!</h2><p>${isBreak(S.date)?"It's a break day":"It's the weekend"}. Enjoy it, ${esc(kidLabel(S.kid))}!</p></section>`; paintTimer(); return; }
+  if(off){ $('#board').innerHTML = `<section class="block weekend"><div class="wk-big" aria-hidden="true">${kidInfo(S.kid).theme==='build' ? ICON.cube.replace(/24/g,'64') : '♪'}</div><h2>No schedule today!</h2><p>${isBreak(S.date)?"It's a break day":"It's the weekend"}. Enjoy it, ${esc(kidLabel(S.kid))}!</p></section>`; paintTimer(); return; }
   $('#board').innerHTML = BLOCKS.map(b=>`
     <section class="block">
       <div class="block-h" style="background:${esc(b.color||'#2C3E50')}">${ICON[b.icon]||''}<span>${esc(b.name)}${b.sub?` <small>(${esc(b.sub)})</small>`:''}</span></div>
@@ -1662,7 +1715,7 @@ function render(){
 
   const done = ALL_ITEMS.filter(isOn).length, total=ALL_ITEMS.length||1;
   $('#bar').style.width = (done/total*100)+'%';
-  $('#ptxt').textContent = done===ALL_ITEMS.length && done>0 ? (kidInfo(S.kid).theme==='dance' ? 'Every block done — take a bow!' : 'Every block done — well done!') : `${done} of ${ALL_ITEMS.length} done`;
+  $('#ptxt').textContent = done===ALL_ITEMS.length && done>0 ? (kidInfo(S.kid).theme==='dance' ? 'Every block done — take a bow!' : kidInfo(S.kid).theme==='build' ? 'Every block placed — build complete!' : 'Every block done — well done!') : `${done} of ${ALL_ITEMS.length} done`;
   paintTimer();
 }
 function ordered(b){
@@ -2027,14 +2080,14 @@ function renderEditor(){
         <label class="ed-f">Her name<input data-path="kidName" value="${esc(E.kidName)}" placeholder="optional"></label>
       </div></div>
     ${Object.entries(E.kids||{}).filter(([id])=>id===S.kid).map(([id,k])=>`<div class="ed-sec"><h3>Top of ${esc((k.name||'').trim()||id)}'s board</h3>
-      <p class="help">She has the same blocks and tags, with her own checkmarks, picks and verse.</p>
+      <p class="help">${Array.isArray(k.blocks)?'This board has its own blocks and tags. Changes here only affect this board.':'Same blocks and tags as the first board, with its own checkmarks, picks and verse.'}</p>
       <label class="ed-f">Verse<textarea data-path="kids.${id}.verse" rows="3">${esc(k.verse)}</textarea></label>
       <div class="ed-grid">
         <label class="ed-f">Verse reference<input data-path="kids.${id}.verseRef" value="${esc(k.verseRef)}"></label>
-        <label class="ed-f">Her name<input data-path="kids.${id}.name" value="${esc(k.name)}"></label>
+        <label class="ed-f">Name<input data-path="kids.${id}.name" value="${esc(k.name)}"></label>
       </div>
-      ${Array.isArray(k.blocks)?`<label class="ed-chk"><input type="checkbox" data-path="kids.${id}.weekendOff" data-type="flag" ${k.weekendOff?'checked':''}> No schedule on Saturday and Sunday (her board just says to enjoy the weekend)</label>`:''}
-      <label class="ed-f">${k.pw?'New password for her <small>(leave blank to keep it)</small>':'Her password <small>(she can\'t log in until you set one)</small>'}<input type="password" class="kidpw" data-kidpw="${esc(id)}" autocomplete="new-password"></label></div>`).join('')}
+      ${Array.isArray(k.blocks)?`<label class="ed-chk"><input type="checkbox" data-path="kids.${id}.weekendOff" data-type="flag" ${k.weekendOff?'checked':''}> No schedule on Saturday and Sunday (the board just says to enjoy the weekend)</label>`:''}
+      <label class="ed-f">${k.pw?`New password for ${esc((k.name||'').trim()||id)} <small>(leave blank to keep it)</small>`:`${esc((k.name||'').trim()||id)}'s password <small>(can\'t log in until you set one)</small>`}<input type="password" class="kidpw" data-kidpw="${esc(id)}" autocomplete="new-password"></label></div>`).join('')}
     <div class="ed-sec"><h3>Blocks</h3>
       <div class="ed-tabs" role="group" aria-label="Which board">
         <button data-act="edroot" data-root="blocks" aria-pressed="${R==='blocks'}">Weekday board</button>

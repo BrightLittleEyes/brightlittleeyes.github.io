@@ -92,7 +92,7 @@ service cloud.firestore {
     // One document per day, named by date (2026-11-05)
     match /rhythm_days/{docId} {
       allow read: if true;
-      allow write: if docId.matches('20[0-9][0-9]-[01][0-9]-[0-3][0-9]') && request.resource.data.size() < 10;
+      allow write: if docId.matches('20[0-9][0-9]-[01][0-9]-[0-3][0-9]') && request.resource.data.size() < 16;
     }
 
     // Everything else is locked

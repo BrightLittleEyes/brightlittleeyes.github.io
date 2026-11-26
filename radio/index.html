@@ -59,9 +59,28 @@ h2{font-size:20px;margin:28px 0 12px}
 .err{margin-top:14px;background:#ff7a9322;border:1px solid var(--rose);border-radius:12px;padding:10px 14px;color:#fff;display:none}
 .err.show{display:block}
 footer{margin-top:28px;color:var(--soft);font-size:13px}
+.gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:20px}
+.gate[hidden]{display:none}
+.gcard{background:var(--panel);border:2px solid var(--line);border-radius:24px;padding:28px;width:min(380px,100%);display:grid;gap:12px;text-align:center}
+.gcard h2{margin:0;font-size:28px}
+.gcard p{margin:0;color:var(--soft)}
+.gcard input{font:inherit;font-size:18px;padding:12px 14px;border-radius:12px;border:2px solid var(--line);background:var(--bg);color:var(--ink);min-height:48px}
+.gcard button,.gcard a{font:600 17px Outfit,system-ui,sans-serif;min-height:48px;border-radius:12px;border:0;background:var(--deep);color:#fff;cursor:pointer;display:grid;place-items:center;text-decoration:none}
+.gcard a{background:transparent;color:var(--ink);border:2px solid var(--line)}
+.gmsg{color:#c2304d;min-height:1.4em;font-size:15px}
 </style>
 </head>
 <body>
+<div class="gate" id="gate">
+  <form class="gcard" id="gform" autocomplete="off">
+    <h2>Christian Radio</h2>
+    <p id="gtext">Type your Rhythm board password to listen.</p>
+    <input type="password" id="gpw" aria-label="Password" placeholder="Password">
+    <div class="gmsg" id="gmsg" role="alert"></div>
+    <button type="submit">Unlock</button>
+    <a href="/rhythm/">Go to my Rhythm board</a>
+  </form>
+</div>
 <main>
   <h1>Christian Radio</h1>
   <p class="sub">Pick a station and press play.</p>
@@ -141,6 +160,7 @@ footer{margin-top:28px;color:var(--soft);font-size:13px}
   }
 
   async function start(){
+    if(!document.getElementById('gate').hidden) return;
     showError('');
     setStatus('Connecting…');
     // Add a cache-buster so the stream starts live, not from an old buffer.
@@ -194,6 +214,31 @@ footer{margin-top:28px;color:var(--soft);font-size:13px}
   document.addEventListener('contextmenu', e => e.preventDefault());
 
   render();
+}
+</script>
+<script>
+{
+  /* Lock: only works on a device where the family's Rhythm board is set up.
+     It uses the same passwords as the board (parent, Bekah's, Ruth's), checked against the board's saved settings. */
+  const gate=document.getElementById('gate');
+  const read=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
+  let cfg=null; try{ cfg=JSON.parse(read('rhythm:config')||'null'); }catch(e){}
+  const allowed=new Set();
+  if(cfg){ [cfg.pwParent,cfg.pwKid].forEach(h=>h&&allowed.add(h)); Object.values(cfg.kids||{}).forEach(k=>k&&k.pw&&allowed.add(k.pw)); }
+  const sha=async t=>{ const b=await crypto.subtle.digest('SHA-256', new TextEncoder().encode('rhythm|'+t)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''); };
+  const role=read('rhythm:role');
+  if((role && allowed.has(role)) || allowed.has(read('radio:ok'))) gate.hidden=true;
+  else if(!allowed.size){
+    document.getElementById('gtext').textContent='This radio only works on a device where your Rhythm board is set up. Log in to your board first, then come back.';
+    document.getElementById('gpw').hidden=true; document.querySelector('#gform button').hidden=true;
+  }
+  document.getElementById('gform').addEventListener('submit', async e=>{
+    e.preventDefault();
+    const pw=document.getElementById('gpw').value.trim(); if(!pw) return;
+    let h=''; try{ h=await sha(pw); }catch(err){}
+    if(allowed.has(h)){ try{ localStorage.setItem('radio:ok', h); }catch(err){} gate.hidden=true; }
+    else { document.getElementById('gmsg').textContent='That password didn\'t work. Try again.'; document.getElementById('gpw').value=''; }
+  });
 }
 </script>
 </body>

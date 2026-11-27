@@ -219,26 +219,40 @@ footer{margin-top:28px;color:var(--soft);font-size:13px}
 </script>
 <script>
 {
-  /* Lock: only works on a device where the family's Rhythm board is set up.
-     It uses the same passwords as the board (parent, Bekah's, Ruth's), checked against the board's saved settings. */
-  const gate=document.getElementById('gate');
+  /* Lock: the family's Rhythm board passwords (parent, Bekah's, Ruth's, Sam's).
+     Works on any device: it checks the board's saved settings on this device, or the board's settings online. */
+  const gate=document.getElementById('gate'), msg=document.getElementById('gmsg'), pwEl=document.getElementById('gpw');
   const read=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
-  let cfg=null; try{ cfg=JSON.parse(read('rhythm:config')||'null'); }catch(e){}
+  const write=(k,v)=>{ try{ localStorage.setItem(k,v); }catch(e){} };
   const allowed=new Set();
-  if(cfg){ [cfg.pwParent,cfg.pwKid].forEach(h=>h&&allowed.add(h)); Object.values(cfg.kids||{}).forEach(k=>k&&k.pw&&allowed.add(k.pw)); }
+  const addCfg=c=>{ if(!c) return; [c.pwParent,c.pwKid].forEach(h=>h&&allowed.add(h)); Object.values(c.kids||{}).forEach(k=>k&&k.pw&&allowed.add(k.pw)); };
+  try{ addCfg(JSON.parse(read('rhythm:config')||'null')); }catch(e){}
+  try{ JSON.parse(read('radio:hashes')||'[]').forEach(h=>allowed.add(h)); }catch(e){}
+  const unlocked=()=>{ const r=read('rhythm:role'), ok=read('radio:ok'); return (r && allowed.has(r)) || (ok && allowed.has(ok)); };
+  const open=()=>{ gate.hidden=true; };
+  if(unlocked()) open();
+
+  /* The board's settings online (same database the board uses) */
+  const URL='https://firestore.googleapis.com/v1/projects/survivor51-league/databases/(default)/documents/rhythm_config/main';
+  const online = fetch(URL, {cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{
+    const f=(j&&j.fields)||{}, str=x=>x&&x.stringValue;
+    const hs=[str(f.pwParent), str(f.pwKid)];
+    const kids=(f.kids&&f.kids.mapValue&&f.kids.mapValue.fields)||{};
+    Object.values(kids).forEach(k=>hs.push(str(k&&k.mapValue&&k.mapValue.fields&&k.mapValue.fields.pw)));
+    const got=hs.filter(Boolean); got.forEach(h=>allowed.add(h));
+    if(got.length) write('radio:hashes', JSON.stringify(got));
+    if(!gate.hidden && unlocked()) open();
+  }).catch(()=>{});
+
   const sha=async t=>{ const b=await crypto.subtle.digest('SHA-256', new TextEncoder().encode('rhythm|'+t)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''); };
-  const role=read('rhythm:role');
-  if((role && allowed.has(role)) || allowed.has(read('radio:ok'))) gate.hidden=true;
-  else if(!allowed.size){
-    document.getElementById('gtext').textContent='This radio only works on a device where your Rhythm board is set up. Log in to your board first, then come back.';
-    document.getElementById('gpw').hidden=true; document.querySelector('#gform button').hidden=true;
-  }
   document.getElementById('gform').addEventListener('submit', async e=>{
     e.preventDefault();
-    const pw=document.getElementById('gpw').value.trim(); if(!pw) return;
+    const pw=pwEl.value.trim(); if(!pw) return;
+    msg.textContent='Checking…';
     let h=''; try{ h=await sha(pw); }catch(err){}
-    if(allowed.has(h)){ try{ localStorage.setItem('radio:ok', h); }catch(err){} gate.hidden=true; }
-    else { document.getElementById('gmsg').textContent='That password didn\'t work. Try again.'; document.getElementById('gpw').value=''; }
+    if(!allowed.has(h)) await online;
+    if(allowed.has(h)){ write('radio:ok', h); msg.textContent=''; open(); }
+    else { msg.textContent = allowed.size ? 'That password didn\'t work. Try again.' : 'Can\'t check the password right now. Check the internet connection and try again.'; pwEl.value=''; }
   });
 }
 </script>

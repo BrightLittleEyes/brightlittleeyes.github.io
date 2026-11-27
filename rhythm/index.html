@@ -393,7 +393,7 @@ window.FIREBASE_CONFIG = {
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
-const BUILD = '2026-11-27d';   // change this with every update, so open boards reload to the new version
+const BUILD = '2026-11-27e';   // change this with every update, so open boards reload to the new version
 const COL = 'rhythm_days', CFG_DOC = 'rhythm_config/main';
 
 /* ---------- the starting board (used until you save your own) ---------- */
@@ -1031,6 +1031,16 @@ function normalize(d){
   }
   if(ruth && Array.isArray(ruth.blocks) && !(ruth.radioV>=2)){ (ruth.tags.fun||[]).forEach(t=>{ if(t.id==='radio') t.gate=true; }); ruth.radioV=2; }
   if(ruth && Array.isArray(ruth.blocks) && !(ruth.radioV>=3)){ (ruth.tags.fun||[]).forEach(t=>{ if(t.id==='radio') t.links=[{name:'Open Christian Radio', url:'/radio/'}]; }); ruth.radioV=3; }   // Ruth: radio opens our own player, not the station websites
+  if(ruth && Array.isArray(ruth.blocks) && !(ruth.radioV>=4)){   // Ruth: Christian Radio is its own item right after Bible, like Bekah's (not a Fun Choice)
+    if(ruth.tags && Array.isArray(ruth.tags.fun)) ruth.tags.fun = ruth.tags.fun.filter(t=>t.id!=='radio' && String(t.name||'').trim().toLowerCase()!=='christian radio');
+    if(!ruth.blocks.some(b=>b.items.some(i=>i.id==='radio_slot'))){
+      const radio = {id:'radio_slot', t:'Christian Radio', d:'Listen to Christian radio. Not today? Just check it off.', url:'/radio/', offOnBreak:true};
+      const bb = ruth.blocks.find(b=>b.items.some(i=>i.id==='bible'));
+      if(bb) bb.items.splice(bb.items.findIndex(i=>i.id==='bible')+1, 0, radio);
+      else if(ruth.blocks[0]) ruth.blocks[0].items.push(radio);
+    }
+    ruth.radioV=4;
+  }
   if(ruth && Array.isArray(ruth.blocks) && !(ruth.weekendV>=1)){ ruth.weekendOff=true; ruth.weekendV=1; }   // Ruth: no structure on weekends
   if(ruth && !(ruth.appsV>=1)){ tieApps([ruth.blocks], APP_OF_RUTH); ruth.appsV=1; }
   if(ruth && Array.isArray(ruth.blocks) && !(ruth.tillyV>=1)){   // Ruth: Tilly Math, checked off by her 3rd Grade Math app after 30 minutes

@@ -393,7 +393,7 @@ window.FIREBASE_CONFIG = {
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
-const BUILD = '2026-11-27b';   // change this with every update, so open boards reload to the new version
+const BUILD = '2026-11-27c';   // change this with every update, so open boards reload to the new version
 const COL = 'rhythm_days', CFG_DOC = 'rhythm_config/main';
 
 /* ---------- the starting board (used until you save your own) ---------- */
@@ -1454,6 +1454,14 @@ function normalizeMain(d){
       if(!t.links.some(l=>l.video==='3R2jD6j3pDI')) t.links.push({name:'▶ Bracelet video', video:'3R2jD6j3pDI'});
     });
     c.v = 50;
+  }
+  if(c.v < 51){                       // Bekah's crafting choice: crocheting a name (like a Christmas blanket with the family's last name)
+    (c.tags.fun||[]).forEach(t=>{ if(t.id!=='yarn') return;
+      t.links = t.links||[];
+      if(!t.links.some(l=>l.video==='yn0o08cfUuY')) t.links.push({name:'▶ Name blanket: letters', video:'yn0o08cfUuY'});
+      if(!t.links.some(l=>l.video==='9tYzlZa4u5s')) t.links.push({name:'▶ Name blanket: C2C stitch', video:'9tYzlZa4u5s'});
+    });
+    c.v = 51;
   }
   return c;
 }

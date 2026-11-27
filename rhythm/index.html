@@ -393,7 +393,7 @@ window.FIREBASE_CONFIG = {
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
-const BUILD = '2026-11-27g';   // change this with every update, so open boards reload to the new version
+const BUILD = '2026-11-27h';   // change this with every update, so open boards reload to the new version
 const COL = 'rhythm_days', CFG_DOC = 'rhythm_config/main';
 
 /* ---------- the starting board (used until you save your own) ---------- */
@@ -1087,6 +1087,14 @@ function normalize(d){
       if(!list.some(l=>l.video==='Du2ClKNihvY')){ const at=list.findIndex(l=>l.video==='3R2jD6j3pDI'); list.splice(at>=0?at:list.length, 0, {name:'▶ Easy bracelet: spiral staircase', video:'Du2ClKNihvY'}); } })(craft.links); }
     ruth.craftV=3;
   }
+  if(ruth && ruth.tags && Array.isArray(ruth.tags.fun) && !(ruth.craftV>=4)){   // Ruth (9): the easy 4-string candy stripe video in place of the harder one
+    const craft = ruth.tags.fun.find(t=>t.id==='crafting' || String(t.name||'').trim().toLowerCase()==='free crafting');
+    if(craft){ craft.links=(craft.links||[]);
+      const at=craft.links.findIndex(l=>l.video==='3R2jD6j3pDI');
+      craft.links = craft.links.filter(l=>l.video!=='3R2jD6j3pDI');
+      if(!craft.links.some(l=>l.video==='KOuCM6QPRlM')) craft.links.splice(at>=0?at:craft.links.length, 0, {name:'▶ Bracelet: candy stripe, easy (4 strings)', video:'KOuCM6QPRlM'}); }
+    ruth.craftV=4;
+  }
   if(!(c.carpoolBrkV>=1)){             // no Carpool on break days, on any board
     [c, ...Object.values(c.kids||{})].forEach(k=>{ if(!k) return; [...(k.blocks||[]),...(k.satBlocks||[]),...(k.sunBlocks||[])].forEach(b=>(b.items||[]).forEach(i=>{
       if(/^carpool/i.test(i.id||'') || /^carpool$/i.test((i.t||'').trim())) i.offOnBreak = true; })); });
@@ -1499,6 +1507,12 @@ function normalizeMain(d){
     (c.tags.fun||[]).forEach(t=>{ if(t.id==='yarn'){ t.links=t.links||[]; (list=>{ list.forEach(l=>{ if(l.video==='3R2jD6j3pDI' && l.name==='▶ Bracelet video') l.name='▶ Bracelet: candy stripe (next step)'; });
       if(!list.some(l=>l.video==='Du2ClKNihvY')){ const at=list.findIndex(l=>l.video==='3R2jD6j3pDI'); list.splice(at>=0?at:list.length, 0, {name:'▶ Easy bracelet: spiral staircase', video:'Du2ClKNihvY'}); } })(t.links); } });
     c.v = 53;
+  }
+  if(c.v < 54){                       // a simpler candy stripe video (2 colors, 4 strings) before the harder one
+    (c.tags.fun||[]).forEach(t=>{ if(t.id!=='yarn') return; t.links=t.links||[];
+      if(!t.links.some(l=>l.video==='KOuCM6QPRlM')){ const at=t.links.findIndex(l=>l.video==='3R2jD6j3pDI'); t.links.splice(at>=0?at:t.links.length, 0, {name:'▶ Bracelet: candy stripe, easy (4 strings)', video:'KOuCM6QPRlM'}); }
+      t.links.forEach(l=>{ if(l.video==='3R2jD6j3pDI' && /next step/.test(l.name)) l.name='▶ Bracelet: candy stripe, more colors'; }); });
+    c.v = 54;
   }
   return c;
 }

@@ -393,7 +393,7 @@ window.FIREBASE_CONFIG = {
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
-const BUILD = '2026-11-27c';   // change this with every update, so open boards reload to the new version
+const BUILD = '2026-11-27d';   // change this with every update, so open boards reload to the new version
 const COL = 'rhythm_days', CFG_DOC = 'rhythm_config/main';
 
 /* ---------- the starting board (used until you save your own) ---------- */
@@ -1060,6 +1060,12 @@ function normalize(d){
     ruth.brk2V=1;
   }
   if(ruth && Array.isArray(ruth.blocks) && c.kids && !c.kids.sam) c.kids.sam = samBoard(c, ruth);   // Sam: third child, public school
+  if(ruth && ruth.tags && Array.isArray(ruth.tags.fun) && !(ruth.craftV>=1)){   // Ruth's Free Crafting gets the same craft videos as Bekah's crafting choice
+    const vids = (((c.tags.fun||[]).find(t=>t.id==='yarn')||{}).links||[]).filter(l=>l.video);
+    const craft = ruth.tags.fun.find(t=>t.id==='crafting' || String(t.name||'').trim().toLowerCase()==='free crafting');
+    if(craft && vids.length){ craft.links = craft.links||[]; vids.forEach(v=>{ if(!craft.links.some(l=>l.video===v.video)) craft.links.push({...v}); }); }
+    ruth.craftV=1;
+  }
   if(!(c.carpoolBrkV>=1)){             // no Carpool on break days, on any board
     [c, ...Object.values(c.kids||{})].forEach(k=>{ if(!k) return; [...(k.blocks||[]),...(k.satBlocks||[]),...(k.sunBlocks||[])].forEach(b=>(b.items||[]).forEach(i=>{
       if(/^carpool/i.test(i.id||'') || /^carpool$/i.test((i.t||'').trim())) i.offOnBreak = true; })); });

@@ -393,7 +393,7 @@ window.FIREBASE_CONFIG = {
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
-const BUILD = '2026-11-26b';   // change this with every update, so open boards reload to the new version
+const BUILD = '2026-11-26c';   // change this with every update, so open boards reload to the new version
 const COL = 'rhythm_days', CFG_DOC = 'rhythm_config/main';
 
 /* ---------- the starting board (used until you save your own) ---------- */
@@ -1055,6 +1055,10 @@ function normalize(d){
     ruth.gbV=1;
   }
   if(ruth && ruth.tags && !(ruth.lightV>=1)){ ruth.tags.mech = ruth.tags.mech||[]; addLight(ruth.tags.mech); ruth.lightV=1; }
+  if(ruth && Array.isArray(ruth.blocks) && !(ruth.brk2V>=1)){   // Ruth on break days: no Mark Attendance and no Bible Block
+    ruth.blocks.forEach(b=>b.items.forEach(i=>{ if(i.id==='attendance' || i.id==='bible') i.offOnBreak = true; }));
+    ruth.brk2V=1;
+  }
   if(ruth && Array.isArray(ruth.blocks) && c.kids && !c.kids.sam) c.kids.sam = samBoard(c, ruth);   // Sam: third child, public school
   return c;
 }

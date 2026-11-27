@@ -393,7 +393,7 @@ window.FIREBASE_CONFIG = {
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
-const BUILD = '2026-11-27e';   // change this with every update, so open boards reload to the new version
+const BUILD = '2026-11-27f';   // change this with every update, so open boards reload to the new version
 const COL = 'rhythm_days', CFG_DOC = 'rhythm_config/main';
 
 /* ---------- the starting board (used until you save your own) ---------- */
@@ -1076,6 +1076,11 @@ function normalize(d){
     if(craft && vids.length){ craft.links = craft.links||[]; vids.forEach(v=>{ if(!craft.links.some(l=>l.video===v.video)) craft.links.push({...v}); }); }
     ruth.craftV=1;
   }
+  if(ruth && ruth.tags && Array.isArray(ruth.tags.fun) && !(ruth.craftV>=2)){   // Ruth's Free Crafting: the beginner single & double crochet video too
+    const craft = ruth.tags.fun.find(t=>t.id==='crafting' || String(t.name||'').trim().toLowerCase()==='free crafting');
+    if(craft){ craft.links=craft.links||[]; if(!craft.links.some(l=>l.video==='KE4rZ_7JzEc')){ const at=craft.links.findIndex(l=>l.video==='aMVNXeL_E6w'); craft.links.splice(at>=0?at+1:craft.links.length, 0, {name:'▶ First stitches: single & double crochet', video:'KE4rZ_7JzEc'}); } }
+    ruth.craftV=2;
+  }
   if(!(c.carpoolBrkV>=1)){             // no Carpool on break days, on any board
     [c, ...Object.values(c.kids||{})].forEach(k=>{ if(!k) return; [...(k.blocks||[]),...(k.satBlocks||[]),...(k.sunBlocks||[])].forEach(b=>(b.items||[]).forEach(i=>{
       if(/^carpool/i.test(i.id||'') || /^carpool$/i.test((i.t||'').trim())) i.offOnBreak = true; })); });
@@ -1478,6 +1483,11 @@ function normalizeMain(d){
       if(!t.links.some(l=>l.video==='9tYzlZa4u5s')) t.links.push({name:'▶ Name blanket: C2C stitch', video:'9tYzlZa4u5s'});
     });
     c.v = 51;
+  }
+  if(c.v < 52){                       // total-beginner crochet: slip knot, chain, single and double crochet
+    (c.tags.fun||[]).forEach(t=>{ if(t.id!=='yarn') return; t.links=t.links||[];
+      if(!t.links.some(l=>l.video==='KE4rZ_7JzEc')){ const at=t.links.findIndex(l=>l.video==='aMVNXeL_E6w'); t.links.splice(at>=0?at+1:t.links.length, 0, {name:'▶ First stitches: single & double crochet', video:'KE4rZ_7JzEc'}); } });
+    c.v = 52;
   }
   return c;
 }

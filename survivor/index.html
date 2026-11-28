@@ -253,7 +253,8 @@ const SWAP_EP = 4; // Episode 4 tribe swap added Dina
 const SURVIVE=2, OUT=-3, PREDICT=3, LAST_EP=14;
 const WIN_VAL={2:70,3:60,4:50,5:45,6:40,7:35,8:20,9:15,10:10,11:5,12:3,13:2,14:1};
 const GUESS=[{f:'picks',l:'Voted out',p:PREDICT},{f:'imm',l:'Wins immunity',p:2},{f:'rew',l:'Wins reward',p:2}];
-const DOUBLE_EPS=new Set([5]); // episodes where two people go home
+const DOUBLE_EPS=new Set([5,10]); // episodes where two people go home
+const DOUBLE_IMM=new Set([10]); // episodes with two immunity challenges
 // Episodes played in pairs (Double Duo). Guesses are made on pairs.
 const PAIRS={8:[['carter','cristian'],['mike','maggie'],['lewis','sharonda'],['kilby','kristin'],['devin','jelly'],['eric','thienan']]};
 const pairKey=pr=>'pair:'+pr.join('+');
@@ -261,7 +262,15 @@ const pairName=pr=>pr.map(k=>first(k)).join(' & ');
 // Reward challenges played in schoolyard-pick teams
 const REW_TEAMS={9:[{n:'Purple team',ks:['mike','devin','eric','lewis','thienan']},{n:'Yellow team',ks:['sharonda','carter','jelly','maggie','cristian']}]};
 const teamLabel=t=>t.n+' ('+t.ks.map(k=>first(k)).join(', ')+')';
-function guessesFor(ep){ return DOUBLE_EPS.has(ep) ? [{f:'picks',l:'Voted out #1',p:PREDICT},{f:'picks2',l:'Voted out #2',p:PREDICT},...GUESS.slice(1)] : GUESS; }
+function guessesFor(ep){
+  const out=[], twoBoot=DOUBLE_EPS.has(ep), twoImm=DOUBLE_IMM.has(ep);
+  out.push({f:'picks',l:twoBoot?'Voted out #1':'Voted out',p:PREDICT});
+  if(twoBoot) out.push({f:'picks2',l:'Voted out #2',p:PREDICT});
+  out.push({f:'imm',l:twoImm?'Wins immunity #1':'Wins immunity',p:2});
+  if(twoImm) out.push({f:'imm2',l:'Wins immunity #2',p:2});
+  out.push(GUESS[2]);
+  return out;
+}
 const EVENTS = [
   {c:'team',l:'Tribe won immunity',p:2},{c:'reward',l:'Won reward',p:5},{c:'indiv',l:'Individual immunity',p:5},
   {c:'idol',l:'Found idol',p:4},{c:'adv',l:'Found advantage',p:2},{c:'save',l:'Idol/advantage saved someone',p:5},
@@ -332,8 +341,9 @@ function guessRight(e,f,g,firstBoot){
   if(TRIBES.includes(g)) return CAST.some(c=>(ta[c.k]||(e.num<SWAP_EP?(c.t0||c.t):tribeOf(c.k)))===g && has(c.k, f==='imm'?'team':'reward'));
   return has(g, f==='imm'?'indiv':'reward');
 }
-function guessHits(e,mid){ const P=S.preds[e.num]||{}; return guessesFor(e.num).filter(G=>guessRight(e,G.f,(P[G.f]||{})[mid],(P.picks||{})[mid])).length; }
-function guessPts(e,mid){ const P=S.preds[e.num]||{}; return guessesFor(e.num).reduce((s,G)=>s+(guessRight(e,G.f,(P[G.f]||{})[mid],(P.picks||{})[mid])?G.p:0),0); }
+function guessOk(e,G,P,mid){ const g=(P[G.f]||{})[mid]; if(G.f.endsWith('2') && g && g===(P[G.f.slice(0,-1)]||{})[mid]) return false; return guessRight(e,G.f.replace(/2$/,''),g); }
+function guessHits(e,mid){ const P=S.preds[e.num]||{}; return guessesFor(e.num).filter(G=>guessOk(e,G,P,mid)).length; }
+function guessPts(e,mid){ const P=S.preds[e.num]||{}; return guessesFor(e.num).reduce((s,G)=>s+(guessOk(e,G,P,mid)?G.p:0),0); }
 function guessOpts(f,sel,alive,ep){
   if(f==='rew' && REW_TEAMS[ep]){
     const o=(v,l)=>`<option value="${v}" ${sel===v?'selected':''}>${esc(l)}</option>`;
@@ -425,7 +435,7 @@ function renderStandings(){
       </div>
       <div class="panel">
         <h2>Tonight's picks · Ep ${ep}</h2>
-        <p class="sub">Lock these in before the episode airs. Voted out +${PREDICT}, immunity +2, reward +2. Pick a tribe before the merge and a castaway after.${DOUBLE_EPS.has(ep)?` <b>Two people go home this episode, so everyone gets two voted-out guesses.</b>`:''}${PAIRS[ep]?` <b>This episode is played in pairs, so every guess is a pair.</b>`:''}${REW_TEAMS[ep]?` <b>The reward challenge is played in two teams, so pick a team for the reward guess.</b>`:''}</p>
+        <p class="sub">Lock these in before the episode airs. Voted out +${PREDICT}, immunity +2, reward +2. Pick a tribe before the merge and a castaway after.${DOUBLE_EPS.has(ep)&&DOUBLE_IMM.has(ep)?` <b>This is a double episode with two immunity challenges and two votes, so everyone gets two immunity guesses and two voted-out guesses.</b>`:DOUBLE_EPS.has(ep)?` <b>Two people go home this episode, so everyone gets two voted-out guesses.</b>`:''}${PAIRS[ep]?` <b>This episode is played in pairs, so every guess is a pair.</b>`:''}${REW_TEAMS[ep]?` <b>The reward challenge is played in two teams, so pick a team for the reward guess.</b>`:''}</p>
         <div class="stack" style="gap:0">${m.managers.map(mg=>`
           <div class="guess"><div style="font-weight:600">${esc(mg.name)}</div>
             <div class="guessrow">${guessesFor(ep).map(G=>`<label><span class="glabel">${G.l}</span><select data-pred="${mg.id}" data-field="${G.f}" aria-label="${esc(mg.name)}: ${G.l}" ${S.canWrite?'':'disabled'}>${guessOpts(G.f,(P[G.f]||{})[mg.id],alive,ep)}</select></label>`).join('')}</div>
